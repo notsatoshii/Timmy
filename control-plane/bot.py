@@ -1,242 +1,434 @@
 #!/usr/bin/env python3
-"""LEVER Build Agent — Telegram Bot"""
+"""
+LEVER Protocol — Telegram Command Center + Claude Code Proxy
+============================================================
+Two modes:
+  1. Slash commands (/status, /go, etc.) — existing functionality
+  2. Natural language → Claude Code passthrough — any non-command message
+     gets piped to `claude -p "..."` and the response sent back to TG.
+
+Security: Only AUTHORIZED_USER_ID can interact.
+"""
 
 import os
-import subprocess
+import sys
+import json
 import asyncio
-import glob
-from datetime import datetime
-from dotenv import load_dotenv
-from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+import subprocess
+import logging
+import time
+import signal
+from datetime import datetime, timezone
+from pathlib import Path
 
-load_dotenv()
-TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-ALLOWED_USER = int(os.getenv("TELEGRAM_USER_ID"))
-REPO = "/root/lever-protocol"
+# ─── Configuration ────────────────────────────────────────────────────────────
 
-def auth(func):
-    async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        if update.effective_user.id != ALLOWED_USER:
-            return
-        return await func(update, context)
-    return wrapper
+BOT_TOKEN = os.environ.get("LEVER_BOT_TOKEN", "8541708860:AAGmNKlIeo5Acn6Wssk6HzQR1QfMNX2GXwk")
+AUTHORIZED_USER_ID = 422985839
+PROJECT_DIR = "/root/lever-protocol"
+CLAUDE_CODE_BIN = "claude"  # assumes claude is in PATH
+MAX_TG_MESSAGE_LENGTH = 4000  # leave buffer under 4096
+CLAUDE_TIMEOUT = 300  # 5 minutes max per claude invocation
+LOG_FILE = "/root/lever-protocol/control-plane/bot.log"
 
-def run_cmd(cmd, cwd=REPO, timeout=60):
+# ─── Logging ──────────────────────────────────────────────────────────────────
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler(LOG_FILE),
+        logging.StreamHandler(sys.stdout),
+    ],
+)
+log = logging.getLogger("lever-bot")
+
+# ─── Telegram API (raw HTTP, no external deps beyond requests) ────────────────
+
+import requests
+
+API_BASE = f"https://api.telegram.org/bot{BOT_TOKEN}"
+
+
+def tg_send(chat_id: int, text: str, parse_mode: str = None) -> dict:
+    """Send a message, auto-chunking if too long."""
+    chunks = chunk_text(text, MAX_TG_MESSAGE_LENGTH)
+    result = None
+    for chunk in chunks:
+        payload = {"chat_id": chat_id, "text": chunk}
+        if parse_mode:
+            payload["parse_mode"] = parse_mode
+        try:
+            r = requests.post(f"{API_BASE}/sendMessage", json=payload, timeout=30)
+            result = r.json()
+        except Exception as e:
+            log.error(f"TG send error: {e}")
+    return result
+
+
+def tg_send_typing(chat_id: int):
+    """Show typing indicator."""
     try:
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, cwd=cwd, timeout=timeout)
-        output = (result.stdout + result.stderr).strip()
-        return output if output else "(no output)"
+        requests.post(
+            f"{API_BASE}/sendChatAction",
+            json={"chat_id": chat_id, "action": "typing"},
+            timeout=10,
+        )
+    except Exception:
+        pass
+
+
+def chunk_text(text: str, max_len: int) -> list[str]:
+    """Split text into chunks that fit TG message limits."""
+    if len(text) <= max_len:
+        return [text]
+
+    chunks = []
+    lines = text.split("\n")
+    current = ""
+
+    for line in lines:
+        if len(current) + len(line) + 1 > max_len:
+            if current:
+                chunks.append(current)
+                current = ""
+            # If single line exceeds limit, hard-split it
+            while len(line) > max_len:
+                chunks.append(line[:max_len])
+                line = line[max_len:]
+            current = line
+        else:
+            current = current + "\n" + line if current else line
+
+    if current:
+        chunks.append(current)
+
+    return chunks if chunks else ["(empty response)"]
+
+
+# ─── Claude Code Proxy ────────────────────────────────────────────────────────
+
+
+def run_claude_code(prompt: str, cwd: str = PROJECT_DIR) -> str:
+    """
+    Run Claude Code in non-interactive mode and capture output.
+    Uses `claude -p "prompt"` which sends a single prompt and exits.
+    """
+    log.info(f"Claude Code invocation: {prompt[:100]}...")
+
+    try:
+        result = subprocess.run(
+            [CLAUDE_CODE_BIN, "-p", prompt],
+            capture_output=True,
+            text=True,
+            timeout=CLAUDE_TIMEOUT,
+            cwd=cwd,
+            env={
+                **os.environ,
+                "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+            },
+        )
+
+        output = result.stdout.strip()
+        stderr = result.stderr.strip()
+
+        if result.returncode != 0 and not output:
+            output = f"⚠️ Claude Code error (exit {result.returncode}):\n{stderr}"
+        elif stderr and not output:
+            output = stderr
+
+        if not output:
+            output = "(no output)"
+
+        return output
+
     except subprocess.TimeoutExpired:
-        return "timed out"
+        return f"⏱️ Claude Code timed out after {CLAUDE_TIMEOUT}s. The task may be too complex for a single prompt. Try breaking it down."
+    except FileNotFoundError:
+        return "❌ Claude Code binary not found. Is `claude` in PATH?"
     except Exception as e:
-        return f"Error: {e}"
+        return f"❌ Error running Claude Code: {str(e)}"
 
-def truncate(text, limit=3800):
-    return text if len(text) <= limit else "...(truncated)...\n\n" + text[-limit:]
 
-@auth
-async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "LEVER Build Agent\n\n"
-        "/status - Latest build progress\n"
-        "/health - System health check\n"
-        "/tasks - Task queue overview\n"
-        "/sessions - Active agent sessions\n"
-        "/go <agent> <worktree> - Launch agent on a task\n"
-        "/approve <branch> - Merge branch to main\n"
-        "/test - Run forge test suite\n"
-        "/lessons - View accumulated lessons\n"
-        "/brief - Latest daily planning brief\n"
-        "/project <path> - Switch active project\n"
-        "/help - Show this message"
+# ─── Slash Command Handlers ───────────────────────────────────────────────────
+
+
+def cmd_status(chat_id: int):
+    """Show agent session status."""
+    try:
+        result = subprocess.run(
+            ["tmux", "list-sessions"], capture_output=True, text=True, timeout=10
+        )
+        sessions = result.stdout.strip() if result.stdout.strip() else "No active tmux sessions."
+    except Exception as e:
+        sessions = f"Error checking sessions: {e}"
+
+    tg_send(chat_id, f"📊 Session Status\n\n{sessions}")
+
+
+def cmd_health(chat_id: int):
+    """Server health check."""
+    checks = []
+
+    # Disk
+    try:
+        r = subprocess.run(["df", "-h", "/"], capture_output=True, text=True, timeout=5)
+        lines = r.stdout.strip().split("\n")
+        if len(lines) >= 2:
+            checks.append(f"💾 Disk: {lines[1].split()[3]} free")
+    except Exception:
+        checks.append("💾 Disk: check failed")
+
+    # Memory
+    try:
+        r = subprocess.run(["free", "-h"], capture_output=True, text=True, timeout=5)
+        lines = r.stdout.strip().split("\n")
+        if len(lines) >= 2:
+            parts = lines[1].split()
+            checks.append(f"🧠 RAM: {parts[2]} used / {parts[1]} total")
+    except Exception:
+        checks.append("🧠 RAM: check failed")
+
+    # Claude Code
+    try:
+        r = subprocess.run(
+            [CLAUDE_CODE_BIN, "--version"], capture_output=True, text=True, timeout=10
+        )
+        checks.append(f"🤖 Claude Code: {r.stdout.strip()}")
+    except Exception:
+        checks.append("🤖 Claude Code: not found")
+
+    # Forge
+    try:
+        r = subprocess.run(
+            ["forge", "--version"], capture_output=True, text=True, timeout=10
+        )
+        checks.append(f"🔨 Forge: {r.stdout.strip().split(chr(10))[0]}")
+    except Exception:
+        checks.append("🔨 Forge: not found")
+
+    # Git
+    try:
+        r = subprocess.run(
+            ["git", "-C", PROJECT_DIR, "log", "--oneline", "-1"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        checks.append(f"📝 Last commit: {r.stdout.strip()}")
+    except Exception:
+        checks.append("📝 Git: check failed")
+
+    tg_send(chat_id, "🏥 Health Check\n\n" + "\n".join(checks))
+
+
+def cmd_lessons(chat_id: int):
+    """Show lessons learned."""
+    path = Path(PROJECT_DIR) / "KNOWLEDGE" / "lessons.md"
+    if path.exists():
+        content = path.read_text()[-3000:]  # last 3000 chars
+        tg_send(chat_id, f"📚 Lessons (tail)\n\n{content}")
+    else:
+        tg_send(chat_id, "📚 No lessons.md found yet.")
+
+
+def cmd_buildlog(chat_id: int):
+    """Show build log."""
+    path = Path(PROJECT_DIR) / "BUILD_LOG.md"
+    if path.exists():
+        content = path.read_text()[-3000:]
+        tg_send(chat_id, f"🏗️ Build Log (tail)\n\n{content}")
+    else:
+        tg_send(chat_id, "🏗️ No BUILD_LOG.md found yet.")
+
+
+def cmd_tasks(chat_id: int):
+    """Show current task queue / spec files."""
+    spec_dir = Path(PROJECT_DIR) / "SPEC"
+    if spec_dir.exists():
+        specs = sorted(spec_dir.glob("*.md"))
+        lines = [f"{'✅' if (Path(PROJECT_DIR) / 'contracts' / 'src' / s.stem.split('-',1)[-1]).with_suffix('.sol').exists() else '⬜'} {s.name}" for s in specs]
+        tg_send(chat_id, "📋 Contract Specs\n\n" + "\n".join(lines))
+    else:
+        tg_send(chat_id, "📋 No SPEC/ directory found.")
+
+
+def cmd_go(chat_id: int, args: str):
+    """Launch a build agent on a specific task."""
+    if not args:
+        tg_send(chat_id, "Usage: /go <task description>\n\nExample: /go build FixedPointMath library")
+        return
+    tg_send(chat_id, f"🚀 Launching Claude Code agent...\n\nTask: {args}")
+    tg_send_typing(chat_id)
+    result = run_claude_code(args)
+    tg_send(chat_id, f"✅ Agent result:\n\n{result}")
+
+
+def cmd_test(chat_id: int, args: str):
+    """Run tests."""
+    target = args if args else ""
+    tg_send(chat_id, f"🧪 Running tests{' for ' + target if target else ''}...")
+    tg_send_typing(chat_id)
+
+    try:
+        cmd = ["forge", "test", "-vv"]
+        if target:
+            cmd.extend(["--match-contract", target])
+        result = subprocess.run(
+            cmd, capture_output=True, text=True, timeout=120, cwd=PROJECT_DIR
+        )
+        output = result.stdout[-3000:] if result.stdout else result.stderr[-3000:]
+        tg_send(chat_id, f"🧪 Test Results\n\n{output}")
+    except subprocess.TimeoutExpired:
+        tg_send(chat_id, "⏱️ Tests timed out after 120s")
+    except Exception as e:
+        tg_send(chat_id, f"❌ Test error: {e}")
+
+
+def cmd_help(chat_id: int):
+    """Show available commands."""
+    help_text = """🤖 LEVER Bot — Command Center + Claude Code Proxy
+
+📌 Slash Commands:
+/status — Agent session status
+/health — Server health check
+/go <task> — Launch Claude Code on a task
+/test [contract] — Run forge tests
+/tasks — Show spec/build status
+/lessons — Show lessons learned
+/buildlog — Show build log
+/help — This message
+
+💬 Natural Language (Claude Code Proxy):
+Just type anything without a / prefix and it goes straight to Claude Code.
+
+Examples:
+  "show me the current forge compilation errors"
+  "read SPEC/01-FixedPointMath.md and summarize it"
+  "run forge build and tell me what's broken"
+  "what files are in the contracts directory?"
+  "write a unit test for RiskCurves.computeR"
+
+Claude Code has full access to the project at /root/lever-protocol
+and can read, write, and execute code."""
+
+    tg_send(chat_id, help_text)
+
+
+# ─── Message Router ───────────────────────────────────────────────────────────
+
+COMMANDS = {
+    "/status": lambda cid, _: cmd_status(cid),
+    "/health": lambda cid, _: cmd_health(cid),
+    "/go": lambda cid, args: cmd_go(cid, args),
+    "/test": lambda cid, args: cmd_test(cid, args),
+    "/tasks": lambda cid, _: cmd_tasks(cid),
+    "/lessons": lambda cid, _: cmd_lessons(cid),
+    "/buildlog": lambda cid, _: cmd_buildlog(cid),
+    "/help": lambda cid, _: cmd_help(cid),
+    "/start": lambda cid, _: cmd_help(cid),
+}
+
+
+def handle_message(update: dict):
+    """Route incoming message to handler."""
+    msg = update.get("message", {})
+    chat_id = msg.get("chat", {}).get("id")
+    user_id = msg.get("from", {}).get("id")
+    text = msg.get("text", "").strip()
+
+    if not chat_id or not text:
+        return
+
+    # Security: only authorized user
+    if user_id != AUTHORIZED_USER_ID:
+        tg_send(chat_id, "🔒 Unauthorized.")
+        log.warning(f"Unauthorized access attempt from user {user_id}")
+        return
+
+    log.info(f"Message from {user_id}: {text[:100]}")
+
+    # Slash command?
+    if text.startswith("/"):
+        parts = text.split(maxsplit=1)
+        cmd = parts[0].lower().split("@")[0]  # handle /cmd@botname
+        args = parts[1] if len(parts) > 1 else ""
+
+        handler = COMMANDS.get(cmd)
+        if handler:
+            handler(chat_id, args)
+        else:
+            tg_send(chat_id, f"Unknown command: {cmd}\nType /help for available commands.")
+        return
+
+    # Natural language → Claude Code proxy
+    tg_send(chat_id, f"🤖 Sending to Claude Code...")
+    tg_send_typing(chat_id)
+
+    # Prepend project context so Claude Code knows where it is
+    contextualized_prompt = (
+        f"You are working on the LEVER Protocol project at {PROJECT_DIR}. "
+        f"Read CLAUDE.md for project context if needed. "
+        f"The user asks: {text}"
     )
 
-@auth
-async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    log_file = f"{REPO}/BUILD_LOG.md"
-    if not os.path.exists(log_file):
-        await update.message.reply_text("No build log yet.")
-        return
-    with open(log_file) as f:
-        lines = f.readlines()
-    entries = [l.strip() for l in lines if l.strip() and not l.startswith("#") and not l.startswith("---") and "|" in l]
-    recent = entries[-15:] if len(entries) > 15 else entries
-    if not recent:
-        await update.message.reply_text("Build log exists but no entries yet.")
-        return
-    await update.message.reply_text("Recent Build Activity:\n\n" + "\n".join(recent))
+    result = run_claude_code(contextualized_prompt)
+    tg_send(chat_id, result)
 
-@auth
-async def cmd_health(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Running health checks...")
-    checks = []
-    tmux_out = run_cmd("tmux list-panes -t lever:agents -F '#{pane_index}: #{pane_current_command}' 2>/dev/null")
-    if "error" in tmux_out.lower() or "no server" in tmux_out.lower() or "no session" in tmux_out.lower():
-        checks.append("tmux: No active session")
-    else:
-        panes = [l for l in tmux_out.strip().split('\n') if l.strip()]
-        active = len([l for l in panes if 'claude' in l.lower() or 'launch' in l.lower()])
-        checks.append(f"Agents: {active}/4 running")
-    build_out = run_cmd("forge build 2>&1", timeout=120)
-    if "nothing to compile" in build_out.lower() or "no files" in build_out.lower():
-        checks.append("Forge: OK (no contracts yet)")
-    elif "error" in build_out.lower():
-        checks.append("Forge build: FAILING")
-    else:
-        checks.append("Forge build: passing")
-    disk_out = run_cmd("df -h / | tail -1 | awk '{print $4}'")
-    checks.append(f"Disk free: {disk_out.strip()}")
-    commit_out = run_cmd("git log --oneline -1 --format='%ar: %s'")
-    checks.append(f"Last commit: {commit_out.strip()}")
-    log_file = f"{REPO}/BUILD_LOG.md"
-    if os.path.exists(log_file):
-        mtime = os.path.getmtime(log_file)
-        age_hours = (datetime.now().timestamp() - mtime) / 3600
-        checks.append(f"Build log: updated {age_hours:.1f}h ago")
-    await update.message.reply_text("Health Report:\n\n" + "\n".join(checks))
 
-@auth
-async def cmd_test(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Running forge test... (may take a minute)")
-    result = run_cmd("forge test --summary 2>&1", timeout=300)
-    await update.message.reply_text(f"Test Results:\n\n{truncate(result, 3500)}")
+# ─── Polling Loop ─────────────────────────────────────────────────────────────
 
-@auth
-async def cmd_approve(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not context.args:
-        await update.message.reply_text("Usage: /approve branch-name")
-        return
-    branch = context.args[0]
-    await update.message.reply_text(f"Merging {branch} into main...")
-    run_cmd("git stash 2>/dev/null")
-    run_cmd("git checkout main")
-    run_cmd("git pull origin main")
-    result = run_cmd(f"git merge origin/{branch} --no-edit 2>&1")
-    if "conflict" in result.lower():
-        await update.message.reply_text(f"Merge conflict!\n\n{truncate(result, 3000)}")
-        return
-    build = run_cmd("forge build 2>&1", timeout=120)
-    if "error" in build.lower() and "nothing" not in build.lower():
-        await update.message.reply_text(f"Merged but build fails:\n\n{truncate(build, 3000)}")
-        return
-    run_cmd("git push origin main")
-    await update.message.reply_text(f"{branch} merged to main. Build passes. Pushed.")
 
-@auth
-async def cmd_go(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not context.args or len(context.args) < 2:
-        await update.message.reply_text("Usage: /go <agent-number> <worktree-name>\nExample: /go 1 vault-build")
-        return
-    agent_num = context.args[0]
-    worktree = context.args[1]
-    pane = int(agent_num) - 1
-    run_cmd(f"tmux send-keys -t lever:agents.{pane} C-c 2>/dev/null")
-    run_cmd(f"tmux send-keys -t lever:agents.{pane} '/root/launch-agent.sh {agent_num} {worktree}' Enter")
-    await update.message.reply_text(f"Agent {agent_num} launched on {worktree}")
+def poll():
+    """Long-polling loop for Telegram updates."""
+    log.info("Bot started. Polling for updates...")
+    offset = 0
 
-@auth
-async def cmd_sessions(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    pane_info = run_cmd("tmux list-panes -t lever:agents -F 'Pane #{pane_index}: #{pane_current_command}' 2>/dev/null")
-    worktrees = run_cmd("cd /root/lever-protocol && git worktree list 2>/dev/null")
-    msg = f"Sessions:\n{pane_info}\n\nWorktrees:\n{truncate(worktrees, 1500)}"
-    await update.message.reply_text(msg)
+    while True:
+        try:
+            r = requests.get(
+                f"{API_BASE}/getUpdates",
+                params={"offset": offset, "timeout": 30},
+                timeout=35,
+            )
+            data = r.json()
 
-@auth
-async def cmd_tasks(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    tasks_file = f"{REPO}/TASK_QUEUE.md"
-    if not os.path.exists(tasks_file):
-        await update.message.reply_text("No task queue file found.")
-        return
-    with open(tasks_file) as f:
-        lines = f.readlines()
-    status_lines = [l.strip() for l in lines if "|" in l and any(s in l for s in ["TODO","IN_PROGRESS","REVIEW","FIXING","DONE"])]
-    done = len([l for l in status_lines if "DONE" in l])
-    in_progress = len([l for l in status_lines if "IN_PROGRESS" in l])
-    review = len([l for l in status_lines if "REVIEW" in l])
-    todo = len([l for l in status_lines if "TODO" in l])
-    total = done + in_progress + review + todo
-    pct = (done / total * 100) if total > 0 else 0
-    filled = int(pct / 5)
-    bar = "=" * filled + "-" * (20 - filled)
-    msg = f"Task Progress:\n\n[{bar}] {pct:.0f}%\n\nDone: {done}/{total}\nBuilding: {in_progress}\nIn Review: {review}\nTodo: {todo}"
-    active = [l.strip() for l in status_lines if any(s in l for s in ["IN_PROGRESS","REVIEW","FIXING"])]
-    if active:
-        msg += "\n\nActive:\n" + "\n".join(active[:8])
-    await update.message.reply_text(msg)
+            if not data.get("ok"):
+                log.error(f"TG API error: {data}")
+                time.sleep(5)
+                continue
 
-@auth
-async def cmd_lessons(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    lessons_file = f"{REPO}/KNOWLEDGE/lessons.md"
-    if not os.path.exists(lessons_file):
-        await update.message.reply_text("No lessons file yet.")
-        return
-    with open(lessons_file) as f:
-        content = f.read()
-    if len(content.strip()) < 100:
-        await update.message.reply_text("Lessons file exists but no entries yet.")
-        return
-    await update.message.reply_text(f"Lessons Learned:\n\n{truncate(content)}")
+            for update in data.get("result", []):
+                offset = update["update_id"] + 1
+                try:
+                    handle_message(update)
+                except Exception as e:
+                    log.error(f"Error handling update: {e}", exc_info=True)
 
-@auth
-async def cmd_brief(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    briefs = sorted(glob.glob("/root/daily-briefs/*.md"))
-    if not briefs:
-        await update.message.reply_text("No daily briefs yet. They appear once the daily planning cron runs.")
-        return
-    with open(briefs[-1]) as f:
-        content = f.read()
-    await update.message.reply_text(f"Daily Brief ({os.path.basename(briefs[-1])}):\n\n{truncate(content)}")
+        except requests.exceptions.Timeout:
+            continue
+        except requests.exceptions.ConnectionError:
+            log.warning("Connection error, retrying in 5s...")
+            time.sleep(5)
+        except Exception as e:
+            log.error(f"Polling error: {e}", exc_info=True)
+            time.sleep(5)
 
-@auth
-async def cmd_project(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global REPO
-    if not context.args:
-        await update.message.reply_text(f"Active project: {REPO}\n\nUsage: /project <path>\nOr: /project list")
-        return
-    if context.args[0] == "list":
-        projects = ["/root/lever-protocol"]
-        for d in glob.glob("/root/workspace/*/"):
-            if os.path.isdir(d):
-                projects.append(d.rstrip("/"))
-        await update.message.reply_text("Projects:\n\n" + "\n".join(projects))
-        return
-    path = context.args[0]
-    if os.path.isdir(path):
-        REPO = path
-        await update.message.reply_text(f"Switched to {path}")
-    else:
-        await update.message.reply_text(f"Directory not found: {path}")
 
-async def monitor_callback(context: ContextTypes.DEFAULT_TYPE):
-    log_file = f"{REPO}/BUILD_LOG.md"
-    try:
-        if os.path.exists(log_file):
-            mtime = os.path.getmtime(log_file)
-            age_hours = (datetime.now().timestamp() - mtime) / 3600
-            if age_hours >= 4:
-                await context.bot.send_message(chat_id=ALLOWED_USER, text="No build activity in 4+ hours. Check /sessions and /health.")
-    except Exception as e:
-        print(f"Monitor error: {e}")
-
-def main():
-    print(f"[{datetime.now()}] Starting LEVER Build Agent bot...")
-    app = Application.builder().token(TOKEN).build()
-    app.add_handler(CommandHandler("start", cmd_help))
-    app.add_handler(CommandHandler("help", cmd_help))
-    app.add_handler(CommandHandler("status", cmd_status))
-    app.add_handler(CommandHandler("health", cmd_health))
-    app.add_handler(CommandHandler("test", cmd_test))
-    app.add_handler(CommandHandler("approve", cmd_approve))
-    app.add_handler(CommandHandler("go", cmd_go))
-    app.add_handler(CommandHandler("sessions", cmd_sessions))
-    app.add_handler(CommandHandler("tasks", cmd_tasks))
-    app.add_handler(CommandHandler("lessons", cmd_lessons))
-    app.add_handler(CommandHandler("brief", cmd_brief))
-    app.add_handler(CommandHandler("project", cmd_project))
-    app.job_queue.run_repeating(monitor_callback, interval=1800, first=60)
-    print(f"[{datetime.now()}] Bot running. Commands: /help")
-    app.run_polling(drop_pending_updates=True)
+# ─── Entry Point ──────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    main()
+    if BOT_TOKEN == "YOUR_TOKEN_HERE":
+        print("ERROR: Set LEVER_BOT_TOKEN environment variable or edit BOT_TOKEN in this file.")
+        print("  export LEVER_BOT_TOKEN='your-token-here'")
+        sys.exit(1)
+
+    # Graceful shutdown
+    def sighandler(sig, frame):
+        log.info("Shutting down...")
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, sighandler)
+    signal.signal(signal.SIGTERM, sighandler)
+
+    poll()
