@@ -41,6 +41,12 @@ interface IRewardsDistributor {
     /// @return amount USDT claimed
     function claim() external returns (uint256 amount);
 
+    /// @notice Release USDT rewards to a recipient (vault-only)
+    /// @dev Called by LeverVault after computing yield and resetting tranche snapshots.
+    /// @param to Recipient address
+    /// @param amount USDT amount to release (WAD)
+    function releaseRewards(address to, uint256 amount) external;
+
     // ──────────────────────────────────────────────
     // External — View
     // ──────────────────────────────────────────────
@@ -61,4 +67,3 @@ interface IRewardsDistributor {
     /// @notice Get total rewards from fee split lifetime
     function totalFeeRewards() external view returns (uint256);
 }
-

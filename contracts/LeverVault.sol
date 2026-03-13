@@ -281,21 +281,23 @@ contract LeverVault is ILeverVault, ERC4626, AccessControl, ReentrancyGuard, Pau
     }
 
     // ──────────────────────────────────────────────
-    // External — Yield (delegated to RewardsDistributor)
+    // External — Yield (vault computes, distributor releases)
     // ──────────────────────────────────────────────
 
     /// @inheritdoc ILeverVault
     function claim() external nonReentrant returns (uint256 amount) {
-        amount = rewardsDistributor.claim();
+        amount = _computeAndResetYield(msg.sender);
+        if (amount == 0) revert LeverVault__ZeroAmount();
+        rewardsDistributor.releaseRewards(msg.sender, amount);
     }
 
     /// @inheritdoc ILeverVault
     function compound() external nonReentrant whenNotPaused returns (uint256 newShares) {
-        uint256 amount = rewardsDistributor.claim();
+        uint256 amount = _computeAndResetYield(msg.sender);
         if (amount == 0) return 0;
 
-        // Re-deposit claimed yield
-        usdt.safeTransferFrom(msg.sender, address(this), amount);
+        // Release yield to vault, then mint shares
+        rewardsDistributor.releaseRewards(address(this), amount);
         newShares = previewDeposit(amount);
         _mint(msg.sender, newShares);
         _addTranche(msg.sender, uint128(newShares));
@@ -433,6 +435,24 @@ contract LeverVault is ILeverVault, ERC4626, AccessControl, ReentrancyGuard, Pau
     /// @inheritdoc ILeverVault
     function isInCooldown(address user) public view returns (bool) {
         return block.timestamp < _cancelCooldownEnd[user];
+    }
+
+    // ──────────────────────────────────────────────
+    // Internal — Yield Computation
+    // ──────────────────────────────────────────────
+
+    /// @dev Compute pending yield for a user and reset all tranche snapshots to current index
+    function _computeAndResetYield(address user) internal returns (uint256 totalYield) {
+        uint256 currentIndex = rewardsDistributor.rewardPerShareCumulative();
+        Tranche[] storage tranches = _tranches[user];
+        for (uint256 i; i < tranches.length; ++i) {
+            if (currentIndex > tranches[i].rewardSnapshot) {
+                totalYield += uint256(tranches[i].shares).wadMul(
+                    uint256(currentIndex - tranches[i].rewardSnapshot)
+                );
+                tranches[i].rewardSnapshot = uint128(currentIndex);
+            }
+        }
     }
 
     // ──────────────────────────────────────────────

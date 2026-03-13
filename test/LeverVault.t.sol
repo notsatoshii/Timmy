@@ -66,6 +66,7 @@ contract MockRewardsDistributor {
         return _claimAmount;
     }
 
+    function releaseRewards(address, uint256) external {}
     function depositRewards(uint256) external {}
     function receiveUnmatchedFunding(bytes32, uint256) external {}
     function pendingRewards(address) external view returns (uint256) { return 0; }
