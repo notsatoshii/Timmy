@@ -13,10 +13,10 @@ import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.s
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
 /// @title BorrowFeeEngine
-/// @notice Continuous fee on all leveraged positions (1× exempt). Index-based accrual.
+/// @notice Continuous fee on all leveraged positions (1x exempt). Index-based accrual.
 ///         The "ticking clock" that gives every leveraged position a finite economic lifespan.
-/// @dev Rate = base_borrow_rate × M_ttR × (1 + imbalance_surcharge).
-///      M_ttR driven by R_borrow(τ) with τ_ref = 168h. Surcharge on heavy side only.
+/// @dev Rate = base_borrow_rate * M_ttR * (1 + imbalance_surcharge).
+///      M_ttR driven by R_borrow(tau) with tau_ref = 168h. Surcharge on heavy side only.
 contract BorrowFeeEngine is IBorrowFeeEngine, AccessControl, ReentrancyGuard, Pausable {
     using FixedPointMath for uint256;
 
@@ -69,8 +69,9 @@ contract BorrowFeeEngine is IBorrowFeeEngine, AccessControl, ReentrancyGuard, Pa
     mapping(bytes32 => uint256) private _longBorrowIndex;
     mapping(bytes32 => uint256) private _shortBorrowIndex;
 
-    /// @notice Last accrual timestamp per market
-    mapping(bytes32 => uint256) private _lastAccrualTime;
+    /// @notice Last accrual timestamp per market per side
+    mapping(bytes32 => uint256) private _longLastAccrualTime;
+    mapping(bytes32 => uint256) private _shortLastAccrualTime;
 
     /// @notice Per-market risk parameters (set by admin/keeper)
     mapping(bytes32 => uint256) public sigmaCurrent;
@@ -160,7 +161,7 @@ contract BorrowFeeEngine is IBorrowFeeEngine, AccessControl, ReentrancyGuard, Pa
     {
         IPositionManager.Position memory pos = positionManager.getPosition(positionId);
 
-        // 1× positions are exempt
+        // 1x positions are exempt
         if (pos.leverage == WAD) return 0;
         if (!pos.isOpen) return 0;
 
@@ -192,7 +193,7 @@ contract BorrowFeeEngine is IBorrowFeeEngine, AccessControl, ReentrancyGuard, Pa
         returns (uint256 annualized)
     {
         uint256 hourly = _computeBorrowRate(marketId, isLong);
-        // Annualized = hourly × 8760 hours/year
+        // Annualized = hourly * 8760 hours/year
         annualized = hourly * 8760;
     }
 
@@ -203,7 +204,9 @@ contract BorrowFeeEngine is IBorrowFeeEngine, AccessControl, ReentrancyGuard, Pa
         override
         returns (uint256 index)
     {
-        uint256 lastAccrual = _lastAccrualTime[marketId];
+        uint256 lastAccrual = isLong
+            ? _longLastAccrualTime[marketId]
+            : _shortLastAccrualTime[marketId];
         index = isLong ? _longBorrowIndex[marketId] : _shortBorrowIndex[marketId];
 
         // If asOfTimestamp is at or before the last accrual, return the stored index
@@ -228,7 +231,8 @@ contract BorrowFeeEngine is IBorrowFeeEngine, AccessControl, ReentrancyGuard, Pa
         if (_longBorrowIndex[marketId] == 0) {
             _longBorrowIndex[marketId] = WAD;
             _shortBorrowIndex[marketId] = WAD;
-            _lastAccrualTime[marketId] = block.timestamp;
+            _longLastAccrualTime[marketId] = block.timestamp;
+            _shortLastAccrualTime[marketId] = block.timestamp;
         }
     }
 
@@ -266,7 +270,9 @@ contract BorrowFeeEngine is IBorrowFeeEngine, AccessControl, ReentrancyGuard, Pa
 
     /// @dev Accrue borrow index for a single market side
     function _accrueIndex(bytes32 marketId, bool isLong) internal {
-        uint256 lastAccrual = _lastAccrualTime[marketId];
+        uint256 lastAccrual = isLong
+            ? _longLastAccrualTime[marketId]
+            : _shortLastAccrualTime[marketId];
         if (lastAccrual == 0) return; // Market not initialized
 
         uint256 deltaT = block.timestamp - lastAccrual;
@@ -278,13 +284,13 @@ contract BorrowFeeEngine is IBorrowFeeEngine, AccessControl, ReentrancyGuard, Pa
 
         if (isLong) {
             _longBorrowIndex[marketId] += indexDelta;
+            _longLastAccrualTime[marketId] = block.timestamp;
             emit BorrowIndexUpdated(marketId, true, _longBorrowIndex[marketId], rate, block.timestamp);
         } else {
             _shortBorrowIndex[marketId] += indexDelta;
+            _shortLastAccrualTime[marketId] = block.timestamp;
             emit BorrowIndexUpdated(marketId, false, _shortBorrowIndex[marketId], rate, block.timestamp);
         }
-
-        _lastAccrualTime[marketId] = block.timestamp;
     }
 
     /// @dev Compute the current borrow rate for a market side
@@ -293,13 +299,13 @@ contract BorrowFeeEngine is IBorrowFeeEngine, AccessControl, ReentrancyGuard, Pa
         // 1. Get R_borrow_adjusted
         uint256 rBorrowAdj = _getRBorrowAdjusted(marketId);
 
-        // 2. M_ttR = 1.0 + (25.0 - 1.0) × (1 - R_borrow_adjusted)
+        // 2. M_ttR = 1.0 + (25.0 - 1.0) * (1 - R_borrow_adjusted)
         uint256 mTtR = RiskCurves.borrowMttR(rBorrowAdj);
 
         // 3. Imbalance surcharge (heavy side only)
         uint256 surcharge = _computeSurcharge(marketId, isLong);
 
-        // 4. rate = BASE_BORROW_RATE × M_ttR × (1 + surcharge)
+        // 4. rate = BASE_BORROW_RATE * M_ttR * (1 + surcharge)
         rate = BASE_BORROW_RATE.wadMul(mTtR).wadMul(WAD + surcharge);
     }
 

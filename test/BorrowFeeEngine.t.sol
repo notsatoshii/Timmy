@@ -16,7 +16,6 @@ contract MockMarketRegistryBorrow {
     struct MockMarket {
         uint256 tau;
         bool live;
-        bytes32[] activeMarkets;
     }
 
     mapping(bytes32 => MockMarket) private _markets;
@@ -191,7 +190,7 @@ contract BorrowFeeEngineTest is Test {
         uint256 indexAfterAccrual = engine.getBorrowIndex(MARKET_A, true);
         assertGt(indexAfterAccrual, WAD, "Index should have grown");
 
-        // Try re-initializing — should be no-op
+        // Try re-initializing - should be no-op
         engine.initializeMarketIndex(MARKET_A);
         assertEq(engine.getBorrowIndex(MARKET_A, true), indexAfterAccrual, "Should not reinitialize");
     }
@@ -201,17 +200,17 @@ contract BorrowFeeEngineTest is Test {
     // ──────────────────────────────────────────────
 
     function test_getMttR_farFromResolution() public view {
-        // τ = 48h, M_market = 1.0
-        // R_borrow = 1 - e^(-2 * 48/168) = 1 - e^(-0.571...) ≈ 0.4353
-        // M_ttR = 1 + 24 × (1 - 0.4353) = 1 + 24 × 0.5647 ≈ 14.55
+        // tau = 48h, M_market = 1.0
+        // R_borrow = 1 - e^(-2 * 48/168) ~= 0.4353
+        // M_ttR = 1 + 24 * (1 - 0.4353) ~= 14.55
         uint256 mttR = engine.getMttR(MARKET_A);
         assertGt(mttR, 14e18, "M_ttR should be > 14");
         assertLt(mttR, 15e18, "M_ttR should be < 15");
     }
 
     function test_getMttR_nearResolution() public {
-        // τ = 1h: R_borrow = 1 - e^(-2/168) ≈ 0.01183
-        // M_ttR = 1 + 24 × (1 - 0.01183) ≈ 24.72
+        // tau = 1h: R_borrow = 1 - e^(-2/168) ~= 0.01183
+        // M_ttR = 1 + 24 * (1 - 0.01183) ~= 24.72
         registry.setMarket(MARKET_A, 1e18, false);
         uint256 mttR = engine.getMttR(MARKET_A);
         assertGt(mttR, 24e18, "M_ttR should be > 24");
@@ -219,7 +218,7 @@ contract BorrowFeeEngineTest is Test {
     }
 
     function test_getMttR_atResolution() public {
-        // τ = 0: R_borrow = 0, M_ttR = 1 + 24 × 1 = 25
+        // tau = 0: R_borrow = 0, M_ttR = 1 + 24 * 1 = 25
         registry.setMarket(MARKET_A, 0, false);
         uint256 mttR = engine.getMttR(MARKET_A);
         assertEq(mttR, 25e18, "M_ttR at tau=0 should be 25");
@@ -243,7 +242,6 @@ contract BorrowFeeEngineTest is Test {
 
         assertGt(longSurcharge, 0, "Long side should have surcharge");
         assertEq(shortSurcharge, 0, "Short side (light) should have no surcharge");
-        // surcharge = 0.4 × 1.0 = 0.4
         assertApproxEqRel(longSurcharge, 4e17, 1e15, "Surcharge should be ~0.4");
     }
 
@@ -264,7 +262,6 @@ contract BorrowFeeEngineTest is Test {
     // ──────────────────────────────────────────────
 
     function test_getCurrentBorrowRate_balanced() public view {
-        // rate = BASE (0.02%) × M_ttR × (1 + 0)
         uint256 rate = engine.getCurrentBorrowRate(MARKET_A, true);
         uint256 mttR = engine.getMttR(MARKET_A);
         uint256 expected = uint256(2e14).wadMul(mttR);
@@ -278,7 +275,6 @@ contract BorrowFeeEngineTest is Test {
         uint256 rateShort = engine.getCurrentBorrowRate(MARKET_A, false);
 
         assertGt(rateLong, rateShort, "Heavy side should pay more");
-        // Long rate = base × M_ttR × (1 + 0.5) = 1.5× short rate
         assertApproxEqRel(rateLong, rateShort * 3 / 2, 1e15, "Long should be 1.5x short");
     }
 
@@ -306,7 +302,6 @@ contract BorrowFeeEngineTest is Test {
     function test_accrueIndex_noOpSameBlock() public {
         uint256 indexBefore = engine.getBorrowIndex(MARKET_A, true);
 
-        // Same block — no time passed
         engine.accrueIndex(MARKET_A, true);
 
         uint256 indexAfter = engine.getBorrowIndex(MARKET_A, true);
@@ -320,7 +315,6 @@ contract BorrowFeeEngineTest is Test {
         engine.accrueIndex(MARKET_A, true);
 
         uint256 indexDelta = engine.getBorrowIndex(MARKET_A, true) - WAD;
-        // Expected: rate (per hour) / 3600 × 3600 = rate
         assertApproxEqRel(indexDelta, rate, 1e15, "1 hour accrual should equal hourly rate");
     }
 
@@ -342,40 +336,24 @@ contract BorrowFeeEngineTest is Test {
     // ──────────────────────────────────────────────
 
     function test_getAccruedFees_basic() public {
-        // Create a leveraged position at current index (WAD)
         uint256 posId = posMgr.createMockPosition(
-            user1,
-            MARKET_A,
-            true,          // isLong
-            1000e18,       // positionSize (notional)
-            100e18,        // collateral
-            10e18,         // leverage (10×)
-            WAD            // borrowIndex snapshot = current
+            user1, MARKET_A, true, 1000e18, 100e18, 10e18, WAD
         );
 
-        // Advance 1 hour and accrue
         vm.warp(block.timestamp + 1 hours);
         engine.accrueIndex(MARKET_A, true);
 
         uint256 fees = engine.getAccruedFees(posId);
         assertGt(fees, 0, "Should have accrued fees");
 
-        // fees = positionSize × indexDelta
         uint256 indexDelta = engine.getBorrowIndex(MARKET_A, true) - WAD;
         uint256 expected = uint256(1000e18).wadMul(indexDelta);
         assertApproxEqRel(fees, expected, 1e15, "Fees should match index delta x size");
     }
 
     function test_getAccruedFees_1xExempt() public {
-        // 1× position should be exempt
         uint256 posId = posMgr.createMockPosition(
-            user1,
-            MARKET_A,
-            true,
-            1000e18,
-            1000e18,  // collateral = notional (1×)
-            WAD,      // leverage = 1×
-            WAD
+            user1, MARKET_A, true, 1000e18, 1000e18, WAD, WAD
         );
 
         vm.warp(block.timestamp + 1 hours);
@@ -399,22 +377,18 @@ contract BorrowFeeEngineTest is Test {
     }
 
     function test_getAccruedFees_twoPositionsDifferentTimes() public {
-        // Position 1 opens now
         uint256 pos1 = posMgr.createMockPosition(
             user1, MARKET_A, true, 1000e18, 100e18, 10e18, WAD
         );
 
-        // Advance 1 hour and accrue
         vm.warp(block.timestamp + 1 hours);
         engine.accrueIndex(MARKET_A, true);
 
-        // Position 2 opens after 1 hour of accrual
         uint256 currentIndex = engine.getBorrowIndex(MARKET_A, true);
         uint256 pos2 = posMgr.createMockPosition(
             user1, MARKET_A, true, 1000e18, 100e18, 10e18, currentIndex
         );
 
-        // Advance another hour
         vm.warp(block.timestamp + 1 hours);
         engine.accrueIndex(MARKET_A, true);
 
@@ -450,7 +424,6 @@ contract BorrowFeeEngineTest is Test {
     // ──────────────────────────────────────────────
 
     function test_computeIndexAt_futureTimestamp() public view {
-        // Should project the index forward
         uint256 futureTs = block.timestamp + 1 hours;
         uint256 projectedLong = engine.computeIndexAt(MARKET_A, true, futureTs);
         uint256 projectedShort = engine.computeIndexAt(MARKET_A, false, futureTs);
@@ -460,13 +433,11 @@ contract BorrowFeeEngineTest is Test {
     }
 
     function test_computeIndexAt_pastTimestamp() public {
-        // Advance and accrue first
         vm.warp(block.timestamp + 2 hours);
         engine.accrueIndex(MARKET_A, true);
 
         uint256 currentIndex = engine.getBorrowIndex(MARKET_A, true);
 
-        // Ask for index at a past time — should return stored index
         uint256 pastTs = block.timestamp - 1 hours;
         uint256 pastIndex = engine.computeIndexAt(MARKET_A, true, pastTs);
 
@@ -474,11 +445,9 @@ contract BorrowFeeEngineTest is Test {
     }
 
     function test_computeIndexAt_matchesActualAccrual() public {
-        // Project what index would be at T+1h
         uint256 targetTs = block.timestamp + 1 hours;
         uint256 projected = engine.computeIndexAt(MARKET_A, true, targetTs);
 
-        // Actually accrue to that time
         vm.warp(targetTs);
         engine.accrueIndex(MARKET_A, true);
         uint256 actual = engine.getBorrowIndex(MARKET_A, true);
@@ -487,39 +456,21 @@ contract BorrowFeeEngineTest is Test {
     }
 
     function test_computeIndexAt_settlementFreeze() public {
-        // Scenario: market resolved externally at T+30min, but we accrue until T+2h
+        // Scenario: market resolved externally at T+30min
+        // computeIndexAt should return a smaller index than full T+2h accrual
         uint256 startTs = block.timestamp;
         uint256 externalResolution = startTs + 30 minutes;
 
-        // Accrue past the resolution time
-        vm.warp(startTs + 2 hours);
-        engine.accrueIndex(MARKET_A, true);
-
-        // computeIndexAt at resolution time should be less than current
-        uint256 frozenIndex = engine.computeIndexAt(MARKET_A, true, externalResolution);
-        uint256 currentIndex = engine.getBorrowIndex(MARKET_A, true);
-
-        // The frozen index is capped at lastAccrual (current), so it returns current
-        // But what we really want to test is projecting from BEFORE the accrual.
-        // Let's do a proper scenario:
-
-        // Reset: new engine
-        BorrowFeeEngine engine2 = new BorrowFeeEngine(
-            admin, address(registry), address(oiLimits), address(posMgr)
-        );
-        vm.warp(startTs);
-        engine2.initializeMarketIndex(MARKET_A);
-        engine2.updateMarketRiskParams(MARKET_A, 0, 0, WAD, WAD, 0, 0);
-
-        // Project from T=0 to T+30min
-        uint256 frozenIdx = engine2.computeIndexAt(MARKET_A, true, externalResolution);
+        // Project from T=0 to T+30min (before any accrual)
+        uint256 frozenIdx = engine.computeIndexAt(MARKET_A, true, externalResolution);
 
         // Now accrue to T+2h
         vm.warp(startTs + 2 hours);
-        engine2.accrueIndex(MARKET_A, true);
-        uint256 fullIdx = engine2.getBorrowIndex(MARKET_A, true);
+        engine.accrueIndex(MARKET_A, true);
+        uint256 fullIdx = engine.getBorrowIndex(MARKET_A, true);
 
         assertGt(fullIdx, frozenIdx, "Full accrual should exceed frozen-at-resolution index");
+        assertGt(frozenIdx, WAD, "Frozen index should still be > WAD (some accrual)");
     }
 
     // ──────────────────────────────────────────────
@@ -527,10 +478,9 @@ contract BorrowFeeEngineTest is Test {
     // ──────────────────────────────────────────────
 
     function test_rate_increasesWhenLive() public {
-        // Not live: τ_eff = τ
         uint256 rateNotLive = engine.getCurrentBorrowRate(MARKET_A, true);
 
-        // Live: τ_eff = τ × 0.30 → closer to resolution → higher M_ttR → higher rate
+        // Live: tau_eff = tau * 0.30 -> closer to resolution -> higher M_ttR
         registry.setMarket(MARKET_A, 48e18, true);
         uint256 rateLive = engine.getCurrentBorrowRate(MARKET_A, true);
 
@@ -591,7 +541,7 @@ contract BorrowFeeEngineTest is Test {
     }
 
     function test_mttR_veryFarFromResolution() public {
-        // τ = 720h (30 days): R_borrow should be large, M_ttR close to 1
+        // tau = 720h (30 days): R_borrow should be large, M_ttR close to 1
         registry.setMarket(MARKET_A, 720e18, false);
         uint256 mttR = engine.getMttR(MARKET_A);
         assertLt(mttR, 2e18, "M_ttR far from resolution should be close to 1");
