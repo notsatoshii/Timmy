@@ -28,7 +28,7 @@ AUTHORIZED_USER_ID = 422985839
 PROJECT_DIR = "/root/lever-protocol"
 CLAUDE_CODE_BIN = "claude"  # assumes claude is in PATH
 MAX_TG_MESSAGE_LENGTH = 4000  # leave buffer under 4096
-CLAUDE_TIMEOUT = 300  # 5 minutes max per claude invocation
+CLAUDE_TIMEOUT = 600  # 5 minutes max per claude invocation
 LOG_FILE = "/root/lever-protocol/control-plane/bot.log"
 
 # ─── Logging ──────────────────────────────────────────────────────────────────
@@ -226,7 +226,7 @@ def cmd_lessons(chat_id: int):
     """Show lessons learned."""
     path = Path(PROJECT_DIR) / "KNOWLEDGE" / "lessons.md"
     if path.exists():
-        content = path.read_text()[-3000:]  # last 3000 chars
+        content = path.read_text()[-6000:]  # last 6000 chars
         tg_send(chat_id, f"📚 Lessons (tail)\n\n{content}")
     else:
         tg_send(chat_id, "📚 No lessons.md found yet.")
@@ -236,7 +236,7 @@ def cmd_buildlog(chat_id: int):
     """Show build log."""
     path = Path(PROJECT_DIR) / "BUILD_LOG.md"
     if path.exists():
-        content = path.read_text()[-3000:]
+        content = path.read_text()[-6000:]
         tg_send(chat_id, f"🏗️ Build Log (tail)\n\n{content}")
     else:
         tg_send(chat_id, "🏗️ No BUILD_LOG.md found yet.")
@@ -277,7 +277,7 @@ def cmd_test(chat_id: int, args: str):
         result = subprocess.run(
             cmd, capture_output=True, text=True, timeout=120, cwd=PROJECT_DIR
         )
-        output = result.stdout[-3000:] if result.stdout else result.stderr[-3000:]
+        output = result.stdout[-6000:] if result.stdout else result.stderr[-6000:]
         tg_send(chat_id, f"🧪 Test Results\n\n{output}")
     except subprocess.TimeoutExpired:
         tg_send(chat_id, "⏱️ Tests timed out after 120s")
