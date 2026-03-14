@@ -216,17 +216,14 @@ abstract contract IntegrationBase is Test {
         positionManager = new PositionManager(admin);
         accountManager = new AccountManager(admin, address(usdt));
 
-        // ── 3. Deploy fee engines ──
-        borrowFeeEngine = new BorrowFeeEngine(admin, address(registry), address(oiLimits), address(positionManager));
-
-        // OILimits needs vault for TVL
+        // ── 3. Deploy OILimits first (needed by fee engines) ──
         oiLimits = new OILimits(address(registry), address(vault), admin);
 
-        // Re-deploy BorrowFeeEngine with correct OILimits address
+        // ── 4. Deploy fee engines ──
         borrowFeeEngine = new BorrowFeeEngine(admin, address(registry), address(oiLimits), address(positionManager));
         fundingRateEngine = new FundingRateEngine(admin, address(registry), address(oiLimits), address(positionManager));
 
-        // ── 4. Deploy MarginEngine ──
+        // ── 5. Deploy MarginEngine ──
         marginEngine = new MarginEngine(
             admin,
             address(positionManager),
@@ -236,7 +233,7 @@ abstract contract IntegrationBase is Test {
             address(fundingRateEngine)
         );
 
-        // ── 5. Deploy LeverageModel ──
+        // ── 6. Deploy LeverageModel ──
         leverageModel = new LeverageModel(
             address(vault),
             address(insuranceFund),
@@ -246,7 +243,7 @@ abstract contract IntegrationBase is Test {
             admin
         );
 
-        // ── 6. Deploy ExecutionEngine ──
+        // ── 7. Deploy ExecutionEngine ──
         executionEngine = new ExecutionEngine(
             address(positionManager),
             address(oiLimits),
@@ -260,10 +257,10 @@ abstract contract IntegrationBase is Test {
             admin
         );
 
-        // ── 7. Grant roles ──
+        // ── 8. Grant roles ──
         _grantAllRoles();
 
-        // ── 8. Set up test market ──
+        // ── 9. Set up test market ──
         _setupTestMarket();
 
         vm.stopPrank();
@@ -298,6 +295,10 @@ abstract contract IntegrationBase is Test {
 
         // Activate market
         registry.activateMarket(marketId);
+
+        // Initialize fee engine indices for this market
+        borrowFeeEngine.initializeMarketIndex(marketId);
+        fundingRateEngine.initializeMarketIndex(marketId);
 
         // Set up smoothing params for the oracle
         oracleAdapter.updateSmoothingParams(marketId, IOracleAdapter.SmoothingParams({
