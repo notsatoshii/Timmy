@@ -1,0 +1,39 @@
+{
+  "timestamp": "2026-03-15T15:11:26.388707",
+  "monitoring_start": "2026-03-15T15:10:00Z",
+  "database_health": {
+    "feed_db": {
+      "price_updates": 6,
+      "alerts": 0,
+      "last_price_update": 1773583233.025353
+    },
+    "discovery_db": {
+      "total_markets": 53,
+      "high_score_markets": 14,
+      "last_discovery_update": 1773583597.3986
+    }
+  },
+  "file_health": {
+    "market_config.json": {
+      "exists": true,
+      "size": 7949,
+      "modified": 1773587461.4498844
+    },
+    "demo_markets.json": {
+      "exists": true,
+      "size": 1719,
+      "modified": 1773583251.36791
+    },
+    "candidates.json": {
+      "exists": true,
+      "size": 9030,
+      "modified": 1773583605.4494734
+    },
+    "validation_report.json": {
+      "exists": true,
+      "size": 4209,
+      "modified": 1773582475.8653126
+    }
+  },
+  "uptime_hours": 0.023996863055555553
+}
