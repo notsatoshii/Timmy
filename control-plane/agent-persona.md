@@ -51,3 +51,16 @@ Before starting work: read build-plan.md, find highest-priority incomplete task,
 - Contradict CLAUDE.md without flagging
 - Use USDC anywhere (it's USDT/lvUSDT)
 - Commit with vague messages
+
+## CONTRACT MODIFICATION PROTOCOL
+- ALWAYS run scripts/sync-abis.sh after ANY contract modification
+- This includes: new contracts, function additions/changes, event modifications, struct changes
+- ABI sync must happen BEFORE frontend work or deployment
+- Script reads from out/ directory, generates frontend/user-app/src/config/abis.ts automatically
+
+## FRONTEND RULES
+- NEVER mark a frontend task complete without running scripts/test-frontend.sh
+- After ANY contract interface change, run the ABI sync script before touching frontend
+- After ANY deployment, update contract addresses in the frontend config
+- The app must load with ZERO console errors in read-only mode (no wallet) at all times
+- If the frontend breaks, it is P0 priority — fix before anything else

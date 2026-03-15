@@ -103,6 +103,8 @@ def pick_model(task_description):
         r'integration.*fail', r'lifecycle.*fail',
         r'security', r'access.control', r'attack.*vector',
         r'token.*transfer.*gap', r'settlement.*wir', r'PnL.*transfer',
+        r'redesign', r'polish', r'UI.*UX', r'professional.*theme', r'dark.*theme',
+        r'investor.*demo', r'frontend.*detail.*view', r'portfolio.*dashboard',
     ]
     desc = task_description.lower() if task_description else ""
     for p in opus_patterns:
