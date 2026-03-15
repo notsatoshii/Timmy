@@ -10,6 +10,7 @@ import {
   BORROW_FEE_ENGINE_ABI,
   FUNDING_RATE_ENGINE_ABI,
 } from '../config/abis';
+import { useLivePrices } from '../hooks/useLivePrices';
 
 interface PositionData {
   id: bigint;
@@ -137,11 +138,41 @@ const Positions: React.FC = () => {
     fetchPositionDetails();
   }, [fetchPositionDetails]);
 
+  // Live prices for demo positions
+  const demoMarketIds = ['demo-1', 'demo-2'];
+  const { prices: livePrices, lastUpdate: priceLastUpdate } = useLivePrices({
+    marketIds: demoMarketIds,
+    pollingInterval: 30000,
+    enabled: true
+  });
+
+  // Helper function to calculate PnL based on current vs entry PI
+  const calculatePnL = (isLong: boolean, entryPI: bigint, currentPI: bigint, positionSize: bigint): bigint => {
+    const priceDiff = Number(currentPI) - Number(entryPI);
+    const direction = isLong ? 1 : -1;
+    return BigInt(Math.round(direction * priceDiff * Number(positionSize) / 1e18));
+  };
+
+  // Helper function to create positions with live prices
+  const createLivePosition = (basePosition: Omit<PositionData, 'currentPI' | 'pnl' | 'equity'>, demoMarketId: string): PositionData => {
+    const livePrice = livePrices[demoMarketId];
+    const currentPI = livePrice ? BigInt(Math.round(livePrice.pi * 1e18)) : basePosition.entryPI;
+    const pnl = calculatePnL(basePosition.isLong, basePosition.entryPI, currentPI, basePosition.positionSize);
+    const equity = basePosition.collateral + pnl - basePosition.borrowFees + basePosition.fundingAccrued;
+
+    return {
+      ...basePosition,
+      currentPI,
+      pnl,
+      equity
+    };
+  };
+
   // Mock positions for demo when no real positions exist
-  const demoPositions: PositionData[] = [
+  const baseDemoPositions = [
     {
       id: BigInt(1),
-      marketId: '0x0000000000000000000000000000000000000000000000000000000000000001' as `0x${string}`,
+      marketId: 'demo-1' as `0x${string}`,
       marketName: 'SpaceX IPO by Dec 2026',
       isLong: true,
       collateral: BigInt('1000000000000000000000'), // 1000 USDT
@@ -149,16 +180,13 @@ const Positions: React.FC = () => {
       entryPI: BigInt('350000000000000000'), // 0.35
       entryPrice: BigInt('355000000000000000'), // 0.355 (with impact)
       leverage: BigInt('5000000000000000000'), // 5x
-      currentPI: BigInt('380000000000000000'), // 0.38
-      pnl: BigInt('352000000000000000000'), // +352 USDT
       borrowFees: BigInt('12000000000000000000'), // 12 USDT
       fundingAccrued: BigInt('-3000000000000000000'), // -3 USDT
-      equity: BigInt('1337000000000000000000'), // 1337 USDT
       isOpen: true,
     },
     {
       id: BigInt(2),
-      marketId: '0x0000000000000000000000000000000000000000000000000000000000000002' as `0x${string}`,
+      marketId: 'demo-2' as `0x${string}`,
       marketName: 'US-Iran Ceasefire by Sep 2025',
       isLong: false,
       collateral: BigInt('500000000000000000000'), // 500 USDT
@@ -166,14 +194,16 @@ const Positions: React.FC = () => {
       entryPI: BigInt('280000000000000000'), // 0.28
       entryPrice: BigInt('275000000000000000'), // 0.275
       leverage: BigInt('3000000000000000000'), // 3x
-      currentPI: BigInt('250000000000000000'), // 0.25
-      pnl: BigInt('112500000000000000000'), // +112.5 (short profits from price drop)
       borrowFees: BigInt('5000000000000000000'), // 5 USDT
       fundingAccrued: BigInt('2000000000000000000'), // +2 USDT (received)
-      equity: BigInt('609500000000000000000'), // 609.5 USDT
       isOpen: true,
     },
   ];
+
+  // Create live positions with real-time PnL calculation
+  const demoPositions: PositionData[] = baseDemoPositions.map((basePos, index) =>
+    createLivePosition(basePos, demoMarketIds[index])
+  );
 
   const displayPositions = positions.length > 0 ? positions : (address ? demoPositions : []);
 
@@ -295,14 +325,26 @@ const Positions: React.FC = () => {
       {displayPositions.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
-            <h3 className="text-sm font-medium text-gray-500 mb-1">Net PnL</h3>
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-sm font-medium text-gray-500">Net PnL</h3>
+              <div className="flex items-center">
+                <div className="w-1 h-1 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-xs text-green-600 ml-1">LIVE</span>
+              </div>
+            </div>
             <p className={`text-2xl font-bold font-mono ${totalNetPnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>
               {totalNetPnl >= 0 ? '+' : ''}${totalNetPnl.toFixed(2)}
             </p>
             <p className="text-xs text-gray-500 mt-1">After fees & funding</p>
           </div>
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
-            <h3 className="text-sm font-medium text-gray-500 mb-1">Total Equity</h3>
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-sm font-medium text-gray-500">Total Equity</h3>
+              <div className="flex items-center">
+                <div className="w-1 h-1 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-xs text-green-600 ml-1">LIVE</span>
+              </div>
+            </div>
             <p className="text-2xl font-bold font-mono text-gray-900">${totalEquity.toFixed(2)}</p>
             <p className="text-xs text-gray-500 mt-1">Collateral + net PnL</p>
           </div>
@@ -367,7 +409,13 @@ const Positions: React.FC = () => {
                       <p className="font-semibold font-mono text-gray-900">{formatPrice(position.entryPrice)}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Current PI</p>
+                      <div className="flex items-center space-x-2">
+                        <p className="text-gray-500">Current PI</p>
+                        <div className="flex items-center">
+                          <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
+                          <span className="text-xs text-green-600 ml-1">LIVE</span>
+                        </div>
+                      </div>
                       <p className="font-semibold font-mono text-gray-900">{formatPrice(position.currentPI)}</p>
                     </div>
                     <div>
@@ -395,6 +443,11 @@ const Positions: React.FC = () => {
                         {formatPnl(position.fundingAccrued)}
                       </span></span>
                       <span>Equity: <span className="font-mono text-gray-700">${formatWad(position.equity)}</span></span>
+                      {priceLastUpdate > 0 && (
+                        <span className="text-green-600">
+                          Updated: {new Date(priceLastUpdate).toLocaleTimeString()}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
