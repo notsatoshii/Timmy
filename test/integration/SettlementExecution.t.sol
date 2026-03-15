@@ -35,7 +35,9 @@ contract SettlementExecutionTest is IntegrationBase {
         positionManager.grantRole(positionManager.ENGINE(), address(settlementEngine));
         oiLimits.grantRole(oiLimits.SETTLEMENT_ENGINE_ROLE(), address(settlementEngine));
         accountManager.grantRole(accountManager.ENGINE(), address(settlementEngine));
+        accountManager.grantRole(accountManager.ENGINE(), admin); // for test setup helpers
         oracleAdapter.grantRole(oracleAdapter.KEEPER(), address(settlementEngine));
+        oracleAdapter.grantRole(oracleAdapter.SETTLEMENT(), address(settlementEngine));
         settlementEngine.grantRole(settlementEngine.KEEPER_ROLE(), keeper);
 
         vm.stopPrank();
@@ -52,12 +54,23 @@ contract SettlementExecutionTest is IntegrationBase {
         vm.warp(marketResolutionTime + 1);
 
         // Set pending resolution
-        registry.setPendingResolution(marketId, marketResolutionTime);
+        registry.setPendingResolution(marketId);
 
         // Resolve
-        registry.resolveMarket(marketId, outcome);
+        registry.resolveMarket(marketId, outcome, marketResolutionTime);
 
         vm.stopPrank();
+    }
+
+    /// @dev Helper: deposit collateral into AccountManager and lock it for a user
+    function _depositAndLock(address user, uint256 amount) internal {
+        usdt.mint(user, amount);
+        vm.startPrank(user);
+        usdt.approve(address(accountManager), amount);
+        accountManager.deposit(amount);
+        vm.stopPrank();
+        vm.prank(admin);
+        accountManager.lockCollateral(user, amount);
     }
 
     /// @dev Helper: open opposing positions for a balanced market
@@ -65,6 +78,9 @@ contract SettlementExecutionTest is IntegrationBase {
         uint256 collateral,
         uint256 leverage
     ) internal returns (uint256 longId, uint256 shortId) {
+        // Pre-deposit collateral so settlement can release it
+        _depositAndLock(alice, collateral);
+        _depositAndLock(bob, collateral);
         longId = _openPosition(alice, true, collateral, leverage);
         shortId = _openPosition(bob, false, collateral, leverage);
     }

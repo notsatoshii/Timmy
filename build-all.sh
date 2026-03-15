@@ -7,7 +7,7 @@ run_step() {
   echo "STEP: $1" >> $LOG
   echo "TIME: $(date)" >> $LOG
   echo "========================================" >> $LOG
-  claude --permission-mode bypassPermissions -p "$2" >> $LOG 2>&1
+  claude --dangerously-skip-permissions -p "$2" >> $LOG 2>&1
   echo "" >> $LOG
   echo "FINISHED: $1 at $(date)" >> $LOG
   echo "" >> $LOG

@@ -89,6 +89,11 @@ contract OracleAdapter is IOracleAdapter, AccessControl, ReentrancyGuard, Pausab
         uint256 depth,
         uint256 volume
     ) external onlyRole(ORACLE) nonReentrant whenNotPaused {
+        // 0. Source must be registered and active
+        if (!_sources[msg.sender].isActive) {
+            revert OracleAdapter__SourceNotActive(msg.sender);
+        }
+
         // 1. Market must be active
         IMarketRegistry.MarketState state = MARKET_REGISTRY.getMarketState(marketId);
         if (state != IMarketRegistry.MarketState.ACTIVE) {

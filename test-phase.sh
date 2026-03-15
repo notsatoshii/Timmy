@@ -1,6 +1,6 @@
 #!/bin/bash
-cd /root/lever-protocol
-LOG="/root/lever-protocol/test-phase.log"
+cd /home/lever/lever-protocol
+LOG="/home/lever/lever-protocol/test-phase.log"
 BOT_TOKEN="8541708860:AAGmNKlIeo5Acn6Wssk6HzQR1QfMNX2GXwk"
 CHAT_ID="422985839"
 
@@ -14,7 +14,7 @@ run_step() {
   echo "TIME: $(date)" >> $LOG
   echo "========================================" >> $LOG
   notify "Starting: $1"
-  claude --permission-mode bypassPermissions -p "$2" >> $LOG 2>&1
+  claude --dangerously-skip-permissions -p "$2" >> $LOG 2>&1
   echo "" >> $LOG
   echo "FINISHED: $1 at $(date)" >> $LOG
   echo "" >> $LOG

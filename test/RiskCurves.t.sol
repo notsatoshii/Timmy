@@ -208,8 +208,9 @@ contract RiskCurvesTest is Test {
         assertEq(result, 5e17);
     }
 
-    function test_depthFactor_zeroThreshold() public view {
-        assertEq(harness.computeDepthFactor(0, 0), WAD, "Zero threshold = 1.0");
+    function test_depthFactor_zeroThreshold() public {
+        vm.expectRevert(RiskCurves.RiskCurves__ZeroDepthThreshold.selector);
+        harness.computeDepthFactor(0, 0);
     }
 
     function test_depthFactor_zeroDepth() public view {

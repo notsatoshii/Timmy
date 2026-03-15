@@ -39,6 +39,7 @@ contract OracleAdapterTest is Test {
         oracle.grantRole(oracle.ORACLE(), oracleRole);
         oracle.grantRole(oracle.KEEPER(), keeper);
         oracle.grantRole(oracle.SETTLEMENT(), settlement);
+        oracle.registerSource(oracleRole, WAD);
         vm.stopPrank();
 
         // Create and activate a market
@@ -372,6 +373,34 @@ contract OracleAdapterTest is Test {
     // pushPrice — Access control
     // ─────────────────────────────────────────────────────
 
+    function test_pushPrice_revert_sourceNotActive() public {
+        // Create a new address with ORACLE role but not registered as active source
+        address unregistered = address(0xF1);
+        bytes32 oracleRoleHash = oracle.ORACLE();
+        vm.prank(admin);
+        oracle.grantRole(oracleRoleHash, unregistered);
+
+        vm.prank(unregistered);
+        vm.expectRevert(abi.encodeWithSelector(
+            IOracleAdapter.OracleAdapter__SourceNotActive.selector,
+            unregistered
+        ));
+        oracle.pushPrice(MARKET_ID, 0.5e18, 0.5e18, 0.01e18, 100_000e18, 1_000_000e18);
+    }
+
+    function test_pushPrice_revert_sourceDeactivated() public {
+        // Remove the active source
+        vm.prank(admin);
+        oracle.removeSource(oracleRole);
+
+        vm.prank(oracleRole);
+        vm.expectRevert(abi.encodeWithSelector(
+            IOracleAdapter.OracleAdapter__SourceNotActive.selector,
+            oracleRole
+        ));
+        oracle.pushPrice(MARKET_ID, 0.5e18, 0.5e18, 0.01e18, 100_000e18, 1_000_000e18);
+    }
+
     function test_pushPrice_revert_notOracle() public {
         vm.prank(nobody);
         vm.expectRevert();
@@ -439,10 +468,10 @@ contract OracleAdapterTest is Test {
         oracle.registerSource(src, WAD);
 
         IOracleAdapter.SourceConfig[] memory sources = oracle.getActiveSources();
-        assertEq(sources.length, 1);
-        assertEq(sources[0].source, src);
-        assertEq(sources[0].weight, WAD);
-        assertTrue(sources[0].isActive);
+        assertEq(sources.length, 2);
+        assertEq(sources[1].source, src);
+        assertEq(sources[1].weight, WAD);
+        assertTrue(sources[1].isActive);
     }
 
     function test_removeSource() public {
@@ -457,7 +486,7 @@ contract OracleAdapterTest is Test {
         vm.stopPrank();
 
         IOracleAdapter.SourceConfig[] memory sources = oracle.getActiveSources();
-        assertEq(sources.length, 0);
+        assertEq(sources.length, 1);
     }
 
     function test_removeSource_revert_notRegistered() public {
@@ -478,7 +507,7 @@ contract OracleAdapterTest is Test {
         vm.stopPrank();
 
         IOracleAdapter.SourceConfig[] memory sources = oracle.getActiveSources();
-        assertEq(sources[0].weight, 0.5e18);
+        assertEq(sources[1].weight, 0.5e18);
     }
 
     function test_updateSourceWeight_revert_notRegistered() public {
@@ -610,9 +639,9 @@ contract OracleAdapterTest is Test {
         assertFalse(oracle.isFrozen(MARKET_ID));
     }
 
-    function test_getActiveSources_emptyByDefault() public view {
+    function test_getActiveSources_hasOracleByDefault() public view {
         IOracleAdapter.SourceConfig[] memory sources = oracle.getActiveSources();
-        assertEq(sources.length, 0);
+        assertEq(sources.length, 1);
     }
 
     // ─────────────────────────────────────────────────────
@@ -797,7 +826,7 @@ contract OracleAdapterTest is Test {
         vm.stopPrank();
 
         IOracleAdapter.SourceConfig[] memory sources = oracle.getActiveSources();
-        assertEq(sources.length, 2);
+        assertEq(sources.length, 3);
     }
 
     // ─────────────────────────────────────────────────────

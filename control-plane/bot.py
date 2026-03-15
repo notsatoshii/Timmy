@@ -32,14 +32,14 @@ from pathlib import Path
 
 BOT_TOKEN = os.environ.get("LEVER_BOT_TOKEN", "8541708860:AAGmNKlIeo5Acn6Wssk6HzQR1QfMNX2GXwk")
 AUTHORIZED_USER_ID = 422985839
-PROJECT_DIR = "/root/lever-protocol"
+PROJECT_DIR = "/home/lever/lever-protocol"
 CLAUDE_CODE_BIN = "claude"  # assumes claude is in PATH
 MAX_TG_MESSAGE_LENGTH = 4000  # leave buffer under 4096
-CLAUDE_TIMEOUT = 600  # 10 minutes max per claude invocation
-LOG_FILE = "/root/lever-protocol/control-plane/bot.log"
-HANDOFF_FILE = "/root/lever-protocol/session-handoff.md"
+CLAUDE_TIMEOUT = 1800  # 10 minutes max per claude invocation
+LOG_FILE = "/home/lever/lever-protocol/control-plane/bot.log"
+HANDOFF_FILE = "/home/lever/lever-protocol/session-handoff.md"
 SESSION_LIMIT = 25  # messages before auto-handoff
-SESSION_STATE_FILE = "/root/lever-protocol/control-plane/session-state.json"
+SESSION_STATE_FILE = "/home/lever/lever-protocol/control-plane/session-state.json"
 
 # ─── Logging ──────────────────────────────────────────────────────────────────
 

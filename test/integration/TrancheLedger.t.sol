@@ -43,8 +43,13 @@ contract TrancheLedgerTest is Test {
 
         usdt = new TrancheTestToken();
 
-        distributor = new RewardsDistributor(admin, address(usdt), admin);
+        // Predict vault address so distributor can reference it at construction
+        uint64 nonce = vm.getNonce(admin);
+        address predictedVault = vm.computeCreateAddress(admin, nonce + 1);
+
+        distributor = new RewardsDistributor(admin, address(usdt), predictedVault);
         vault = new LeverVault(admin, address(usdt), address(distributor));
+        require(address(vault) == predictedVault, "vault address mismatch");
 
         distributor.grantRole(distributor.LEVER_VAULT_ROLE(), address(vault));
 
@@ -196,8 +201,9 @@ contract TrancheLedgerTest is Test {
         vm.stopPrank();
 
         // Transfer from alice to bob — should add tranches to bob and consolidate
+        uint256 aliceHalf = vault.balanceOf(alice) / 2;
         vm.prank(alice);
-        vault.transfer(bob, vault.balanceOf(alice) / 2);
+        vault.transfer(bob, aliceHalf);
 
         ILeverVault.Tranche[] memory bobAfter = vault.getTranches(bob);
         assertLe(bobAfter.length, 10); // Should never exceed max
@@ -251,8 +257,9 @@ contract TrancheLedgerTest is Test {
 
         // Fund distributor so it can increase reward index
         usdt.mint(address(distributor), 1_000_000e18);
+        bytes32 feeRouterRole = distributor.FEE_ROUTER_ROLE();
         vm.prank(admin);
-        distributor.grantRole(distributor.FEE_ROUTER_ROLE(), admin);
+        distributor.grantRole(feeRouterRole, admin);
 
         vm.startPrank(alice);
 

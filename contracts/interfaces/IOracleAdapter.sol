@@ -12,6 +12,7 @@ interface IOracleAdapter {
     // ──────────────────────────────────────────────
 
     error OracleAdapter__SourceNotRegistered(address source);
+    error OracleAdapter__SourceNotActive(address source);
     error OracleAdapter__StaleData(bytes32 marketId, uint256 lastUpdate, uint256 threshold);
     error OracleAdapter__InvalidProbability(uint256 pRaw);
     error OracleAdapter__InconsistentPrices(uint256 pYes, uint256 pNo);

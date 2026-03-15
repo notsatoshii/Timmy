@@ -47,22 +47,24 @@ contract LiquidationExecutionTest is IntegrationBase {
     /// @dev Push PI down aggressively through multiple ticks to overcome smoothing
     function _pushPIDown(uint256 target) internal {
         uint256 current = oracleAdapter.getPI(marketId);
-        while (current > target) {
-            uint256 step = current > target + 3e16 ? current - 3e16 : target;
-            vm.warp(block.timestamp + 10);
-            _pushPI(step);
+        uint256 maxIter = 50;
+        while (current > target && maxIter > 0) {
+            vm.warp(block.timestamp + 60);
+            _pushPI(target); // push directly to target each tick, smoothing will converge
             current = oracleAdapter.getPI(marketId);
+            --maxIter;
         }
     }
 
     /// @dev Push PI up aggressively through multiple ticks
     function _pushPIUp(uint256 target) internal {
         uint256 current = oracleAdapter.getPI(marketId);
-        while (current < target) {
-            uint256 step = current + 3e16 < target ? current + 3e16 : target;
-            vm.warp(block.timestamp + 10);
-            _pushPI(step);
+        uint256 maxIter = 50;
+        while (current < target && maxIter > 0) {
+            vm.warp(block.timestamp + 60);
+            _pushPI(target); // push directly to target each tick
             current = oracleAdapter.getPI(marketId);
+            --maxIter;
         }
     }
 
@@ -70,7 +72,7 @@ contract LiquidationExecutionTest is IntegrationBase {
 
     function test_liquidate_closesPosition() public {
         // Open high-leverage long at PI=0.50
-        uint256 posId = _openPosition(alice, true, 1000e18, 5e18);
+        uint256 posId = _openPosition(alice, true, 1000e18, 3e18);
         assertTrue(positionManager.isPositionOpen(posId));
 
         // Push PI down until liquidatable
@@ -106,7 +108,7 @@ contract LiquidationExecutionTest is IntegrationBase {
     }
 
     function test_liquidate_reducesOI() public {
-        uint256 posId = _openPosition(alice, true, 1000e18, 5e18);
+        uint256 posId = _openPosition(alice, true, 1000e18, 3e18);
         uint256 oiBefore = oiLimits.getGlobalOI();
         assertGt(oiBefore, 0);
 
@@ -134,7 +136,7 @@ contract LiquidationExecutionTest is IntegrationBase {
     }
 
     function test_liquidate_shortPosition() public {
-        uint256 posId = _openPosition(alice, false, 1000e18, 5e18);
+        uint256 posId = _openPosition(alice, false, 1000e18, 3e18);
 
         // Push PI up to hurt short
         _pushPIUp(65e16);
@@ -160,7 +162,7 @@ contract LiquidationExecutionTest is IntegrationBase {
 
     function test_liquidate_withBadDebt_insuranceAbsorbs() public {
         // Open high-leverage position
-        uint256 posId = _openPosition(alice, true, 500e18, 5e18);
+        uint256 posId = _openPosition(alice, true, 500e18, 3e18);
 
         // Push PI down dramatically + time passes for borrow fees
         vm.warp(block.timestamp + 6 hours);
@@ -188,8 +190,8 @@ contract LiquidationExecutionTest is IntegrationBase {
 
     function test_batchLiquidate_multiplePositions() public {
         // Open two positions
-        uint256 posId1 = _openPosition(alice, true, 1000e18, 5e18);
-        uint256 posId2 = _openPosition(bob, true, 800e18, 5e18);
+        uint256 posId1 = _openPosition(alice, true, 1000e18, 3e18);
+        uint256 posId2 = _openPosition(bob, true, 800e18, 3e18);
 
         // Push PI down
         _pushPIDown(30e16);
@@ -217,7 +219,7 @@ contract LiquidationExecutionTest is IntegrationBase {
 
     function test_pincerEffect_borrowFeesAlone_causeLiquidation() public {
         // Open position with moderate leverage
-        uint256 posId = _openPosition(alice, true, 1000e18, 5e18);
+        uint256 posId = _openPosition(alice, true, 1000e18, 3e18);
         assertFalse(marginEngine.isLiquidatable(posId));
 
         // Slight adverse PI move
@@ -243,7 +245,7 @@ contract LiquidationExecutionTest is IntegrationBase {
     // ─── Preview ───
 
     function test_previewLiquidation_matchesExecution() public {
-        uint256 posId = _openPosition(alice, true, 1000e18, 5e18);
+        uint256 posId = _openPosition(alice, true, 1000e18, 3e18);
 
         _pushPIDown(30e16);
         vm.prank(admin);
@@ -268,7 +270,7 @@ contract LiquidationExecutionTest is IntegrationBase {
     function test_totalBadDebt_accumulates() public {
         uint256 before = liquidationEngine.totalBadDebt();
 
-        uint256 posId = _openPosition(alice, true, 500e18, 5e18);
+        uint256 posId = _openPosition(alice, true, 500e18, 3e18);
 
         vm.warp(block.timestamp + 12 hours);
         vm.prank(admin);

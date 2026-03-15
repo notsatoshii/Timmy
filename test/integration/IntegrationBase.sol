@@ -278,6 +278,9 @@ abstract contract IntegrationBase is Test {
         // OracleAdapter roles
         oracleAdapter.grantRole(oracleAdapter.ORACLE(), oracle);
         oracleAdapter.grantRole(oracleAdapter.KEEPER(), keeper);
+
+        // Register oracle as an active source (required by pushPrice)
+        oracleAdapter.registerSource(oracle, 1e18);
     }
 
     function _setupTestMarket() internal {
@@ -299,6 +302,42 @@ abstract contract IntegrationBase is Test {
         // Initialize fee engine indices for this market
         borrowFeeEngine.initializeMarketIndex(marketId);
         fundingRateEngine.initializeMarketIndex(marketId);
+
+        // Set market risk params (depthThreshold must be > 0 to avoid RiskCurves__ZeroDepthThreshold)
+        // Using baseline volatility values: sigmaCurrent=sigmaBaseline=0.1, depth=$100k, depthThreshold=$50k
+        borrowFeeEngine.updateMarketRiskParams(
+            marketId,
+            1e17,       // sigmaCurrent = 0.1
+            1e17,       // sigmaBaseline = 0.1
+            100_000e18, // externalDepth = $100k
+            100_000e18, // depthThreshold = $100k (= externalDepth, so depth_factor = 1.0)
+            0,          // marketOI = 0 (no positions yet)
+            0           // globalOI = 0
+        );
+        fundingRateEngine.updateMarketRiskParams(
+            marketId,
+            1e17,       // sigmaCurrent = 0.1
+            1e17,       // sigmaBaseline = 0.1
+            100_000e18, // externalDepth = $100k
+            100_000e18, // depthThreshold = $100k (= externalDepth, so depth_factor = 1.0)
+            0,          // marketOI = 0
+            0           // globalOI = 0
+        );
+        marginEngine.updateMarketRiskParams(
+            marketId,
+            1e17,       // sigmaCurrent = 0.1
+            1e17,       // sigmaBaseline = 0.1
+            100_000e18, // externalDepth = $100k
+            100_000e18, // depthThreshold = $100k (= externalDepth, so depth_factor = 1.0)
+            0,          // marketOI = 0
+            0,          // globalOI = 0
+            0           // marketUtilization = 0
+        );
+        leverageModel.setMarketRiskParams(
+            marketId,
+            1e17,       // sigmaBaseline = 0.1
+            100_000e18  // depthThreshold = $100k (= externalDepth, so depth_factor = 1.0)
+        );
 
         // Set up smoothing params for the oracle
         oracleAdapter.updateSmoothingParams(marketId, IOracleAdapter.SmoothingParams({

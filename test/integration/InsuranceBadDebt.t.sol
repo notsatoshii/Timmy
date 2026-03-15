@@ -88,8 +88,8 @@ contract InsuranceBadDebtTest is Test {
     }
 
     function test_tier3_midIFR() public {
-        // Bring IFR to 5-10%: need balance = 5% of $10M = $500k
-        _fundInsurance(490_000e18); // bootstrap + 490k = 500k
+        // Bring IFR to >5% but ≤10%: need balance > 500k (threshold is strictly >5%)
+        _fundInsurance(491_000e18); // bootstrap + 491k = 501k → IFR = 5.01%
         uint256 ifr = insurance.getIFR();
         assertGt(ifr, 5e16);  // > 5%
         assertLe(ifr, 1e17);  // ≤ 10%
@@ -101,8 +101,8 @@ contract InsuranceBadDebtTest is Test {
     }
 
     function test_tier2_highIFR() public {
-        // Bring IFR to 10-15%: need balance = 10% of $10M = $1M
-        _fundInsurance(990_000e18);
+        // Bring IFR to >10% but ≤15%: need balance > 1M (threshold is strictly >10%)
+        _fundInsurance(991_000e18); // bootstrap + 991k = 1001k → IFR = 10.01%
         uint256 ifr = insurance.getIFR();
         assertGt(ifr, 1e17);    // > 10%
         assertLe(ifr, 15e16);   // ≤ 15%

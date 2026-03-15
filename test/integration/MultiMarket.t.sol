@@ -32,6 +32,12 @@ contract MultiMarketTest is IntegrationBase {
         borrowFeeEngine.initializeMarketIndex(marketId2);
         fundingRateEngine.initializeMarketIndex(marketId2);
 
+        // Set market risk params for market 2
+        borrowFeeEngine.updateMarketRiskParams(marketId2, 1e17, 1e17, 100_000e18, 100_000e18, 0, 0);
+        fundingRateEngine.updateMarketRiskParams(marketId2, 1e17, 1e17, 100_000e18, 100_000e18, 0, 0);
+        marginEngine.updateMarketRiskParams(marketId2, 1e17, 1e17, 100_000e18, 100_000e18, 0, 0, 0);
+        leverageModel.setMarketRiskParams(marketId2, 1e17, 100_000e18);
+
         oracleAdapter.updateSmoothingParams(marketId2, IOracleAdapter.SmoothingParams({
             alpha: 3e17,
             deltaMax: 1e17,

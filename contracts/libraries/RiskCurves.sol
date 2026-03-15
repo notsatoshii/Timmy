@@ -12,6 +12,12 @@ library RiskCurves {
     using FixedPointMath for int256;
 
     // ──────────────────────────────────────────────
+    // Custom Errors
+    // ──────────────────────────────────────────────
+
+    error RiskCurves__ZeroDepthThreshold();
+
+    // ──────────────────────────────────────────────
     // Constants
     // ──────────────────────────────────────────────
 
@@ -100,7 +106,7 @@ library RiskCurves {
         uint256 externalDepth,
         uint256 depthThreshold
     ) internal pure returns (uint256 depthFactor) {
-        if (depthThreshold == 0) return WAD;
+        if (depthThreshold == 0) revert RiskCurves__ZeroDepthThreshold();
         if (externalDepth >= depthThreshold) return WAD;
 
         depthFactor = externalDepth.wadDiv(depthThreshold);
