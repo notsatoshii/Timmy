@@ -88,3 +88,26 @@ After ANY frontend change:
 4. Evaluate: professional or template? Readable? Spacing consistent? Key numbers prominent? Mobile working? Dark theme with #00E8B4 green and #8060FF purple?
 5. If anything looks wrong, fix and re-screenshot
 6. Include screenshot evaluation in shift report
+
+## FRONTEND DESIGN SPEC
+Target aesthetic: Hyperliquid meets Polymarket. Data-dense but clean.
+- Dark theme: backgrounds #050509, #0B0B14, #111120
+- Primary accent: #00E8B4 (electric green) — for positive numbers, active states, CTAs
+- Secondary accent: #8060FF (purple) — for highlights, charts, branding
+- Danger: #FF4868 — for negative PnL, liquidation warnings, errors
+- Warning: #FFB830 — for margin warnings, pending states
+- Typography: Inter or Instrument Sans, not system defaults. Monospace (JetBrains Mono) for all numbers.
+- Layout references: Hyperliquid for trading panel density, dYdX for market overview, GMX for vault/earn page, Polymarket for market cards
+- The yield number (LP APY) must be the most visible element on the Vault page
+- PnL should use green/red coloring with + prefix for profits
+- All financial numbers right-aligned, monospace, consistent decimal places
+- Mobile: bottom tab navigation, cards stack vertically, trading panel simplified
+- NO generic Tailwind templates. NO default shadcn components without customization. Every element should feel intentionally designed.
+
+## DESIGN REFERENCE
+To see reference UIs, use the WebFetch tool or take screenshots:
+- Polymarket homepage (no login needed): https://polymarket.com
+- Hyperliquid trading (no login needed): https://app.hyperliquid.xyz
+- dYdX trading (no login needed): https://trade.dydx.exchange
+- GMX earn page (no login needed): https://app.gmx.io/#/earn
+All show full UI without wallet connection. Fetch these pages and study their layout, spacing, color usage, and information hierarchy before designing LEVER's frontend.

@@ -27,7 +27,7 @@
 - [ ] **BorrowFeeEngine/FundingRateEngine: permissionless accrual** — spec says KEEPER, implementation allows anyone. Safer but deviates.
 - [ ] **FundingRateEngine: routeUnmatchedFunding bookkeeping-only** — emits event but no actual USDT transfer to RewardsDistributor
 - [ ] **LeverVault: weightedAge() stub** — returns tranche count, not weighted age
-- [ ] **Puppeteer Chrome sandboxing issues** — DISCOVERED 2026-03-15. Puppeteer's bundled Chrome missing shared libraries (libatk-1.0.so.0, etc.) in sandboxed environment. System chromium-browser (snap) has xdg-settings issues. Requires proper launch configuration with --no-sandbox, --disable-dev-shm-usage flags and possibly executablePath override for screenshot functionality.
+- [ ] **Puppeteer Chrome sandboxing issues** — CONFIRMED 2026-03-15. Both system chromium-browser (snap, xdg-settings missing) and Puppeteer's bundled Chrome (missing libatk-1.0.so.0, other shared libs) fail to launch in sandboxed environment. Screenshot script functional but blocked by missing dependencies. Would require: apt install libatk1.0-0 libgtk-3-0 libx11-xcb1 libxcomposite1 libxcursor1 libxdamage1 libxi6 libxtst6 libnss3 libxss1 libgconf-2-4 libxrandr2 libasound2 libpangocairo-1.0-0 libcups2 + other GUI libs not available in this environment.
 
 ## FIXED (MarketRegistry — 2026-03-15)
 - [x] **5 role misassignments** — activateMarket/setLive were KEEPER (spec: MARKET_MANAGER), setPendingResolution/resolveMarket were KEEPER/MARKET_MANAGER (spec: ORACLE), voidMarket was MARKET_MANAGER (spec: ADMIN)

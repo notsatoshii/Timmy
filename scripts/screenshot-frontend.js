@@ -12,7 +12,21 @@ const SIZES = [
   { name: 'mobile', width: 375, height: 812 },
 ];
 (async () => {
-  const browser = await puppeteer.launch({ headless: 'new', executablePath: '/usr/bin/chromium-browser', args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+  const browser = await puppeteer.launch({
+    headless: 'new',
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+      '--no-first-run',
+      '--no-zygote',
+      '--disable-gpu',
+      '--disable-background-timer-throttling',
+      '--disable-backgrounding-occluded-windows',
+      '--disable-renderer-backgrounding'
+    ]
+  });
   const outDir = '/home/lever/lever-protocol/frontend/screenshots';
   fs.mkdirSync(outDir, { recursive: true });
   for (const size of SIZES) {
