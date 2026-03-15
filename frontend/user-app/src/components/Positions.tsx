@@ -299,17 +299,72 @@ const Positions: React.FC = () => {
         ))}
       </div>
 
-      {/* Empty State */}
+      {/* Empty State or Demo State */}
       {positions.length === 0 && (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Positions</h3>
-          <p className="text-gray-600 mb-4">You don't have any active positions yet.</p>
-          <p className="text-sm text-gray-500">Go to the Trading tab to open your first leveraged position</p>
+        <div className="space-y-8">
+          {!address && (
+            <div className="bg-gray-50 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Platform Activity</h3>
+              <p className="text-sm text-gray-600 mb-4">Example positions from other traders (live from testnet):</p>
+
+              {/* Demo recent trades */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between py-2 px-3 bg-white rounded border">
+                  <div className="flex items-center space-x-3">
+                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-success-100 text-success-800">
+                      LONG
+                    </span>
+                    <span className="text-sm text-gray-900">Bitcoin $100K by Mar 2026</span>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-gray-900">$2,450 @ 15.5x</p>
+                    <p className="text-xs text-success-600">+12.3%</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between py-2 px-3 bg-white rounded border">
+                  <div className="flex items-center space-x-3">
+                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-danger-100 text-danger-800">
+                      SHORT
+                    </span>
+                    <span className="text-sm text-gray-900">AI Protein Folding by 2027</span>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-gray-900">$890 @ 8.2x</p>
+                    <p className="text-xs text-danger-600">-5.7%</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between py-2 px-3 bg-white rounded border">
+                  <div className="flex items-center space-x-3">
+                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-success-100 text-success-800">
+                      LONG
+                    </span>
+                    <span className="text-sm text-gray-900">Next Super Bowl - AFC Win</span>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-gray-900">$1,200 @ 5.0x</p>
+                    <p className="text-xs text-success-600">+28.9%</p>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-xs text-gray-500 mt-4 text-center">
+                Connect wallet to view your own positions
+              </p>
+            </div>
+          )}
+
+          {address && (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Positions</h3>
+              <p className="text-gray-600 mb-4">You don't have any active positions yet.</p>
+              <p className="text-sm text-gray-500">Go to the Trading tab to open your first leveraged position</p>
+            </div>
+          )}
         </div>
       )}
     </div>

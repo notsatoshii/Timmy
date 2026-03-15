@@ -128,6 +128,14 @@ const Trading: React.FC = () => {
         <p className="text-gray-600">
           Take leveraged positions on binary prediction markets
         </p>
+        {!address && (
+          <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <strong>Demo mode:</strong> Configure your position parameters below.
+              Connect wallet to execute trades.
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -247,7 +255,14 @@ const Trading: React.FC = () => {
 
             <div className="mt-6 space-y-3">
               {/* Action Buttons */}
-              {!accountBalance || accountBalance < parseUsdt(tradeForm.collateral || '0') ? (
+              {!address ? (
+                <div className="text-center py-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <p className="text-sm text-gray-600 mb-3">Connect wallet to execute this trade</p>
+                  <p className="text-xs text-gray-500">
+                    Position value: {calculatePositionSize()} USDT • Leverage: {tradeForm.leverage}x
+                  </p>
+                </div>
+              ) : !accountBalance || accountBalance < parseUsdt(tradeForm.collateral || '0') ? (
                 <div className="space-y-2">
                   <button
                     onClick={handleApproveUsdt}

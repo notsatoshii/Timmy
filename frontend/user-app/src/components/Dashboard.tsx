@@ -65,18 +65,18 @@ const Dashboard: React.FC = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {!isConnected ? (
-          <div className="text-center py-12">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
-              Connect your wallet to start trading
-            </h3>
-            <p className="text-gray-600 mb-8">
-              Connect to Base Sepolia testnet to access LEVER Protocol
+        {/* Always show content - wallet connection is handled by individual components */}
+        {renderContent()}
+
+        {/* Show wallet connection prompt only for transaction-heavy tabs when not connected */}
+        {!isConnected && (activeTab === 'trading' || activeTab === 'positions') && (
+          <div className="fixed bottom-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-4 max-w-sm">
+            <h4 className="font-medium text-gray-900 mb-2">Connect to Trade</h4>
+            <p className="text-sm text-gray-600 mb-3">
+              Connect your wallet to open positions and manage trades
             </p>
             <ConnectButton />
           </div>
-        ) : (
-          renderContent()
         )}
       </main>
     </div>
