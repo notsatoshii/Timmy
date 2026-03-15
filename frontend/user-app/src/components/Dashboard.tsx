@@ -6,6 +6,7 @@ import Markets from './Markets';
 import Trading from './Trading';
 import Vault from './Vault';
 import Positions from './Positions';
+import ErrorBoundary from './ErrorBoundary';
 
 type TabType = 'markets' | 'trading' | 'vault' | 'positions';
 
@@ -23,21 +24,43 @@ const Dashboard: React.FC = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'markets':
-        return <Markets />;
+        return (
+          <ErrorBoundary panelName="Markets">
+            <Markets />
+          </ErrorBoundary>
+        );
       case 'trading':
-        return <Trading />;
+        return (
+          <ErrorBoundary panelName="Trading">
+            <Trading />
+          </ErrorBoundary>
+        );
       case 'vault':
-        return <Vault />;
+        return (
+          <ErrorBoundary panelName="Vault">
+            <Vault />
+          </ErrorBoundary>
+        );
       case 'positions':
-        return <Positions />;
+        return (
+          <ErrorBoundary panelName="Positions">
+            <Positions />
+          </ErrorBoundary>
+        );
       default:
-        return <Markets />;
+        return (
+          <ErrorBoundary panelName="Markets">
+            <Markets />
+          </ErrorBoundary>
+        );
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      <ErrorBoundary panelName="Header">
+        <Header />
+      </ErrorBoundary>
 
       {/* Navigation Tabs */}
       <div className="bg-white shadow">
