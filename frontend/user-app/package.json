@@ -16,7 +16,6 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@wagmi/chains": "^1.8.0",
-    "@walletconnect/ethereum-provider": "^2.23.8",
     "autoprefixer": "^10.4.27",
     "lucide-react": "^0.577.0",
     "postcss": "^8.5.8",
