@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAccount } from 'wagmi';
 import ConnectWallet from './ConnectWallet';
 import Header from './Header';
+import ProtocolStats from './ProtocolStats';
 import Markets from './Markets';
 import Trading from './Trading';
 import Vault from './Vault';
@@ -70,6 +71,11 @@ const Dashboard: React.FC = () => {
     <div className="min-h-screen bg-surface-0">
       <ErrorBoundary panelName="Header">
         <Header />
+      </ErrorBoundary>
+
+      {/* Protocol Stats Banner */}
+      <ErrorBoundary panelName="ProtocolStats">
+        <ProtocolStats />
       </ErrorBoundary>
 
       {/* Navigation Tabs */}
