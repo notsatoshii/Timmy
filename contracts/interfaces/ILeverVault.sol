@@ -102,6 +102,13 @@ interface ILeverVault is IERC4626 {
     /// @notice Get real-time NAV including unrealized trader PnL
     function getNAV() external view returns (uint256 nav);
 
+    /// @notice Transfer USDT from vault to AccountManager to fund trader PnL profit
+    /// @dev Called by ExecutionEngine when a trader closes a profitable position.
+    ///      The unified LP pool backs all trades — this is how winners get paid.
+    /// @param recipient AccountManager address to receive the USDT
+    /// @param amount USDT amount to transfer (WAD)
+    function fundTraderPnL(address recipient, uint256 amount) external;
+
     /// @notice Absorb a bad debt loss into the LP pool NAV
     /// @dev Called by LiquidationEngine when insurance is insufficient.
     ///      Directly reduces NAV. All LPs share the loss pro-rata via share price decrease.

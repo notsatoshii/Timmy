@@ -12,6 +12,9 @@ import { ILeverageModel } from "./interfaces/ILeverageModel.sol";
 import { IFeeRouter } from "./interfaces/IFeeRouter.sol";
 import { IBorrowFeeEngine } from "./interfaces/IBorrowFeeEngine.sol";
 import { IFundingRateEngine } from "./interfaces/IFundingRateEngine.sol";
+import { IAccountManager } from "./interfaces/IAccountManager.sol";
+import { ILeverVault } from "./interfaces/ILeverVault.sol";
+import { IInsuranceFund } from "./interfaces/IInsuranceFund.sol";
 import { RiskCurves } from "./libraries/RiskCurves.sol";
 import { FixedPointMath } from "./libraries/FixedPointMath.sol";
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
@@ -83,6 +86,8 @@ contract ExecutionEngine is IExecutionEngine, AccessControl, ReentrancyGuard, Pa
     IFeeRouter public immutable feeRouter;
     IBorrowFeeEngine public immutable borrowFeeEngine;
     IFundingRateEngine public immutable fundingRateEngine;
+    IAccountManager public immutable accountManager;
+    ILeverVault public immutable leverVault;
 
     // ──────────────────────────────────────────────
     // Constructor
@@ -97,6 +102,8 @@ contract ExecutionEngine is IExecutionEngine, AccessControl, ReentrancyGuard, Pa
     /// @param _feeRouter FeeRouter address
     /// @param _borrowFeeEngine BorrowFeeEngine address
     /// @param _fundingRateEngine FundingRateEngine address
+    /// @param _accountManager AccountManager address
+    /// @param _leverVault LeverVault address (LP pool that backs trades)
     /// @param _admin Initial admin address
     constructor(
         address _positionManager,
@@ -108,13 +115,15 @@ contract ExecutionEngine is IExecutionEngine, AccessControl, ReentrancyGuard, Pa
         address _feeRouter,
         address _borrowFeeEngine,
         address _fundingRateEngine,
+        address _accountManager,
+        address _leverVault,
         address _admin
     ) {
         if (
             _positionManager == address(0) || _oiLimits == address(0) || _marginEngine == address(0)
                 || _oracleAdapter == address(0) || _marketRegistry == address(0) || _leverageModel == address(0)
                 || _feeRouter == address(0) || _borrowFeeEngine == address(0) || _fundingRateEngine == address(0)
-                || _admin == address(0)
+                || _accountManager == address(0) || _leverVault == address(0) || _admin == address(0)
         ) {
             revert ExecutionEngine__ZeroAddress();
         }
@@ -128,6 +137,8 @@ contract ExecutionEngine is IExecutionEngine, AccessControl, ReentrancyGuard, Pa
         feeRouter = IFeeRouter(_feeRouter);
         borrowFeeEngine = IBorrowFeeEngine(_borrowFeeEngine);
         fundingRateEngine = IFundingRateEngine(_fundingRateEngine);
+        accountManager = IAccountManager(_accountManager);
+        leverVault = ILeverVault(_leverVault);
 
         _grantRole(DEFAULT_ADMIN_ROLE, _admin);
         _grantRole(ADMIN_ROLE, _admin);
@@ -181,6 +192,8 @@ contract ExecutionEngine is IExecutionEngine, AccessControl, ReentrancyGuard, Pa
         if (!pos.isOpen) revert ExecutionEngine__PositionNotFound(positionId);
         if (pos.owner != msg.sender) revert ExecutionEngine__NotPositionOwner(positionId, msg.sender);
 
+        accountManager.lockCollateral(msg.sender, amount);
+
         uint256 newCollateral = pos.collateral + amount;
         positionManager.updateCollateral(positionId, newCollateral);
 
@@ -198,6 +211,8 @@ contract ExecutionEngine is IExecutionEngine, AccessControl, ReentrancyGuard, Pa
         if (!marginEngine.canRemoveCollateral(positionId, amount)) {
             revert ExecutionEngine__InsufficientCollateral(pos.collateral - amount, pos.collateral);
         }
+
+        accountManager.releaseCollateral(msg.sender, amount);
 
         uint256 newCollateral = pos.collateral - amount;
         positionManager.updateCollateral(positionId, newCollateral);
@@ -266,22 +281,34 @@ contract ExecutionEngine is IExecutionEngine, AccessControl, ReentrancyGuard, Pa
         }
     }
 
-    /// @dev Compute price, validate margin, create position, emit event
+    /// @dev Compute price, validate margin, settle collateral, create position, emit event
     function _executeOpen(OpenParams calldata params, uint256 notional) private returns (uint256 positionId) {
         OpenContext memory ctx;
         ctx.notional = notional;
         ctx.pi = oracleAdapter.getPI(params.marketId);
         (ctx.entryPrice, ctx.impact) =
             _computeExecutionPrice(params.marketId, params.isLong, notional, ctx.pi, true);
-        ctx.collateralNet = params.collateral - feeRouter.collectTransactionFee(notional);
+        uint256 txFee = feeRouter.collectTransactionFee(notional);
+        ctx.collateralNet = params.collateral - txFee;
 
         _validateMargin(params.marketId, params.isLong, ctx.collateralNet, params.leverage);
+
+        // Lock position collateral in AccountManager
+        accountManager.lockCollateral(msg.sender, ctx.collateralNet);
+
+        // Debit TX fee from user's free balance (fee already routed by FeeRouter)
+        if (txFee > 0) {
+            accountManager.debitPnL(msg.sender, txFee);
+        }
 
         // Increase OI AFTER price computation to avoid double-counting in imbalance_delta.
         // If caps are exceeded, this reverts and the whole tx rolls back.
         oiLimits.increaseOI(params.marketId, msg.sender, params.isLong, ctx.notional);
 
         positionId = _storePosition(params, ctx);
+
+        // Track position ownership in AccountManager
+        accountManager.assignPosition(msg.sender, positionId);
 
         emit PositionOpened(
             positionId, params.marketId, msg.sender, params.isLong,
@@ -313,7 +340,7 @@ contract ExecutionEngine is IExecutionEngine, AccessControl, ReentrancyGuard, Pa
         if (!valid) revert ExecutionEngine__MarginCheckFailed(failedCheck);
     }
 
-    /// @dev Execute the close: compute exit price, emit event
+    /// @dev Execute the close: compute exit price, settle PnL, update state, emit event
     function _executeClose(uint256 positionId, IPositionManager.Position memory pos) private {
         uint256 pi = oracleAdapter.getPI(pos.marketId);
         (uint256 exitPrice,) = _computeExecutionPrice(pos.marketId, pos.isLong, pos.positionSize, pi, false);
@@ -322,12 +349,74 @@ contract ExecutionEngine is IExecutionEngine, AccessControl, ReentrancyGuard, Pa
         uint256 borrowFees = borrowFeeEngine.getAccruedFees(positionId);
         int256 accruedFunding = fundingRateEngine.getAccruedFunding(positionId);
 
+        // Settle PnL: bookkeeping + actual USDT transfers between AccountManager, Vault, FeeRouter
+        uint256 badDebt = _settlePnL(pos.owner, pos.collateral, pnl, borrowFees, accruedFunding);
+
+        if (badDebt > 0) {
+            emit BadDebtRecorded(positionId, pos.owner, badDebt);
+        }
+
+        // Update downstream state
         oiLimits.decreaseOI(pos.marketId, pos.owner, pos.isLong, pos.positionSize);
         positionManager.closePosition(positionId);
+        accountManager.removePosition(pos.owner, positionId);
 
         emit PositionClosed(
             positionId, pos.marketId, pos.owner, exitPrice, pnl, borrowFees, accruedFunding, block.timestamp
         );
+    }
+
+    /// @dev Settle PnL with AccountManager on position close.
+    ///      1. Bookkeeping: release collateral, credit/debit net pnlDelta
+    ///      2. Token transfers: vault pays price profits, AccountManager sends price losses to vault,
+    ///         borrow fees routed through FeeRouter for 50/30/20 split.
+    ///         Funding stays internal to AccountManager (trader-to-trader, no external USDT movement).
+    /// @return badDebt Amount the user could not cover (for InsuranceFund routing)
+    function _settlePnL(
+        address owner,
+        uint256 collateral,
+        int256 pnl,
+        uint256 borrowFees,
+        int256 accruedFunding
+    ) private returns (uint256 badDebt) {
+        accountManager.releaseCollateral(owner, collateral);
+
+        // Net change to user's balance beyond their collateral
+        int256 pnlDelta = pnl - int256(borrowFees) + accruedFunding;
+
+        if (pnlDelta > 0) {
+            accountManager.creditPnL(owner, uint256(pnlDelta));
+        } else if (pnlDelta < 0) {
+            badDebt = accountManager.debitPnL(owner, uint256(-pnlDelta));
+        }
+
+        // ── Token transfers ──
+
+        // Inflow: vault pays trader's price profit
+        if (pnl > 0) {
+            leverVault.fundTraderPnL(address(accountManager), uint256(pnl));
+        }
+
+        // Outflows: price loss → vault, borrow fees → FeeRouter
+        uint256 pnlLoss = pnl < 0 ? uint256(-pnl) : 0;
+        uint256 totalOutflow = pnlLoss + borrowFees;
+
+        if (totalOutflow > 0) {
+            uint256 transferable = badDebt >= totalOutflow ? 0 : totalOutflow - badDebt;
+
+            // FeeRouter has priority (protocol revenue), vault absorbs shortfall from bad debt
+            uint256 toFeeRouter = borrowFees > transferable ? transferable : borrowFees;
+            uint256 toVault = transferable - toFeeRouter;
+            if (toVault > pnlLoss) toVault = pnlLoss;
+
+            if (toVault > 0) {
+                accountManager.transferOut(address(leverVault), toVault);
+            }
+            if (toFeeRouter > 0) {
+                accountManager.transferOut(address(feeRouter), toFeeRouter);
+                feeRouter.routeFees(IFeeRouter.FeeType.BORROW, toFeeRouter);
+            }
+        }
     }
 
     // ──────────────────────────────────────────────

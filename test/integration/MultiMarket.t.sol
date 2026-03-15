@@ -67,6 +67,12 @@ contract MultiMarketTest is IntegrationBase {
         uint256 collateral,
         uint256 leverage
     ) internal returns (uint256 positionId) {
+        // Ensure user has enough balance in AccountManager
+        uint256 currentFree = accountManager.getFreeCollateral(user);
+        if (currentFree < collateral) {
+            _fundUser(user, collateral - currentFree);
+        }
+
         vm.prank(user);
         positionId = executionEngine.openPosition(
             IExecutionEngine.OpenParams({

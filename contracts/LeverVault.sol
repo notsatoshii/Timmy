@@ -318,6 +318,13 @@ contract LeverVault is ILeverVault, ERC4626, AccessControl, ReentrancyGuard, Pau
     }
 
     /// @inheritdoc ILeverVault
+    function fundTraderPnL(address recipient, uint256 amount) external onlyRole(EXECUTION_ENGINE_ROLE) {
+        if (recipient == address(0)) revert LeverVault__ZeroAddress();
+        if (amount == 0) revert LeverVault__ZeroAmount();
+        usdt.safeTransfer(recipient, amount);
+    }
+
+    /// @inheritdoc ILeverVault
     function socializeLoss(uint256 amount) external onlyRole(LIQUIDATION_ENGINE_ROLE) {
         if (amount == 0) revert LeverVault__ZeroAmount();
         _socializedLosses += amount;

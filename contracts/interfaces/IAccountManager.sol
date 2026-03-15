@@ -55,6 +55,23 @@ interface IAccountManager {
     /// @return badDebt Amount that could not be debited (WAD)
     function debitPnL(address user, uint256 amount) external returns (uint256 badDebt);
 
+    /// @notice Assign a position to a user (called by ExecutionEngine on position open)
+    /// @param user Position owner
+    /// @param positionId Position identifier
+    function assignPosition(address user, uint256 positionId) external;
+
+    /// @notice Remove a position from a user (called on position close)
+    /// @param user Position owner
+    /// @param positionId Position identifier
+    function removePosition(address user, uint256 positionId) external;
+
+    /// @notice Transfer USDT out to another contract (e.g. LeverVault on trader loss)
+    /// @dev Called by ExecutionEngine when a trader closes with a net loss.
+    ///      The loss amount is sent back to the LP pool.
+    /// @param to Destination address (LeverVault)
+    /// @param amount USDT amount to transfer (WAD)
+    function transferOut(address to, uint256 amount) external;
+
     // ──────────────────────────────────────────────
     // External — View
     // ──────────────────────────────────────────────

@@ -121,6 +121,9 @@ contract PositionLifecycleTest is IntegrationBase {
         IPositionManager.Position memory posBefore = positionManager.getPosition(posId);
         uint256 addAmount = 200e18;
 
+        // Fund alice with additional collateral
+        _fundUser(alice, addAmount);
+
         vm.prank(alice);
         executionEngine.addCollateral(posId, addAmount);
 
@@ -235,6 +238,7 @@ contract PositionLifecycleTest is IntegrationBase {
         assertTrue(positionManager.isPositionOpen(posId));
 
         // 2. Add collateral
+        _fundUser(alice, 200e18);
         vm.prank(alice);
         executionEngine.addCollateral(posId, 200e18);
 

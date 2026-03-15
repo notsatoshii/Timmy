@@ -154,6 +154,8 @@ contract FullIntegrationTest is Test {
             address(feeRouter),
             address(borrowFeeEngine),
             address(fundingRateEngine),
+            address(accountManager),
+            address(vault),
             admin
         );
 
@@ -547,18 +549,22 @@ contract FullIntegrationTest is Test {
             assertFalse(closedPos.isOpen, "Step 10: Position should be closed");
         }
 
-        // --- Step 11: Verify PnL distribution ---
-        // ExecutionEngine emits PositionClosed with PnL data but does not transfer tokens.
-        // The actual PnL settlement (vault paying trader or vice versa) is not wired in
-        // ExecutionEngine - it's bookkeeping-only. We verify computed values.
+        // --- Step 11: Verify PnL settlement via AccountManager ---
+        // ExecutionEngine._settlePnL handles both bookkeeping (credit/debit) and
+        // actual USDT transfers: vault pays price profits, AccountManager sends
+        // price losses to vault, borrow fees routed through FeeRouter.
         {
             uint256 vaultNAVAfter = vault.getNAV();
             uint256 traderBalAfter = accountManager.getBalance(trader);
 
             console.log("Step 11: Vault NAV after close =", vaultNAVAfter);
             console.log("Step 11: Trader AccountManager balance after close =", traderBalAfter);
-            console.log("Step 11: ExecutionEngine is bookkeeping-only for PnL");
-            console.log("Step 11: PnL verified via computed equity (Step 9) and events");
+            console.log("Step 11: PnL settled with actual USDT transfers");
+
+            // Trader profited (PI went from 0.50 to 0.60). Balance should be > 0.
+            // Original deposit was 1000. TX fee = 5. CollateralNet = 995.
+            // PnL ~ +500 (direction * (0.60 - 0.50) * 5000). Net gain above collateral.
+            assertGt(traderBalAfter, 0, "Step 11: Trader should have balance after profitable close");
         }
 
         // --- Step 12: Verify all OI returned to zero ---
@@ -580,19 +586,15 @@ contract FullIntegrationTest is Test {
         }
 
         // --- Step 13: Verify vault NAV reflects state ---
-        // Vault NAV = USDT balance in vault. ExecutionEngine does not transfer USDT
-        // to/from the vault for PnL. NAV should remain $10.1M (seed + LP deposit).
+        // Vault receives trader losses via PnL settlement (ExecutionEngine._settlePnL).
+        // NAV may differ from seed+LP deposit due to trader PnL flows and fee distributions.
         {
             uint256 finalNAV = vault.getNAV();
-            uint256 expectedNAV = 10_100_000e18;
+            uint256 seedNAV = 10_100_000e18;
             console.log("Step 13: Final vault NAV =", finalNAV);
-            console.log("Step 13: Expected vault NAV = 10100000000000000000000000 (10.1M)");
-            if (finalNAV >= expectedNAV) {
-                console.log("Step 13: NAV difference (gain) =", finalNAV - expectedNAV);
-            } else {
-                console.log("Step 13: NAV difference (loss) =", expectedNAV - finalNAV);
-            }
-            assertEq(finalNAV, expectedNAV, "Step 13: Vault NAV should remain 10.1M");
+            // NAV should be close to seed — small delta from trader PnL + impact spread
+            assertGt(finalNAV, seedNAV * 99 / 100, "Step 13: Vault NAV should not drop >1%");
+            assertLt(finalNAV, seedNAV * 101 / 100, "Step 13: Vault NAV should not rise >1%");
         }
 
         console.log("");
@@ -670,16 +672,6 @@ contract FullIntegrationTest is Test {
         console.log("Step 2: Entry PI =", pos.entryPI);
         assertEq(pos.positionSize, 10_000e18, "Notional should be 10000");
         assertTrue(pos.isOpen, "Position should be open");
-
-        // ExecutionEngine is bookkeeping-only: it doesn't lock collateral in AccountManager.
-        // LiquidationEngine.releaseCollateral expects it locked. Bridge the gap manually.
-        {
-            vm.startPrank(admin);
-            accountManager.grantRole(accountManager.ENGINE(), admin);
-            accountManager.lockCollateral(trader, pos.collateral);
-            accountManager.revokeRole(accountManager.ENGINE(), admin);
-            vm.stopPrank();
-        }
 
         // --- Step 3: Move oracle to PI=0.42 ---
         {

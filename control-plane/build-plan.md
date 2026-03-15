@@ -51,7 +51,7 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 - [ ] **P1** Verify InsuranceBadDebt.t.sol passes
 - [ ] **P1** Verify FeeFlow.t.sol passes
 - [ ] **P1** Verify TrancheLedger.t.sol passes
-- [ ] **P0** Fix ExecutionEngine token transfer gap — bookkeeping only, no USDT moves on PnL settlement
+- [x] **P0** Fix ExecutionEngine token transfer gap — FIXED 2026-03-15. Vault ↔ AccountManager USDT transfers wired. Borrow fees routed via FeeRouter with real transfers.
 
 ## Phase 4: Deployment Prep
 - [ ] Deployment scripts (Foundry, ordered by dependency)
@@ -83,3 +83,4 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 [2026-03-15] Phase 2 P1 audits complete — all 9 contracts audited. BorrowFeeEngine, FundingRateEngine, FeeRouter, RewardsDistributor, InsuranceFund: PASS. LeverVault: PASS (stubs noted). LiquidationEngine: issues noted. SettlementEngine: PASS (event issue).
 [2026-03-15] Liquidation integration tests verified — LiquidationFlow.t.sol (10/10) + LiquidationExecution.t.sol (9/9) both pass clean. Test-phase hang resolved.
 [2026-03-15] Settlement integration tests verified — SettlementFlow.t.sol (11/11) + SettlementExecution.t.sol (12/12) both pass clean. Market resolution, PI snapshots, and claim payouts all working correctly.
+[2026-03-15] ExecutionEngine PnL token transfer gap FIXED — _settlePnL now moves actual USDT: vault pays price profits via fundTraderPnL, AccountManager sends price losses to vault via transferOut, borrow fees routed to FeeRouter with real USDT. Bad debt tracked via BadDebtRecorded event. Integration tests updated to fund users via AccountManager.deposit before opening positions. 1016 tests pass, 0 fail.

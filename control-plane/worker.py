@@ -23,8 +23,8 @@ TG_TOKEN = "8541708860:AAGmNKlIeo5Acn6Wssk6HzQR1QfMNX2GXwk"
 TG_CHAT = "422985839"
 
 TASK_TIMEOUT = 2700       # 45 min max per Claude Code invocation
-REST_BETWEEN_TASKS = 120  # 2 min rest between tasks (let system breathe)
-REST_WHEN_IDLE = 1800     # 30 min rest when all tasks done before re-checking
+REST_BETWEEN_TASKS = 5  # 2 min rest between tasks (let system breathe)
+REST_WHEN_IDLE = 300     # 30 min rest when all tasks done before re-checking
 MAX_CONSECUTIVE_FAILS = 3 # after 3 fails in a row, long rest
 
 ICT = timezone(timedelta(hours=7))
@@ -119,6 +119,9 @@ def execute_task(task_raw, task_display):
     report_path = f"{WORKER_LOGS}/report-{ts}.md"
 
     model, model_short = pick_model(task_display)
+    def ts():
+        return datetime.now(ICT).strftime('[%H:%M:%S] ')
+
     log(f"Task: {task_display[:80]}")
     log(f"Model: {model_short}")
 
@@ -184,15 +187,95 @@ Stay in character. Be efficient. Do ONE task well.
 
     # Run Claude Code
     try:
+        proc = subprocess.Popen(
+            ['claude', '--dangerously-skip-permissions', '--model', model,
+             '--output-format', 'stream-json', '--verbose', '-p', prompt],
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            cwd=PROJECT,
+            env={**os.environ, 'PATH': ENV_PATH},
+            bufsize=1
+        )
         with open(log_path, 'w') as logfile:
-            proc = subprocess.Popen(
-                ['claude', '--dangerously-skip-permissions', '--model', model, '-p', prompt],
-                stdout=logfile, stderr=subprocess.STDOUT,
-                cwd=PROJECT,
-                env={**os.environ, 'PATH': ENV_PATH}
-            )
-            proc.wait(timeout=TASK_TIMEOUT)
-            exit_code = proc.returncode
+            start = time.time()
+            while True:
+                line = proc.stdout.readline()
+                if not line and proc.poll() is not None:
+                    break
+                if line:
+                    try:
+                        chunk = json.loads(line.decode('utf-8', errors='replace'))
+                        ctype = chunk.get('type', '')
+                        if ctype == 'assistant':
+                            # Assistant message — extract text from content blocks
+                            msg = chunk.get('message', {})
+                            for block in msg.get('content', []):
+                                if block.get('type') == 'text':
+                                    logfile.write(block['text'] + '\n')
+                                    logfile.flush()
+                                elif block.get('type') == 'tool_use':
+                                    name = block.get('name', '?')
+                                    inp = block.get('input', {})
+                                    if not isinstance(inp, dict):
+                                        inp = {}
+                                    # Show detail based on tool type
+                                    if name in ('Read', 'read'):
+                                        logfile.write(ts() + '[Read] ' + str(inp.get('file_path', inp.get('path', '?')))[:200] + '\n')
+                                    elif name in ('Edit', 'edit'):
+                                        logfile.write(ts() + '[Edit] ' + str(inp.get('file_path', inp.get('path', '?')))[:200] + '\n')
+                                        if inp.get('old_string'):
+                                            logfile.write('  - ' + str(inp['old_string'])[:100].replace('\n',' ') + '\n')
+                                        if inp.get('new_string'):
+                                            logfile.write('  + ' + str(inp['new_string'])[:100].replace('\n',' ') + '\n')
+                                    elif name in ('Write', 'write'):
+                                        logfile.write(ts() + '[Write] ' + str(inp.get('file_path', inp.get('path', '?')))[:200] + '\n')
+                                    elif name in ('Bash', 'bash'):
+                                        logfile.write(ts() + '$ ' + str(inp.get('command', '?'))[:300] + '\n')
+                                    elif name in ('Glob', 'glob'):
+                                        logfile.write(ts() + '[Glob] ' + str(inp.get('pattern', '?'))[:200] + '\n')
+                                    elif name in ('Grep', 'grep'):
+                                        logfile.write(ts() + '[Grep] ' + str(inp.get('pattern', '?'))[:100] + ' in ' + str(inp.get('path', '?'))[:100] + '\n')
+                                    elif name in ('WebSearch', 'web_search'):
+                                        logfile.write(ts() + '[Search] ' + str(inp.get('query', '?'))[:200] + '\n')
+                                    elif name in ('TodoWrite', 'todo_write'):
+                                        logfile.write(ts() + '[Todo] ' + str(inp.get('todos', '?'))[:200] + '\n')
+                                    else:
+                                        logfile.write(ts() + '[Tool: ' + name + '] ' + str(inp)[:150] + '\n')
+                                    logfile.flush()
+                                elif block.get('type') == 'tool_result':
+                                    content = block.get('content', '')
+                                    if isinstance(content, str) and content.strip():
+                                        lines = content.strip().split('\n')
+                                        preview = '\n'.join(lines[:8])
+                                        if len(lines) > 8:
+                                            preview += '\n... (' + str(len(lines)) + ' lines)'
+                                        logfile.write(preview + '\n')
+                                    elif isinstance(content, list):
+                                        for sub in content:
+                                            if isinstance(sub, dict) and sub.get('text'):
+                                                lines = sub['text'].strip().split('\n')
+                                                preview = '\n'.join(lines[:8])
+                                                if len(lines) > 8:
+                                                    preview += '\n... (' + str(len(lines)) + ' lines)'
+                                                logfile.write(preview + '\n')
+                                    logfile.flush()
+                        elif ctype == 'result':
+                            logfile.write('\n' + ts() + '=== RESULT ===\n')
+                            logfile.write(chunk.get('result', '') + '\n')
+                            logfile.write('Cost: $' + str(round(chunk.get('total_cost_usd', 0), 4)) + '\n')
+                            logfile.write('Duration: ' + str(chunk.get('duration_ms', 0) // 1000) + 's\n')
+                            logfile.flush()
+                        elif ctype == 'system':
+                            logfile.write(ts() + '[Session started — model: ' + chunk.get('model', '?') + ']\n')
+                            logfile.flush()
+                    except Exception:
+                        logfile.write(line.decode('utf-8', errors='replace'))
+                        logfile.flush()
+                if time.time() - start > TASK_TIMEOUT:
+                    proc.kill()
+                    logfile.write('\n[TIMEOUT]\n')
+                    logfile.flush()
+                    break
+            exit_code = proc.returncode if proc.returncode is not None else -1
     except subprocess.TimeoutExpired:
         proc.kill()
         log(f"TIMEOUT after {TASK_TIMEOUT}s")

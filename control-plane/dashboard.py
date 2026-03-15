@@ -8,6 +8,61 @@ Run: python3 dashboard.py — Access: http://SERVER_IP:8080
 import http.server, json, os, subprocess, glob, urllib.parse, re, time, traceback
 from datetime import datetime, timezone, timedelta
 
+
+def parse_stream_json(raw_text):
+    """Parse stream-json log into readable text."""
+    lines = raw_text.strip().split('\n')
+    output = []
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        if not line.startswith('{'):
+            output.append(line)
+            continue
+        try:
+            chunk = json.loads(line)
+            ctype = chunk.get('type', '')
+            if ctype == 'system':
+                model = chunk.get('model', '?')
+                output.append(f'[Session started — model: {model}]')
+            elif ctype == 'assistant':
+                msg = chunk.get('message', {})
+                for block in msg.get('content', []):
+                    bt = block.get('type', '')
+                    if bt == 'text':
+                        output.append(block['text'])
+                    elif bt == 'thinking':
+                        thought = block.get('thinking', '')
+                        if thought:
+                            output.append(f'[Thinking] {thought[:500]}')
+                    elif bt == 'tool_use':
+                        name = block.get('name', '?')
+                        inp = block.get('input', {})
+                        output.append(f'[Tool: {name}]')
+                        if isinstance(inp, dict):
+                            cmd = inp.get('command', inp.get('content', inp.get('path', '')))
+                            if cmd:
+                                output.append(f'  > {str(cmd)[:300]}')
+                    elif bt == 'tool_result':
+                        content = block.get('content', '')
+                        if isinstance(content, str) and content:
+                            output.append(content[:500])
+                        elif isinstance(content, list):
+                            for sub in content:
+                                if isinstance(sub, dict) and sub.get('text'):
+                                    output.append(sub['text'][:500])
+            elif ctype == 'result':
+                output.append('')
+                output.append('=== RESULT ===')
+                output.append(chunk.get('result', ''))
+                cost = chunk.get('total_cost_usd', 0)
+                dur = chunk.get('duration_ms', 0)
+                output.append(f'Cost: ${round(cost, 4)} | Duration: {dur // 1000}s')
+        except (json.JSONDecodeError, Exception):
+            output.append(line)
+    return '\n'.join(output)
+
 PORT = 8080
 PROJECT = "/home/lever/lever-protocol"
 CONTROL = f"{PROJECT}/control-plane"
@@ -205,7 +260,7 @@ def api_live(n=200):
             "elapsed": None, "next_task": next_task(),
         }
     return {
-        "log": read_file(log_path, tail=n),
+        "log": parse_stream_json(read_file(log_path, tail=n)),
         "file": os.path.basename(log_path),
         "size": fsize(log_path),
         "running": running,
@@ -228,7 +283,10 @@ def api_log(path):
         return f"[Access denied: {path} not in allowed directories]"
     if not os.path.exists(real):
         return f"[File not found: {path}]"
-    return read_file(path)
+    content = read_file(path)
+    if path.endswith(".log"):
+        return parse_stream_json(content)
+    return content
 
 def api_trigger():
     global _last_trigger
@@ -511,7 +569,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Instrument Sans',sans-ser
 // ========== State ==========
 let DATA = {};
 let liveTimer = null;
-let prevLogLen = 0;
+let prevLogLen = -1;
 let wasRunning = false;
 let lastRefresh = 0;
 
@@ -588,8 +646,8 @@ function fetchLive() {
       var newLen = d.log ? d.log.length : 0;
 
       // Only re-render if content changed
-      if (newLen !== prevLogLen) {
-        el.innerHTML = colorize(d.log || 'No output yet.');
+      if (newLen !== prevLogLen || prevLogLen === -1) {
+        el.innerHTML = colorize(d.log || 'Claude Code is thinking... output appears when it starts writing.');
         prevLogLen = newLen;
         if (document.getElementById('autoscroll').checked) {
           el.scrollTop = el.scrollHeight;

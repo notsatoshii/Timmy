@@ -58,6 +58,7 @@ interface IExecutionEngine {
 
     event CollateralAdded(uint256 indexed positionId, uint256 amount, uint256 newCollateral);
     event CollateralRemoved(uint256 indexed positionId, uint256 amount, uint256 newCollateral);
+    event BadDebtRecorded(uint256 indexed positionId, address indexed owner, uint256 amount);
 
     // ──────────────────────────────────────────────
     // Structs

@@ -171,6 +171,74 @@ contract MockFeeRouter {
     function collectTransactionFee(uint256 notional) external pure returns (uint256) {
         return (notional * TX_FEE_RATE) / 1e18;
     }
+
+    function routeFees(uint8, uint256) external {
+        // no-op for tests
+    }
+}
+
+contract MockAccountManager {
+    mapping(address => uint256) public balances;
+    mapping(address => uint256) public locked;
+
+    function setBalance(address user, uint256 amount) external {
+        balances[user] = amount;
+    }
+
+    function lockCollateral(address user, uint256 amount) external {
+        locked[user] += amount;
+    }
+
+    function releaseCollateral(address user, uint256 amount) external {
+        locked[user] -= amount;
+    }
+
+    function creditPnL(address user, uint256 amount) external {
+        balances[user] += amount;
+    }
+
+    function debitPnL(address user, uint256 amount) external returns (uint256 badDebt) {
+        if (amount > balances[user]) {
+            badDebt = amount - balances[user];
+            balances[user] = 0;
+        } else {
+            balances[user] -= amount;
+        }
+    }
+
+    function transferOut(address, uint256) external {}
+
+    function assignPosition(address, uint256) external {}
+
+    function removePosition(address, uint256) external {}
+
+    function getBalance(address user) external view returns (uint256) {
+        return balances[user];
+    }
+
+    function getFreeCollateral(address user) external view returns (uint256) {
+        return balances[user] - locked[user];
+    }
+
+    function getLockedCollateral(address user) external view returns (uint256) {
+        return locked[user];
+    }
+
+    function getUserPositions(address) external pure returns (uint256[] memory) {
+        return new uint256[](0);
+    }
+}
+
+contract MockLeverVault_EE {
+    uint256 public fundCalls;
+    address public lastRecipient;
+    uint256 public lastAmount;
+
+    function fundTraderPnL(address recipient, uint256 amount) external {
+        ++fundCalls;
+        lastRecipient = recipient;
+        lastAmount = amount;
+    }
 }
 
 contract MockBorrowFeeEngine {
@@ -285,6 +353,8 @@ contract ExecutionEngineTest is Test {
     MockFeeRouter feeRouter;
     MockBorrowFeeEngine borrowFeeEngine;
     MockFundingRateEngine fundingRateEngine;
+    MockAccountManager accountManager;
+    MockLeverVault_EE vault;
 
     address admin = address(0xAD);
     address alice = address(0xA1);
@@ -302,6 +372,8 @@ contract ExecutionEngineTest is Test {
         feeRouter = new MockFeeRouter();
         borrowFeeEngine = new MockBorrowFeeEngine();
         fundingRateEngine = new MockFundingRateEngine();
+        accountManager = new MockAccountManager();
+        vault = new MockLeverVault_EE();
 
         engine = new ExecutionEngine(
             address(positionManager),
@@ -313,6 +385,8 @@ contract ExecutionEngineTest is Test {
             address(feeRouter),
             address(borrowFeeEngine),
             address(fundingRateEngine),
+            address(accountManager),
+            address(vault),
             admin
         );
 
@@ -342,6 +416,8 @@ contract ExecutionEngineTest is Test {
         assertEq(address(engine.feeRouter()), address(feeRouter));
         assertEq(address(engine.borrowFeeEngine()), address(borrowFeeEngine));
         assertEq(address(engine.fundingRateEngine()), address(fundingRateEngine));
+        assertEq(address(engine.accountManager()), address(accountManager));
+        assertEq(address(engine.leverVault()), address(vault));
     }
 
     function test_constructor_revertsOnZeroAddress() public {
@@ -350,7 +426,7 @@ contract ExecutionEngineTest is Test {
             address(0), address(oiLimits), address(marginEngine),
             address(oracleAdapter), address(registry), address(leverageModel),
             address(feeRouter), address(borrowFeeEngine), address(fundingRateEngine),
-            admin
+            address(accountManager), address(vault), admin
         );
     }
 

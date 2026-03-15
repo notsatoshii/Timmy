@@ -122,6 +122,12 @@ contract AccountManager is IAccountManager, AccessControl, ReentrancyGuard, Paus
         }
     }
 
+    /// @inheritdoc IAccountManager
+    function transferOut(address to, uint256 amount) external onlyRole(ENGINE) nonReentrant {
+        if (amount == 0) revert AccountManager__ZeroAmount();
+        collateralToken.safeTransfer(to, amount);
+    }
+
     /// @notice Assign a position to a user (called by ExecutionEngine on position open)
     /// @param user Position owner
     /// @param positionId Position identifier

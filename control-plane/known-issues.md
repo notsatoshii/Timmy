@@ -6,7 +6,7 @@
 ## MEDIUM
 - [ ] **OracleAdapter role assignments** — freezeMarket/unfreezeMarket/updateSmoothingParams use KEEPER not ADMIN
 - [ ] **OracleAdapter missing auto-freeze on staleness**
-- [ ] **ExecutionEngine is bookkeeping-only** — no token transfers for PnL settlement. Needs settlement layer wiring.
+- [x] **ExecutionEngine is bookkeeping-only** — FIXED 2026-03-15. _settlePnL now moves USDT: vault↔AccountManager for price PnL, AccountManager→FeeRouter for borrow fees. Bad debt tracked via event.
 - [ ] **Root's /root/lever-protocol copy** — should be deleted after confirming /home/lever is canonical
 - [ ] **LiquidationEngine: no execution impact in equity calc** — spec requires computeExitPrice for liquidation equity, currently uses marginEngine.computeEquity (PI-based, no impact)
 - [ ] **LiquidationEngine: partial liquidation not chunked** — flagged but full position closed in one call. Comment says "future iteration"

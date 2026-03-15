@@ -81,6 +81,7 @@ contract MockLeverVault {
     function getUtilization() external view returns (uint256) { return _utilization; }
     function withdrawalsEnabled() external pure returns (bool) { return true; }
     function socializeLoss(uint256) external {}
+    function fundTraderPnL(address, uint256) external {}
 
     // ERC4626 stubs needed by some contracts
     function asset() external pure returns (address) { return address(0); }
@@ -254,6 +255,8 @@ abstract contract IntegrationBase is Test {
             address(feeRouter),
             address(borrowFeeEngine),
             address(fundingRateEngine),
+            address(accountManager),
+            address(vault),
             admin
         );
 
@@ -269,6 +272,9 @@ abstract contract IntegrationBase is Test {
     function _grantAllRoles() internal {
         // PositionManager: ENGINE role to ExecutionEngine
         positionManager.grantRole(positionManager.ENGINE(), address(executionEngine));
+
+        // AccountManager: ENGINE role to ExecutionEngine
+        accountManager.grantRole(accountManager.ENGINE(), address(executionEngine));
 
         // OILimits: engine roles
         oiLimits.grantRole(oiLimits.EXECUTION_ENGINE_ROLE(), address(executionEngine));
@@ -375,13 +381,29 @@ abstract contract IntegrationBase is Test {
         );
     }
 
+    // ─── Helper: Fund a user's AccountManager balance with USDT ───
+    function _fundUser(address user, uint256 amount) internal {
+        usdt.mint(user, amount);
+        vm.startPrank(user);
+        usdt.approve(address(accountManager), amount);
+        accountManager.deposit(amount);
+        vm.stopPrank();
+    }
+
     // ─── Helper: Open a position as a specific user ───
+    /// @dev Automatically funds the user's AccountManager if needed
     function _openPosition(
         address user,
         bool isLong,
         uint256 collateral,
         uint256 leverage
     ) internal returns (uint256 positionId) {
+        // Ensure user has enough balance in AccountManager
+        uint256 currentFree = accountManager.getFreeCollateral(user);
+        if (currentFree < collateral) {
+            _fundUser(user, collateral - currentFree);
+        }
+
         vm.prank(user);
         positionId = executionEngine.openPosition(
             IExecutionEngine.OpenParams({
