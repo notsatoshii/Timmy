@@ -1,0 +1,144 @@
+{
+  "timestamp": "2026-03-15T13:47:55.865629",
+  "test_duration_minutes": 5.0,
+  "markets_tested": 3,
+  "websocket_results": {
+    "available": false,
+    "tested_endpoints": [
+      "wss://ws-subscriptions-clob.polymarket.com",
+      "wss://clob.polymarket.com/ws",
+      "wss://gamma-api.polymarket.com/ws",
+      "wss://api.polymarket.com/ws",
+      "wss://ws.polymarket.com"
+    ],
+    "working_endpoints": [
+      "wss://clob.polymarket.com/ws",
+      "wss://gamma-api.polymarket.com/ws"
+    ],
+    "errors": [
+      "wss://ws-subscriptions-clob.polymarket.com: Invalid URL 'https:/-subscriptions-clob.polymarket.com': No host supplied",
+      "wss://ws.polymarket.com: Invalid URL 'https:/.polymarket.com': No host supplied"
+    ]
+  },
+  "source_reliability": {
+    "clob_midpoint": {
+      "success_rate": 1.0,
+      "avg_response_time_ms": 264.0,
+      "total_attempts": 3,
+      "total_successes": 3,
+      "error_count": 0,
+      "unique_errors": 0
+    },
+    "gamma_embedded": {
+      "success_rate": 1.0,
+      "avg_response_time_ms": 406.4,
+      "total_attempts": 3,
+      "total_successes": 3,
+      "error_count": 0,
+      "unique_errors": 0
+    },
+    "clob_orderbook": {
+      "success_rate": 1.0,
+      "avg_response_time_ms": 197.0,
+      "total_attempts": 3,
+      "total_successes": 3,
+      "error_count": 0,
+      "unique_errors": 0
+    }
+  },
+  "price_consistency": {
+    "avg_variance": 0.267443,
+    "max_deviation_seen": 0.5,
+    "markets_with_discrepancies": 3
+  },
+  "recommendations": [
+    "PRIMARY: Use clob_midpoint as primary source (success rate: 100.0%)",
+    "PERFORMANCE: clob_orderbook has fastest response time (197ms)",
+    "ALERT: Price deviations up to 50.00% detected between sources",
+    "FALLBACK: Recommended order: clob_midpoint \u2192 gamma_embedded \u2192 clob_orderbook",
+    "WEBSOCKET: No confirmed endpoints - implement REST polling with shorter intervals"
+  ],
+  "detailed_reports": [
+    {
+      "market_id": "0x52fa882beba7627c...",
+      "question": "Gustavo Petro out as leader of Colombia by June 30?",
+      "primary_price": 0.0245,
+      "max_deviation": 0.5,
+      "recommended_source": "clob_orderbook",
+      "source_results": {
+        "clob_midpoint": {
+          "success": true,
+          "price": 0.0245,
+          "response_time_ms": 208.0535888671875,
+          "error": null
+        },
+        "gamma_embedded": {
+          "success": true,
+          "price": 0.0,
+          "response_time_ms": 291.5940284729004,
+          "error": null
+        },
+        "clob_orderbook": {
+          "success": true,
+          "price": 0.5,
+          "response_time_ms": 197.8750228881836,
+          "error": null
+        }
+      }
+    },
+    {
+      "market_id": "0x9775cd557a3cdba4...",
+      "question": "Will Ethereum reach $4,000 by December 31, 2026?",
+      "primary_price": 0.285,
+      "max_deviation": 0.5,
+      "recommended_source": "clob_orderbook",
+      "source_results": {
+        "clob_midpoint": {
+          "success": true,
+          "price": 0.285,
+          "response_time_ms": 212.843656539917,
+          "error": null
+        },
+        "gamma_embedded": {
+          "success": true,
+          "price": 0.0,
+          "response_time_ms": 468.86134147644043,
+          "error": null
+        },
+        "clob_orderbook": {
+          "success": true,
+          "price": 0.5,
+          "response_time_ms": 179.06713485717773,
+          "error": null
+        }
+      }
+    },
+    {
+      "market_id": "0xcad388a016c4ccb9...",
+      "question": "EdgeX FDV above $2B one day after launch?",
+      "primary_price": 0.075,
+      "max_deviation": 0.5,
+      "recommended_source": "clob_orderbook",
+      "source_results": {
+        "clob_midpoint": {
+          "success": true,
+          "price": 0.075,
+          "response_time_ms": 370.96214294433594,
+          "error": null
+        },
+        "gamma_embedded": {
+          "success": true,
+          "price": 0.0,
+          "response_time_ms": 458.6338996887207,
+          "error": null
+        },
+        "clob_orderbook": {
+          "success": true,
+          "price": 0.5,
+          "response_time_ms": 214.13636207580566,
+          "error": null
+        }
+      }
+    }
+  ]
+}

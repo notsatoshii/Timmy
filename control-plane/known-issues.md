@@ -2,6 +2,8 @@
 
 ## CRITICAL
 - [x] **OracleAdapter source validation was dead code** — FIXED 2026-03-15
+- [ ] **Oracle fallback sources broken — SINGLE POINT OF FAILURE** — DISCOVERED 2026-03-15. Gamma API returns 0.0 prices for all markets (broken parameter/parsing). CLOB orderbook returns static 0.5 for all markets (empty books). Only CLOB midpoint functional. If primary source fails, oracle provides invalid prices.
+- [ ] **Feed monitor fallback chain non-functional** — DISCOVERED 2026-03-15. Current feed_monitor.py 3-tier fallback (CLOB→Gamma→cached) would fail in production due to broken Gamma integration. Single point of failure creates liquidation risk.
 
 ## MEDIUM
 - [ ] **OracleAdapter role assignments** — freezeMarket/unfreezeMarket/updateSmoothingParams use KEEPER not ADMIN

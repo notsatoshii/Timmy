@@ -315,10 +315,15 @@ Stay in character. Be efficient. Do ONE task well.
 
 def acquire_lock():
     if os.path.exists(LOCK_FILE):
-        age = time.time() - os.path.getmtime(LOCK_FILE)
-        if age < 3600:
-            return False  # someone else is running
-        os.remove(LOCK_FILE)  # stale lock
+        try:
+            pid = int(Path(LOCK_FILE).read_text().strip())
+            # Check if that PID is actually alive
+            os.kill(pid, 0)  # signal 0 = just check existence
+            return False  # process is alive, real lock
+        except (ValueError, ProcessLookupError, PermissionError, OSError):
+            # PID is dead or invalid — stale lock
+            log("Removing stale lock (dead PID)")
+            os.remove(LOCK_FILE)
     Path(LOCK_FILE).write_text(str(os.getpid()))
     return True
 

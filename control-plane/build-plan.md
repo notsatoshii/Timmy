@@ -61,7 +61,7 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 - [x] P0 Market onboarding script — create LEVER markets from Polymarket market IDs — DONE 2026-03-15
 - [x] P0 Oracle price feed — pull Polymarket CLOB prices, push to OracleAdapter via keeper bot — DONE 2026-03-15
 - [x] P0 Price feed reliability — heartbeat check, staleness detection, fallback on API failure — DONE 2026-03-15
-- [ ] P1 Multi-source price validation — compare Polymarket REST vs WebSocket vs backup sources
+- [x] P1 Multi-source price validation — compare Polymarket REST vs WebSocket vs backup sources — CRITICAL ISSUES FOUND 2026-03-15
 - [ ] P1 Price smoothing verification — confirm OracleAdapter EMA smoothing works with real price data
 - [ ] P1 Feed monitoring dashboard — log price updates, detect gaps, alert on stale feeds
 - [ ] P1 Market discovery — auto-detect new high-volume Polymarket markets for onboarding
@@ -111,3 +111,4 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 [2026-03-15] Market onboarding pipeline — Python script generates market_config.json from Polymarket API (category classification, allocation weights, resolution times). Foundry script (OnboardMarkets.s.sol) reads config and calls MarketRegistry.createMarket() on-chain.
 [2026-03-15] Oracle keeper bot — scripts/oracle/keeper.py. Continuous loop: fetches Polymarket CLOB midpoint prices + orderbook spread/depth, converts to WAD, pushes to OracleAdapter.pushPrice() on-chain. Supports dry-run mode. Web3.py in dedicated venv.
 [2026-03-15] Price feed monitor — scripts/oracle/feed_monitor.py. Three-tier fallback (CLOB → Gamma → cached), heartbeat tracking per market, staleness alerts (2min stale, 5min critical), health reporting for dashboards.
+[2026-03-15] Multi-source price validation COMPLETE — CRITICAL ISSUES FOUND: Gamma API returns 0.0 prices (broken fallback), CLOB orderbook returns static 0.5 (empty books), only CLOB midpoint reliable. Created multi_source_validator.py + price_source_analysis.md. Single point of failure identified - requires immediate fix before mainnet.
