@@ -49,27 +49,27 @@ export const parseWad = (value: string): bigint => {
 // Contract addresses type definition
 export interface ContractAddresses {
   // Core contracts
-  usdt: string;
-  marketRegistry: string;
-  oracleAdapter: string;
-  accountManager: string;
-  positionManager: string;
+  usdt: `0x${string}`;
+  marketRegistry: `0x${string}`;
+  oracleAdapter: `0x${string}`;
+  accountManager: `0x${string}`;
+  positionManager: `0x${string}`;
 
   // Pool contracts
-  leverVault: string;
-  rewardsDistributor: string;
-  insuranceFund: string;
-  feeRouter: string;
+  leverVault: `0x${string}`;
+  rewardsDistributor: `0x${string}`;
+  insuranceFund: `0x${string}`;
+  feeRouter: `0x${string}`;
 
   // Engine contracts
-  leverageModel: string;
-  oiLimits: string;
-  borrowFeeEngine: string;
-  fundingRateEngine: string;
-  marginEngine: string;
-  executionEngine: string;
-  liquidationEngine: string;
-  settlementEngine: string;
+  leverageModel: `0x${string}`;
+  oiLimits: `0x${string}`;
+  borrowFeeEngine: `0x${string}`;
+  fundingRateEngine: `0x${string}`;
+  marginEngine: `0x${string}`;
+  executionEngine: `0x${string}`;
+  liquidationEngine: `0x${string}`;
+  settlementEngine: `0x${string}`;
 }
 
 // Cached contract addresses
@@ -78,27 +78,27 @@ let cachedAddresses: ContractAddresses | null = null;
 // Fallback addresses (current deployment for development)
 const FALLBACK_ADDRESSES: ContractAddresses = {
   // Core contracts
-  usdt: "0x92c9711101bBB0B742d6320D52521FAd1712A85e",
-  marketRegistry: "0x463697f45a0dA6B247305bac56F68e37779ba6bF",
-  oracleAdapter: "0x4F0224F2cC6ab7acC1A913D06F055Ae8FA484d78",
-  accountManager: "0xe0f420dD416e6047fDA063d66292f7679160519B",
-  positionManager: "0x5D538d96735C4752fF12b590ff4737d856a6f484",
+  usdt: "0x92c9711101bBB0B742d6320D52521FAd1712A85e" as `0x${string}`,
+  marketRegistry: "0x463697f45a0dA6B247305bac56F68e37779ba6bF" as `0x${string}`,
+  oracleAdapter: "0x4F0224F2cC6ab7acC1A913D06F055Ae8FA484d78" as `0x${string}`,
+  accountManager: "0xe0f420dD416e6047fDA063d66292f7679160519B" as `0x${string}`,
+  positionManager: "0x5D538d96735C4752fF12b590ff4737d856a6f484" as `0x${string}`,
 
   // Pool contracts
-  leverVault: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-  rewardsDistributor: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
-  insuranceFund: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
-  feeRouter: "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
+  leverVault: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512" as `0x${string}`,
+  rewardsDistributor: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0" as `0x${string}`,
+  insuranceFund: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9" as `0x${string}`,
+  feeRouter: "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9" as `0x${string}`,
 
   // Engine contracts
-  leverageModel: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-  oiLimits: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-  borrowFeeEngine: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
-  fundingRateEngine: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
-  marginEngine: "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
-  executionEngine: "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
-  liquidationEngine: "0x0165878A594ca255338adfa4d48449f69242Eb8F",
-  settlementEngine: "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853"
+  leverageModel: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512" as `0x${string}`,
+  oiLimits: "0x5FbDB2315678afecb367f032d93F642f64180aa3" as `0x${string}`,
+  borrowFeeEngine: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0" as `0x${string}`,
+  fundingRateEngine: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9" as `0x${string}`,
+  marginEngine: "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9" as `0x${string}`,
+  executionEngine: "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707" as `0x${string}`,
+  liquidationEngine: "0x0165878A594ca255338adfa4d48449f69242Eb8F" as `0x${string}`,
+  settlementEngine: "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853" as `0x${string}`
 };
 
 /**
@@ -133,27 +133,27 @@ export async function loadContractAddresses(): Promise<ContractAddresses> {
     // Combine all deployments into a single ContractAddresses object
     cachedAddresses = {
       // Core contracts
-      usdt: coreDeployment.usdt,
-      marketRegistry: coreDeployment.marketRegistry,
-      oracleAdapter: coreDeployment.oracleAdapter,
-      accountManager: coreDeployment.accountManager,
-      positionManager: coreDeployment.positionManager,
+      usdt: coreDeployment.usdt as `0x${string}`,
+      marketRegistry: coreDeployment.marketRegistry as `0x${string}`,
+      oracleAdapter: coreDeployment.oracleAdapter as `0x${string}`,
+      accountManager: coreDeployment.accountManager as `0x${string}`,
+      positionManager: coreDeployment.positionManager as `0x${string}`,
 
       // Pool contracts
-      leverVault: poolDeployment.leverVault,
-      rewardsDistributor: poolDeployment.rewardsDistributor,
-      insuranceFund: poolDeployment.insuranceFund,
-      feeRouter: poolDeployment.feeRouter,
+      leverVault: poolDeployment.leverVault as `0x${string}`,
+      rewardsDistributor: poolDeployment.rewardsDistributor as `0x${string}`,
+      insuranceFund: poolDeployment.insuranceFund as `0x${string}`,
+      feeRouter: poolDeployment.feeRouter as `0x${string}`,
 
       // Engine contracts
-      leverageModel: enginesDeployment.leverageModel,
-      oiLimits: enginesDeployment.oiLimits,
-      borrowFeeEngine: enginesDeployment.borrowFeeEngine,
-      fundingRateEngine: enginesDeployment.fundingRateEngine,
-      marginEngine: enginesDeployment.marginEngine,
-      executionEngine: enginesDeployment.executionEngine,
-      liquidationEngine: enginesDeployment.liquidationEngine,
-      settlementEngine: enginesDeployment.settlementEngine
+      leverageModel: enginesDeployment.leverageModel as `0x${string}`,
+      oiLimits: enginesDeployment.oiLimits as `0x${string}`,
+      borrowFeeEngine: enginesDeployment.borrowFeeEngine as `0x${string}`,
+      fundingRateEngine: enginesDeployment.fundingRateEngine as `0x${string}`,
+      marginEngine: enginesDeployment.marginEngine as `0x${string}`,
+      executionEngine: enginesDeployment.executionEngine as `0x${string}`,
+      liquidationEngine: enginesDeployment.liquidationEngine as `0x${string}`,
+      settlementEngine: enginesDeployment.settlementEngine as `0x${string}`
     };
 
     console.log('Contract addresses loaded from deployment files');

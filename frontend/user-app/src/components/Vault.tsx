@@ -14,26 +14,26 @@ const Vault: React.FC = () => {
 
   // Read vault stats
   const { data: totalAssets } = useReadContract({
-    address: CONTRACT_ADDRESSES.leverVault as `0x${string}`,
+    address: CONTRACT_ADDRESSES.leverVault,
     abi: LEVER_VAULT_ABI,
     functionName: 'totalAssets',
   });
 
   const { data: totalShares } = useReadContract({
-    address: CONTRACT_ADDRESSES.leverVault as `0x${string}`,
+    address: CONTRACT_ADDRESSES.leverVault,
     abi: LEVER_VAULT_ABI,
     functionName: 'totalSupply',
   });
 
   const { data: userShares } = useReadContract({
-    address: CONTRACT_ADDRESSES.leverVault as `0x${string}`,
+    address: CONTRACT_ADDRESSES.leverVault,
     abi: LEVER_VAULT_ABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
   });
 
   const { data: usdtBalance } = useReadContract({
-    address: CONTRACT_ADDRESSES.usdt as `0x${string}`,
+    address: CONTRACT_ADDRESSES.usdt,
     abi: USDT_ABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
@@ -45,7 +45,7 @@ const Vault: React.FC = () => {
     try {
       const amount = parseUsdt(depositAmount);
       await approveUsdt({
-        address: CONTRACT_ADDRESSES.usdt as `0x${string}`,
+        address: CONTRACT_ADDRESSES.usdt,
         abi: USDT_ABI,
         functionName: 'approve',
         args: [CONTRACT_ADDRESSES.leverVault, amount],
@@ -61,10 +61,10 @@ const Vault: React.FC = () => {
     try {
       const amount = parseUsdt(depositAmount);
       await depositToVault({
-        address: CONTRACT_ADDRESSES.leverVault as `0x${string}`,
+        address: CONTRACT_ADDRESSES.leverVault,
         abi: LEVER_VAULT_ABI,
         functionName: 'deposit',
-        args: [amount],
+        args: [amount, address!],
       });
       setDepositAmount('');
     } catch (error) {
@@ -78,7 +78,7 @@ const Vault: React.FC = () => {
     try {
       const sharesToWithdraw = BigInt(Math.floor(parseFloat(withdrawShares) * 1e18));
       await requestWithdrawal({
-        address: CONTRACT_ADDRESSES.leverVault as `0x${string}`,
+        address: CONTRACT_ADDRESSES.leverVault,
         abi: LEVER_VAULT_ABI,
         functionName: 'requestWithdrawal',
         args: [sharesToWithdraw],
@@ -335,7 +335,7 @@ const Vault: React.FC = () => {
         <button
           onClick={() => {
             approveUsdt({
-              address: CONTRACT_ADDRESSES.usdt as `0x${string}`,
+              address: CONTRACT_ADDRESSES.usdt,
               abi: USDT_ABI,
               functionName: 'faucet',
               args: [],

@@ -17,7 +17,7 @@ const Markets: React.FC = () => {
 
   // Read active markets from MarketRegistry
   const { data: activeMarketIds } = useReadContract({
-    address: CONTRACT_ADDRESSES.marketRegistry as `0x${string}`,
+    address: CONTRACT_ADDRESSES.marketRegistry,
     abi: MARKET_REGISTRY_ABI,
     functionName: 'getActiveMarkets',
   });

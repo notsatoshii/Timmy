@@ -29,7 +29,7 @@ const Positions: React.FC = () => {
 
   // Read user's position IDs
   const { data: positionIds } = useReadContract({
-    address: CONTRACT_ADDRESSES.positionManager as `0x${string}`,
+    address: CONTRACT_ADDRESSES.positionManager,
     abi: POSITION_MANAGER_ABI,
     functionName: 'getUserPositions',
     args: address ? [address] : undefined,
@@ -80,7 +80,7 @@ const Positions: React.FC = () => {
   const handleClosePosition = async (positionId: string) => {
     try {
       await closePosition({
-        address: CONTRACT_ADDRESSES.executionEngine as `0x${string}`,
+        address: CONTRACT_ADDRESSES.executionEngine,
         abi: EXECUTION_ENGINE_ABI,
         functionName: 'closePosition',
         args: [BigInt(positionId)],

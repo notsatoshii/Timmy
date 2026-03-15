@@ -26,7 +26,7 @@ const Trading: React.FC = () => {
 
   // Read user's USDT balance
   const { data: usdtBalance } = useReadContract({
-    address: CONTRACT_ADDRESSES.usdt as `0x${string}`,
+    address: CONTRACT_ADDRESSES.usdt,
     abi: USDT_ABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
@@ -34,7 +34,7 @@ const Trading: React.FC = () => {
 
   // Read user's account balance (deposited USDT)
   const { data: accountBalance } = useReadContract({
-    address: CONTRACT_ADDRESSES.accountManager as `0x${string}`,
+    address: CONTRACT_ADDRESSES.accountManager,
     abi: ACCOUNT_MANAGER_ABI,
     functionName: 'getBalance',
     args: address ? [address] : undefined,
@@ -50,7 +50,7 @@ const Trading: React.FC = () => {
     try {
       const amount = parseUsdt(tradeForm.collateral);
       await approveUsdt({
-        address: CONTRACT_ADDRESSES.usdt as `0x${string}`,
+        address: CONTRACT_ADDRESSES.usdt,
         abi: USDT_ABI,
         functionName: 'approve',
         args: [CONTRACT_ADDRESSES.accountManager, amount],
@@ -66,7 +66,7 @@ const Trading: React.FC = () => {
     try {
       const amount = parseUsdt(tradeForm.collateral);
       await depositCollateral({
-        address: CONTRACT_ADDRESSES.accountManager as `0x${string}`,
+        address: CONTRACT_ADDRESSES.accountManager,
         abi: ACCOUNT_MANAGER_ABI,
         functionName: 'deposit',
         args: [amount],
@@ -84,15 +84,15 @@ const Trading: React.FC = () => {
       const leverage = parseUnits(tradeForm.leverage, 18);
 
       await openPosition({
-        address: CONTRACT_ADDRESSES.executionEngine as `0x${string}`,
+        address: CONTRACT_ADDRESSES.executionEngine,
         abi: EXECUTION_ENGINE_ABI,
         functionName: 'openPosition',
-        args: [
-          tradeForm.marketId as `0x${string}`,
-          tradeForm.direction === 'long',
-          collateralAmount,
-          leverage,
-        ],
+        args: [{
+          marketId: tradeForm.marketId as `0x${string}`,
+          isLong: tradeForm.direction === 'long',
+          collateral: collateralAmount,
+          leverage: leverage,
+        }],
       });
 
       // Reset form
@@ -307,7 +307,7 @@ const Trading: React.FC = () => {
               onClick={() => {
                 // Call USDT faucet
                 approveUsdt({
-                  address: CONTRACT_ADDRESSES.usdt as `0x${string}`,
+                  address: CONTRACT_ADDRESSES.usdt,
                   abi: USDT_ABI,
                   functionName: 'faucet',
                   args: [],
