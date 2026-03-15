@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { useAccount, useWriteContract, useReadContract } from 'wagmi';
+import { useAccount, useWriteContract, useReadContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseUnits } from 'viem';
 import { CONTRACT_ADDRESSES, formatUsdt, parseUsdt } from '../config/contracts';
 import { EXECUTION_ENGINE_ABI, ACCOUNT_MANAGER_ABI, USDT_ABI } from '../config/abis';
+import { useNotifications } from '../contexts/NotificationContext';
 import Skeleton from './Skeleton';
 
 interface TradeForm {
@@ -22,6 +23,7 @@ interface TradingProps {
 
 const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
   const { address } = useAccount();
+  const { showSuccessToast, showErrorToast, showTradeConfirmation } = useNotifications();
   const [tradeForm, setTradeForm] = useState<TradeForm>({
     marketId: selectedTrade?.marketId || '',
     direction: selectedTrade?.direction || 'long',
@@ -40,9 +42,77 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
     }
   }, [selectedTrade]);
 
-  const { writeContract: openPosition } = useWriteContract();
-  const { writeContract: depositCollateral } = useWriteContract();
-  const { writeContract: approveUsdt } = useWriteContract();
+  const { writeContract: openPosition, data: openTxHash, error: openError } = useWriteContract();
+  const { writeContract: depositCollateral, data: depositTxHash, error: depositError } = useWriteContract();
+  const { writeContract: approveUsdt, data: approveTxHash, error: approveError } = useWriteContract();
+
+  // Watch for transaction confirmations
+  const { isSuccess: openSuccess } = useWaitForTransactionReceipt({
+    hash: openTxHash,
+  });
+
+  const { isSuccess: depositSuccess } = useWaitForTransactionReceipt({
+    hash: depositTxHash,
+  });
+
+  const { isSuccess: approveSuccess } = useWaitForTransactionReceipt({
+    hash: approveTxHash,
+  });
+
+  // Handle transaction success/error notifications
+  React.useEffect(() => {
+    if (openSuccess && openTxHash) {
+      const marketName = selectedTrade?.marketName || 'Market Position';
+      showTradeConfirmation('open', marketName, openTxHash);
+    }
+  }, [openSuccess, openTxHash, selectedTrade?.marketName, showTradeConfirmation]);
+
+  React.useEffect(() => {
+    if (openError) {
+      showErrorToast(
+        'Position Open Failed',
+        'There was an error opening your position. Please try again.'
+      );
+    }
+  }, [openError, showErrorToast]);
+
+  React.useEffect(() => {
+    if (depositSuccess && depositTxHash) {
+      showSuccessToast(
+        'Collateral Deposited',
+        'Your collateral has been successfully deposited to your account.',
+        depositTxHash
+      );
+    }
+  }, [depositSuccess, depositTxHash, showSuccessToast]);
+
+  React.useEffect(() => {
+    if (depositError) {
+      showErrorToast(
+        'Deposit Failed',
+        'There was an error depositing your collateral. Please try again.'
+      );
+    }
+  }, [depositError, showErrorToast]);
+
+  React.useEffect(() => {
+    if (approveSuccess && approveTxHash) {
+      showSuccessToast(
+        'USDT Approved',
+        'Your USDT spending has been approved.',
+        approveTxHash
+      );
+    }
+  }, [approveSuccess, approveTxHash, showSuccessToast]);
+
+  React.useEffect(() => {
+    if (approveError) {
+      showErrorToast(
+        'Approval Failed',
+        'There was an error approving your USDT spending. Please try again.'
+      );
+    }
+  }, [approveError, showErrorToast]);
 
   // Read user's USDT balance
   const { data: usdtBalance, isLoading: loadingUsdtBalance } = useReadContract({

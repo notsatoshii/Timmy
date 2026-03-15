@@ -11,6 +11,7 @@ import {
   FUNDING_RATE_ENGINE_ABI,
 } from '../config/abis';
 import { useLivePrices } from '../hooks/useLivePrices';
+import { useNotifications } from '../contexts/NotificationContext';
 import TradeHistory from './TradeHistory';
 import PnLChart from './PnLChart';
 import FeeBreakdown from './FeeBreakdown';
@@ -39,6 +40,7 @@ type CloseState = 'idle' | 'confirming' | 'pending' | 'success' | 'error';
 
 const Positions: React.FC = () => {
   const { address } = useAccount();
+  const { showTradeConfirmation, showErrorToast, showLiquidationWarning } = useNotifications();
   const [positions, setPositions] = useState<PositionData[]>([]);
   const [selectedPositionId, setSelectedPositionId] = useState<bigint | null>(null);
   const [closeState, setCloseState] = useState<CloseState>('idle');
@@ -90,6 +92,16 @@ const Positions: React.FC = () => {
       refetchPositionIds();
       refetchBalance();
       refetchFreeCollateral();
+
+      // Find the closed position for notification
+      const allPositions = positions.length > 0 ? positions : (address ? baseDemoPositions.map((basePos, index) =>
+        createLivePosition(basePos, demoMarketIds[index])
+      ) : []);
+      const closedPosition = allPositions.find(pos => pos.id === selectedPositionId);
+      if (closedPosition && txHash) {
+        showTradeConfirmation('close', closedPosition.marketName, txHash);
+      }
+
       const timer = setTimeout(() => {
         setCloseState('idle');
         setSelectedPositionId(null);
@@ -97,14 +109,18 @@ const Positions: React.FC = () => {
       }, 5000);
       return () => clearTimeout(timer);
     }
-  }, [txConfirmed, closeState, refetchPositionIds, refetchBalance, refetchFreeCollateral]);
+  }, [txConfirmed, closeState, refetchPositionIds, refetchBalance, refetchFreeCollateral, selectedPositionId, txHash, showTradeConfirmation, positions, address]);
 
   useEffect(() => {
     if (writeError) {
       setCloseState('error');
       setCloseError(writeError.message?.slice(0, 200) || 'Transaction failed');
+      showErrorToast(
+        'Position Close Failed',
+        'There was an error closing your position. Please try again.'
+      );
     }
-  }, [writeError]);
+  }, [writeError, showErrorToast]);
 
   const fetchPositionDetails = useCallback(async () => {
     if (!positionIds || !Array.isArray(positionIds) || positionIds.length === 0) {
@@ -252,6 +268,45 @@ const Positions: React.FC = () => {
   const totalEquity = displayPositions.reduce((sum, pos) => sum + Number(pos.equity) / 1e18, 0);
   const totalNetPnl = displayPositions.reduce((sum, pos) => sum + Number(computeNetPnl(pos)) / 1e18, 0);
   const totalCollateral = displayPositions.reduce((sum, pos) => sum + Number(pos.collateral) / 1e18, 0);
+
+  // Monitor positions for liquidation warnings
+  useEffect(() => {
+    displayPositions.forEach(position => {
+      const equity = Number(position.equity) / 1e18;
+      const notional = Number(position.positionSize) / 1e18;
+
+      if (notional > 0) {
+        // Calculate maintenance margin requirement (simplified: 2.5% of notional)
+        const maintenanceMargin = notional * 0.025;
+
+        // Calculate margin percentage: equity / maintenance margin * 100
+        const marginPercent = (equity / maintenanceMargin) * 100;
+
+        // Trigger warnings if margin is below 150%
+        if (marginPercent < 150 && marginPercent > 0) {
+          // Only warn once per session per position to avoid spam
+          const warningKey = `liquidation-warning-${position.id}-${Math.floor(marginPercent)}`;
+
+          if (!sessionStorage.getItem(warningKey)) {
+            sessionStorage.setItem(warningKey, 'shown');
+            showLiquidationWarning(marginPercent, position.marketName);
+          }
+        }
+      }
+    });
+  }, [displayPositions, showLiquidationWarning]);
+
+  // Listen for navigation events from notifications
+  useEffect(() => {
+    const handleNavigateToPositions = () => {
+      // This will be handled by the parent Dashboard component
+      // For now, we just scroll to top of positions
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    window.addEventListener('navigate-to-positions', handleNavigateToPositions);
+    return () => window.removeEventListener('navigate-to-positions', handleNavigateToPositions);
+  }, []);
 
   return (
     <div className="space-y-6">
