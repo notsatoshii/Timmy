@@ -45,7 +45,7 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 - [x] **P0** Full position lifecycle (PositionLifecycle.t.sol) — PASSED 2026-03-15 08:35 UTC
 - [x] **P0** Verify LiquidationFlow.t.sol + LiquidationExecution.t.sol pass — PASSED 2026-03-15 (10/10 + 9/9 tests)
 - [x] **P0** Verify SettlementFlow.t.sol + SettlementExecution.t.sol pass — PASSED 2026-03-15 (11/11 + 12/12 tests)
-- [ ] **P1** Verify MultiMarket.t.sol passes
+- [x] **P1** Verify MultiMarket.t.sol passes — PASSED 2026-03-15 (13/13 tests)
 - [ ] **P1** Verify NearResolution.t.sol passes (edge cases near 0/100)
 - [ ] **P1** Verify WithdrawalQueue.t.sol passes (LP 80% utilization gate)
 - [ ] **P1** Verify InsuranceBadDebt.t.sol passes
@@ -85,3 +85,4 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 [2026-03-15] Settlement integration tests verified — SettlementFlow.t.sol (11/11) + SettlementExecution.t.sol (12/12) both pass clean. Market resolution, PI snapshots, and claim payouts all working correctly.
 [2026-03-15] ExecutionEngine PnL token transfer gap FIXED — _settlePnL now moves actual USDT: vault pays price profits via fundTraderPnL, AccountManager sends price losses to vault via transferOut, borrow fees routed to FeeRouter with real USDT. Bad debt tracked via BadDebtRecorded event. Integration tests updated to fund users via AccountManager.deposit before opening positions. 1016 tests pass, 0 fail.
 [2026-03-15] Repo consolidation task investigated — Only /home/lever/lever-protocol found. /root/ access denied. Root processes run from /home/lever path. No duplicate copy accessible with current permissions.
+[2026-03-15] MultiMarket integration tests verified — 13/13 tests pass clean. Confirms independent operation across markets (OI tracking, fees, funding, leverage, PI movements, resolution).
