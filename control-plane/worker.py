@@ -222,12 +222,26 @@ Stay in character. Be efficient. Do ONE task well.
                                         logfile.write(ts() + '[Read] ' + str(inp.get('file_path', inp.get('path', '?')))[:200] + '\n')
                                     elif name in ('Edit', 'edit'):
                                         logfile.write(ts() + '[Edit] ' + str(inp.get('file_path', inp.get('path', '?')))[:200] + '\n')
-                                        if inp.get('old_string'):
-                                            logfile.write('  - ' + str(inp['old_string'])[:100].replace('\n',' ') + '\n')
-                                        if inp.get('new_string'):
-                                            logfile.write('  + ' + str(inp['new_string'])[:100].replace('\n',' ') + '\n')
+                                        old_s = str(inp.get('old_string', inp.get('old_text', '')))
+                                        new_s = str(inp.get('new_string', inp.get('new_text', '')))
+                                        if old_s:
+                                            for line in old_s[:500].split('\n')[:5]:
+                                                logfile.write('  - ' + line + '\n')
+                                        if new_s:
+                                            for line in new_s[:500].split('\n')[:5]:
+                                                logfile.write('  + ' + line + '\n')
+                                            if len(new_s) > 500:
+                                                logfile.write('  ... (' + str(len(new_s)) + ' chars)\n')
                                     elif name in ('Write', 'write'):
-                                        logfile.write(ts() + '[Write] ' + str(inp.get('file_path', inp.get('path', '?')))[:200] + '\n')
+                                        fpath = str(inp.get('file_path', inp.get('path', '?')))[:200]
+                                        logfile.write(ts() + '[Write] ' + fpath + '\n')
+                                        content = str(inp.get('content', inp.get('file_text', '')))
+                                        if content:
+                                            preview = content[:1000].replace('\r', '')
+                                            logfile.write(preview)
+                                            if len(content) > 1000:
+                                                logfile.write('\n... (' + str(len(content)) + ' chars total)')
+                                            logfile.write('\n')
                                     elif name in ('Bash', 'bash'):
                                         logfile.write(ts() + '$ ' + str(inp.get('command', '?'))[:300] + '\n')
                                     elif name in ('Glob', 'glob'):

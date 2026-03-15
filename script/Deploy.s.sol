@@ -179,18 +179,7 @@ contract Deploy is Script {
             addresses.feeRouter
         );
 
-        addresses.settlementEngine = _deploySettlementEngine(
-            addresses.oracleAdapter,
-            addresses.positionManager,
-            addresses.accountManager,
-            addresses.borrowFeeEngine,
-            addresses.fundingRateEngine,
-            addresses.leverVault,
-            addresses.insuranceFund,
-            addresses.feeRouter,
-            addresses.marketRegistry,
-            addresses.oiLimits
-        );
+        addresses.settlementEngine = _deploySettlementEngine(addresses);
 
         // Phase 9: Update LeverVault with correct RewardsDistributor
         _updateLeverVaultRewardsDistributor(addresses);
@@ -486,31 +475,22 @@ contract Deploy is Script {
     }
 
     function _deploySettlementEngine(
-        address oracleAdapter,
-        address positionManager,
-        address accountManager,
-        address borrowFeeEngine,
-        address fundingRateEngine,
-        address leverVault,
-        address insuranceFund,
-        address feeRouter,
-        address marketRegistry,
-        address oiLimits
+        DeploymentAddresses memory addresses
     ) internal returns (address) {
         address deployer = vm.addr(vm.envUint("PRIVATE_KEY"));
         console.log("Deploying SettlementEngine...");
         SettlementEngine engine = new SettlementEngine(
             deployer,
-            marketRegistry,
-            positionManager,
-            oracleAdapter,
-            borrowFeeEngine,
-            fundingRateEngine,
-            insuranceFund,
-            feeRouter,
-            oiLimits,
-            accountManager,
-            leverVault
+            addresses.marketRegistry,
+            addresses.positionManager,
+            addresses.oracleAdapter,
+            addresses.borrowFeeEngine,
+            addresses.fundingRateEngine,
+            addresses.insuranceFund,
+            addresses.feeRouter,
+            addresses.oiLimits,
+            addresses.accountManager,
+            addresses.leverVault
         );
         console.log("SettlementEngine deployed:", address(engine));
         return address(engine);
@@ -631,7 +611,7 @@ contract Deploy is Script {
     // ──────────────────────────────────────────────
 
     function _saveDeploymentConfig(DeploymentAddresses memory addr) internal {
-        string memory config = string(abi.encodePacked(
+        string memory part1 = string(abi.encodePacked(
             '{\n',
             '  "usdt": "', vm.toString(addr.usdt), '",\n',
             '  "marketRegistry": "', vm.toString(addr.marketRegistry), '",\n',
@@ -639,20 +619,27 @@ contract Deploy is Script {
             '  "accountManager": "', vm.toString(addr.accountManager), '",\n',
             '  "positionManager": "', vm.toString(addr.positionManager), '",\n',
             '  "leverageModel": "', vm.toString(addr.leverageModel), '",\n',
-            '  "oiLimits": "', vm.toString(addr.oiLimits), '",\n',
+            '  "oiLimits": "', vm.toString(addr.oiLimits), '",\n'
+        ));
+
+        string memory part2 = string(abi.encodePacked(
             '  "borrowFeeEngine": "', vm.toString(addr.borrowFeeEngine), '",\n',
             '  "fundingRateEngine": "', vm.toString(addr.fundingRateEngine), '",\n',
             '  "marginEngine": "', vm.toString(addr.marginEngine), '",\n',
             '  "executionEngine": "', vm.toString(addr.executionEngine), '",\n',
             '  "feeRouter": "', vm.toString(addr.feeRouter), '",\n',
             '  "insuranceFund": "', vm.toString(addr.insuranceFund), '",\n',
-            '  "leverVault": "', vm.toString(addr.leverVault), '",\n',
+            '  "leverVault": "', vm.toString(addr.leverVault), '",\n'
+        ));
+
+        string memory part3 = string(abi.encodePacked(
             '  "rewardsDistributor": "', vm.toString(addr.rewardsDistributor), '",\n',
             '  "liquidationEngine": "', vm.toString(addr.liquidationEngine), '",\n',
             '  "settlementEngine": "', vm.toString(addr.settlementEngine), '"\n',
             '}'
         ));
 
+        string memory config = string(abi.encodePacked(part1, part2, part3));
         vm.writeFile("deployment.json", config);
         console.log("Deployment config saved to deployment.json");
     }
