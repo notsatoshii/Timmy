@@ -12,12 +12,13 @@ LEVER brings leveraged long/short trading to prediction markets. Instead of bina
 |--------|-------|
 | Overall Progress | **58%** (30/52 tasks) |
 | Contracts | **16** implementations + **3** libraries |
+| Interfaces | **16** |
 | Test Files | **32** files (~1026 test functions) |
 | Open Issues | 0 critical, 10 medium, 8 low |
 | Resolved Issues | 26 |
-| Latest Commit | `e643c46 audit: complete Phase 2 P1 spec audits for all 9 remaining contracts` |
+| Latest Commit | `3c1b0fb docs: auto-generated README and CONTRIBUTING` |
 | Branch | `main` |
-| Last Updated | 2026-03-15 16:47:04 ICT |
+| Last Updated | 2026-03-15 16:52:20 ICT |
 
 ### Phase Progress
 
@@ -35,7 +36,7 @@ LEVER brings leveraged long/short trading to prediction markets. Instead of bina
 
 ## Architecture
 
-**Chain:** Base (Sepolia testnet → mainnet)
+**Chain:** Base (Sepolia testnet > mainnet)
 **Solidity:** 0.8.24
 **Framework:** Foundry
 **Deposit Asset:** USDT / lvUSDT (ERC-4626 vault shares)
@@ -66,7 +67,7 @@ LEVER brings leveraged long/short trading to prediction markets. Instead of bina
 
 ### Key Design Decisions
 
-- **Oracle:** References external prediction market prices (e.g., Polymarket) — no proprietary price discovery
+- **Oracle:** References external prediction market prices — no proprietary price discovery
 - **Vault:** Unified ERC-4626 LeverVault (lvUSDT) backs all markets. LPs earn yield from borrow fees
 - **Funding:** Single funding index per market. `accrued = -direction * posSize * (currentIndex - entryIndex)`
 - **Liquidation:** 1.0% fee (100 bps). Bad debt socialized to LPs. ADL only at settlement
@@ -80,25 +81,18 @@ LEVER brings leveraged long/short trading to prediction markets. Instead of bina
 
 ```
 lever-protocol/
-├── contracts/
-│   ├── core/           # OracleAdapter, MarketRegistry, AccountManager, PositionManager
-│   ├── interfaces/     # All contract interfaces (I*.sol)
-│   ├── libraries/      # FixedPointMath, RiskCurves, ProbabilityIndex
-│   └── *.sol           # ExecutionEngine, LeverVault, fee engines, settlement
-├── test/
-│   ├── *.t.sol         # Unit tests + math verification
-│   └── integration/    # Full lifecycle, liquidation, settlement, multi-market
-├── control-plane/      # Build agent (Timmy), dashboard, automation
-│   ├── agent-persona.md
-│   ├── build-plan.md
-│   ├── known-issues.md
-│   ├── dashboard.py
-│   ├── proactive-worker.sh
-│   ├── nightly-cycle.sh
-│   └── model-router.sh
-├── CLAUDE.md           # Protocol specification
-├── SPEC/               # Per-contract specifications
-└── foundry.toml
+  contracts/
+    core/           OracleAdapter, MarketRegistry, AccountManager, PositionManager
+    interfaces/     All contract interfaces (I*.sol)
+    libraries/      FixedPointMath, RiskCurves, ProbabilityIndex
+    *.sol           ExecutionEngine, LeverVault, fee engines, settlement
+  test/
+    *.t.sol         Unit tests + math verification
+    integration/    Full lifecycle, liquidation, settlement, multi-market
+  control-plane/    Build agent (Timmy), dashboard, automation
+  CLAUDE.md         Protocol specification
+  SPEC/             Per-contract specifications
+  foundry.toml
 ```
 
 ---
@@ -129,7 +123,7 @@ lever-protocol/
   - `RiskCurves.t.sol`
   - `SettlementEngine.t.sol`
 
-  **Integration Tests:**
+  **Integration:**
   - `FeeFlow.t.sol`
   - `InsuranceBadDebt.t.sol`
   - `LiquidationExecution.t.sol`
@@ -146,49 +140,26 @@ lever-protocol/
 ### Running Tests
 
 ```bash
-# Full test suite
-forge test --summary
-
-# Specific contract
-forge test --match-contract OracleAdapterTest
-
-# With gas reporting
-forge test --gas-report
-
-# Integration tests only
-forge test --match-path test/integration/*
+forge test --summary            # Full suite
+forge test --match-contract X   # Specific contract
+forge test --gas-report         # With gas
+forge test --match-path test/integration/*  # Integration only
 ```
 
 ---
 
 ## Build Agent (Timmy)
 
-This project uses an automated build agent that:
+Automated build agent that works autonomously:
 
-- Runs **every 4 hours** (proactive worker) — picks the next task from the build plan, executes it, runs QA, commits and pushes
-- Runs **nightly at 2 AM UTC** — deep maintenance cycle: fixes issues, runs full test suite, generates summary
-- **Auto-selects models** — Opus for spec audits and complex bugs, Sonnet for routine tasks
-- Reports progress via **Telegram** and a **web dashboard**
-
-### Dashboard
-
-Access the live monitoring dashboard:
-```
-http://SERVER_IP:8080
-```
-
-Features: live terminal feed, build plan progress, worker/nightly logs, known issues tracker, git history, model router decisions.
+- **Every 4 hours:** picks the next task, executes with QA gate, commits and pushes
+- **Nightly at 2 AM UTC:** deep maintenance — fixes issues, runs full test suite
+- **Model routing:** Opus for spec audits and complex bugs, Sonnet for routine tasks
+- **Reports via Telegram** and a **web dashboard** at `http://SERVER_IP:8080`
 
 ---
 
 ## Development
-
-### Prerequisites
-
-- [Foundry](https://book.getfoundry.sh/) (forge, cast, anvil)
-- Solidity 0.8.24
-
-### Setup
 
 ```bash
 git clone git@github.com:notsatoshii/Timmy.git lever-protocol
@@ -202,10 +173,10 @@ forge test
 
 ## Roadmap
 
-1. ~~Contract implementation~~ ✅
-2. ~~Math verification~~ ✅
-3. Spec audit (all contracts) — **in progress**
-4. Integration testing — **in progress**
+1. ~~Contract implementation~~ Done
+2. ~~Math verification~~ Done
+3. Spec audit (all contracts) — in progress
+4. Integration testing — in progress
 5. Base Sepolia deployment
 6. Seed bots + monitoring
 7. Frontend dashboard
@@ -214,4 +185,4 @@ forge test
 
 ---
 
-*This README is auto-generated by the build agent and updated nightly. Last generated: 2026-03-15 16:47:04 ICT*
+*Auto-generated by build agent. Last updated: 2026-03-15 16:52:20 ICT*
