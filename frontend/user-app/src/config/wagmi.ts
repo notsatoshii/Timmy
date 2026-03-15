@@ -1,14 +1,15 @@
 import { connectorsForWallets } from '@rainbow-me/rainbowkit';
-import { injectedWallet, metaMaskWallet, coinbaseWallet } from '@rainbow-me/rainbowkit/wallets';
+import { injectedWallet } from '@rainbow-me/rainbowkit/wallets';
 import { createConfig, http } from 'wagmi';
 import { baseSepolia } from 'wagmi/chains';
 
-// Only injected wallets — no WalletConnect, no WebSocket origin errors
+// Only injected wallets — no WalletConnect, no external SDK dependencies
+// injectedWallet covers MetaMask, Coinbase Wallet, Rabby, and any browser extension
 const connectors = connectorsForWallets(
   [
     {
-      groupName: 'Supported Wallets',
-      wallets: [injectedWallet, metaMaskWallet, coinbaseWallet],
+      groupName: 'Browser Wallets',
+      wallets: [injectedWallet],
     },
   ],
   {
