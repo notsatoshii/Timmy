@@ -2,11 +2,12 @@
 # LEVER Protocol — Frontend Test Gate
 # Run after EVERY frontend change. Fails = change is broken. No exceptions.
 # Usage: ./scripts/test-frontend.sh
+# Override port: LEVER_TEST_PORT=3001 ./scripts/test-frontend.sh
 
 set -euo pipefail
 
 FRONTEND_DIR="$(cd "$(dirname "$0")/../frontend/user-app" && pwd)"
-PORT=3000
+PORT=${LEVER_TEST_PORT:-3000}
 LOG="/tmp/lever-frontend-test-$$.log"
 PAGE="/tmp/lever-frontend-page-$$.html"
 DEV_PID=""
@@ -28,6 +29,7 @@ die()  { echo "  FAIL  $1"; cleanup; exit 1; }
 
 echo "=== LEVER Frontend Test Gate ==="
 echo "Dir: $FRONTEND_DIR"
+echo "Port: $PORT"
 echo ""
 cd "$FRONTEND_DIR"
 
@@ -35,6 +37,12 @@ cd "$FRONTEND_DIR"
 # 1. Production build must exit 0
 # -----------------------------------------------------------
 echo "[1/5] Production build..."
+
+# Move aside root-owned build dir if present
+if [ -d "build" ] && [ "$(stat -c '%U' build/deployments 2>/dev/null)" = "root" ]; then
+  mv build "build_old_$$" 2>/dev/null || true
+fi
+
 BUILD_OUT=$(npm run build 2>&1) || die "npm run build exited non-zero"
 
 if echo "$BUILD_OUT" | grep -q "Failed to compile"; then
@@ -76,6 +84,12 @@ pass "No critical errors in build output"
 echo "[3/5] Starting dev server on port $PORT..."
 lsof -ti:$PORT 2>/dev/null | xargs kill -9 2>/dev/null || true
 sleep 1
+
+# If port is still in use (e.g. root-owned process), try next port
+if ss -tlnp 2>/dev/null | grep -q ":$PORT "; then
+  PORT=$((PORT + 1))
+  echo "  Port conflict, using $PORT instead"
+fi
 
 BROWSER=none PORT=$PORT npm start > "$LOG" 2>&1 &
 DEV_PID=$!

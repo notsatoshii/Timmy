@@ -11,6 +11,7 @@ import {
   FUNDING_RATE_ENGINE_ABI,
 } from '../config/abis';
 import { useLivePrices } from '../hooks/useLivePrices';
+import TradeHistory from './TradeHistory';
 
 interface PositionData {
   id: bigint;
@@ -586,6 +587,11 @@ const Positions: React.FC = () => {
           )}
         </div>
       )}
+
+      {/* Trade History Section */}
+      <div className="mt-12">
+        <TradeHistory />
+      </div>
     </div>
   );
 };
