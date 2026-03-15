@@ -14,6 +14,8 @@ interface IMarketRegistry {
     error MarketRegistry__InvalidResolutionTime(uint256 resolutionTime);
     error MarketRegistry__InvalidAllocationWeight(uint256 weight);
     error MarketRegistry__MarketNotActive(bytes32 marketId);
+    error MarketRegistry__MarketAlreadyLive(bytes32 marketId);
+    error MarketRegistry__InvalidOutcome(uint8 outcome);
     error MarketRegistry__InvalidStateTransition(bytes32 marketId, uint8 from, uint8 to);
 
     // ──────────────────────────────────────────────
@@ -21,6 +23,7 @@ interface IMarketRegistry {
     // ──────────────────────────────────────────────
 
     event MarketCreated(bytes32 indexed marketId, string name, uint256 resolutionTime, uint8 category);
+    event MarketActivated(bytes32 indexed marketId, uint256 timestamp);
     event MarketLive(bytes32 indexed marketId, uint256 timestamp);
     event MarketPendingResolution(bytes32 indexed marketId, uint256 timestamp);
     event MarketResolved(bytes32 indexed marketId, uint8 outcome, uint256 externalTimestamp);

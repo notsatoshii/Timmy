@@ -12,6 +12,7 @@ contract MarketRegistryTest is Test {
     address public keeper = address(0xB);
     address public manager = address(0xC);
     address public nobody = address(0xD);
+    address public oracle = address(0xE);
 
     uint256 constant WAD = 1e18;
     uint256 constant SECONDS_PER_HOUR = 3600;
@@ -32,6 +33,7 @@ contract MarketRegistryTest is Test {
         vm.startPrank(admin);
         registry.grantRole(registry.KEEPER(), keeper);
         registry.grantRole(registry.MARKET_MANAGER(), manager);
+        registry.grantRole(registry.ORACLE(), oracle);
         vm.stopPrank();
     }
 
@@ -61,7 +63,7 @@ contract MarketRegistryTest is Test {
             IMarketRegistry.MarketCategory.HIGH_LIQUIDITY,
             0.5e18
         );
-        vm.prank(keeper);
+        vm.prank(manager);
         registry.activateMarket(id);
     }
 
@@ -181,9 +183,9 @@ contract MarketRegistryTest is Test {
         _createDefaultMarket();
 
         vm.expectEmit(true, false, false, true);
-        emit IMarketRegistry.MarketLive(MARKET_ID, block.timestamp);
+        emit IMarketRegistry.MarketActivated(MARKET_ID, block.timestamp);
 
-        vm.prank(keeper);
+        vm.prank(manager);
         registry.activateMarket(MARKET_ID);
 
         assertEq(uint8(registry.getMarketState(MARKET_ID)), uint8(IMarketRegistry.MarketState.ACTIVE));
@@ -206,13 +208,13 @@ contract MarketRegistryTest is Test {
                 uint8(IMarketRegistry.MarketState.ACTIVE)
             )
         );
-        vm.prank(keeper);
+        vm.prank(manager);
         registry.activateMarket(MARKET_ID);
     }
 
     function test_activateMarket_revert_nonexistent() public {
         vm.expectRevert(abi.encodeWithSelector(IMarketRegistry.MarketRegistry__MarketNotFound.selector, MARKET_ID));
-        vm.prank(keeper);
+        vm.prank(manager);
         registry.activateMarket(MARKET_ID);
     }
 
@@ -229,7 +231,7 @@ contract MarketRegistryTest is Test {
         vm.expectEmit(true, false, false, true);
         emit IMarketRegistry.MarketLive(MARKET_ID, liveTime);
 
-        vm.prank(keeper);
+        vm.prank(manager);
         registry.setLive(MARKET_ID);
 
         assertTrue(registry.isLive(MARKET_ID));
@@ -241,7 +243,17 @@ contract MarketRegistryTest is Test {
         _createDefaultMarket(); // LISTED state
 
         vm.expectRevert(abi.encodeWithSelector(IMarketRegistry.MarketRegistry__MarketNotActive.selector, MARKET_ID));
-        vm.prank(keeper);
+        vm.prank(manager);
+        registry.setLive(MARKET_ID);
+    }
+
+    function test_setLive_revert_alreadyLive() public {
+        _createAndActivate(MARKET_ID);
+        vm.prank(manager);
+        registry.setLive(MARKET_ID);
+
+        vm.expectRevert(abi.encodeWithSelector(IMarketRegistry.MarketRegistry__MarketAlreadyLive.selector, MARKET_ID));
+        vm.prank(manager);
         registry.setLive(MARKET_ID);
     }
 
@@ -260,7 +272,7 @@ contract MarketRegistryTest is Test {
         vm.expectEmit(true, false, false, true);
         emit IMarketRegistry.MarketPendingResolution(MARKET_ID, block.timestamp);
 
-        vm.prank(keeper);
+        vm.prank(oracle);
         registry.setPendingResolution(MARKET_ID);
 
         assertEq(uint8(registry.getMarketState(MARKET_ID)), uint8(IMarketRegistry.MarketState.PENDING_RESOLUTION));
@@ -279,7 +291,7 @@ contract MarketRegistryTest is Test {
                 uint8(IMarketRegistry.MarketState.PENDING_RESOLUTION)
             )
         );
-        vm.prank(keeper);
+        vm.prank(oracle);
         registry.setPendingResolution(MARKET_ID);
     }
 
@@ -289,7 +301,7 @@ contract MarketRegistryTest is Test {
 
     function test_resolveMarket_happyPath() public {
         _createAndActivate(MARKET_ID);
-        vm.prank(keeper);
+        vm.prank(oracle);
         registry.setPendingResolution(MARKET_ID);
 
         uint256 extTs = block.timestamp + 1000;
@@ -297,7 +309,7 @@ contract MarketRegistryTest is Test {
         vm.expectEmit(true, false, false, true);
         emit IMarketRegistry.MarketResolved(MARKET_ID, 1, extTs);
 
-        vm.prank(manager);
+        vm.prank(oracle);
         registry.resolveMarket(MARKET_ID, 1, extTs);
 
         IMarketRegistry.Market memory m = registry.getMarket(MARKET_ID);
@@ -308,13 +320,23 @@ contract MarketRegistryTest is Test {
 
     function test_resolveMarket_outcomeNO() public {
         _createAndActivate(MARKET_ID);
-        vm.prank(keeper);
+        vm.prank(oracle);
         registry.setPendingResolution(MARKET_ID);
 
-        vm.prank(manager);
+        vm.prank(oracle);
         registry.resolveMarket(MARKET_ID, 0, block.timestamp);
 
         assertEq(registry.getMarket(MARKET_ID).outcome, 0);
+    }
+
+    function test_resolveMarket_revert_invalidOutcome() public {
+        _createAndActivate(MARKET_ID);
+        vm.prank(oracle);
+        registry.setPendingResolution(MARKET_ID);
+
+        vm.expectRevert(abi.encodeWithSelector(IMarketRegistry.MarketRegistry__InvalidOutcome.selector, 2));
+        vm.prank(oracle);
+        registry.resolveMarket(MARKET_ID, 2, block.timestamp);
     }
 
     function test_resolveMarket_revert_fromActive() public {
@@ -328,7 +350,7 @@ contract MarketRegistryTest is Test {
                 uint8(IMarketRegistry.MarketState.RESOLVED)
             )
         );
-        vm.prank(manager);
+        vm.prank(oracle);
         registry.resolveMarket(MARKET_ID, 1, block.timestamp);
     }
 
@@ -343,7 +365,7 @@ contract MarketRegistryTest is Test {
                 uint8(IMarketRegistry.MarketState.RESOLVED)
             )
         );
-        vm.prank(manager);
+        vm.prank(oracle);
         registry.resolveMarket(MARKET_ID, 1, block.timestamp);
     }
 
@@ -357,7 +379,7 @@ contract MarketRegistryTest is Test {
         vm.expectEmit(true, false, false, true);
         emit IMarketRegistry.MarketVoided(MARKET_ID, block.timestamp);
 
-        vm.prank(manager);
+        vm.prank(admin);
         registry.voidMarket(MARKET_ID);
 
         assertEq(uint8(registry.getMarketState(MARKET_ID)), uint8(IMarketRegistry.MarketState.VOIDED));
@@ -368,7 +390,7 @@ contract MarketRegistryTest is Test {
         _createAndActivate(MARKET_ID);
         assertEq(registry.activeMarketCount(), 1);
 
-        vm.prank(manager);
+        vm.prank(admin);
         registry.voidMarket(MARKET_ID);
 
         assertEq(uint8(registry.getMarketState(MARKET_ID)), uint8(IMarketRegistry.MarketState.VOIDED));
@@ -378,10 +400,10 @@ contract MarketRegistryTest is Test {
 
     function test_voidMarket_fromPendingResolution() public {
         _createAndActivate(MARKET_ID);
-        vm.prank(keeper);
+        vm.prank(oracle);
         registry.setPendingResolution(MARKET_ID);
 
-        vm.prank(manager);
+        vm.prank(admin);
         registry.voidMarket(MARKET_ID);
 
         assertEq(uint8(registry.getMarketState(MARKET_ID)), uint8(IMarketRegistry.MarketState.VOIDED));
@@ -389,9 +411,9 @@ contract MarketRegistryTest is Test {
 
     function test_voidMarket_revert_fromResolved() public {
         _createAndActivate(MARKET_ID);
-        vm.prank(keeper);
+        vm.prank(oracle);
         registry.setPendingResolution(MARKET_ID);
-        vm.prank(manager);
+        vm.prank(oracle);
         registry.resolveMarket(MARKET_ID, 1, block.timestamp);
 
         vm.expectRevert(
@@ -402,13 +424,13 @@ contract MarketRegistryTest is Test {
                 uint8(IMarketRegistry.MarketState.VOIDED)
             )
         );
-        vm.prank(manager);
+        vm.prank(admin);
         registry.voidMarket(MARKET_ID);
     }
 
     function test_voidMarket_revert_fromVoided() public {
         _createDefaultMarket();
-        vm.prank(manager);
+        vm.prank(admin);
         registry.voidMarket(MARKET_ID);
 
         vm.expectRevert(
@@ -419,7 +441,7 @@ contract MarketRegistryTest is Test {
                 uint8(IMarketRegistry.MarketState.VOIDED)
             )
         );
-        vm.prank(manager);
+        vm.prank(admin);
         registry.voidMarket(MARKET_ID);
     }
 
@@ -536,7 +558,7 @@ contract MarketRegistryTest is Test {
         assertEq(active.length, 3);
 
         // Remove middle one via setPendingResolution
-        vm.prank(keeper);
+        vm.prank(oracle);
         registry.setPendingResolution(MARKET_ID_2);
 
         assertEq(registry.activeMarketCount(), 2);
@@ -551,7 +573,7 @@ contract MarketRegistryTest is Test {
         _createAndActivate(MARKET_ID);
         assertEq(registry.activeMarketCount(), 1);
 
-        vm.prank(manager);
+        vm.prank(admin);
         registry.voidMarket(MARKET_ID);
 
         assertEq(registry.activeMarketCount(), 0);
@@ -579,7 +601,7 @@ contract MarketRegistryTest is Test {
         );
     }
 
-    function test_accessControl_activateMarket_onlyKeeper() public {
+    function test_accessControl_activateMarket_onlyManager() public {
         _createDefaultMarket();
 
         vm.prank(nobody);
@@ -587,7 +609,7 @@ contract MarketRegistryTest is Test {
         registry.activateMarket(MARKET_ID);
     }
 
-    function test_accessControl_setLive_onlyKeeper() public {
+    function test_accessControl_setLive_onlyManager() public {
         _createAndActivate(MARKET_ID);
 
         vm.prank(nobody);
@@ -595,7 +617,7 @@ contract MarketRegistryTest is Test {
         registry.setLive(MARKET_ID);
     }
 
-    function test_accessControl_setPendingResolution_onlyKeeper() public {
+    function test_accessControl_setPendingResolution_onlyOracle() public {
         _createAndActivate(MARKET_ID);
 
         vm.prank(nobody);
@@ -603,9 +625,9 @@ contract MarketRegistryTest is Test {
         registry.setPendingResolution(MARKET_ID);
     }
 
-    function test_accessControl_resolveMarket_onlyManager() public {
+    function test_accessControl_resolveMarket_onlyOracle() public {
         _createAndActivate(MARKET_ID);
-        vm.prank(keeper);
+        vm.prank(oracle);
         registry.setPendingResolution(MARKET_ID);
 
         vm.prank(nobody);
@@ -613,7 +635,7 @@ contract MarketRegistryTest is Test {
         registry.resolveMarket(MARKET_ID, 1, block.timestamp);
     }
 
-    function test_accessControl_voidMarket_onlyManager() public {
+    function test_accessControl_voidMarket_onlyAdmin() public {
         _createDefaultMarket();
 
         vm.prank(nobody);
@@ -670,7 +692,7 @@ contract MarketRegistryTest is Test {
         vm.prank(admin);
         registry.pause();
 
-        vm.prank(keeper);
+        vm.prank(manager);
         vm.expectRevert();
         registry.activateMarket(MARKET_ID);
     }
@@ -681,7 +703,7 @@ contract MarketRegistryTest is Test {
         vm.prank(admin);
         registry.pause();
 
-        vm.prank(keeper);
+        vm.prank(manager);
         vm.expectRevert();
         registry.setLive(MARKET_ID);
     }
@@ -692,20 +714,20 @@ contract MarketRegistryTest is Test {
         vm.prank(admin);
         registry.pause();
 
-        vm.prank(keeper);
+        vm.prank(oracle);
         vm.expectRevert();
         registry.setPendingResolution(MARKET_ID);
     }
 
     function test_pause_blocksResolve() public {
         _createAndActivate(MARKET_ID);
-        vm.prank(keeper);
+        vm.prank(oracle);
         registry.setPendingResolution(MARKET_ID);
 
         vm.prank(admin);
         registry.pause();
 
-        vm.prank(manager);
+        vm.prank(oracle);
         vm.expectRevert();
         registry.resolveMarket(MARKET_ID, 1, block.timestamp);
     }
@@ -716,7 +738,7 @@ contract MarketRegistryTest is Test {
         vm.prank(admin);
         registry.pause();
 
-        vm.prank(manager);
+        vm.prank(admin);
         vm.expectRevert();
         registry.voidMarket(MARKET_ID);
     }
@@ -783,24 +805,24 @@ contract MarketRegistryTest is Test {
         assertEq(uint8(registry.getMarketState(MARKET_ID)), uint8(IMarketRegistry.MarketState.LISTED));
 
         // Activate
-        vm.prank(keeper);
+        vm.prank(manager);
         registry.activateMarket(MARKET_ID);
         assertEq(uint8(registry.getMarketState(MARKET_ID)), uint8(IMarketRegistry.MarketState.ACTIVE));
         assertEq(registry.activeMarketCount(), 1);
 
         // Set live
-        vm.prank(keeper);
+        vm.prank(manager);
         registry.setLive(MARKET_ID);
         assertTrue(registry.isLive(MARKET_ID));
 
         // Pending resolution
-        vm.prank(keeper);
+        vm.prank(oracle);
         registry.setPendingResolution(MARKET_ID);
         assertEq(uint8(registry.getMarketState(MARKET_ID)), uint8(IMarketRegistry.MarketState.PENDING_RESOLUTION));
         assertEq(registry.activeMarketCount(), 0);
 
         // Resolve
-        vm.prank(manager);
+        vm.prank(oracle);
         registry.resolveMarket(MARKET_ID, 1, block.timestamp);
         assertEq(uint8(registry.getMarketState(MARKET_ID)), uint8(IMarketRegistry.MarketState.RESOLVED));
         assertEq(registry.getMarket(MARKET_ID).outcome, 1);
@@ -813,6 +835,7 @@ contract MarketRegistryTest is Test {
     function test_constructor_adminHasAllRoles() public view {
         assertTrue(registry.hasRole(registry.DEFAULT_ADMIN_ROLE(), admin));
         assertTrue(registry.hasRole(registry.MARKET_MANAGER(), admin));
+        assertTrue(registry.hasRole(registry.ORACLE(), admin));
         assertTrue(registry.hasRole(registry.KEEPER(), admin));
     }
 

@@ -20,6 +20,7 @@ contract MarketRegistry is IMarketRegistry, AccessControl, ReentrancyGuard, Paus
     // ──────────────────────────────────────────────
 
     bytes32 public constant MARKET_MANAGER = keccak256("MARKET_MANAGER");
+    bytes32 public constant ORACLE = keccak256("ORACLE");
     bytes32 public constant KEEPER = keccak256("KEEPER");
 
     uint256 private constant WAD = 1e18;
@@ -49,6 +50,7 @@ contract MarketRegistry is IMarketRegistry, AccessControl, ReentrancyGuard, Paus
     constructor(address admin) {
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(MARKET_MANAGER, admin);
+        _grantRole(ORACLE, admin);
         _grantRole(KEEPER, admin);
     }
 
@@ -96,7 +98,7 @@ contract MarketRegistry is IMarketRegistry, AccessControl, ReentrancyGuard, Paus
     }
 
     /// @inheritdoc IMarketRegistry
-    function activateMarket(bytes32 marketId) external onlyRole(KEEPER) whenNotPaused {
+    function activateMarket(bytes32 marketId) external onlyRole(MARKET_MANAGER) whenNotPaused {
         Market storage m = _getMarketStorage(marketId);
         if (m.state != MarketState.LISTED) {
             revert MarketRegistry__InvalidStateTransition(marketId, uint8(m.state), uint8(MarketState.ACTIVE));
@@ -105,14 +107,17 @@ contract MarketRegistry is IMarketRegistry, AccessControl, ReentrancyGuard, Paus
         m.state = MarketState.ACTIVE;
         _addToActive(marketId);
 
-        emit MarketLive(marketId, block.timestamp);
+        emit MarketActivated(marketId, block.timestamp);
     }
 
     /// @inheritdoc IMarketRegistry
-    function setLive(bytes32 marketId) external onlyRole(KEEPER) whenNotPaused {
+    function setLive(bytes32 marketId) external onlyRole(MARKET_MANAGER) whenNotPaused {
         Market storage m = _getMarketStorage(marketId);
         if (m.state != MarketState.ACTIVE) {
             revert MarketRegistry__MarketNotActive(marketId);
+        }
+        if (m.isLive) {
+            revert MarketRegistry__MarketAlreadyLive(marketId);
         }
 
         m.isLive = true;
@@ -122,7 +127,7 @@ contract MarketRegistry is IMarketRegistry, AccessControl, ReentrancyGuard, Paus
     }
 
     /// @inheritdoc IMarketRegistry
-    function setPendingResolution(bytes32 marketId) external onlyRole(KEEPER) whenNotPaused {
+    function setPendingResolution(bytes32 marketId) external onlyRole(ORACLE) whenNotPaused {
         Market storage m = _getMarketStorage(marketId);
         if (m.state != MarketState.ACTIVE) {
             revert MarketRegistry__InvalidStateTransition(
@@ -141,7 +146,11 @@ contract MarketRegistry is IMarketRegistry, AccessControl, ReentrancyGuard, Paus
         bytes32 marketId,
         uint8 outcome,
         uint256 externalTimestamp
-    ) external onlyRole(MARKET_MANAGER) whenNotPaused {
+    ) external onlyRole(ORACLE) whenNotPaused {
+        if (outcome > 1) {
+            revert MarketRegistry__InvalidOutcome(outcome);
+        }
+
         Market storage m = _getMarketStorage(marketId);
         if (m.state != MarketState.PENDING_RESOLUTION) {
             revert MarketRegistry__InvalidStateTransition(marketId, uint8(m.state), uint8(MarketState.RESOLVED));
@@ -155,7 +164,7 @@ contract MarketRegistry is IMarketRegistry, AccessControl, ReentrancyGuard, Paus
     }
 
     /// @inheritdoc IMarketRegistry
-    function voidMarket(bytes32 marketId) external onlyRole(MARKET_MANAGER) whenNotPaused {
+    function voidMarket(bytes32 marketId) external onlyRole(DEFAULT_ADMIN_ROLE) whenNotPaused {
         Market storage m = _getMarketStorage(marketId);
         // Can void from LISTED, ACTIVE, or PENDING_RESOLUTION
         if (m.state == MarketState.RESOLVED || m.state == MarketState.VOIDED) {
