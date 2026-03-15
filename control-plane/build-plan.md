@@ -50,12 +50,26 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 - [x] **P1** Verify WithdrawalQueue.t.sol passes (LP 80% utilization gate) — VERIFIED 2026-03-15
 - [x] **P1** Verify InsuranceBadDebt.t.sol passes — PASSED 2026-03-15 (21/21 tests)
 - [x] **P1** Verify FeeFlow.t.sol passes — PASSED 2026-03-15 (15/15 tests)
-- [ ] **P1** Verify TrancheLedger.t.sol passes
+- [x] **P1** Verify TrancheLedger.t.sol passes — VERIFIED 2026-03-15 (9/9 tests)
 - [x] **P0** Fix ExecutionEngine token transfer gap — FIXED 2026-03-15. Vault ↔ AccountManager USDT transfers wired. Borrow fees routed via FeeRouter with real transfers.
+
+## Phase 3.5: Oracle & Market Data Integration
+> Goal: Mock USDT working, Polymarket price feeds connected, oracle reliability proven.
+
+- [ ] P0 Deploy MockUSDT (ERC-20, mintable, 6 decimals) for testnet use
+- [ ] P0 Polymarket API integration — fetch active binary markets (elections, sports, crypto events)
+- [ ] P0 Market onboarding script — create LEVER markets from Polymarket market IDs
+- [ ] P0 Oracle price feed — pull Polymarket CLOB prices, push to OracleAdapter via keeper bot
+- [ ] P0 Price feed reliability — heartbeat check, staleness detection, fallback on API failure
+- [ ] P1 Multi-source price validation — compare Polymarket REST vs WebSocket vs backup sources
+- [ ] P1 Price smoothing verification — confirm OracleAdapter EMA smoothing works with real price data
+- [ ] P1 Feed monitoring dashboard — log price updates, detect gaps, alert on stale feeds
+- [ ] P1 Market discovery — auto-detect new high-volume Polymarket markets for onboarding
 
 ## Phase 4: Deployment Prep
 - [ ] Deployment scripts (Foundry, ordered by dependency)
 - [ ] Constructor parameter configs (testnet values)
+- [ ] Deploy MockUSDT to Base Sepolia with faucet function
 - [ ] Role assignment script
 - [ ] Verification script (BaseScan)
 - [ ] Post-deployment smoke test
@@ -91,3 +105,4 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 [2026-03-15] WithdrawalQueue integration tests verified — 20/20 tests pass clean. Covers withdrawal queue mechanics: request→48h→execute, FIFO ordering, cancellation with 24h re-request cooldown. Note: 80% utilization gate is stubbed (getUtilization() returns 0, withdrawalsEnabled() returns true).
 [2026-03-15] InsuranceBadDebt integration tests verified — 21/21 tests pass clean. Covers bad debt absorption across all 4 tiers, daily cap mechanics, floor protection, fee router deposits, settlement engine integration.
 [2026-03-15] FeeFlow integration tests verified — 15/15 tests pass clean. Comprehensive fee testing: borrow fees accrual and time growth, funding rate mechanics with OI imbalance, TX fee deduction, combined fee erosion, matched/unmatched OI splits, fee router tracking.
+[2026-03-15] TrancheLedger integration tests verified — 9/9 tests pass clean. Covers tranche ledger mechanics: individual tranche creation, proportional transfers, reward snapshot preservation, automatic consolidation at 11 tranches, and withdrawal tranche removal.
