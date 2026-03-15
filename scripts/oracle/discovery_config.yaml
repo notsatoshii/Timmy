@@ -1,0 +1,65 @@
+# Market Discovery Configuration
+# Configuration for the automated market discovery system
+
+# Volume thresholds (USD)
+volume_thresholds:
+  minimum: 50000          # $50k minimum to be considered
+  high_priority: 500000   # $500k for high-priority flagging
+  mega_volume: 2000000    # $2M for immediate attention
+
+# Liquidity requirements
+liquidity:
+  minimum_threshold: 10000      # $10k minimum liquidity
+  preferred_ratio: 0.1          # Liquidity should be ≥10% of volume
+
+# Time constraints
+time_filters:
+  min_days_to_resolution: 7     # Don't onboard markets resolving <7 days
+  max_days_to_resolution: 365   # Don't onboard markets >1 year out
+  market_staleness_hours: 24    # Re-scan markets every 24 hours
+
+# Category preferences (weights for onboarding score)
+category_weights:
+  politics: 1.0        # Core use case - US elections, policy decisions
+  crypto: 0.9          # High crypto community interest
+  sports: 0.8          # Popular betting category
+  stocks: 0.7          # Financial markets
+  science: 0.6         # Niche but quality events
+  tech: 0.6            # Tech company events, product launches
+  entertainment: 0.4   # Lower priority - awards, celebrity events
+  other: 0.3           # Catch-all category
+
+# Onboarding score parameters
+scoring:
+  min_candidate_score: 60.0     # Minimum score to be considered a candidate
+  auto_onboard_score: 80.0      # Score threshold for automatic flagging
+  max_candidates_per_batch: 15  # Maximum markets to onboard in one batch
+
+# Discovery scan settings
+scan_settings:
+  api_limit: 200               # Markets to fetch per scan
+  daemon_interval: 3600        # Seconds between daemon scans (1 hour)
+  batch_size: 50              # Markets to process in one batch
+
+# Price balance preferences
+price_preferences:
+  balanced_range: [0.2, 0.8]   # Ideal price range for maximum engagement
+  acceptable_range: [0.1, 0.9] # Minimum acceptable price range
+  extreme_penalty: true        # Penalize very skewed markets
+
+# Database settings
+database:
+  retention_days: 90           # Keep discovered markets for 90 days
+  cleanup_interval: 86400      # Clean old records every 24 hours
+
+# API settings
+api:
+  rate_limit_delay: 0.25       # Seconds between API calls
+  request_timeout: 10          # Request timeout in seconds
+  max_retries: 3               # Maximum retries for failed requests
+
+# Output settings
+output:
+  log_level: "INFO"            # DEBUG, INFO, WARNING, ERROR
+  export_metadata: true        # Include discovery metadata in exports
+  backup_candidates: true      # Keep backup of candidates.json

@@ -1,0 +1,240 @@
+[
+  {
+    "marketId": "0xdb4b2f370c3d0e996fbb32213c87aa5402936e3d4882432b6738e2f5661b79a6",
+    "name": "Will Cura\u00e7ao win the 2026 FIFA World Cup?",
+    "externalMarketId": "0xdb4b2f370c3d0e996fbb32213c87aa5402936e3d4882432b6738e2f5661b79a6",
+    "resolutionTime": 1784505600,
+    "category": 0,
+    "allocationWeight": "50000000000000000",
+    "_discovery": {
+      "onboardingScore": 139.0,
+      "volume": 9886150.856269851,
+      "liquidity": 1851157.63296,
+      "currentPrice": 0.0015,
+      "category": "other",
+      "firstSeen": 1773583597.2952793,
+      "discoveryNotes": "Auto-discovered. Vol: $9,886,151, Liq: $1,851,158"
+    }
+  },
+  {
+    "marketId": "0x81b06cb917c9a2aabc67a7765bc3c640e88a699bbf451b29915049c0766cde04",
+    "name": "US x Iran ceasefire by June 30?",
+    "externalMarketId": "0x81b06cb917c9a2aabc67a7765bc3c640e88a699bbf451b29915049c0766cde04",
+    "resolutionTime": 1780185600,
+    "category": 0,
+    "allocationWeight": "50000000000000000",
+    "_discovery": {
+      "onboardingScore": 132.21,
+      "volume": 994701.007382997,
+      "liquidity": 183232.1801,
+      "currentPrice": 0.605,
+      "category": "other",
+      "firstSeen": 1773583597.2660284,
+      "discoveryNotes": "Auto-discovered. Vol: $994,701, Liq: $183,232"
+    }
+  },
+  {
+    "marketId": "0x434f5226d48f9b140a0cb8f12d066bc0bf2aabe8ac672bf2c91ec5906e86480e",
+    "name": "Will Jalen Brunson win the 2025\u20132026 NBA MVP?",
+    "externalMarketId": "0x434f5226d48f9b140a0cb8f12d066bc0bf2aabe8ac672bf2c91ec5906e86480e",
+    "resolutionTime": 1781049600,
+    "category": 0,
+    "allocationWeight": "50000000000000000",
+    "_discovery": {
+      "onboardingScore": 124.56,
+      "volume": 992719.4714589996,
+      "liquidity": 81594.18049,
+      "currentPrice": 0.0005,
+      "category": "other",
+      "firstSeen": 1773583597.2793102,
+      "discoveryNotes": "Auto-discovered. Vol: $992,719, Liq: $81,594"
+    }
+  },
+  {
+    "marketId": "0x16c63b7cc37f012b9f59ee164ec03877914c701d06d48291ae8d6fc08a088b0d",
+    "name": "2026 Balance of Power: D Senate, D House",
+    "externalMarketId": "0x16c63b7cc37f012b9f59ee164ec03877914c701d06d48291ae8d6fc08a088b0d",
+    "resolutionTime": 1793664000,
+    "category": 0,
+    "allocationWeight": "50000000000000000",
+    "_discovery": {
+      "onboardingScore": 123.88,
+      "volume": 983294.127124005,
+      "liquidity": 142295.3546,
+      "currentPrice": 0.475,
+      "category": "other",
+      "firstSeen": 1773583597.314314,
+      "discoveryNotes": "Auto-discovered. Vol: $983,294, Liq: $142,295"
+    }
+  },
+  {
+    "marketId": "0xc510176cf39d73295354fc797d84b510d050b45d29d6c9735ee18cdbc4fd6463",
+    "name": "Will Robert F. Kennedy Jr. win the 2028 Republican presidential nomination?",
+    "externalMarketId": "0xc510176cf39d73295354fc797d84b510d050b45d29d6c9735ee18cdbc4fd6463",
+    "resolutionTime": 1857168000,
+    "category": 0,
+    "allocationWeight": "50000000000000000",
+    "_discovery": {
+      "onboardingScore": 123.27,
+      "volume": 9651519.181314688,
+      "liquidity": 930081.47985,
+      "currentPrice": 0.0075,
+      "category": "other",
+      "firstSeen": 1773583597.3732014,
+      "discoveryNotes": "Auto-discovered. Vol: $9,651,519, Liq: $930,081"
+    }
+  },
+  {
+    "marketId": "0xbb4d51e6364066d92eb6f9b8413dd7193de70966736044463b205834805a1f3b",
+    "name": "Will the Iranian regime fall before 2027?",
+    "externalMarketId": "0xbb4d51e6364066d92eb6f9b8413dd7193de70966736044463b205834805a1f3b",
+    "resolutionTime": 1798675200,
+    "category": 0,
+    "allocationWeight": "50000000000000000",
+    "_discovery": {
+      "onboardingScore": 120.01,
+      "volume": 9898266.176313639,
+      "liquidity": 393986.3783,
+      "currentPrice": 0.375,
+      "category": "other",
+      "firstSeen": 1773583597.2926834,
+      "discoveryNotes": "Auto-discovered. Vol: $9,898,266, Liq: $393,986"
+    }
+  },
+  {
+    "marketId": "0xdaa4866bae18be58c5a79d2aeeffd035ec78f1bb49dbd88f72993997778a990f",
+    "name": "Will Bitcoin reach $100,000 by December 31, 2026?",
+    "externalMarketId": "0xdaa4866bae18be58c5a79d2aeeffd035ec78f1bb49dbd88f72993997778a990f",
+    "resolutionTime": 1798779600,
+    "category": 0,
+    "allocationWeight": "50000000000000000",
+    "_discovery": {
+      "onboardingScore": 118.86,
+      "volume": 975762.9560030011,
+      "liquidity": 90296.0418,
+      "currentPrice": 0.405,
+      "category": "other",
+      "firstSeen": 1773583597.3472798,
+      "discoveryNotes": "Auto-discovered. Vol: $975,763, Liq: $90,296"
+    }
+  },
+  {
+    "marketId": "0xf232b565995e4b3a3e7fa6cef775eeff1cecd20ad7c013cb9fc8dadabfe279a9",
+    "name": "Will Alexandria Ocasio-Cortez win the 2028 US Presidential Election?",
+    "externalMarketId": "0xf232b565995e4b3a3e7fa6cef775eeff1cecd20ad7c013cb9fc8dadabfe279a9",
+    "resolutionTime": 1857168000,
+    "category": 0,
+    "allocationWeight": "50000000000000000",
+    "_discovery": {
+      "onboardingScore": 116.98,
+      "volume": 9589941.332220007,
+      "liquidity": 622187.36078,
+      "currentPrice": 0.046,
+      "category": "other",
+      "firstSeen": 1773583597.3834455,
+      "discoveryNotes": "Auto-discovered. Vol: $9,589,941, Liq: $622,187"
+    }
+  },
+  {
+    "marketId": "0xcad388a016c4ccb9a4bc07549f802d60675d9a5ebb7b0e221cf2efef5f067e16",
+    "name": "EdgeX FDV above $2B one day after launch?",
+    "externalMarketId": "0xcad388a016c4ccb9a4bc07549f802d60675d9a5ebb7b0e221cf2efef5f067e16",
+    "resolutionTime": 1798779600,
+    "category": 0,
+    "allocationWeight": "50000000000000000",
+    "_discovery": {
+      "onboardingScore": 105.22,
+      "volume": 997857.0873679954,
+      "liquidity": 39269.7204,
+      "currentPrice": 0.075,
+      "category": "other",
+      "firstSeen": 1773583597.2514935,
+      "discoveryNotes": "Auto-discovered. Vol: $997,857, Liq: $39,270"
+    }
+  },
+  {
+    "marketId": "0xcbd66faaf74bf50d61ab2f63f9351f8086305dcbf16c1e3eab0ebfe576fce1c6",
+    "name": "Will Russia enter Druzkhivka by June 30?",
+    "externalMarketId": "0xcbd66faaf74bf50d61ab2f63f9351f8086305dcbf16c1e3eab0ebfe576fce1c6",
+    "resolutionTime": 1782777600,
+    "category": 0,
+    "allocationWeight": "50000000000000000",
+    "_discovery": {
+      "onboardingScore": 71.0,
+      "volume": 97988.60309799996,
+      "liquidity": 11473.4685,
+      "currentPrice": 0.255,
+      "category": "other",
+      "firstSeen": 1773583597.3273685,
+      "discoveryNotes": "Auto-discovered. Vol: $97,989, Liq: $11,473"
+    }
+  },
+  {
+    "marketId": "0x52fa882beba7627c68eb13f5b917313a422fdfe3d3e75c3073d39f687b84a212",
+    "name": "Gustavo Petro out as leader of Colombia by June 30?",
+    "externalMarketId": "0x52fa882beba7627c68eb13f5b917313a422fdfe3d3e75c3073d39f687b84a212",
+    "resolutionTime": 1782777600,
+    "category": 0,
+    "allocationWeight": "50000000000000000",
+    "_discovery": {
+      "onboardingScore": 67.25,
+      "volume": 99729.71897500004,
+      "liquidity": 15011.2521,
+      "currentPrice": 0.0245,
+      "category": "other",
+      "firstSeen": 1773583597.2583642,
+      "discoveryNotes": "Auto-discovered. Vol: $99,730, Liq: $15,011"
+    }
+  },
+  {
+    "marketId": "0x50adf6f00acff7d21a9810d30fe155454edf3e2133063801a99115e29ead47af",
+    "name": " World Cup game relocated away from Mexico?",
+    "externalMarketId": "0x50adf6f00acff7d21a9810d30fe155454edf3e2133063801a99115e29ead47af",
+    "resolutionTime": 1781049600,
+    "category": 0,
+    "allocationWeight": "50000000000000000",
+    "_discovery": {
+      "onboardingScore": 67.2,
+      "volume": 99384.79425999991,
+      "liquidity": 18998.4501,
+      "currentPrice": 0.05,
+      "category": "other",
+      "firstSeen": 1773583597.271389,
+      "discoveryNotes": "Auto-discovered. Vol: $99,385, Liq: $18,998"
+    }
+  },
+  {
+    "marketId": "0x9f6c180ed79bccf08b3d58d23c6af3a87afd4d0b176e770c6951a573dcaee814",
+    "name": "Will Alexander Zverev be the 2026 Men\u2019s Wimbledon winner?",
+    "externalMarketId": "0x9f6c180ed79bccf08b3d58d23c6af3a87afd4d0b176e770c6951a573dcaee814",
+    "resolutionTime": 1783814400,
+    "category": 0,
+    "allocationWeight": "50000000000000000",
+    "_discovery": {
+      "onboardingScore": 66.75,
+      "volume": 96231.47508799998,
+      "liquidity": 14618.20571,
+      "currentPrice": 0.0155,
+      "category": "other",
+      "firstSeen": 1773583597.3781903,
+      "discoveryNotes": "Auto-discovered. Vol: $96,231, Liq: $14,618"
+    }
+  },
+  {
+    "marketId": "0x62790784a29c4738bc05f605b78cc9f4ce79dc1a3754bb0a503e446b15a903a5",
+    "name": "Will Meituan have the top AI model at the end of June 2026?",
+    "externalMarketId": "0x62790784a29c4738bc05f605b78cc9f4ce79dc1a3754bb0a503e446b15a903a5",
+    "resolutionTime": 1782777600,
+    "category": 0,
+    "allocationWeight": "50000000000000000",
+    "_discovery": {
+      "onboardingScore": 66.69,
+      "volume": 95871.38356699998,
+      "liquidity": 17310.47538,
+      "currentPrice": 0.026,
+      "category": "other",
+      "firstSeen": 1773583597.3862386,
+      "discoveryNotes": "Auto-discovered. Vol: $95,871, Liq: $17,310"
+    }
+  }
+]

@@ -1,0 +1,46 @@
+# Systemd service for LEVER Market Discovery
+# Place in: /etc/systemd/system/lever-discovery.service
+#
+# Enable: sudo systemctl enable lever-discovery
+# Start:  sudo systemctl start lever-discovery
+# Status: sudo systemctl status lever-discovery
+# Logs:   sudo journalctl -f -u lever-discovery
+
+[Unit]
+Description=LEVER Protocol Market Discovery Service
+Documentation=https://github.com/lever-protocol/lever
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=exec
+User=lever
+Group=lever
+WorkingDirectory=/home/lever/lever-protocol
+ExecStart=/usr/bin/python3 scripts/oracle/market_discovery.py --daemon --interval 3600
+Restart=always
+RestartSec=30
+StandardOutput=journal
+StandardError=journal
+
+# Environment
+Environment=PYTHONPATH=/home/lever/lever-protocol
+Environment=PYTHONUNBUFFERED=1
+
+# Resource limits
+MemoryLimit=512M
+CPUQuota=50%
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/home/lever/lever-protocol/scripts/oracle
+ReadOnlyPaths=/home/lever/lever-protocol
+
+# Logging
+SyslogIdentifier=lever-discovery
+
+[Install]
+WantedBy=multi-user.target
