@@ -1,7 +1,7 @@
 # LEVER Protocol
 ### Synthetic Leveraged Perpetuals for Prediction Markets
 
-LEVER transforms prediction markets from binary yes/no betting into sophisticated leveraged trading instruments. Traders take 2-50x leveraged positions on probability movements across elections, sports, economics, and emerging events, while liquidity providers earn yield from a unified vault backing all markets simultaneously.
+LEVER transforms prediction markets from binary yes/no betting into sophisticated leveraged trading instruments. Traders take 2-30x leveraged positions on probability movements across elections, sports, economics, and emerging events, while liquidity providers earn yield from a unified vault backing all markets simultaneously.
 
 ## The Opportunity
 
