@@ -20,10 +20,14 @@
 - [x] **setLive allowed re-setting** — overwrote liveStartTime silently. Spec says revert if already live.
 - [x] **activateMarket emitted MarketLive** — misleading event. Now emits MarketActivated.
 
+## FIXED (AccountManager — 2026-03-15)
+- [x] **debitPnL reverted on insufficient balance** — spec says cap at balance, return bad debt. Was blocking liquidation/settlement of underwater positions. Now returns badDebt amount for InsuranceFund routing.
+
 ## AUDIT PROGRESS
 - [x] FixedPointMath — PASS
 - [x] RiskCurves — PASS
 - [x] ProbabilityIndex — PASS
 - [x] OracleAdapter — ISSUES FOUND (see above)
 - [x] MarketRegistry — ISSUES FOUND & FIXED (see above)
-- [ ] AccountManager through SettlementEngine — pending
+- [x] AccountManager — ISSUE FOUND & FIXED (see above)
+- [ ] PositionManager through SettlementEngine — pending

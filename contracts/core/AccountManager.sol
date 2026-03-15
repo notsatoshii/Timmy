@@ -109,13 +109,17 @@ contract AccountManager is IAccountManager, AccessControl, ReentrancyGuard, Paus
     }
 
     /// @inheritdoc IAccountManager
-    function debitPnL(address user, uint256 amount) external onlyRole(ENGINE) nonReentrant {
+    function debitPnL(address user, uint256 amount) external onlyRole(ENGINE) nonReentrant returns (uint256 badDebt) {
         // Debit comes from locked collateral that is being released
         // The caller (ExecutionEngine) handles the ordering: release collateral first, then debit
-        if (amount > _balances[user]) {
-            revert AccountManager__InsufficientBalance(user, amount, _balances[user]);
+        // If amount > balance, debit what's available — the remainder is bad debt
+        uint256 balance = _balances[user];
+        if (amount >= balance) {
+            badDebt = amount - balance;
+            _balances[user] = 0;
+        } else {
+            _balances[user] = balance - amount;
         }
-        _balances[user] -= amount;
     }
 
     /// @notice Assign a position to a user (called by ExecutionEngine on position open)

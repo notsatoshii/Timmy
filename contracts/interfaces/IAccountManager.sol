@@ -49,9 +49,11 @@ interface IAccountManager {
     function creditPnL(address user, uint256 amount) external;
 
     /// @notice Debit PnL from user (called on position close with loss)
+    /// @dev Caps at balance — remainder returned as bad debt for InsuranceFund
     /// @param user Position owner
     /// @param amount Amount to debit (WAD)
-    function debitPnL(address user, uint256 amount) external;
+    /// @return badDebt Amount that could not be debited (WAD)
+    function debitPnL(address user, uint256 amount) external returns (uint256 badDebt);
 
     // ──────────────────────────────────────────────
     // External — View

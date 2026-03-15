@@ -25,7 +25,7 @@
 - [x] ProbabilityIndex — PASS
 - [x] OracleAdapter — ISSUES FOUND (logged in known-issues.md)
 - [x] **P0** MarketRegistry — audit against spec — ISSUES FOUND & FIXED 2026-03-15
-- [ ] **P0** AccountManager — audit against spec
+- [x] **P0** AccountManager — audit against spec — ISSUES FOUND & FIXED 2026-03-15
 - [ ] **P0** PositionManager — audit against spec
 - [ ] **P0** LeverageModel — audit against spec
 - [ ] **P0** OILimits — audit against spec
@@ -76,3 +76,4 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 [2026-03-15] Full lifecycle integration — 13/13 steps, zero mocks
 [2026-03-15] Build plan synced with actual test-phase.log results
 [2026-03-15] MarketRegistry spec audit — 9 issues found, all fixed. Roles, outcome validation, already-live guard, event naming.
+[2026-03-15] AccountManager spec audit — 1 HIGH fixed (debitPnL now caps at balance, returns bad debt).

@@ -355,20 +355,15 @@ contract AccountManagerTest is Test {
         assertEq(accountManager.getBalance(alice), 700 * WAD);
     }
 
-    function test_debitPnL_revertsOnInsufficientBalance() public {
+    function test_debitPnL_capsAtBalance_returnsBadDebt() public {
         vm.prank(alice);
         accountManager.deposit(100 * WAD);
 
         vm.prank(engine);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IAccountManager.AccountManager__InsufficientBalance.selector,
-                alice,
-                200 * WAD,
-                100 * WAD
-            )
-        );
-        accountManager.debitPnL(alice, 200 * WAD);
+        uint256 badDebt = accountManager.debitPnL(alice, 250 * WAD);
+
+        assertEq(badDebt, 150 * WAD, "bad debt should be 150");
+        assertEq(accountManager.getBalance(alice), 0, "balance should be zero");
     }
 
     function test_debitPnL_revertsWithoutEngineRole() public {
@@ -383,13 +378,14 @@ contract AccountManagerTest is Test {
         accountManager.debitPnL(alice, 100 * WAD);
     }
 
-    function test_debitPnL_entireBalance() public {
+    function test_debitPnL_entireBalance_zeroBadDebt() public {
         vm.prank(alice);
         accountManager.deposit(500 * WAD);
 
         vm.prank(engine);
-        accountManager.debitPnL(alice, 500 * WAD);
+        uint256 badDebt = accountManager.debitPnL(alice, 500 * WAD);
 
+        assertEq(badDebt, 0, "no bad debt when exact balance");
         assertEq(accountManager.getBalance(alice), 0);
     }
 
