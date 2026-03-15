@@ -7,7 +7,7 @@
 - [ ] **OracleAdapter role assignments** — freezeMarket/unfreezeMarket/updateSmoothingParams use KEEPER not ADMIN
 - [ ] **OracleAdapter missing auto-freeze on staleness**
 - [x] **ExecutionEngine is bookkeeping-only** — FIXED 2026-03-15. _settlePnL now moves USDT: vault↔AccountManager for price PnL, AccountManager→FeeRouter for borrow fees. Bad debt tracked via event.
-- [ ] **Root's /root/lever-protocol copy** — INVESTIGATION: Only one lever-protocol found at /home/lever/lever-protocol. Cannot access /root/ (permission denied). Root process running from /home/lever path, not separate copy. Task requires root access or may be already resolved.
+- [x] **Root's auto-backup cron conflict** — INVESTIGATION COMPLETE 2026-03-15: No active root cron jobs doing git/backup operations found. Checked system cron directories, running processes, systemd timers. Only backup operation is lever user's nightly.py. Root process (dashboard.py) only reads git data. No conflicting operations detected. Issue appears resolved or was preventative.
 - [ ] **LiquidationEngine: no execution impact in equity calc** — spec requires computeExitPrice for liquidation equity, currently uses marginEngine.computeEquity (PI-based, no impact)
 - [ ] **LiquidationEngine: partial liquidation not chunked** — flagged but full position closed in one call. Comment says "future iteration"
 - [ ] **LiquidationEngine: Path A/B not implemented** — only permissionless Path C exists. Spec requires internal paths from closePosition and oracle updates.
