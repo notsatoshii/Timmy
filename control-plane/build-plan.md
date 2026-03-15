@@ -49,7 +49,7 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 - [x] **P1** Verify NearResolution.t.sol passes (edge cases near 0/100) — PASSED 2026-03-15 (7/7 tests)
 - [x] **P1** Verify WithdrawalQueue.t.sol passes (LP 80% utilization gate) — VERIFIED 2026-03-15
 - [x] **P1** Verify InsuranceBadDebt.t.sol passes — PASSED 2026-03-15 (21/21 tests)
-- [ ] **P1** Verify FeeFlow.t.sol passes
+- [x] **P1** Verify FeeFlow.t.sol passes — PASSED 2026-03-15 (15/15 tests)
 - [ ] **P1** Verify TrancheLedger.t.sol passes
 - [x] **P0** Fix ExecutionEngine token transfer gap — FIXED 2026-03-15. Vault ↔ AccountManager USDT transfers wired. Borrow fees routed via FeeRouter with real transfers.
 
@@ -90,3 +90,4 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 [2026-03-15] NearResolution integration tests verified — 7/7 tests pass clean. Edge cases confirmed working: leverage compression as τ→0, risk tightening near resolution, 1× leverage enforcement at τ=0, borrow rate escalation, and live market compression.
 [2026-03-15] WithdrawalQueue integration tests verified — 20/20 tests pass clean. Covers withdrawal queue mechanics: request→48h→execute, FIFO ordering, cancellation with 24h re-request cooldown. Note: 80% utilization gate is stubbed (getUtilization() returns 0, withdrawalsEnabled() returns true).
 [2026-03-15] InsuranceBadDebt integration tests verified — 21/21 tests pass clean. Covers bad debt absorption across all 4 tiers, daily cap mechanics, floor protection, fee router deposits, settlement engine integration.
+[2026-03-15] FeeFlow integration tests verified — 15/15 tests pass clean. Comprehensive fee testing: borrow fees accrual and time growth, funding rate mechanics with OI imbalance, TX fee deduction, combined fee erosion, matched/unmatched OI splits, fee router tracking.
