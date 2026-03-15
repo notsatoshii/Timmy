@@ -56,7 +56,7 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 ## Phase 3.5: Oracle & Market Data Integration
 > Goal: Mock USDT working, Polymarket price feeds connected, oracle reliability proven.
 
-- [ ] P0 Deploy MockUSDT (ERC-20, mintable, 6 decimals) for testnet use
+- [x] P0 Deploy MockUSDT (ERC-20, mintable, 6 decimals) for testnet use — DONE 2026-03-15 (11/11 tests)
 - [ ] P0 Polymarket API integration — fetch active binary markets (elections, sports, crypto events)
 - [ ] P0 Market onboarding script — create LEVER markets from Polymarket market IDs
 - [ ] P0 Oracle price feed — pull Polymarket CLOB prices, push to OracleAdapter via keeper bot
@@ -106,3 +106,4 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 [2026-03-15] InsuranceBadDebt integration tests verified — 21/21 tests pass clean. Covers bad debt absorption across all 4 tiers, daily cap mechanics, floor protection, fee router deposits, settlement engine integration.
 [2026-03-15] FeeFlow integration tests verified — 15/15 tests pass clean. Comprehensive fee testing: borrow fees accrual and time growth, funding rate mechanics with OI imbalance, TX fee deduction, combined fee erosion, matched/unmatched OI splits, fee router tracking.
 [2026-03-15] TrancheLedger integration tests verified — 9/9 tests pass clean. Covers tranche ledger mechanics: individual tranche creation, proportional transfers, reward snapshot preservation, automatic consolidation at 11 tranches, and withdrawal tranche removal.
+[2026-03-15] MockUSDT contract deployed — contracts/periphery/MockUSDT.sol. 6 decimals, faucet (10k USDT/hr cooldown), owner mint. 11/11 tests pass. NOTE: Protocol internals use WAD (1e18) but real USDT is 6 decimals — decimal scaling needed at deposit/withdrawal boundaries.

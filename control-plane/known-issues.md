@@ -15,6 +15,7 @@
 - [ ] **LeverVault: utilization gate stubbed** — getUtilization() returns 0, withdrawalsEnabled() returns true. No OILimits dependency for 80% gate.
 - [ ] **SettlementEngine: MarketSettled event passes totalBadDebt for totalLoserDebt param** — semantic mismatch in event, logic correct
 
+- [ ] **Decimal mismatch: protocol uses WAD (1e18) internally, real USDT is 6 decimals** — Need scaling at deposit/withdrawal boundaries (AccountManager.deposit, LeverVault.deposit/withdraw). Test suite uses 18-decimal mock, so this gap is invisible until testnet deployment.
 ## LOW
 - [ ] **OracleAdapter consistency tolerance** — 5% vs spec 2%
 - [ ] **OracleAdapter volatility EMA** — lookback ~10 vs spec ~20
