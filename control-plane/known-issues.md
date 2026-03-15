@@ -13,6 +13,8 @@
 - [ ] **OracleAdapter consistency tolerance** — 5% vs spec 2%
 - [ ] **OracleAdapter volatility EMA** — lookback ~10 vs spec ~20
 - [ ] **OracleAdapter convergence enforcement** — not implemented (spec says SHOULD)
+- [ ] **MarginEngine PENDING_RESOLUTION MM multiplier** — spec says use 2× (WP 18.3), not implemented
+- [ ] **MarginEngine IM uses rate-based (5%) instead of notional/leverage** — deliberate to avoid circularity, documented
 
 ## FIXED (MarketRegistry — 2026-03-15)
 - [x] **5 role misassignments** — activateMarket/setLive were KEEPER (spec: MARKET_MANAGER), setPendingResolution/resolveMarket were KEEPER/MARKET_MANAGER (spec: ORACLE), voidMarket was MARKET_MANAGER (spec: ADMIN)
@@ -23,6 +25,9 @@
 ## FIXED (AccountManager — 2026-03-15)
 - [x] **debitPnL reverted on insufficient balance** — spec says cap at balance, return bad debt. Was blocking liquidation/settlement of underwater positions. Now returns badDebt amount for InsuranceFund routing.
 
+## FIXED (ExecutionEngine — 2026-03-15)
+- [x] **OI double-counted in imbalance_delta for opens** — increaseOI was called before price computation, so the trade's own OI was already in getSideOI(). Then _computeImbalanceDelta added it again. Moved increaseOI after price computation.
+
 ## AUDIT PROGRESS
 - [x] FixedPointMath — PASS
 - [x] RiskCurves — PASS
@@ -30,4 +35,9 @@
 - [x] OracleAdapter — ISSUES FOUND (see above)
 - [x] MarketRegistry — ISSUES FOUND & FIXED (see above)
 - [x] AccountManager — ISSUE FOUND & FIXED (see above)
-- [ ] PositionManager through SettlementEngine — pending
+- [x] PositionManager — PASS
+- [x] LeverageModel — PASS
+- [x] OILimits — PASS
+- [x] ExecutionEngine — ISSUE FOUND & FIXED (see above)
+- [x] MarginEngine — PASS (deviations noted in LOW)
+- [ ] BorrowFeeEngine through SettlementEngine — pending (P1)

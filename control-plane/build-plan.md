@@ -26,11 +26,11 @@
 - [x] OracleAdapter — ISSUES FOUND (logged in known-issues.md)
 - [x] **P0** MarketRegistry — audit against spec — ISSUES FOUND & FIXED 2026-03-15
 - [x] **P0** AccountManager — audit against spec — ISSUES FOUND & FIXED 2026-03-15
-- [ ] **P0** PositionManager — audit against spec
-- [ ] **P0** LeverageModel — audit against spec
-- [ ] **P0** OILimits — audit against spec
-- [ ] **P0** ExecutionEngine — audit against spec
-- [ ] **P0** MarginEngine — audit against spec
+- [x] **P0** PositionManager — audit against spec — PASS 2026-03-15
+- [x] **P0** LeverageModel — audit against spec — PASS 2026-03-15
+- [x] **P0** OILimits — audit against spec — PASS 2026-03-15
+- [x] **P0** ExecutionEngine — audit against spec — OI ORDERING BUG FIXED 2026-03-15
+- [x] **P0** MarginEngine — audit against spec — PASS (deviations noted) 2026-03-15
 - [ ] **P1** BorrowFeeEngine — audit against spec
 - [ ] **P1** FundingRateEngine — audit against spec
 - [ ] **P1** FeeRouter — audit against spec
@@ -77,3 +77,6 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 [2026-03-15] Build plan synced with actual test-phase.log results
 [2026-03-15] MarketRegistry spec audit — 9 issues found, all fixed. Roles, outcome validation, already-live guard, event naming.
 [2026-03-15] AccountManager spec audit — 1 HIGH fixed (debitPnL now caps at balance, returns bad debt).
+[2026-03-15] PositionManager, LeverageModel, OILimits — all PASS, no fixes needed.
+[2026-03-15] ExecutionEngine spec audit — OI ordering bug fixed (trade was double-counted in imbalance_delta).
+[2026-03-15] MarginEngine spec audit — PASS with noted deviations (IM rate-based, pending resolution MM not implemented).

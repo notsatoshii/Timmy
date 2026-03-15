@@ -158,8 +158,8 @@ contract ExecutionEngine is IExecutionEngine, AccessControl, ReentrancyGuard, Pa
         uint256 notional = params.collateral.wadMul(params.leverage);
         if (notional == 0) revert ExecutionEngine__ZeroSize();
 
-        oiLimits.increaseOI(params.marketId, msg.sender, params.isLong, notional);
-
+        // NOTE: OI is increased INSIDE _executeOpen, AFTER price computation.
+        // This prevents the trade's own OI from double-counting in imbalance_delta.
         positionId = _executeOpen(params, notional);
     }
 
@@ -276,6 +276,10 @@ contract ExecutionEngine is IExecutionEngine, AccessControl, ReentrancyGuard, Pa
         ctx.collateralNet = params.collateral - feeRouter.collectTransactionFee(notional);
 
         _validateMargin(params.marketId, params.isLong, ctx.collateralNet, params.leverage);
+
+        // Increase OI AFTER price computation to avoid double-counting in imbalance_delta.
+        // If caps are exceeded, this reverts and the whole tx rolls back.
+        oiLimits.increaseOI(params.marketId, msg.sender, params.isLong, ctx.notional);
 
         positionId = _storePosition(params, ctx);
 
