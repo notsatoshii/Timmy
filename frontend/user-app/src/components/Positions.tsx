@@ -413,7 +413,7 @@ const Positions: React.FC = () => {
                   </div>
 
                   {/* Position details grid skeleton */}
-                  <div className="grid grid-cols-2 md:grid-cols-6 gap-4 text-sm">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 text-sm">
                     {[1, 2, 3, 4, 5, 6].map((detailIndex) => (
                       <div key={detailIndex}>
                         <Skeleton width="70px" height="16px" className="mb-1" />
@@ -471,7 +471,7 @@ const Positions: React.FC = () => {
                   </div>
 
                   {/* Position details grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-6 gap-4 text-sm">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 text-sm">
                     <div>
                       <p className="text-gray-500">Collateral</p>
                       <p className="font-semibold font-mono text-gray-900">${formatWad(position.collateral)}</p>
@@ -485,8 +485,8 @@ const Positions: React.FC = () => {
                       <p className="font-semibold font-mono text-gray-900">{formatPrice(position.entryPrice)}</p>
                     </div>
                     <div>
-                      <div className="flex items-center space-x-2">
-                        <p className="text-gray-500">Current PI</p>
+                      <div className="flex items-center space-x-1">
+                        <p className="text-gray-500 text-xs sm:text-sm">Current PI</p>
                         <div className="flex items-center">
                           <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
                           <span className="text-xs text-green-600 ml-1">LIVE</span>
@@ -513,7 +513,7 @@ const Positions: React.FC = () => {
 
                   {/* Fee breakdown */}
                   <div className="mt-3 pt-3 border-t border-gray-100">
-                    <div className="flex space-x-6 text-xs text-gray-500">
+                    <div className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-4 text-xs text-gray-500">
                       <span>Borrow fees: <span className="font-mono text-red-400">-${formatWad(position.borrowFees)}</span></span>
                       <span>Funding: <span className={`font-mono ${position.fundingAccrued >= BigInt(0) ? 'text-green-500' : 'text-red-400'}`}>
                         {formatPnl(position.fundingAccrued)}
