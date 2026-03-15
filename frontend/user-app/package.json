@@ -15,6 +15,7 @@
     "@types/node": "^16.18.126",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@wagmi/chains": "^1.8.0",
     "@walletconnect/ethereum-provider": "^2.23.8",
     "autoprefixer": "^10.4.27",
     "lucide-react": "^0.577.0",
@@ -26,7 +27,7 @@
     "tailwindcss": "^3.4.19",
     "typescript": "^5.9.3",
     "viem": "^2.47.4",
-    "wagmi": "^3.5.0",
+    "wagmi": "^2.19.5",
     "web-vitals": "^2.1.4"
   },
   "scripts": {

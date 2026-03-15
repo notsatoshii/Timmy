@@ -1,11 +1,28 @@
-import { getDefaultConfig } from '@rainbow-me/rainbowkit';
+import { connectorsForWallets } from '@rainbow-me/rainbowkit';
+import { injectedWallet, metaMaskWallet, coinbaseWallet } from '@rainbow-me/rainbowkit/wallets';
+import { createConfig, http } from 'wagmi';
 import { baseSepolia } from 'wagmi/chains';
 
-export const config = getDefaultConfig({
-  appName: 'LEVER Protocol',
-  projectId: 'YOUR_PROJECT_ID', // Get from WalletConnect
+// Only injected wallets — no WalletConnect, no WebSocket origin errors
+const connectors = connectorsForWallets(
+  [
+    {
+      groupName: 'Supported Wallets',
+      wallets: [injectedWallet, metaMaskWallet, coinbaseWallet],
+    },
+  ],
+  {
+    appName: 'LEVER Protocol',
+    projectId: 'NONE', // Not used — WalletConnect removed
+  }
+);
+
+export const config = createConfig({
+  connectors,
   chains: [baseSepolia],
-  ssr: false,
+  transports: {
+    [baseSepolia.id]: http(),
+  },
 });
 
 export { baseSepolia };
