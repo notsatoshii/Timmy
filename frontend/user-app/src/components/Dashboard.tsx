@@ -4,12 +4,22 @@ import ConnectWallet from './ConnectWallet';
 import Header from './Header';
 import ProtocolStats from './ProtocolStats';
 import Markets from './Markets';
+import MarketDetail from './MarketDetail';
 import Trading from './Trading';
 import Vault from './Vault';
 import Positions from './Positions';
 import ErrorBoundary from './ErrorBoundary';
 
 type TabType = 'markets' | 'trading' | 'vault' | 'positions';
+
+interface Market {
+  id: string;
+  description: string;
+  price: number;
+  resolutionTime: number;
+  category: string;
+  isLive: boolean;
+}
 
 const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('markets');
@@ -18,11 +28,21 @@ const Dashboard: React.FC = () => {
     marketName: string;
     direction: 'long' | 'short';
   } | null>(null);
+  const [selectedMarket, setSelectedMarket] = useState<Market | null>(null);
   const { isConnected } = useAccount();
 
   const handleTradeSelection = (marketId: string, marketName: string, direction: 'long' | 'short') => {
     setSelectedTrade({ marketId, marketName, direction });
+    setSelectedMarket(null); // Clear market detail view
     setActiveTab('trading');
+  };
+
+  const handleMarketDetail = (market: Market) => {
+    setSelectedMarket(market);
+  };
+
+  const handleBackToMarkets = () => {
+    setSelectedMarket(null);
   };
 
   const tabs = [
@@ -35,9 +55,16 @@ const Dashboard: React.FC = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'markets':
+        if (selectedMarket) {
+          return (
+            <ErrorBoundary panelName="MarketDetail">
+              <MarketDetail market={selectedMarket} onBack={handleBackToMarkets} />
+            </ErrorBoundary>
+          );
+        }
         return (
           <ErrorBoundary panelName="Markets">
-            <Markets onTradeSelect={handleTradeSelection} />
+            <Markets onTradeSelect={handleTradeSelection} onMarketDetail={handleMarketDetail} />
           </ErrorBoundary>
         );
       case 'trading':
@@ -61,7 +88,7 @@ const Dashboard: React.FC = () => {
       default:
         return (
           <ErrorBoundary panelName="Markets">
-            <Markets />
+            <Markets onTradeSelect={handleTradeSelection} onMarketDetail={handleMarketDetail} />
           </ErrorBoundary>
         );
     }

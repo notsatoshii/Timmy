@@ -16,9 +16,10 @@ interface Market {
 
 interface MarketsProps {
   onTradeSelect?: (marketId: string, marketName: string, direction: 'long' | 'short') => void;
+  onMarketDetail?: (market: Market) => void;
 }
 
-const Markets: React.FC<MarketsProps> = ({ onTradeSelect }) => {
+const Markets: React.FC<MarketsProps> = ({ onTradeSelect, onMarketDetail }) => {
   const [markets, setMarkets] = useState<Market[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -212,7 +213,8 @@ const Markets: React.FC<MarketsProps> = ({ onTradeSelect }) => {
         {markets.map((market) => (
           <div
             key={market.id}
-            className="bg-surface-1 rounded-lg border border-border p-5 hover:border-border-light transition-all duration-200 hover:shadow-card"
+            className="bg-surface-1 rounded-lg border border-border p-5 hover:border-border-light transition-all duration-200 hover:shadow-card cursor-pointer"
+            onClick={() => onMarketDetail?.(market)}
           >
             <div className="flex flex-col space-y-4 md:flex-row md:items-start md:justify-between md:space-y-0">
               <div className="flex-1 min-w-0">
@@ -264,13 +266,19 @@ const Markets: React.FC<MarketsProps> = ({ onTradeSelect }) => {
               <div className="md:ml-6 flex-shrink-0">
                 <div className="flex space-x-2">
                   <button
-                    onClick={() => onTradeSelect?.(market.id, market.description, 'long')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onTradeSelect?.(market.id, market.description, 'long');
+                    }}
                     className="bg-accent/10 text-accent border border-accent/30 px-5 py-2 rounded-md text-sm font-semibold hover:bg-accent/20 hover:border-accent/50 transition-all flex-1 md:flex-none"
                   >
                     Long
                   </button>
                   <button
-                    onClick={() => onTradeSelect?.(market.id, market.description, 'short')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onTradeSelect?.(market.id, market.description, 'short');
+                    }}
                     className="bg-danger/10 text-danger border border-danger/30 px-5 py-2 rounded-md text-sm font-semibold hover:bg-danger/20 hover:border-danger/50 transition-all flex-1 md:flex-none"
                   >
                     Short
