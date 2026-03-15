@@ -14,7 +14,7 @@ run_step() {
   echo "TIME: $(date)" >> $LOG
   echo "========================================" >> $LOG
   notify "Starting: $1"
-  claude -p "$2" >> $LOG 2>&1
+  claude --permission-mode bypassPermissions -p "$2" >> $LOG 2>&1
   echo "" >> $LOG
   echo "FINISHED: $1 at $(date)" >> $LOG
   echo "" >> $LOG

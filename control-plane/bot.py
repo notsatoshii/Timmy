@@ -7,6 +7,13 @@ Two modes:
   2. Natural language → Claude Code passthrough — any non-command message
      gets piped to `claude -p "..."` and the response sent back to TG.
 
+Session Management:
+  - Uses `claude -c -p` to continue sessions (memory between messages)
+  - Every 25 messages, triggers automatic handoff:
+    1. Asks Claude to summarize session state to session-handoff.md
+    2. Resets session counter
+    3. Next message starts fresh but loads handoff context
+
 Security: Only AUTHORIZED_USER_ID can interact.
 """
 
@@ -28,8 +35,11 @@ AUTHORIZED_USER_ID = 422985839
 PROJECT_DIR = "/root/lever-protocol"
 CLAUDE_CODE_BIN = "claude"  # assumes claude is in PATH
 MAX_TG_MESSAGE_LENGTH = 4000  # leave buffer under 4096
-CLAUDE_TIMEOUT = 600  # 5 minutes max per claude invocation
+CLAUDE_TIMEOUT = 600  # 10 minutes max per claude invocation
 LOG_FILE = "/root/lever-protocol/control-plane/bot.log"
+HANDOFF_FILE = "/root/lever-protocol/session-handoff.md"
+SESSION_LIMIT = 25  # messages before auto-handoff
+SESSION_STATE_FILE = "/root/lever-protocol/control-plane/session-state.json"
 
 # ─── Logging ──────────────────────────────────────────────────────────────────
 
@@ -42,6 +52,29 @@ logging.basicConfig(
     ],
 )
 log = logging.getLogger("lever-bot")
+
+# ─── Session State ────────────────────────────────────────────────────────────
+
+def load_session_state() -> dict:
+    """Load session state from disk."""
+    try:
+        if Path(SESSION_STATE_FILE).exists():
+            with open(SESSION_STATE_FILE, "r") as f:
+                return json.load(f)
+    except Exception as e:
+        log.error(f"Error loading session state: {e}")
+    return {"message_count": 0, "session_active": False}
+
+
+def save_session_state(state: dict):
+    """Save session state to disk."""
+    try:
+        Path(SESSION_STATE_FILE).parent.mkdir(parents=True, exist_ok=True)
+        with open(SESSION_STATE_FILE, "w") as f:
+            json.dump(state, f)
+    except Exception as e:
+        log.error(f"Error saving session state: {e}")
+
 
 # ─── Telegram API (raw HTTP, no external deps beyond requests) ────────────────
 
@@ -109,16 +142,22 @@ def chunk_text(text: str, max_len: int) -> list[str]:
 # ─── Claude Code Proxy ────────────────────────────────────────────────────────
 
 
-def run_claude_code(prompt: str, cwd: str = PROJECT_DIR) -> str:
+def run_claude_code(prompt: str, continue_session: bool = True, cwd: str = PROJECT_DIR) -> str:
     """
-    Run Claude Code in non-interactive mode and capture output.
-    Uses `claude -p "prompt"` which sends a single prompt and exits.
+    Run Claude Code and capture output.
+    - continue_session=True: uses -c flag to continue most recent session
+    - continue_session=False: starts a fresh session (no -c flag)
     """
-    log.info(f"Claude Code invocation: {prompt[:100]}...")
+    log.info(f"Claude Code invocation (continue={continue_session}): {prompt[:100]}...")
+
+    cmd = [CLAUDE_CODE_BIN]
+    if continue_session:
+        cmd.append("-c")
+    cmd.extend(["-p", prompt])
 
     try:
         result = subprocess.run(
-            [CLAUDE_CODE_BIN, "-p", prompt],
+            cmd,
             capture_output=True,
             text=True,
             timeout=CLAUDE_TIMEOUT,
@@ -150,11 +189,66 @@ def run_claude_code(prompt: str, cwd: str = PROJECT_DIR) -> str:
         return f"❌ Error running Claude Code: {str(e)}"
 
 
+def do_handoff(chat_id: int):
+    """
+    Trigger session handoff:
+    1. Ask Claude to summarize current state to handoff file
+    2. Reset session counter
+    """
+    log.info("Triggering session handoff...")
+    tg_send(chat_id, "🔄 Session reaching context limit. Running automatic handoff...")
+    tg_send_typing(chat_id)
+
+    handoff_prompt = (
+        f"IMPORTANT: This session is about to reset. Write a comprehensive handoff document to {HANDOFF_FILE}. "
+        f"Include:\n"
+        f"1. SUMMARY: What was accomplished this session (files created, modified, tested)\n"
+        f"2. CURRENT STATE: What is working, what is broken, what tests pass/fail\n"
+        f"3. OPEN ISSUES: Any errors, warnings, or unresolved problems\n"
+        f"4. NEXT STEPS: What should be done next\n"
+        f"5. KEY DECISIONS: Any design decisions or changes made this session\n"
+        f"6. CONTEXT: Any important details the next session needs to know\n\n"
+        f"Write it as a markdown file. Be specific — include file paths, function names, error messages. "
+        f"The next session will ONLY have this file for context, so don't leave anything out."
+    )
+
+    result = run_claude_code(handoff_prompt, continue_session=True)
+    log.info(f"Handoff result: {result[:200]}")
+
+    # Reset session state
+    state = {"message_count": 0, "session_active": False}
+    save_session_state(state)
+
+    tg_send(chat_id, f"✅ Session handoff complete. Context saved to session-handoff.md. Next message starts a fresh session.")
+    return result
+
+
+def get_handoff_context() -> str:
+    """Load handoff file content for new session context."""
+    try:
+        if Path(HANDOFF_FILE).exists():
+            content = Path(HANDOFF_FILE).read_text()
+            if content.strip():
+                return (
+                    f"\n\n--- PREVIOUS SESSION HANDOFF ---\n"
+                    f"The following is a summary from your previous session. Use it for context:\n\n"
+                    f"{content}\n"
+                    f"--- END HANDOFF ---\n\n"
+                )
+    except Exception as e:
+        log.error(f"Error reading handoff file: {e}")
+    return ""
+
+
 # ─── Slash Command Handlers ───────────────────────────────────────────────────
 
 
 def cmd_status(chat_id: int):
     """Show agent session status."""
+    state = load_session_state()
+    msg_count = state.get("message_count", 0)
+    remaining = SESSION_LIMIT - msg_count
+
     try:
         result = subprocess.run(
             ["tmux", "list-sessions"], capture_output=True, text=True, timeout=10
@@ -163,7 +257,14 @@ def cmd_status(chat_id: int):
     except Exception as e:
         sessions = f"Error checking sessions: {e}"
 
-    tg_send(chat_id, f"📊 Session Status\n\n{sessions}")
+    status_text = (
+        f"📊 Session Status\n\n"
+        f"💬 Messages this session: {msg_count}/{SESSION_LIMIT}\n"
+        f"📝 Messages until handoff: {remaining}\n"
+        f"📄 Handoff file exists: {'Yes' if Path(HANDOFF_FILE).exists() else 'No'}\n\n"
+        f"{sessions}"
+    )
+    tg_send(chat_id, status_text)
 
 
 def cmd_health(chat_id: int):
@@ -260,7 +361,19 @@ def cmd_go(chat_id: int, args: str):
         return
     tg_send(chat_id, f"🚀 Launching Claude Code agent...\n\nTask: {args}")
     tg_send_typing(chat_id)
-    result = run_claude_code(args)
+
+    # /go commands use session continuity
+    state = load_session_state()
+    msg_count = state.get("message_count", 0)
+    continue_session = msg_count > 0 and state.get("session_active", False)
+
+    result = run_claude_code(args, continue_session=continue_session)
+
+    # Update state
+    state["message_count"] = msg_count + 1
+    state["session_active"] = True
+    save_session_state(state)
+
     tg_send(chat_id, f"✅ Agent result:\n\n{result}")
 
 
@@ -285,29 +398,29 @@ def cmd_test(chat_id: int, args: str):
         tg_send(chat_id, f"❌ Test error: {e}")
 
 
+def cmd_reset(chat_id: int):
+    """Manually reset session."""
+    do_handoff(chat_id)
+
+
 def cmd_help(chat_id: int):
     """Show available commands."""
     help_text = """🤖 LEVER Bot — Command Center + Claude Code Proxy
 
 📌 Slash Commands:
-/status — Agent session status
+/status — Session status + message count
 /health — Server health check
 /go <task> — Launch Claude Code on a task
 /test [contract] — Run forge tests
 /tasks — Show spec/build status
 /lessons — Show lessons learned
 /buildlog — Show build log
+/reset — Force session handoff + reset
 /help — This message
 
 💬 Natural Language (Claude Code Proxy):
 Just type anything without a / prefix and it goes straight to Claude Code.
-
-Examples:
-  "show me the current forge compilation errors"
-  "read SPEC/01-FixedPointMath.md and summarize it"
-  "run forge build and tell me what's broken"
-  "what files are in the contracts directory?"
-  "write a unit test for RiskCurves.computeR"
+Sessions continue for 25 messages, then auto-handoff and reset.
 
 Claude Code has full access to the project at /root/lever-protocol
 and can read, write, and execute code."""
@@ -325,6 +438,7 @@ COMMANDS = {
     "/tasks": lambda cid, _: cmd_tasks(cid),
     "/lessons": lambda cid, _: cmd_lessons(cid),
     "/buildlog": lambda cid, _: cmd_buildlog(cid),
+    "/reset": lambda cid, _: cmd_reset(cid),
     "/help": lambda cid, _: cmd_help(cid),
     "/start": lambda cid, _: cmd_help(cid),
 }
@@ -361,18 +475,49 @@ def handle_message(update: dict):
             tg_send(chat_id, f"Unknown command: {cmd}\nType /help for available commands.")
         return
 
-    # Natural language → Claude Code proxy
-    tg_send(chat_id, f"🤖 Sending to Claude Code...")
+    # ─── Session Management ───────────────────────────────────────────────
+
+    state = load_session_state()
+    msg_count = state.get("message_count", 0)
+
+    # Check if we need to handoff before processing
+    if msg_count >= SESSION_LIMIT:
+        do_handoff(chat_id)
+        state = load_session_state()  # reload after reset
+        msg_count = 0
+
+    # Determine if this is a new session or continuation
+    is_new_session = msg_count == 0 or not state.get("session_active", False)
+
+    # Build the prompt
+    if is_new_session:
+        # Fresh session: include project context + handoff from previous session
+        handoff_context = get_handoff_context()
+        contextualized_prompt = (
+            f"You are working on the LEVER Protocol project at {PROJECT_DIR}. "
+            f"Read CLAUDE.md for full project context. "
+            f"{handoff_context}"
+            f"The user asks: {text}"
+        )
+        continue_session = False
+        log.info(f"Starting NEW session (message 1/{SESSION_LIMIT})")
+    else:
+        # Continuing session: just pass the message, Claude has context
+        contextualized_prompt = text
+        continue_session = True
+        log.info(f"Continuing session (message {msg_count + 1}/{SESSION_LIMIT})")
+
+    # Send to Claude Code
+    tg_send(chat_id, f"🤖 [{msg_count + 1}/{SESSION_LIMIT}] Sending to Claude Code...")
     tg_send_typing(chat_id)
 
-    # Prepend project context so Claude Code knows where it is
-    contextualized_prompt = (
-        f"You are working on the LEVER Protocol project at {PROJECT_DIR}. "
-        f"Read CLAUDE.md for project context if needed. "
-        f"The user asks: {text}"
-    )
+    result = run_claude_code(contextualized_prompt, continue_session=continue_session)
 
-    result = run_claude_code(contextualized_prompt)
+    # Update session state
+    state["message_count"] = msg_count + 1
+    state["session_active"] = True
+    save_session_state(state)
+
     tg_send(chat_id, result)
 
 
