@@ -13,7 +13,7 @@ const Skeleton: React.FC<SkeletonProps> = ({
   height,
   variant = 'rectangular'
 }) => {
-  const baseClasses = 'animate-pulse bg-gray-200';
+  const baseClasses = 'animate-pulse bg-surface-3';
 
   const variantClasses = {
     text: 'rounded',

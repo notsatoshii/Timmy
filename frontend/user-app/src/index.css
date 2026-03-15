@@ -1,12 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer base {
+  body {
+    @apply bg-surface-0 text-gray-200 antialiased;
+    font-family: 'Inter', 'Instrument Sans', system-ui, -apple-system, sans-serif;
+  }
+
+  /* Custom scrollbar for dark theme */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0B0B14;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #2A2A4A;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #3A3A5A;
+  }
+
+  /* Form input overrides for dark theme */
+  select, input[type="text"], input[type="number"], textarea {
+    @apply bg-surface-3 border-border text-gray-200;
+  }
+  select:focus, input[type="text"]:focus, input[type="number"]:focus, textarea:focus {
+    @apply border-accent ring-1 ring-accent/30;
+  }
+
+  /* Range slider styling */
+  input[type="range"] {
+    @apply accent-accent;
+  }
+  input[type="range"]::-webkit-slider-track {
+    background: #1E1E3A;
+    border-radius: 4px;
+    height: 4px;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    background: #00E8B4;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-surface-1 border border-border rounded-lg;
+  }
+  .card-elevated {
+    @apply bg-surface-2 border border-border rounded-lg;
+  }
 }

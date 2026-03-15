@@ -146,21 +146,21 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Open Position</h2>
-        <p className="text-gray-600">
+        <h2 className="text-2xl font-bold text-gray-100">Open Position</h2>
+        <p className="text-gray-500">
           Take leveraged positions on binary prediction markets
         </p>
         {selectedTrade && (
-          <div className="mt-2 p-3 bg-success-50 border border-success-200 rounded-lg">
-            <p className="text-sm text-success-800">
-              <strong>Market selected:</strong> {selectedTrade.marketName} • Direction: {selectedTrade.direction.toUpperCase()}
+          <div className="mt-2 p-3 bg-accent-muted border border-accent/20 rounded-lg">
+            <p className="text-sm text-accent">
+              <strong>Market selected:</strong> {selectedTrade.marketName} &bull; Direction: {selectedTrade.direction.toUpperCase()}
             </p>
           </div>
         )}
         {!address && (
-          <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-800">
-              <strong>Demo mode:</strong> Configure your position parameters below.
+          <div className="mt-2 p-3 bg-purple-muted border border-purple/20 rounded-lg">
+            <p className="text-sm text-gray-300">
+              <span className="font-medium text-purple">Demo mode:</span> Configure your position parameters below.
               Connect wallet to execute trades.
             </p>
           </div>
@@ -170,19 +170,19 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Trading Form */}
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Position Details</h3>
+          <div className="bg-surface-1 rounded-lg border border-border p-6">
+            <h3 className="text-lg font-semibold text-gray-100 mb-4">Position Details</h3>
 
             <div className="space-y-4">
               {/* Market Selection */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-400 mb-2">
                   Select Market
                 </label>
                 <select
                   value={tradeForm.marketId}
                   onChange={(e) => handleInputChange('marketId', e.target.value)}
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  className="w-full rounded-md bg-surface-3 border-border text-gray-200 shadow-sm focus:border-accent focus:ring-accent/30"
                 >
                   <option value="">Choose a market...</option>
                   {mockMarkets.map((market) => (
@@ -195,17 +195,17 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
 
               {/* Direction */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-400 mb-2">
                   Direction
                 </label>
                 <div className="flex space-x-3">
                   <button
                     type="button"
                     onClick={() => handleInputChange('direction', 'long')}
-                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                    className={`flex-1 py-2.5 px-4 rounded-md text-sm font-semibold transition-all ${
                       tradeForm.direction === 'long'
-                        ? 'bg-success-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-accent/20 text-accent border border-accent/40 shadow-glow-green'
+                        : 'bg-surface-3 text-gray-400 border border-border hover:border-border-light'
                     }`}
                   >
                     Long (Yes)
@@ -213,10 +213,10 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
                   <button
                     type="button"
                     onClick={() => handleInputChange('direction', 'short')}
-                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                    className={`flex-1 py-2.5 px-4 rounded-md text-sm font-semibold transition-all ${
                       tradeForm.direction === 'short'
-                        ? 'bg-danger-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-danger/20 text-danger border border-danger/40'
+                        : 'bg-surface-3 text-gray-400 border border-border hover:border-border-light'
                     }`}
                   >
                     Short (No)
@@ -226,7 +226,7 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
 
               {/* Collateral Amount */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-400 mb-2">
                   Collateral Amount (USDT)
                 </label>
                 <input
@@ -236,21 +236,21 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
                   value={tradeForm.collateral}
                   onChange={(e) => handleInputChange('collateral', e.target.value)}
                   placeholder="0.00"
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  className="w-full rounded-md bg-surface-3 border-border text-gray-200 shadow-sm focus:border-accent focus:ring-accent/30 font-mono"
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Wallet Balance: {loadingUsdtBalance ? (
                     <Skeleton width="60px" height="16px" className="inline-block" />
                   ) : (
-                    `${usdtBalance ? formatUsdt(usdtBalance) : '0'} USDT`
+                    <span className="font-mono text-gray-400">{usdtBalance ? formatUsdt(usdtBalance) : '0'} USDT</span>
                   )}
                 </p>
               </div>
 
               {/* Leverage */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Leverage: {tradeForm.leverage}x
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  Leverage: <span className="text-accent font-mono">{tradeForm.leverage}x</span>
                 </label>
                 <input
                   type="range"
@@ -261,7 +261,7 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
                   onChange={(e) => handleInputChange('leverage', e.target.value)}
                   className="w-full"
                 />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <div className="flex justify-between text-xs text-gray-600 mt-1 font-mono">
                   <span>1x</span>
                   <span>15x</span>
                   <span>30x</span>
@@ -269,16 +269,16 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
               </div>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-gray-200">
+            <div className="mt-6 pt-4 border-t border-border">
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Position Size:</span>
-                  <span className="font-medium">{calculatePositionSize()} USDT</span>
+                  <span className="text-gray-500">Position Size:</span>
+                  <span className="font-medium font-mono text-gray-200">{calculatePositionSize()} USDT</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Liquidation Risk:</span>
+                  <span className="text-gray-500">Liquidation Risk:</span>
                   <span className={`font-medium ${
-                    parseFloat(tradeForm.leverage) > 10 ? 'text-danger-600' : 'text-success-600'
+                    parseFloat(tradeForm.leverage) > 10 ? 'text-danger' : 'text-accent'
                   }`}>
                     {parseFloat(tradeForm.leverage) > 10 ? 'High' : 'Low'}
                   </span>
@@ -287,12 +287,11 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
             </div>
 
             <div className="mt-6 space-y-3">
-              {/* Action Buttons */}
               {!address ? (
-                <div className="text-center py-4 bg-gray-50 rounded-lg border border-gray-200">
-                  <p className="text-sm text-gray-600 mb-3">Connect wallet to execute this trade</p>
-                  <p className="text-xs text-gray-500">
-                    Position value: {calculatePositionSize()} USDT • Leverage: {tradeForm.leverage}x
+                <div className="text-center py-4 bg-surface-0 rounded-lg border border-border">
+                  <p className="text-sm text-gray-400 mb-3">Connect wallet to execute this trade</p>
+                  <p className="text-xs text-gray-600 font-mono">
+                    Position value: {calculatePositionSize()} USDT &bull; Leverage: {tradeForm.leverage}x
                   </p>
                 </div>
               ) : !accountBalance || accountBalance < parseUsdt(tradeForm.collateral || '0') ? (
@@ -300,14 +299,14 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
                   <button
                     onClick={handleApproveUsdt}
                     disabled={!tradeForm.collateral}
-                    className="w-full bg-primary-600 text-white py-3 px-4 rounded-md font-medium hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-accent text-surface-0 py-3 px-4 rounded-md font-semibold hover:bg-accent-dim disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   >
                     1. Approve USDT
                   </button>
                   <button
                     onClick={handleDeposit}
                     disabled={!tradeForm.collateral}
-                    className="w-full bg-primary-600 text-white py-3 px-4 rounded-md font-medium hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-purple text-white py-3 px-4 rounded-md font-semibold hover:bg-purple-dim disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   >
                     2. Deposit Collateral
                   </button>
@@ -316,7 +315,7 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
                 <button
                   onClick={handleOpenPosition}
                   disabled={!tradeForm.marketId || !tradeForm.collateral}
-                  className="w-full bg-primary-600 text-white py-3 px-4 rounded-md font-medium hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-accent text-surface-0 py-3 px-4 rounded-md font-semibold hover:bg-accent-dim disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 >
                   Open Position
                 </button>
@@ -327,12 +326,12 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
 
         {/* Account Info */}
         <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Account</h3>
+          <div className="bg-surface-1 rounded-lg border border-border p-6">
+            <h3 className="text-lg font-semibold text-gray-100 mb-4">Account</h3>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-gray-600">USDT Balance:</span>
-                <span className="font-medium">
+                <span className="text-gray-500">USDT Balance:</span>
+                <span className="font-medium font-mono text-gray-200">
                   {loadingUsdtBalance ? (
                     <Skeleton width="60px" height="20px" />
                   ) : (
@@ -341,8 +340,8 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Available Collateral:</span>
-                <span className="font-medium">
+                <span className="text-gray-500">Available Collateral:</span>
+                <span className="font-medium font-mono text-gray-200">
                   {loadingAccountBalance ? (
                     <Skeleton width="60px" height="20px" />
                   ) : (
@@ -354,14 +353,13 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
           </div>
 
           {/* Get Test USDT */}
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <h4 className="font-medium text-yellow-800 mb-2">Need Test USDT?</h4>
-            <p className="text-sm text-yellow-700 mb-3">
+          <div className="bg-warning-muted border border-warning/20 rounded-lg p-4">
+            <h4 className="font-medium text-warning mb-2">Need Test USDT?</h4>
+            <p className="text-sm text-gray-400 mb-3">
               Get free test USDT for Base Sepolia testnet
             </p>
             <button
               onClick={() => {
-                // Call USDT faucet
                 approveUsdt({
                   address: CONTRACT_ADDRESSES.usdt,
                   abi: USDT_ABI,
@@ -369,7 +367,7 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
                   args: [],
                 });
               }}
-              className="w-full bg-yellow-600 text-white py-2 px-3 rounded-md text-sm font-medium hover:bg-yellow-700"
+              className="w-full bg-warning text-surface-0 py-2 px-3 rounded-md text-sm font-semibold hover:bg-warning-dim transition-colors"
             >
               Get 10,000 USDT
             </button>

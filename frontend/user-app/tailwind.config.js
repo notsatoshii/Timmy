@@ -6,42 +6,56 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
+        // Core backgrounds (deep navy → pitch black)
+        surface: {
+          0: '#050509',   // page background
+          1: '#0B0B14',   // card background
+          2: '#111120',   // elevated surfaces
+          3: '#1A1A2E',   // hover states, inputs
         },
-        success: {
-          50: '#f0fdf4',
-          100: '#dcfce7',
-          200: '#bbf7d0',
-          300: '#86efac',
-          400: '#4ade80',
-          500: '#22c55e',
-          600: '#16a34a',
-          700: '#15803d',
-          800: '#166534',
-          900: '#14532d',
+        // Border colors
+        border: {
+          DEFAULT: '#1E1E3A',
+          light: '#2A2A4A',
+          hover: '#3A3A5A',
         },
+        // Accent: electric green
+        accent: {
+          DEFAULT: '#00E8B4',
+          dim: '#00C49A',
+          muted: 'rgba(0, 232, 180, 0.15)',
+          glow: 'rgba(0, 232, 180, 0.25)',
+        },
+        // Secondary: purple
+        purple: {
+          DEFAULT: '#8060FF',
+          dim: '#6B4FD9',
+          muted: 'rgba(128, 96, 255, 0.15)',
+        },
+        // Danger: coral red
         danger: {
-          50: '#fef2f2',
-          100: '#fee2e2',
-          200: '#fecaca',
-          300: '#fca5a5',
-          400: '#f87171',
-          500: '#ef4444',
-          600: '#dc2626',
-          700: '#b91c1c',
-          800: '#991b1b',
-          900: '#7f1d1d',
+          DEFAULT: '#FF4868',
+          dim: '#D93D58',
+          muted: 'rgba(255, 72, 104, 0.15)',
         },
+        // Warning: amber
+        warning: {
+          DEFAULT: '#FFB830',
+          dim: '#D99D29',
+          muted: 'rgba(255, 184, 48, 0.15)',
+        },
+        // Long/Short (reuse accent/danger)
+        long: '#00E8B4',
+        short: '#FF4868',
+      },
+      fontFamily: {
+        sans: ['Inter', 'Instrument Sans', 'system-ui', '-apple-system', 'sans-serif'],
+        mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'monospace'],
+      },
+      boxShadow: {
+        'glow-green': '0 0 20px rgba(0, 232, 180, 0.15)',
+        'glow-purple': '0 0 20px rgba(128, 96, 255, 0.15)',
+        'card': '0 1px 3px rgba(0, 0, 0, 0.3)',
       },
     },
   },

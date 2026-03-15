@@ -119,7 +119,7 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 - [x] **P1** Mobile responsive — test on 375px width, fix any overflow or unreadable text — COMPLETE 2026-03-15
 
 ## Phase 10: Frontend Polish (investor demo ready)
-- [ ] **P1** Dark theme redesign — institutional aesthetic matching pitch deck. Not generic Tailwind template.
+- [x] **P1** Dark theme redesign — institutional aesthetic matching pitch deck. Not generic Tailwind template. — DONE 2026-03-15
 - [ ] **P1** Protocol stats banner at top: TVL, 24h volume, total OI, LP APY, insurance fund — all live from contracts
 - [ ] **P1** Market detail view: click a market to see probability chart, OI breakdown long/short, funding rate, borrow rate, recent positions
 - [ ] **P1** Portfolio dashboard: total equity across positions, PnL curve over time, fee breakdown, margin usage
@@ -128,6 +128,7 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 - [ ] **P1** Final demo walkthrough: record screen capture of full flow (connect wallet, browse markets, open position, see PnL, deposit to vault, see yield) to verify everything works smooth
 
 ## Completion Log
+[2026-03-15] Dark theme redesign COMPLETE — Full institutional dark theme applied across all 10 frontend files. Deep navy backgrounds (#050509, #0B0B14, #111120), electric green accent (#00E8B4), purple secondary (#8060FF), coral red danger (#FF4868), amber warning (#FFB830). Inter + JetBrains Mono typography. Custom scrollbars, form input overrides, glow effects on key metrics. All 5 frontend test phases PASS. Build clean.
 [2026-03-15] OracleAdapter source validation fix — c75c5c9
 [2026-03-15] All math verifications passed — exact match across 6 engines
 [2026-03-15] Full lifecycle integration — 13/13 steps, zero mocks

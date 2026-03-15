@@ -67,13 +67,13 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-surface-0">
       <ErrorBoundary panelName="Header">
         <Header />
       </ErrorBoundary>
 
       {/* Navigation Tabs */}
-      <div className="bg-white shadow">
+      <div className="bg-surface-1 border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Desktop navigation */}
           <div className="hidden md:flex space-x-8">
@@ -83,8 +83,8 @@ const Dashboard: React.FC = () => {
                 onClick={() => setActiveTab(tab.id)}
                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
                   activeTab === tab.id
-                    ? 'border-primary-500 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-accent text-accent'
+                    : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-border-light'
                 }`}
               >
                 <div className="flex flex-col items-center">
@@ -104,7 +104,7 @@ const Dashboard: React.FC = () => {
                   onClick={() => setActiveTab(tab.id)}
                   className={`py-3 px-1 border-b-2 font-medium text-xs transition-colors duration-200 ${
                     activeTab === tab.id
-                      ? 'border-primary-500 text-primary-600'
+                      ? 'border-accent text-accent'
                       : 'border-transparent text-gray-500'
                   }`}
                 >
@@ -120,14 +120,13 @@ const Dashboard: React.FC = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Always show content - wallet connection is handled by individual components */}
         {renderContent()}
 
         {/* Show wallet connection prompt only for transaction-heavy tabs when not connected */}
         {!isConnected && (activeTab === 'trading' || activeTab === 'positions') && (
-          <div className="fixed bottom-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-4 max-w-sm">
-            <h4 className="font-medium text-gray-900 mb-2">Connect to Trade</h4>
-            <p className="text-sm text-gray-600 mb-3">
+          <div className="fixed bottom-4 right-4 bg-surface-2 border border-border rounded-lg shadow-card p-4 max-w-sm">
+            <h4 className="font-medium text-gray-100 mb-2">Connect to Trade</h4>
+            <p className="text-sm text-gray-400 mb-3">
               Connect your wallet to open positions and manage trades
             </p>
             <ConnectWallet />

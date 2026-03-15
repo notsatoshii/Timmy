@@ -44,12 +44,10 @@ const Positions: React.FC = () => {
 
   const { writeContract, data: txHash, error: writeError, reset: resetWrite } = useWriteContract();
 
-  // Wait for close transaction confirmation
   const { isSuccess: txConfirmed, isLoading: txPending } = useWaitForTransactionReceipt({
     hash: txHash,
   });
 
-  // Read user's position IDs from PositionManager
   const { data: positionIds, refetch: refetchPositionIds, isLoading: loadingPositionIds } = useReadContract({
     address: CONTRACT_ADDRESSES.positionManager,
     abi: POSITION_MANAGER_ABI,
@@ -58,7 +56,6 @@ const Positions: React.FC = () => {
     query: { enabled: !!address },
   });
 
-  // Read user's AccountManager balance
   const { data: accountBalance, refetch: refetchBalance, isLoading: loadingAccountBalance } = useReadContract({
     address: CONTRACT_ADDRESSES.accountManager,
     abi: ACCOUNT_MANAGER_ABI,
@@ -67,7 +64,6 @@ const Positions: React.FC = () => {
     query: { enabled: !!address },
   });
 
-  // Read user's free collateral
   const { data: freeCollateral, refetch: refetchFreeCollateral, isLoading: loadingFreeCollateral } = useReadContract({
     address: CONTRACT_ADDRESSES.accountManager,
     abi: ACCOUNT_MANAGER_ABI,
@@ -76,11 +72,9 @@ const Positions: React.FC = () => {
     query: { enabled: !!address },
   });
 
-  // Check if account data is loading
   const isLoadingAccountData = address && (loadingAccountBalance || loadingFreeCollateral);
   const isLoadingPositions = address && loadingPositionIds;
 
-  // Handle transaction state changes
   useEffect(() => {
     if (txPending && closeState === 'confirming') {
       setCloseState('pending');
@@ -90,11 +84,9 @@ const Positions: React.FC = () => {
   useEffect(() => {
     if (txConfirmed && (closeState === 'pending' || closeState === 'confirming')) {
       setCloseState('success');
-      // Refetch all data after successful close
       refetchPositionIds();
       refetchBalance();
       refetchFreeCollateral();
-      // Clear success after 5 seconds
       const timer = setTimeout(() => {
         setCloseState('idle');
         setSelectedPositionId(null);
@@ -111,15 +103,12 @@ const Positions: React.FC = () => {
     }
   }, [writeError]);
 
-  // Fetch position details for each position ID
   const fetchPositionDetails = useCallback(async () => {
     if (!positionIds || !Array.isArray(positionIds) || positionIds.length === 0) {
       setPositions([]);
       return;
     }
 
-    // For now, display position IDs as placeholders until individual reads complete
-    // In production, this would use multicall for efficiency
     const posData: PositionData[] = (positionIds as bigint[]).map((id) => ({
       id,
       marketId: '0x0000000000000000000000000000000000000000000000000000000000000000' as `0x${string}`,
@@ -144,7 +133,6 @@ const Positions: React.FC = () => {
     fetchPositionDetails();
   }, [fetchPositionDetails]);
 
-  // Live prices for demo positions
   const demoMarketIds = ['demo-1', 'demo-2'];
   const { prices: livePrices, lastUpdate: priceLastUpdate } = useLivePrices({
     marketIds: demoMarketIds,
@@ -152,14 +140,12 @@ const Positions: React.FC = () => {
     enabled: true
   });
 
-  // Helper function to calculate PnL based on current vs entry PI
   const calculatePnL = (isLong: boolean, entryPI: bigint, currentPI: bigint, positionSize: bigint): bigint => {
     const priceDiff = Number(currentPI) - Number(entryPI);
     const direction = isLong ? 1 : -1;
     return BigInt(Math.round(direction * priceDiff * Number(positionSize) / 1e18));
   };
 
-  // Helper function to create positions with live prices
   const createLivePosition = (basePosition: Omit<PositionData, 'currentPI' | 'pnl' | 'equity'>, demoMarketId: string): PositionData => {
     const livePrice = livePrices[demoMarketId];
     const currentPI = livePrice ? BigInt(Math.round(livePrice.pi * 1e18)) : basePosition.entryPI;
@@ -174,20 +160,19 @@ const Positions: React.FC = () => {
     };
   };
 
-  // Mock positions for demo when no real positions exist
   const baseDemoPositions = [
     {
       id: BigInt(1),
       marketId: 'demo-1' as `0x${string}`,
       marketName: 'SpaceX IPO by Dec 2026',
       isLong: true,
-      collateral: BigInt('1000000000000000000000'), // 1000 USDT
-      positionSize: BigInt('5000000000000000000000'), // 5000 USDT notional
-      entryPI: BigInt('350000000000000000'), // 0.35
-      entryPrice: BigInt('355000000000000000'), // 0.355 (with impact)
-      leverage: BigInt('5000000000000000000'), // 5x
-      borrowFees: BigInt('12000000000000000000'), // 12 USDT
-      fundingAccrued: BigInt('-3000000000000000000'), // -3 USDT
+      collateral: BigInt('1000000000000000000000'),
+      positionSize: BigInt('5000000000000000000000'),
+      entryPI: BigInt('350000000000000000'),
+      entryPrice: BigInt('355000000000000000'),
+      leverage: BigInt('5000000000000000000'),
+      borrowFees: BigInt('12000000000000000000'),
+      fundingAccrued: BigInt('-3000000000000000000'),
       isOpen: true,
     },
     {
@@ -195,18 +180,17 @@ const Positions: React.FC = () => {
       marketId: 'demo-2' as `0x${string}`,
       marketName: 'US-Iran Ceasefire by Sep 2025',
       isLong: false,
-      collateral: BigInt('500000000000000000000'), // 500 USDT
-      positionSize: BigInt('1500000000000000000000'), // 1500 USDT notional
-      entryPI: BigInt('280000000000000000'), // 0.28
-      entryPrice: BigInt('275000000000000000'), // 0.275
-      leverage: BigInt('3000000000000000000'), // 3x
-      borrowFees: BigInt('5000000000000000000'), // 5 USDT
-      fundingAccrued: BigInt('2000000000000000000'), // +2 USDT (received)
+      collateral: BigInt('500000000000000000000'),
+      positionSize: BigInt('1500000000000000000000'),
+      entryPI: BigInt('280000000000000000'),
+      entryPrice: BigInt('275000000000000000'),
+      leverage: BigInt('3000000000000000000'),
+      borrowFees: BigInt('5000000000000000000'),
+      fundingAccrued: BigInt('2000000000000000000'),
       isOpen: true,
     },
   ];
 
-  // Create live positions with real-time PnL calculation
   const demoPositions: PositionData[] = baseDemoPositions.map((basePos, index) =>
     createLivePosition(basePos, demoMarketIds[index])
   );
@@ -239,7 +223,6 @@ const Positions: React.FC = () => {
   };
 
   const computeNetPnl = (pos: PositionData): bigint => {
-    // Net PnL = price PnL - borrow fees + funding
     return pos.pnl - pos.borrowFees + pos.fundingAccrued;
   };
 
@@ -250,9 +233,9 @@ const Positions: React.FC = () => {
   };
 
   const getPnlColor = (value: bigint): string => {
-    if (value > BigInt(0)) return 'text-green-500';
-    if (value < BigInt(0)) return 'text-red-500';
-    return 'text-gray-400';
+    if (value > BigInt(0)) return 'text-accent';
+    if (value < BigInt(0)) return 'text-danger';
+    return 'text-gray-500';
   };
 
   const formatPrice = (price: bigint): string => {
@@ -270,43 +253,43 @@ const Positions: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Your Positions</h2>
-        <p className="text-gray-600">
+        <h2 className="text-2xl font-bold text-gray-100">Your Positions</h2>
+        <p className="text-gray-500">
           Monitor and manage your active leveraged positions
         </p>
       </div>
 
       {/* Account Balance Bar */}
       {address && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
+        <div className="bg-surface-2 border border-border rounded-lg p-4 flex flex-col space-y-3 md:flex-row md:space-y-0 md:items-center md:justify-between">
           {isLoadingAccountData ? (
             <div className="flex space-x-8">
               <div>
-                <span className="text-sm text-blue-700">Account Balance</span>
+                <span className="text-xs text-gray-500 uppercase tracking-wide">Account Balance</span>
                 <Skeleton width="100px" height="24px" />
               </div>
               <div>
-                <span className="text-sm text-blue-700">Free Collateral</span>
+                <span className="text-xs text-gray-500 uppercase tracking-wide">Free Collateral</span>
                 <Skeleton width="100px" height="24px" />
               </div>
             </div>
           ) : (
             <div className="flex space-x-8">
               <div>
-                <span className="text-sm text-blue-700">Account Balance</span>
-                <p className="text-lg font-bold text-blue-900">
+                <span className="text-xs text-gray-500 uppercase tracking-wide">Account Balance</span>
+                <p className="text-lg font-bold font-mono text-gray-100">
                   ${accountBalance ? formatWad(accountBalance as bigint) : '0.00'} USDT
                 </p>
               </div>
               <div>
-                <span className="text-sm text-blue-700">Free Collateral</span>
-                <p className="text-lg font-bold text-blue-900">
+                <span className="text-xs text-gray-500 uppercase tracking-wide">Free Collateral</span>
+                <p className="text-lg font-bold font-mono text-gray-100">
                   ${freeCollateral ? formatWad(freeCollateral as bigint) : '0.00'} USDT
                 </p>
               </div>
             </div>
           )}
-          <span className="text-xs text-blue-600">
+          <span className="text-xs text-gray-600">
             Collateral returned to balance on position close
           </span>
         </div>
@@ -314,17 +297,17 @@ const Positions: React.FC = () => {
 
       {/* Close Success Banner */}
       {closeState === 'success' && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+        <div className="bg-accent-muted border border-accent/20 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-semibold text-green-800">Position Closed Successfully</h4>
-              <p className="text-sm text-green-700">
+              <h4 className="font-semibold text-accent">Position Closed Successfully</h4>
+              <p className="text-sm text-gray-300">
                 {closedPositionPnl !== null && (
                   <>
-                    Net PnL: <span className={closedPositionPnl >= BigInt(0) ? 'text-green-800 font-bold' : 'text-red-700 font-bold'}>
+                    Net PnL: <span className={`font-mono font-bold ${closedPositionPnl >= BigInt(0) ? 'text-accent' : 'text-danger'}`}>
                       {formatPnl(closedPositionPnl)}
                     </span>
-                    {' — '}
+                    {' \u2014 '}
                   </>
                 )}
                 Collateral and PnL settled to your AccountManager balance.
@@ -332,7 +315,7 @@ const Positions: React.FC = () => {
             </div>
             <button
               onClick={() => { setCloseState('idle'); setClosedPositionPnl(null); }}
-              className="text-green-600 hover:text-green-800 text-sm"
+              className="text-accent hover:text-accent-dim text-sm"
             >
               Dismiss
             </button>
@@ -346,7 +329,7 @@ const Positions: React.FC = () => {
           {isLoadingPositions ? (
             <>
               {[1, 2, 3, 4].map((index) => (
-                <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
+                <div key={index} className="bg-surface-1 rounded-lg border border-border p-5">
                   <div className="flex items-center justify-between mb-1">
                     <Skeleton width="60px" height="16px" />
                     <Skeleton width="40px" height="16px" />
@@ -358,39 +341,39 @@ const Positions: React.FC = () => {
             </>
           ) : (
             <>
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
+              <div className="bg-surface-1 rounded-lg border border-border p-5">
                 <div className="flex items-center justify-between mb-1">
-                  <h3 className="text-sm font-medium text-gray-500">Net PnL</h3>
+                  <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Net PnL</h3>
                   <div className="flex items-center">
-                    <div className="w-1 h-1 bg-green-400 rounded-full animate-pulse"></div>
-                    <span className="text-xs text-green-600 ml-1">LIVE</span>
+                    <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse"></div>
+                    <span className="text-xs text-accent ml-1 font-medium">LIVE</span>
                   </div>
                 </div>
-                <p className={`text-2xl font-bold font-mono ${totalNetPnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                <p className={`text-2xl font-bold font-mono ${totalNetPnl >= 0 ? 'text-accent' : 'text-danger'}`}>
                   {totalNetPnl >= 0 ? '+' : ''}${totalNetPnl.toFixed(2)}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">After fees & funding</p>
+                <p className="text-xs text-gray-600 mt-1">After fees & funding</p>
               </div>
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
+              <div className="bg-surface-1 rounded-lg border border-border p-5">
                 <div className="flex items-center justify-between mb-1">
-                  <h3 className="text-sm font-medium text-gray-500">Total Equity</h3>
+                  <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Equity</h3>
                   <div className="flex items-center">
-                    <div className="w-1 h-1 bg-green-400 rounded-full animate-pulse"></div>
-                    <span className="text-xs text-green-600 ml-1">LIVE</span>
+                    <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse"></div>
+                    <span className="text-xs text-accent ml-1 font-medium">LIVE</span>
                   </div>
                 </div>
-                <p className="text-2xl font-bold font-mono text-gray-900">${totalEquity.toFixed(2)}</p>
-                <p className="text-xs text-gray-500 mt-1">Collateral + net PnL</p>
+                <p className="text-2xl font-bold font-mono text-gray-100">${totalEquity.toFixed(2)}</p>
+                <p className="text-xs text-gray-600 mt-1">Collateral + net PnL</p>
               </div>
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
-                <h3 className="text-sm font-medium text-gray-500 mb-1">Locked Collateral</h3>
-                <p className="text-2xl font-bold font-mono text-gray-900">${totalCollateral.toFixed(2)}</p>
-                <p className="text-xs text-gray-500 mt-1">USDT</p>
+              <div className="bg-surface-1 rounded-lg border border-border p-5">
+                <h3 className="text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Locked Collateral</h3>
+                <p className="text-2xl font-bold font-mono text-gray-100">${totalCollateral.toFixed(2)}</p>
+                <p className="text-xs text-gray-600 mt-1">USDT</p>
               </div>
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
-                <h3 className="text-sm font-medium text-gray-500 mb-1">Active Positions</h3>
-                <p className="text-2xl font-bold font-mono text-gray-900">{displayPositions.length}</p>
-                <p className="text-xs text-gray-500 mt-1">Open</p>
+              <div className="bg-surface-1 rounded-lg border border-border p-5">
+                <h3 className="text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Active Positions</h3>
+                <p className="text-2xl font-bold font-mono text-gray-100">{displayPositions.length}</p>
+                <p className="text-xs text-gray-600 mt-1">Open</p>
               </div>
             </>
           )}
@@ -400,19 +383,16 @@ const Positions: React.FC = () => {
       {/* Positions List */}
       <div className="space-y-4">
         {isLoadingPositions ? (
-          // Show loading skeletons for positions
           [1, 2].map((index) => (
-            <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div key={index} className="bg-surface-1 rounded-lg border border-border p-6">
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
-                  {/* Header skeleton */}
                   <div className="flex items-center space-x-3 mb-3">
                     <Skeleton width="60px" height="24px" />
                     <Skeleton width="40px" height="24px" />
                     <Skeleton width="200px" height="20px" />
                   </div>
 
-                  {/* Position details grid skeleton */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 text-sm">
                     {[1, 2, 3, 4, 5, 6].map((detailIndex) => (
                       <div key={detailIndex}>
@@ -422,8 +402,7 @@ const Positions: React.FC = () => {
                     ))}
                   </div>
 
-                  {/* Fee breakdown skeleton */}
-                  <div className="mt-3 pt-3 border-t border-gray-100">
+                  <div className="mt-3 pt-3 border-t border-border">
                     <div className="flex space-x-6">
                       <Skeleton width="100px" height="14px" />
                       <Skeleton width="80px" height="14px" />
@@ -449,59 +428,56 @@ const Positions: React.FC = () => {
           return (
             <div
               key={position.id.toString()}
-              className={`bg-white rounded-lg shadow-sm border p-6 transition-colors ${
-                isClosing ? 'border-red-300 bg-red-50' : 'border-gray-200'
+              className={`bg-surface-1 rounded-lg border p-6 transition-all ${
+                isClosing ? 'border-danger/40 bg-danger-muted' : 'border-border hover:border-border-light'
               }`}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
-                  {/* Header: Direction badge + market name */}
                   <div className="flex items-center space-x-3 mb-3">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
                       position.isLong
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
+                        ? 'bg-accent-muted text-accent border border-accent/20'
+                        : 'bg-danger-muted text-danger border border-danger/20'
                     }`}>
                       {position.isLong ? 'LONG' : 'SHORT'}
                     </span>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-gray-100 text-gray-700">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold font-mono bg-surface-3 text-gray-400 border border-border">
                       {formatLeverage(position.leverage)}
                     </span>
-                    <h3 className="text-lg font-semibold text-gray-900">{position.marketName}</h3>
+                    <h3 className="text-lg font-semibold text-gray-100">{position.marketName}</h3>
                   </div>
 
-                  {/* Position details grid */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 text-sm">
                     <div>
-                      <p className="text-gray-500">Collateral</p>
-                      <p className="font-semibold font-mono text-gray-900">${formatWad(position.collateral)}</p>
+                      <p className="text-gray-500 text-xs uppercase tracking-wide">Collateral</p>
+                      <p className="font-semibold font-mono text-gray-200">${formatWad(position.collateral)}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Notional</p>
-                      <p className="font-semibold font-mono text-gray-900">${formatWad(position.positionSize)}</p>
+                      <p className="text-gray-500 text-xs uppercase tracking-wide">Notional</p>
+                      <p className="font-semibold font-mono text-gray-200">${formatWad(position.positionSize)}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Entry</p>
-                      <p className="font-semibold font-mono text-gray-900">{formatPrice(position.entryPrice)}</p>
+                      <p className="text-gray-500 text-xs uppercase tracking-wide">Entry</p>
+                      <p className="font-semibold font-mono text-gray-200">{formatPrice(position.entryPrice)}</p>
                     </div>
                     <div>
                       <div className="flex items-center space-x-1">
-                        <p className="text-gray-500 text-xs sm:text-sm">Current PI</p>
+                        <p className="text-gray-500 text-xs uppercase tracking-wide">Current PI</p>
                         <div className="flex items-center">
-                          <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
-                          <span className="text-xs text-green-600 ml-1">LIVE</span>
+                          <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse"></div>
                         </div>
                       </div>
-                      <p className="font-semibold font-mono text-gray-900">{formatPrice(position.currentPI)}</p>
+                      <p className="font-semibold font-mono text-gray-200">{formatPrice(position.currentPI)}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Price PnL</p>
+                      <p className="text-gray-500 text-xs uppercase tracking-wide">Price PnL</p>
                       <p className={`font-semibold font-mono ${getPnlColor(position.pnl)}`}>
                         {formatPnl(position.pnl)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Net PnL</p>
+                      <p className="text-gray-500 text-xs uppercase tracking-wide">Net PnL</p>
                       <p className={`font-semibold font-mono ${getPnlColor(netPnl)}`}>
                         {formatPnl(netPnl)}
                       </p>
@@ -511,16 +487,15 @@ const Positions: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Fee breakdown */}
-                  <div className="mt-3 pt-3 border-t border-gray-100">
+                  <div className="mt-3 pt-3 border-t border-border">
                     <div className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-4 text-xs text-gray-500">
-                      <span>Borrow fees: <span className="font-mono text-red-400">-${formatWad(position.borrowFees)}</span></span>
-                      <span>Funding: <span className={`font-mono ${position.fundingAccrued >= BigInt(0) ? 'text-green-500' : 'text-red-400'}`}>
+                      <span>Borrow fees: <span className="font-mono text-danger">-${formatWad(position.borrowFees)}</span></span>
+                      <span>Funding: <span className={`font-mono ${position.fundingAccrued >= BigInt(0) ? 'text-accent' : 'text-danger'}`}>
                         {formatPnl(position.fundingAccrued)}
                       </span></span>
-                      <span>Equity: <span className="font-mono text-gray-700">${formatWad(position.equity)}</span></span>
+                      <span>Equity: <span className="font-mono text-gray-300">${formatWad(position.equity)}</span></span>
                       {priceLastUpdate > 0 && (
-                        <span className="text-green-600">
+                        <span className="text-accent">
                           Updated: {new Date(priceLastUpdate).toLocaleTimeString()}
                         </span>
                       )}
@@ -532,34 +507,33 @@ const Positions: React.FC = () => {
                 <div className="ml-6 flex-shrink-0 w-48">
                   {isClosing && closeState === 'confirming' ? (
                     <div className="space-y-3">
-                      {/* Close confirmation panel */}
-                      <div className="bg-white border border-red-200 rounded-lg p-3 text-sm">
-                        <p className="font-semibold text-red-800 mb-2">Close Position?</p>
+                      <div className="bg-surface-2 border border-danger/20 rounded-lg p-3 text-sm">
+                        <p className="font-semibold text-danger mb-2">Close Position?</p>
                         <div className="space-y-1 text-xs">
                           <div className="flex justify-between">
                             <span className="text-gray-500">Collateral returned:</span>
-                            <span className="font-mono">${formatWad(position.collateral)}</span>
+                            <span className="font-mono text-gray-200">${formatWad(position.collateral)}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-500">Est. net PnL:</span>
                             <span className={`font-mono ${getPnlColor(netPnl)}`}>{formatPnl(netPnl)}</span>
                           </div>
-                          <div className="flex justify-between border-t border-gray-100 pt-1 mt-1">
-                            <span className="text-gray-700 font-medium">Est. payout:</span>
-                            <span className="font-mono font-medium">${formatWad(position.equity)}</span>
+                          <div className="flex justify-between border-t border-border pt-1 mt-1">
+                            <span className="text-gray-300 font-medium">Est. payout:</span>
+                            <span className="font-mono font-medium text-gray-200">${formatWad(position.equity)}</span>
                           </div>
                         </div>
                       </div>
                       <div className="flex space-x-2">
                         <button
                           onClick={() => handleConfirmClose(position)}
-                          className="flex-1 bg-red-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-red-700"
+                          className="flex-1 bg-danger text-white px-3 py-2 rounded-md text-sm font-semibold hover:bg-danger-dim transition-colors"
                         >
-                          Confirm Close
+                          Confirm
                         </button>
                         <button
                           onClick={handleCancelClose}
-                          className="flex-1 bg-gray-200 text-gray-700 px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-300"
+                          className="flex-1 bg-surface-3 text-gray-300 px-3 py-2 rounded-md text-sm font-medium hover:bg-border-light transition-colors"
                         >
                           Cancel
                         </button>
@@ -567,19 +541,19 @@ const Positions: React.FC = () => {
                     </div>
                   ) : isClosing && closeState === 'pending' ? (
                     <div className="text-center py-4">
-                      <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-2" />
-                      <p className="text-sm text-blue-600 font-medium">Closing...</p>
+                      <div className="animate-spin w-6 h-6 border-2 border-accent border-t-transparent rounded-full mx-auto mb-2" />
+                      <p className="text-sm text-accent font-medium">Closing...</p>
                       <p className="text-xs text-gray-500">Settling PnL</p>
                     </div>
                   ) : isClosing && closeState === 'error' ? (
                     <div className="space-y-2">
-                      <div className="bg-red-50 border border-red-200 rounded p-2">
-                        <p className="text-xs text-red-700 font-medium">Close failed</p>
-                        <p className="text-xs text-red-600 truncate">{closeError}</p>
+                      <div className="bg-danger-muted border border-danger/20 rounded p-2">
+                        <p className="text-xs text-danger font-medium">Close failed</p>
+                        <p className="text-xs text-gray-400 truncate">{closeError}</p>
                       </div>
                       <button
                         onClick={handleCancelClose}
-                        className="w-full bg-gray-200 text-gray-700 px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-300"
+                        className="w-full bg-surface-3 text-gray-300 px-3 py-2 rounded-md text-sm font-medium hover:bg-border-light transition-colors"
                       >
                         Dismiss
                       </button>
@@ -588,7 +562,7 @@ const Positions: React.FC = () => {
                     <div className="space-y-2">
                       <button
                         onClick={() => handleCloseClick(position.id)}
-                        className="w-full bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700"
+                        className="w-full bg-danger/10 text-danger border border-danger/30 px-4 py-2 rounded-md text-sm font-semibold hover:bg-danger/20 hover:border-danger/50 transition-all"
                       >
                         Close Position
                       </button>
@@ -605,44 +579,44 @@ const Positions: React.FC = () => {
       {displayPositions.length === 0 && (
         <div className="space-y-8">
           {!address && (
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Platform Activity</h3>
-              <p className="text-sm text-gray-600 mb-4">Example positions from other traders (live from testnet):</p>
+            <div className="bg-surface-1 rounded-lg border border-border p-6">
+              <h3 className="text-lg font-semibold text-gray-100 mb-4">Recent Platform Activity</h3>
+              <p className="text-sm text-gray-500 mb-4">Example positions from other traders (live from testnet):</p>
 
               <div className="space-y-3">
-                <div className="flex items-center justify-between py-2 px-3 bg-white rounded border">
+                <div className="flex items-center justify-between py-2 px-3 bg-surface-2 rounded border border-border">
                   <div className="flex items-center space-x-3">
-                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-bold bg-green-100 text-green-800">LONG</span>
-                    <span className="text-sm text-gray-900">SpaceX IPO by Dec 2026</span>
+                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-bold bg-accent-muted text-accent border border-accent/20">LONG</span>
+                    <span className="text-sm text-gray-200">SpaceX IPO by Dec 2026</span>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-medium font-mono text-gray-900">$2,450 @ 5.0x</p>
-                    <p className="text-xs font-mono text-green-500">+$302.40 (+12.3%)</p>
+                    <p className="text-sm font-medium font-mono text-gray-200">$2,450 @ 5.0x</p>
+                    <p className="text-xs font-mono text-accent">+$302.40 (+12.3%)</p>
                   </div>
                 </div>
-                <div className="flex items-center justify-between py-2 px-3 bg-white rounded border">
+                <div className="flex items-center justify-between py-2 px-3 bg-surface-2 rounded border border-border">
                   <div className="flex items-center space-x-3">
-                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-bold bg-red-100 text-red-800">SHORT</span>
-                    <span className="text-sm text-gray-900">US-Iran Ceasefire by Sep 2025</span>
+                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-bold bg-danger-muted text-danger border border-danger/20">SHORT</span>
+                    <span className="text-sm text-gray-200">US-Iran Ceasefire by Sep 2025</span>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-medium font-mono text-gray-900">$890 @ 3.0x</p>
-                    <p className="text-xs font-mono text-red-500">-$50.73 (-5.7%)</p>
+                    <p className="text-sm font-medium font-mono text-gray-200">$890 @ 3.0x</p>
+                    <p className="text-xs font-mono text-danger">-$50.73 (-5.7%)</p>
                   </div>
                 </div>
-                <div className="flex items-center justify-between py-2 px-3 bg-white rounded border">
+                <div className="flex items-center justify-between py-2 px-3 bg-surface-2 rounded border border-border">
                   <div className="flex items-center space-x-3">
-                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-bold bg-green-100 text-green-800">LONG</span>
-                    <span className="text-sm text-gray-900">FIFA 2026 Final: Brazil Win</span>
+                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-bold bg-accent-muted text-accent border border-accent/20">LONG</span>
+                    <span className="text-sm text-gray-200">FIFA 2026 Final: Brazil Win</span>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-medium font-mono text-gray-900">$1,200 @ 8.0x</p>
-                    <p className="text-xs font-mono text-green-500">+$346.80 (+28.9%)</p>
+                    <p className="text-sm font-medium font-mono text-gray-200">$1,200 @ 8.0x</p>
+                    <p className="text-xs font-mono text-accent">+$346.80 (+28.9%)</p>
                   </div>
                 </div>
               </div>
 
-              <p className="text-xs text-gray-500 mt-4 text-center">
+              <p className="text-xs text-gray-600 mt-4 text-center">
                 Connect wallet to view your own positions
               </p>
             </div>
@@ -650,14 +624,14 @@ const Positions: React.FC = () => {
 
           {address && (
             <div className="text-center py-12">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-16 h-16 bg-surface-3 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Open Positions</h3>
-              <p className="text-gray-600 mb-2">You don't have any active positions yet.</p>
-              <p className="text-sm text-gray-500">Go to Markets to find an opportunity, then open a position from Trading.</p>
+              <h3 className="text-lg font-medium text-gray-200 mb-2">No Open Positions</h3>
+              <p className="text-gray-500 mb-2">You don't have any active positions yet.</p>
+              <p className="text-sm text-gray-600">Go to Markets to find an opportunity, then open a position from Trading.</p>
             </div>
           )}
         </div>
