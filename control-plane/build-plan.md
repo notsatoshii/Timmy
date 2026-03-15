@@ -4,8 +4,8 @@
 # Last updated: 2026-03-15
 
 ## Phase 1: Stabilize (CURRENT)
-- [ ] **P0** Fix OracleAdapter source validation (dead code — pushPrice ignores _sources[msg.sender].isActive)
-- [ ] **P0** Commit all uncommitted changes (foundry.toml via_ir, RiskCurves fix)
+- [x] **P0** Fix OracleAdapter source validation (dead code — pushPrice ignores _sources[msg.sender].isActive)
+- [x] **P0** Commit all uncommitted changes (foundry.toml via_ir, RiskCurves fix)
 - [ ] **P1** Consolidate repo copies (/root vs /home/lever — sync to /home/lever as canonical)
 - [ ] **P1** Verify full test suite passes clean (forge test --summary, log results)
 - [ ] **P1** Fix CLAUDE.md USDC references on root's copy (or delete after consolidation)
