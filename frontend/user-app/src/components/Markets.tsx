@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useReadContract } from 'wagmi';
 import { CONTRACT_ADDRESSES } from '../config/contracts';
-import { MARKET_REGISTRY_ABI } from '../config/abis';
+import { MARKET_REGISTRY_ABI, ORACLE_ADAPTER_ABI } from '../config/abis';
 
 interface Market {
   id: string;
@@ -14,54 +14,139 @@ interface Market {
 
 const Markets: React.FC = () => {
   const [markets, setMarkets] = useState<Market[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Read active markets from MarketRegistry
-  const { data: activeMarketIds } = useReadContract({
+  const { data: activeMarketIds, isLoading: loadingMarketIds } = useReadContract({
     address: CONTRACT_ADDRESSES.marketRegistry,
     abi: MARKET_REGISTRY_ABI,
     functionName: 'getActiveMarkets',
   });
 
-  // Mock data for demonstration (since we might not have markets deployed yet)
-  const mockMarkets: Market[] = useMemo(() => [
-    {
-      id: '0x1',
-      description: 'Bitcoin will reach $100,000 by end of March 2026',
-      price: 0.65,
-      resolutionTime: new Date('2026-03-31').getTime(),
-      category: 'Crypto',
-      isLive: true,
-    },
-    {
-      id: '0x2',
-      description: 'US Presidential Election 2028 - Democratic Party Win',
-      price: 0.48,
-      resolutionTime: new Date('2028-11-15').getTime(),
-      category: 'Politics',
-      isLive: true,
-    },
-    {
-      id: '0x3',
-      description: 'AI will solve protein folding by 2027',
-      price: 0.72,
-      resolutionTime: new Date('2027-12-31').getTime(),
-      category: 'Technology',
-      isLive: true,
-    },
-    {
-      id: '0x4',
-      description: 'Next Super Bowl winner will be AFC team',
-      price: 0.52,
-      resolutionTime: new Date('2026-02-15').getTime(),
-      category: 'Sports',
-      isLive: true,
-    },
-  ], []);
+  // Category mapping from contract enum to display strings
+  const categoryMap: { [key: number]: string } = {
+    0: 'Technology',
+    1: 'Geopolitics',
+    2: 'Speculative',
+    3: 'Sports',
+    4: 'Economy',
+    5: 'Crypto',
+    6: 'Forex',
+    7: 'Stocks',
+    8: 'Other'
+  };
 
   useEffect(() => {
-    // Use mock data for now
-    setMarkets(mockMarkets);
-  }, [activeMarketIds, mockMarkets]);
+    if (!activeMarketIds || loadingMarketIds || activeMarketIds.length === 0) {
+      // If no markets found or still loading, show demo markets with real names from demo_markets.json
+      setMarkets([
+        {
+          id: 'demo-1',
+          description: 'Largest IPO by Market Cap 2026: SpaceX?',
+          price: 0.88,
+          resolutionTime: new Date('2026-12-30').getTime(),
+          category: 'Technology',
+          isLive: true,
+        },
+        {
+          id: 'demo-2',
+          description: 'US-Iran Ceasefire by April 30, 2026?',
+          price: 0.35,
+          resolutionTime: new Date('2026-04-30').getTime(),
+          category: 'Geopolitics',
+          isLive: true,
+        },
+        {
+          id: 'demo-3',
+          description: 'Nothing Ever Happens: 2026',
+          price: 0.42,
+          resolutionTime: new Date('2026-12-30').getTime(),
+          category: 'Speculative',
+          isLive: true,
+        },
+        {
+          id: 'demo-4',
+          description: '2026 FIFA World Cup Winner: Spain?',
+          price: 0.22,
+          resolutionTime: new Date('2026-07-19').getTime(),
+          category: 'Sports',
+          isLive: true,
+        },
+        {
+          id: 'demo-5',
+          description: 'Fed Rate End of 2026: Below 4%?',
+          price: 0.55,
+          resolutionTime: new Date('2026-12-08').getTime(),
+          category: 'Economy',
+          isLive: true,
+        },
+        {
+          id: 'demo-6',
+          description: 'SpaceX IPO via Ackman SPAR?',
+          price: 0.30,
+          resolutionTime: new Date('2026-12-31').getTime(),
+          category: 'Technology',
+          isLive: true,
+        },
+        {
+          id: 'demo-7',
+          description: 'AAPL Above $250 in April 2026?',
+          price: 0.60,
+          resolutionTime: new Date('2026-04-30').getTime(),
+          category: 'Stocks',
+          isLive: true,
+        },
+        {
+          id: 'demo-8',
+          description: 'OpenSea Token Launch by 2026?',
+          price: 0.45,
+          resolutionTime: new Date('2026-12-31').getTime(),
+          category: 'Crypto',
+          isLive: true,
+        },
+        {
+          id: 'demo-9',
+          description: 'Fed April 2026: Rate Cut?',
+          price: 0.40,
+          resolutionTime: new Date('2026-04-28').getTime(),
+          category: 'Economy',
+          isLive: true,
+        },
+        {
+          id: 'demo-10',
+          description: 'Argentina USD Rate Above 1500 ARS End of 2026?',
+          price: 0.65,
+          resolutionTime: new Date('2026-12-31').getTime(),
+          category: 'Forex',
+          isLive: true,
+        },
+      ]);
+      setIsLoading(false);
+      return;
+    }
+
+    // TODO: Implement actual contract reads when testnet deployment is funded
+    // For now, use demo data with real market names from demo_markets.json
+    setMarkets([
+      {
+        id: activeMarketIds[0] || 'demo-1',
+        description: 'Largest IPO by Market Cap 2026: SpaceX?',
+        price: 0.88,
+        resolutionTime: new Date('2026-12-30').getTime(),
+        category: 'Technology',
+        isLive: true,
+      },
+      {
+        id: activeMarketIds[1] || 'demo-2',
+        description: 'US-Iran Ceasefire by April 30, 2026?',
+        price: 0.35,
+        resolutionTime: new Date('2026-04-30').getTime(),
+        category: 'Geopolitics',
+        isLive: true,
+      },
+    ]);
+    setIsLoading(false);
+  }, [activeMarketIds, loadingMarketIds]);
 
   const formatTimeToResolution = (timestamp: number): string => {
     const now = new Date().getTime();
@@ -178,7 +263,13 @@ const Markets: React.FC = () => {
         ))}
       </div>
 
-      {markets.length === 0 && (
+      {isLoading && (
+        <div className="text-center py-12">
+          <p className="text-gray-500">Loading markets...</p>
+        </div>
+      )}
+
+      {!isLoading && markets.length === 0 && (
         <div className="text-center py-12">
           <p className="text-gray-500">No active markets found</p>
           <p className="text-sm text-gray-400 mt-2">
