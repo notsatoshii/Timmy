@@ -111,3 +111,13 @@ To see reference UIs, use the WebFetch tool or take screenshots:
 - dYdX trading (no login needed): https://trade.dydx.exchange
 - GMX earn page (no login needed): https://app.gmx.io/#/earn
 All show full UI without wallet connection. Fetch these pages and study their layout, spacing, color usage, and information hierarchy before designing LEVER's frontend.
+
+## E2E TESTING PROTOCOL
+After ANY frontend change:
+1. Start dev server: cd frontend/user-app && HOST=0.0.0.0 npm start &
+2. Wait 30 seconds for compilation
+3. Run: node /home/lever/lever-protocol/scripts/e2e-test.js
+4. Check results: all tests must PASS
+5. If any FAIL: view the failure screenshot in frontend/screenshots/e2e/, diagnose the issue, fix it, re-run
+6. View the screenshots of each page to evaluate visual quality
+7. Do not mark any frontend task complete until e2e-test.js passes 10/10
