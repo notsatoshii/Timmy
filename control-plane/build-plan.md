@@ -58,7 +58,7 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 
 - [x] P0 Deploy MockUSDT (ERC-20, mintable, 6 decimals) for testnet use — DONE 2026-03-15 (11/11 tests)
 - [x] P0 Polymarket API integration — fetch active binary markets — DONE 2026-03-15
-- [ ] P0 Market onboarding script — create LEVER markets from Polymarket market IDs
+- [x] P0 Market onboarding script — create LEVER markets from Polymarket market IDs — DONE 2026-03-15
 - [ ] P0 Oracle price feed — pull Polymarket CLOB prices, push to OracleAdapter via keeper bot
 - [ ] P0 Price feed reliability — heartbeat check, staleness detection, fallback on API failure
 - [ ] P1 Multi-source price validation — compare Polymarket REST vs WebSocket vs backup sources
@@ -108,3 +108,4 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 [2026-03-15] TrancheLedger integration tests verified — 9/9 tests pass clean. Covers tranche ledger mechanics: individual tranche creation, proportional transfers, reward snapshot preservation, automatic consolidation at 11 tranches, and withdrawal tranche removal.
 [2026-03-15] MockUSDT contract deployed — contracts/periphery/MockUSDT.sol. 6 decimals, faucet (10k USDT/hr cooldown), owner mint. 11/11 tests pass. NOTE: Protocol internals use WAD (1e18) but real USDT is 6 decimals — decimal scaling needed at deposit/withdrawal boundaries.
 [2026-03-15] Polymarket API client — scripts/oracle/polymarket_client.py. Fetches active binary markets from Gamma API with embedded prices, CLOB /midpoint for real-time prices. Both sources validated against live data. Rate-limited, typed dataclass output.
+[2026-03-15] Market onboarding pipeline — Python script generates market_config.json from Polymarket API (category classification, allocation weights, resolution times). Foundry script (OnboardMarkets.s.sol) reads config and calls MarketRegistry.createMarket() on-chain.
