@@ -12,6 +12,7 @@ import {
 } from '../config/abis';
 import { useLivePrices } from '../hooks/useLivePrices';
 import TradeHistory from './TradeHistory';
+import Skeleton from './Skeleton';
 
 interface PositionData {
   id: bigint;
@@ -49,7 +50,7 @@ const Positions: React.FC = () => {
   });
 
   // Read user's position IDs from PositionManager
-  const { data: positionIds, refetch: refetchPositionIds } = useReadContract({
+  const { data: positionIds, refetch: refetchPositionIds, isLoading: loadingPositionIds } = useReadContract({
     address: CONTRACT_ADDRESSES.positionManager,
     abi: POSITION_MANAGER_ABI,
     functionName: 'getUserPositions',
@@ -58,7 +59,7 @@ const Positions: React.FC = () => {
   });
 
   // Read user's AccountManager balance
-  const { data: accountBalance, refetch: refetchBalance } = useReadContract({
+  const { data: accountBalance, refetch: refetchBalance, isLoading: loadingAccountBalance } = useReadContract({
     address: CONTRACT_ADDRESSES.accountManager,
     abi: ACCOUNT_MANAGER_ABI,
     functionName: 'getBalance',
@@ -67,13 +68,17 @@ const Positions: React.FC = () => {
   });
 
   // Read user's free collateral
-  const { data: freeCollateral, refetch: refetchFreeCollateral } = useReadContract({
+  const { data: freeCollateral, refetch: refetchFreeCollateral, isLoading: loadingFreeCollateral } = useReadContract({
     address: CONTRACT_ADDRESSES.accountManager,
     abi: ACCOUNT_MANAGER_ABI,
     functionName: 'getFreeCollateral',
     args: address ? [address] : undefined,
     query: { enabled: !!address },
   });
+
+  // Check if account data is loading
+  const isLoadingAccountData = address && (loadingAccountBalance || loadingFreeCollateral);
+  const isLoadingPositions = address && loadingPositionIds;
 
   // Handle transaction state changes
   useEffect(() => {
@@ -274,20 +279,33 @@ const Positions: React.FC = () => {
       {/* Account Balance Bar */}
       {address && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
-          <div className="flex space-x-8">
-            <div>
-              <span className="text-sm text-blue-700">Account Balance</span>
-              <p className="text-lg font-bold text-blue-900">
-                ${accountBalance ? formatWad(accountBalance as bigint) : '0.00'} USDT
-              </p>
+          {isLoadingAccountData ? (
+            <div className="flex space-x-8">
+              <div>
+                <span className="text-sm text-blue-700">Account Balance</span>
+                <Skeleton width="100px" height="24px" />
+              </div>
+              <div>
+                <span className="text-sm text-blue-700">Free Collateral</span>
+                <Skeleton width="100px" height="24px" />
+              </div>
             </div>
-            <div>
-              <span className="text-sm text-blue-700">Free Collateral</span>
-              <p className="text-lg font-bold text-blue-900">
-                ${freeCollateral ? formatWad(freeCollateral as bigint) : '0.00'} USDT
-              </p>
+          ) : (
+            <div className="flex space-x-8">
+              <div>
+                <span className="text-sm text-blue-700">Account Balance</span>
+                <p className="text-lg font-bold text-blue-900">
+                  ${accountBalance ? formatWad(accountBalance as bigint) : '0.00'} USDT
+                </p>
+              </div>
+              <div>
+                <span className="text-sm text-blue-700">Free Collateral</span>
+                <p className="text-lg font-bold text-blue-900">
+                  ${freeCollateral ? formatWad(freeCollateral as bigint) : '0.00'} USDT
+                </p>
+              </div>
             </div>
-          </div>
+          )}
           <span className="text-xs text-blue-600">
             Collateral returned to balance on position close
           </span>
@@ -323,48 +341,105 @@ const Positions: React.FC = () => {
       )}
 
       {/* Portfolio Summary */}
-      {displayPositions.length > 0 && (
+      {(isLoadingPositions || displayPositions.length > 0) && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="text-sm font-medium text-gray-500">Net PnL</h3>
-              <div className="flex items-center">
-                <div className="w-1 h-1 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-xs text-green-600 ml-1">LIVE</span>
+          {isLoadingPositions ? (
+            <>
+              {[1, 2, 3, 4].map((index) => (
+                <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
+                  <div className="flex items-center justify-between mb-1">
+                    <Skeleton width="60px" height="16px" />
+                    <Skeleton width="40px" height="16px" />
+                  </div>
+                  <Skeleton width="80px" height="32px" className="mb-1" />
+                  <Skeleton width="90px" height="14px" />
+                </div>
+              ))}
+            </>
+          ) : (
+            <>
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-sm font-medium text-gray-500">Net PnL</h3>
+                  <div className="flex items-center">
+                    <div className="w-1 h-1 bg-green-400 rounded-full animate-pulse"></div>
+                    <span className="text-xs text-green-600 ml-1">LIVE</span>
+                  </div>
+                </div>
+                <p className={`text-2xl font-bold font-mono ${totalNetPnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  {totalNetPnl >= 0 ? '+' : ''}${totalNetPnl.toFixed(2)}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">After fees & funding</p>
               </div>
-            </div>
-            <p className={`text-2xl font-bold font-mono ${totalNetPnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-              {totalNetPnl >= 0 ? '+' : ''}${totalNetPnl.toFixed(2)}
-            </p>
-            <p className="text-xs text-gray-500 mt-1">After fees & funding</p>
-          </div>
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="text-sm font-medium text-gray-500">Total Equity</h3>
-              <div className="flex items-center">
-                <div className="w-1 h-1 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-xs text-green-600 ml-1">LIVE</span>
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-sm font-medium text-gray-500">Total Equity</h3>
+                  <div className="flex items-center">
+                    <div className="w-1 h-1 bg-green-400 rounded-full animate-pulse"></div>
+                    <span className="text-xs text-green-600 ml-1">LIVE</span>
+                  </div>
+                </div>
+                <p className="text-2xl font-bold font-mono text-gray-900">${totalEquity.toFixed(2)}</p>
+                <p className="text-xs text-gray-500 mt-1">Collateral + net PnL</p>
               </div>
-            </div>
-            <p className="text-2xl font-bold font-mono text-gray-900">${totalEquity.toFixed(2)}</p>
-            <p className="text-xs text-gray-500 mt-1">Collateral + net PnL</p>
-          </div>
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
-            <h3 className="text-sm font-medium text-gray-500 mb-1">Locked Collateral</h3>
-            <p className="text-2xl font-bold font-mono text-gray-900">${totalCollateral.toFixed(2)}</p>
-            <p className="text-xs text-gray-500 mt-1">USDT</p>
-          </div>
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
-            <h3 className="text-sm font-medium text-gray-500 mb-1">Active Positions</h3>
-            <p className="text-2xl font-bold font-mono text-gray-900">{displayPositions.length}</p>
-            <p className="text-xs text-gray-500 mt-1">Open</p>
-          </div>
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
+                <h3 className="text-sm font-medium text-gray-500 mb-1">Locked Collateral</h3>
+                <p className="text-2xl font-bold font-mono text-gray-900">${totalCollateral.toFixed(2)}</p>
+                <p className="text-xs text-gray-500 mt-1">USDT</p>
+              </div>
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
+                <h3 className="text-sm font-medium text-gray-500 mb-1">Active Positions</h3>
+                <p className="text-2xl font-bold font-mono text-gray-900">{displayPositions.length}</p>
+                <p className="text-xs text-gray-500 mt-1">Open</p>
+              </div>
+            </>
+          )}
         </div>
       )}
 
       {/* Positions List */}
       <div className="space-y-4">
-        {displayPositions.map((position) => {
+        {isLoadingPositions ? (
+          // Show loading skeletons for positions
+          [1, 2].map((index) => (
+            <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  {/* Header skeleton */}
+                  <div className="flex items-center space-x-3 mb-3">
+                    <Skeleton width="60px" height="24px" />
+                    <Skeleton width="40px" height="24px" />
+                    <Skeleton width="200px" height="20px" />
+                  </div>
+
+                  {/* Position details grid skeleton */}
+                  <div className="grid grid-cols-2 md:grid-cols-6 gap-4 text-sm">
+                    {[1, 2, 3, 4, 5, 6].map((detailIndex) => (
+                      <div key={detailIndex}>
+                        <Skeleton width="70px" height="16px" className="mb-1" />
+                        <Skeleton width="60px" height="20px" />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Fee breakdown skeleton */}
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <div className="flex space-x-6">
+                      <Skeleton width="100px" height="14px" />
+                      <Skeleton width="80px" height="14px" />
+                      <Skeleton width="70px" height="14px" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="ml-6 flex-shrink-0">
+                  <Skeleton width="120px" height="36px" />
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          displayPositions.map((position) => {
           const netPnl = computeNetPnl(position);
           const isClosing = selectedPositionId === position.id;
           const pnlPct = Number(position.collateral) > 0
@@ -523,7 +598,7 @@ const Positions: React.FC = () => {
               </div>
             </div>
           );
-        })}
+        }))}
       </div>
 
       {/* Empty State */}

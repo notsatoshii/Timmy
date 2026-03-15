@@ -3,6 +3,7 @@ import { useReadContract } from 'wagmi';
 import { CONTRACT_ADDRESSES } from '../config/contracts';
 import { MARKET_REGISTRY_ABI, ORACLE_ADAPTER_ABI } from '../config/abis';
 import { useLivePrices } from '../hooks/useLivePrices';
+import Skeleton from './Skeleton';
 
 interface Market {
   id: string;
@@ -297,8 +298,45 @@ const Markets: React.FC<MarketsProps> = ({ onTradeSelect }) => {
       </div>
 
       {isLoading && (
-        <div className="text-center py-12">
-          <p className="text-gray-500">Loading markets...</p>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1">
+          {[1, 2, 3].map((index) => (
+            <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <Skeleton width="80px" height="24px" />
+                    <Skeleton width="40px" height="24px" />
+                  </div>
+
+                  <Skeleton height="28px" className="mb-2" />
+                  <Skeleton width="60%" height="20px" className="mb-4" />
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <Skeleton width="80px" height="16px" className="mb-1" />
+                      <Skeleton width="60px" height="20px" />
+                    </div>
+                    <div>
+                      <Skeleton width="70px" height="16px" className="mb-1" />
+                      <Skeleton width="50px" height="20px" />
+                    </div>
+                    <div>
+                      <Skeleton width="65px" height="16px" className="mb-1" />
+                      <Skeleton width="40px" height="20px" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="ml-6 flex-shrink-0">
+                  <div className="flex space-x-2">
+                    <Skeleton width="60px" height="36px" />
+                    <Skeleton width="60px" height="36px" />
+                  </div>
+                  <Skeleton width="90px" height="16px" className="mt-2 mx-auto" />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

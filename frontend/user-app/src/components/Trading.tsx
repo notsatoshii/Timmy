@@ -3,6 +3,7 @@ import { useAccount, useWriteContract, useReadContract } from 'wagmi';
 import { parseUnits } from 'viem';
 import { CONTRACT_ADDRESSES, formatUsdt, parseUsdt } from '../config/contracts';
 import { EXECUTION_ENGINE_ABI, ACCOUNT_MANAGER_ABI, USDT_ABI } from '../config/abis';
+import Skeleton from './Skeleton';
 
 interface TradeForm {
   marketId: string;
@@ -44,7 +45,7 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
   const { writeContract: approveUsdt } = useWriteContract();
 
   // Read user's USDT balance
-  const { data: usdtBalance } = useReadContract({
+  const { data: usdtBalance, isLoading: loadingUsdtBalance } = useReadContract({
     address: CONTRACT_ADDRESSES.usdt,
     abi: USDT_ABI,
     functionName: 'balanceOf',
@@ -52,7 +53,7 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
   });
 
   // Read user's account balance (deposited USDT)
-  const { data: accountBalance } = useReadContract({
+  const { data: accountBalance, isLoading: loadingAccountBalance } = useReadContract({
     address: CONTRACT_ADDRESSES.accountManager,
     abi: ACCOUNT_MANAGER_ABI,
     functionName: 'getBalance',
@@ -238,7 +239,11 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Wallet Balance: {usdtBalance ? formatUsdt(usdtBalance) : '0'} USDT
+                  Wallet Balance: {loadingUsdtBalance ? (
+                    <Skeleton width="60px" height="16px" className="inline-block" />
+                  ) : (
+                    `${usdtBalance ? formatUsdt(usdtBalance) : '0'} USDT`
+                  )}
                 </p>
               </div>
 
@@ -328,13 +333,21 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
               <div className="flex justify-between">
                 <span className="text-gray-600">USDT Balance:</span>
                 <span className="font-medium">
-                  {usdtBalance ? formatUsdt(usdtBalance) : '0'} USDT
+                  {loadingUsdtBalance ? (
+                    <Skeleton width="60px" height="20px" />
+                  ) : (
+                    `${usdtBalance ? formatUsdt(usdtBalance) : '0'} USDT`
+                  )}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Available Collateral:</span>
                 <span className="font-medium">
-                  {accountBalance ? formatUsdt(accountBalance) : '0'} USDT
+                  {loadingAccountBalance ? (
+                    <Skeleton width="60px" height="20px" />
+                  ) : (
+                    `${accountBalance ? formatUsdt(accountBalance) : '0'} USDT`
+                  )}
                 </span>
               </div>
             </div>

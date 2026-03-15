@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAccount, useReadContract, useWriteContract } from 'wagmi';
 import { CONTRACT_ADDRESSES, formatUsdt, formatWad, parseUsdt, WAD } from '../config/contracts';
 import { LEVER_VAULT_ABI, USDT_ABI, FEE_ROUTER_ABI, OI_LIMITS_ABI } from '../config/abis';
+import Skeleton from './Skeleton';
 
 const Vault: React.FC = () => {
   const { address } = useAccount();
@@ -13,26 +14,26 @@ const Vault: React.FC = () => {
   const { writeContract: requestWithdrawal } = useWriteContract();
 
   // Read vault stats
-  const { data: totalAssets } = useReadContract({
+  const { data: totalAssets, isLoading: loadingTotalAssets } = useReadContract({
     address: CONTRACT_ADDRESSES.leverVault,
     abi: LEVER_VAULT_ABI,
     functionName: 'totalAssets',
   });
 
-  const { data: totalShares } = useReadContract({
+  const { data: totalShares, isLoading: loadingTotalShares } = useReadContract({
     address: CONTRACT_ADDRESSES.leverVault,
     abi: LEVER_VAULT_ABI,
     functionName: 'totalSupply',
   });
 
-  const { data: userShares } = useReadContract({
+  const { data: userShares, isLoading: loadingUserShares } = useReadContract({
     address: CONTRACT_ADDRESSES.leverVault,
     abi: LEVER_VAULT_ABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
   });
 
-  const { data: usdtBalance } = useReadContract({
+  const { data: usdtBalance, isLoading: loadingUsdtBalance } = useReadContract({
     address: CONTRACT_ADDRESSES.usdt,
     abi: USDT_ABI,
     functionName: 'balanceOf',
@@ -40,28 +41,28 @@ const Vault: React.FC = () => {
   });
 
   // Read fee data for APY calculation
-  const { data: borrowFees } = useReadContract({
+  const { data: borrowFees, isLoading: loadingBorrowFees } = useReadContract({
     address: CONTRACT_ADDRESSES.feeRouter,
     abi: FEE_ROUTER_ABI,
     functionName: 'getTotalFeesRouted',
     args: [0], // FeeType.BORROW
   });
 
-  const { data: transactionFees } = useReadContract({
+  const { data: transactionFees, isLoading: loadingTransactionFees } = useReadContract({
     address: CONTRACT_ADDRESSES.feeRouter,
     abi: FEE_ROUTER_ABI,
     functionName: 'getTotalFeesRouted',
     args: [1], // FeeType.TRANSACTION
   });
 
-  const { data: liquidationFees } = useReadContract({
+  const { data: liquidationFees, isLoading: loadingLiquidationFees } = useReadContract({
     address: CONTRACT_ADDRESSES.feeRouter,
     abi: FEE_ROUTER_ABI,
     functionName: 'getTotalFeesRouted',
     args: [2], // FeeType.LIQUIDATION
   });
 
-  const { data: settlementFees } = useReadContract({
+  const { data: settlementFees, isLoading: loadingSettlementFees } = useReadContract({
     address: CONTRACT_ADDRESSES.feeRouter,
     abi: FEE_ROUTER_ABI,
     functionName: 'getTotalFeesRouted',
@@ -69,11 +70,23 @@ const Vault: React.FC = () => {
   });
 
   // Read global OI for utilization calculation
-  const { data: globalOI } = useReadContract({
+  const { data: globalOI, isLoading: loadingGlobalOI } = useReadContract({
     address: CONTRACT_ADDRESSES.oiLimits,
     abi: OI_LIMITS_ABI,
     functionName: 'getGlobalOI',
   });
+
+  // Check if any critical data is still loading
+  const isLoadingVaultData =
+    loadingTotalAssets ||
+    loadingTotalShares ||
+    loadingBorrowFees ||
+    loadingTransactionFees ||
+    loadingLiquidationFees ||
+    loadingSettlementFees ||
+    loadingGlobalOI;
+
+  const isLoadingUserData = address && (loadingUserShares || loadingUsdtBalance);
 
   const handleApprove = async () => {
     if (!depositAmount) return;
@@ -181,63 +194,88 @@ const Vault: React.FC = () => {
 
       {/* Vault Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-sm font-medium text-gray-500 mb-2">Total Value Locked</h3>
-          <p className="text-2xl font-bold text-gray-900">
-            ${totalAssets ? formatUsdt(totalAssets) : '0'}
-          </p>
-          <p className="text-sm text-gray-600 mt-1">USDT</p>
-        </div>
+        {isLoadingVaultData ? (
+          <>
+            {[1, 2, 3, 4].map((index) => (
+              <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <Skeleton width="120px" height="16px" className="mb-2" />
+                <Skeleton width="80px" height="32px" className="mb-1" />
+                <Skeleton width="60px" height="16px" />
+              </div>
+            ))}
+          </>
+        ) : (
+          <>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 className="text-sm font-medium text-gray-500 mb-2">Total Value Locked</h3>
+              <p className="text-2xl font-bold text-gray-900">
+                ${totalAssets ? formatUsdt(totalAssets) : '0'}
+              </p>
+              <p className="text-sm text-gray-600 mt-1">USDT</p>
+            </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-sm font-medium text-gray-500 mb-2">Current APY</h3>
-          <p className="text-2xl font-bold text-success-600">
-            {calculateAPY().toFixed(1)}%
-          </p>
-          <p className="text-sm text-gray-600 mt-1">From trading fees</p>
-        </div>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 className="text-sm font-medium text-gray-500 mb-2">Current APY</h3>
+              <p className="text-2xl font-bold text-success-600">
+                {calculateAPY().toFixed(1)}%
+              </p>
+              <p className="text-sm text-gray-600 mt-1">From trading fees</p>
+            </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-sm font-medium text-gray-500 mb-2">Vault Utilization</h3>
-          <p className="text-2xl font-bold text-gray-900">
-            {getVaultUtilization().toFixed(1)}%
-          </p>
-          <p className="text-sm text-gray-600 mt-1">Trading activity</p>
-        </div>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 className="text-sm font-medium text-gray-500 mb-2">Vault Utilization</h3>
+              <p className="text-2xl font-bold text-gray-900">
+                {getVaultUtilization().toFixed(1)}%
+              </p>
+              <p className="text-sm text-gray-600 mt-1">Trading activity</p>
+            </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-sm font-medium text-gray-500 mb-2">Share Price</h3>
-          <p className="text-2xl font-bold text-gray-900">
-            ${calculateShareValue()}
-          </p>
-          <p className="text-sm text-gray-600 mt-1">lvUSDT per share</p>
-        </div>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 className="text-sm font-medium text-gray-500 mb-2">Share Price</h3>
+              <p className="text-2xl font-bold text-gray-900">
+                ${calculateShareValue()}
+              </p>
+              <p className="text-sm text-gray-600 mt-1">lvUSDT per share</p>
+            </div>
+          </>
+        )}
       </div>
 
       {/* User Position */}
       {address && (
         <div className="bg-gradient-to-r from-primary-50 to-primary-100 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Position</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <p className="text-sm text-gray-600">Your Shares</p>
-              <p className="text-xl font-bold text-gray-900">
-                {userShares ? formatWad(userShares) : '0'} lvUSDT
-              </p>
+          {isLoadingUserData ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[1, 2, 3].map((index) => (
+                <div key={index}>
+                  <Skeleton width="80px" height="16px" className="mb-2" />
+                  <Skeleton width="120px" height="24px" />
+                </div>
+              ))}
             </div>
-            <div>
-              <p className="text-sm text-gray-600">Value</p>
-              <p className="text-xl font-bold text-gray-900">
-                ${calculateUserAssets()} USDT
-              </p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <p className="text-sm text-gray-600">Your Shares</p>
+                <p className="text-xl font-bold text-gray-900">
+                  {userShares ? formatWad(userShares) : '0'} lvUSDT
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Value</p>
+                <p className="text-xl font-bold text-gray-900">
+                  ${calculateUserAssets()} USDT
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Est. Daily Yield</p>
+                <p className="text-xl font-bold text-success-600">
+                  ${(parseFloat(calculateUserAssets()) * calculateAPY() / 100 / 365).toFixed(2)}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-gray-600">Est. Daily Yield</p>
-              <p className="text-xl font-bold text-success-600">
-                ${(parseFloat(calculateUserAssets()) * calculateAPY() / 100 / 365).toFixed(2)}
-              </p>
-            </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -262,7 +300,11 @@ const Vault: React.FC = () => {
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Wallet Balance: {usdtBalance ? formatUsdt(usdtBalance) : '0'} USDT
+                Wallet Balance: {loadingUsdtBalance ? (
+                  <Skeleton width="60px" height="16px" className="inline-block" />
+                ) : (
+                  `${usdtBalance ? formatUsdt(usdtBalance) : '0'} USDT`
+                )}
               </p>
             </div>
 
@@ -315,7 +357,11 @@ const Vault: React.FC = () => {
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Your Shares: {userShares ? formatWad(userShares) : '0'} lvUSDT
+                Your Shares: {loadingUserShares ? (
+                  <Skeleton width="60px" height="16px" className="inline-block" />
+                ) : (
+                  `${userShares ? formatWad(userShares) : '0'} lvUSDT`
+                )}
               </p>
             </div>
 
