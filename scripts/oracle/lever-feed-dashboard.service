@@ -1,0 +1,43 @@
+[Unit]
+Description=LEVER Protocol Oracle Feed Dashboard
+Documentation=file:///home/lever/lever-protocol/scripts/oracle/README_dashboard.md
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=lever
+Group=lever
+WorkingDirectory=/home/lever/lever-protocol
+ExecStart=/usr/bin/python3 scripts/oracle/feed_dashboard.py --daemon
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=30
+Restart=on-failure
+RestartSec=10
+RestartPreventExitStatus=23
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=lever-feed-dashboard
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=false
+ProtectSystem=strict
+ReadWritePaths=/home/lever/lever-protocol/scripts/oracle
+
+# Resource limits
+MemoryLimit=512M
+CPUQuota=50%
+TasksMax=20
+
+# Environment
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
+Alias=feed-dashboard.service

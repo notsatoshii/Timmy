@@ -76,7 +76,7 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 
 ## Phase 5: Testnet
 - [ ] Deploy to Base Sepolia
-- [ ] Seed bots (trading, LP, oracle)
+- [ ] Seed bots (trading, LP, oracle) — use scripts/oracle/demo_markets.json for 10 curated markets
 - [ ] Monitor 48 hours
 
 ## Phase 6: Frontend
