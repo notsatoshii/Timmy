@@ -189,15 +189,15 @@ const Markets: React.FC<MarketsProps> = ({ onTradeSelect }) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center md:space-y-0">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Prediction Markets</h2>
           <p className="text-gray-600">
             Browse active binary outcome markets with up to 30x leverage
           </p>
         </div>
-        <div className="text-right">
-          <div className="flex items-center justify-end space-x-3">
+        <div className="flex flex-col space-y-3 md:text-right">
+          <div className="flex items-center justify-start md:justify-end space-x-3">
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
               <span className="text-sm text-green-600 font-medium">Live Prices</span>
@@ -209,14 +209,16 @@ const Markets: React.FC<MarketsProps> = ({ onTradeSelect }) => {
               Refresh
             </button>
           </div>
-          <p className="text-sm text-gray-600 mt-1">
-            Showing {markets.length} active markets
-          </p>
-          {lastUpdate > 0 && (
-            <p className="text-xs text-gray-500">
-              Updated {formatLastUpdateTime(lastUpdate)}
+          <div className="text-left md:text-right">
+            <p className="text-sm text-gray-600">
+              Showing {markets.length} active markets
             </p>
-          )}
+            {lastUpdate > 0 && (
+              <p className="text-xs text-gray-500">
+                Updated {formatLastUpdateTime(lastUpdate)}
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
@@ -226,7 +228,7 @@ const Markets: React.FC<MarketsProps> = ({ onTradeSelect }) => {
             key={market.id}
             className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200"
           >
-            <div className="flex items-start justify-between">
+            <div className="flex flex-col space-y-4 md:flex-row md:items-start md:justify-between md:space-y-0">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-3 mb-3">
                   <span
@@ -242,11 +244,11 @@ const Markets: React.FC<MarketsProps> = ({ onTradeSelect }) => {
                   )}
                 </div>
 
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">
                   {market.description}
                 </h3>
 
-                <div className="grid grid-cols-3 gap-4 text-sm">
+                <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">
                   <div>
                     <p className="text-gray-500 flex items-center">
                       Current Price
@@ -264,7 +266,7 @@ const Markets: React.FC<MarketsProps> = ({ onTradeSelect }) => {
                       {(market.price * 100).toFixed(1)}%
                     </p>
                   </div>
-                  <div>
+                  <div className="col-span-2 sm:col-span-1">
                     <p className="text-gray-500">Resolution</p>
                     <p className="font-semibold text-gray-900">
                       {formatTimeToResolution(market.resolutionTime)}
@@ -273,17 +275,17 @@ const Markets: React.FC<MarketsProps> = ({ onTradeSelect }) => {
                 </div>
               </div>
 
-              <div className="ml-6 flex-shrink-0">
+              <div className="md:ml-6 flex-shrink-0">
                 <div className="flex space-x-2">
                   <button
                     onClick={() => onTradeSelect?.(market.id, market.description, 'long')}
-                    className="bg-success-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-success-700 transition-colors"
+                    className="bg-success-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-success-700 transition-colors flex-1 md:flex-none"
                   >
                     Long
                   </button>
                   <button
                     onClick={() => onTradeSelect?.(market.id, market.description, 'short')}
-                    className="bg-danger-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-danger-700 transition-colors"
+                    className="bg-danger-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-danger-700 transition-colors flex-1 md:flex-none"
                   >
                     Short
                   </button>

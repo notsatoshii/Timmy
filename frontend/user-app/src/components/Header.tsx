@@ -1,6 +1,6 @@
 import React from 'react';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
+import ConnectWallet from './ConnectWallet';
 
 const Header: React.FC = () => {
   const { isConnected } = useAccount();
@@ -34,7 +34,7 @@ const Header: React.FC = () => {
                 </div>
               </div>
 
-              <ConnectButton />
+              <ConnectWallet />
             </div>
           </div>
         </div>

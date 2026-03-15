@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
+import ConnectWallet from './ConnectWallet';
 import Header from './Header';
 import Markets from './Markets';
 import Trading from './Trading';
@@ -75,7 +75,8 @@ const Dashboard: React.FC = () => {
       {/* Navigation Tabs */}
       <div className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8">
+          {/* Desktop navigation */}
+          <div className="hidden md:flex space-x-8">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -93,6 +94,27 @@ const Dashboard: React.FC = () => {
               </button>
             ))}
           </div>
+
+          {/* Mobile navigation */}
+          <div className="md:hidden">
+            <div className="grid grid-cols-4">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`py-3 px-1 border-b-2 font-medium text-xs transition-colors duration-200 ${
+                    activeTab === tab.id
+                      ? 'border-primary-500 text-primary-600'
+                      : 'border-transparent text-gray-500'
+                  }`}
+                >
+                  <div className="flex flex-col items-center space-y-1">
+                    <span className="text-center leading-tight">{tab.label}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -108,7 +130,7 @@ const Dashboard: React.FC = () => {
             <p className="text-sm text-gray-600 mb-3">
               Connect your wallet to open positions and manage trades
             </p>
-            <ConnectButton />
+            <ConnectWallet />
           </div>
         )}
       </main>
