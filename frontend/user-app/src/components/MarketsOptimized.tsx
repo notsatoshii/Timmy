@@ -1,0 +1,452 @@
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useReadContract } from 'wagmi';
+import { CONTRACT_ADDRESSES } from '../config/contracts';
+import { MARKET_REGISTRY_ABI, ORACLE_ADAPTER_ABI } from '../config/abis';
+import { useLivePrices } from '../hooks/useLivePrices';
+import { useMemoizedMarketCalculations } from '../hooks/useMemoizedCalculations';
+import Skeleton from './Skeleton';
+
+interface Market {
+  id: string;
+  description: string;
+  price: number;
+  resolutionTime: number;
+  category: string;
+  isLive: boolean;
+}
+
+interface MarketsOptimizedProps {
+  onTradeSelect?: (marketId: string, marketName: string, direction: 'long' | 'short') => void;
+  onMarketDetail?: (market: Market) => void;
+}
+
+const MarketsOptimized: React.FC<MarketsOptimizedProps> = ({ onTradeSelect, onMarketDetail }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+
+  // Read active markets from MarketRegistry
+  const { data: activeMarketIds, isLoading: loadingMarketIds } = useReadContract({
+    address: CONTRACT_ADDRESSES.marketRegistry,
+    abi: MARKET_REGISTRY_ABI,
+    functionName: 'getActiveMarkets',
+    query: {
+      staleTime: 60000, // 1 minute - markets don't change frequently
+      refetchInterval: 60000,
+    },
+  });
+
+  // Demo market IDs for live price updates
+  const demoMarketIds = useMemo(() => [
+    'demo-1', 'demo-2', 'demo-3', 'demo-4', 'demo-5',
+    'demo-6', 'demo-7', 'demo-8', 'demo-9', 'demo-10'
+  ], []);
+
+  // Live price updates (30-second polling)
+  const { prices: livePrices, lastUpdate, refreshPrices } = useLivePrices({
+    marketIds: demoMarketIds,
+    pollingInterval: 30000,
+    enabled: true,
+  });
+
+  // Base market data (memoized)
+  const baseMarkets = useMemo(() => [
+    {
+      id: 'demo-1',
+      description: 'Largest IPO by Market Cap 2026: SpaceX?',
+      resolutionTime: new Date('2026-12-30').getTime(),
+      category: 'Technology',
+      isLive: true,
+    },
+    {
+      id: 'demo-2',
+      description: 'US-Iran Ceasefire by April 30, 2026?',
+      resolutionTime: new Date('2026-04-30').getTime(),
+      category: 'Geopolitics',
+      isLive: true,
+    },
+    {
+      id: 'demo-3',
+      description: 'Nothing Ever Happens: 2026',
+      resolutionTime: new Date('2026-12-30').getTime(),
+      category: 'Speculative',
+      isLive: true,
+    },
+    {
+      id: 'demo-4',
+      description: '2026 FIFA World Cup Winner: Spain?',
+      resolutionTime: new Date('2026-07-19').getTime(),
+      category: 'Sports',
+      isLive: true,
+    },
+    {
+      id: 'demo-5',
+      description: 'Fed Rate End of 2026: Below 4%?',
+      resolutionTime: new Date('2026-12-08').getTime(),
+      category: 'Economy',
+      isLive: true,
+    },
+    {
+      id: 'demo-6',
+      description: 'SpaceX IPO via Ackman SPAR?',
+      resolutionTime: new Date('2026-12-31').getTime(),
+      category: 'Technology',
+      isLive: true,
+    },
+    {
+      id: 'demo-7',
+      description: 'AAPL Above $250 in April 2026?',
+      resolutionTime: new Date('2026-04-30').getTime(),
+      category: 'Stocks',
+      isLive: true,
+    },
+    {
+      id: 'demo-8',
+      description: 'OpenSea Token Launch by 2026?',
+      resolutionTime: new Date('2026-12-31').getTime(),
+      category: 'Crypto',
+      isLive: true,
+    },
+    {
+      id: 'demo-9',
+      description: 'Fed April 2026: Rate Cut?',
+      resolutionTime: new Date('2026-04-28').getTime(),
+      category: 'Economy',
+      isLive: true,
+    },
+    {
+      id: 'demo-10',
+      description: 'Argentina USD Rate Above 1500 ARS End of 2026?',
+      resolutionTime: new Date('2026-12-31').getTime(),
+      category: 'Forex',
+      isLive: true,
+    },
+  ], []);
+
+  // Combine base market data with live prices (memoized)
+  const markets = useMemo(() => {
+    return baseMarkets.map(market => ({
+      ...market,
+      price: livePrices[market.id]?.pi || 0.5,
+    }));
+  }, [baseMarkets, livePrices]);
+
+  // Memoized market calculations (filtering, sorting, stats)
+  const {
+    filteredMarkets,
+    totalMarkets,
+    liveMarkets,
+    categories,
+    priceRanges,
+    timeRanges,
+    isEmpty,
+    hasFilters,
+  } = useMemoizedMarketCalculations(markets, searchTerm, categoryFilter);
+
+  // Memoized utility functions
+  const formatTimeToResolution = useCallback((timestamp: number): string => {
+    const now = new Date().getTime();
+    const diff = timestamp - now;
+
+    if (diff < 0) return 'Expired';
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+    if (days > 0) return `${days}d ${hours}h`;
+    return `${hours}h`;
+  }, []);
+
+  const getPriceColor = useCallback((price: number): string => {
+    if (price >= 0.6) return 'text-accent';
+    if (price <= 0.4) return 'text-danger';
+    return 'text-gray-300';
+  }, []);
+
+  const getCategoryColor = useCallback((category: string): string => {
+    const colors: { [key: string]: string } = {
+      'Politics': 'bg-purple-muted text-purple border border-purple/20',
+      'Sports': 'bg-accent-muted text-accent border border-accent/20',
+      'Technology': 'bg-purple-muted text-purple border border-purple/20',
+      'Economy': 'bg-warning-muted text-warning border border-warning/20',
+      'Crypto': 'bg-warning-muted text-warning border border-warning/20',
+      'Entertainment': 'bg-purple-muted text-purple border border-purple/20',
+      'Other': 'bg-surface-3 text-gray-400 border border-border',
+      'Geopolitics': 'bg-danger-muted text-danger border border-danger/20',
+      'Speculative': 'bg-purple-muted text-purple border border-purple/20',
+      'Stocks': 'bg-accent-muted text-accent border border-accent/20',
+      'Forex': 'bg-accent-muted text-accent border border-accent/20',
+    };
+    return colors[category] || colors['Other'];
+  }, []);
+
+  const formatLastUpdateTime = useCallback((timestamp: number): string => {
+    if (!timestamp) return '';
+    const now = Date.now();
+    const diff = Math.floor((now - timestamp) / 1000);
+
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    return `${Math.floor(diff / 3600)}h ago`;
+  }, []);
+
+  // Memoized event handlers
+  const handleTradeSelect = useCallback((e: React.MouseEvent, marketId: string, marketName: string, direction: 'long' | 'short') => {
+    e.stopPropagation();
+    onTradeSelect?.(marketId, marketName, direction);
+  }, [onTradeSelect]);
+
+  const handleMarketClick = useCallback((market: Market) => {
+    onMarketDetail?.(market);
+  }, [onMarketDetail]);
+
+  const clearFilters = useCallback(() => {
+    setSearchTerm('');
+    setCategoryFilter('all');
+  }, []);
+
+  const isLoading = loadingMarketIds;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center md:space-y-0">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-100">Prediction Markets</h2>
+          <p className="text-gray-500">
+            Browse active binary outcome markets with up to 30x leverage
+          </p>
+        </div>
+        <div className="flex flex-col space-y-3 md:text-right">
+          <div className="flex items-center justify-start md:justify-end space-x-3">
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-accent rounded-full animate-pulse"></div>
+              <span className="text-sm text-accent font-medium">Live Prices</span>
+            </div>
+            <button
+              onClick={refreshPrices}
+              className="text-sm text-gray-500 hover:text-gray-300 px-2 py-1 rounded border border-border hover:border-border-light transition-colors"
+            >
+              Refresh
+            </button>
+          </div>
+          <div className="text-left md:text-right">
+            <p className="text-sm text-gray-500">
+              Showing {filteredMarkets.length} of {totalMarkets} markets
+            </p>
+            {lastUpdate > 0 && (
+              <p className="text-xs text-gray-600">
+                Updated {formatLastUpdateTime(lastUpdate)}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Search and Filter Bar */}
+      <div className="flex flex-col space-y-3 md:flex-row md:space-y-0 md:space-x-4">
+        <div className="flex-1">
+          <input
+            type="text"
+            placeholder="Search markets..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-4 py-2 bg-surface-1 border border-border rounded-md text-gray-200 placeholder-gray-500 focus:border-accent focus:ring-accent/30"
+          />
+        </div>
+        <div className="flex space-x-2">
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="px-4 py-2 bg-surface-1 border border-border rounded-md text-gray-200 focus:border-accent focus:ring-accent/30"
+          >
+            <option value="all">All Categories</option>
+            {categories.map(category => (
+              <option key={category} value={category.toLowerCase()}>
+                {category}
+              </option>
+            ))}
+          </select>
+          {hasFilters && (
+            <button
+              onClick={clearFilters}
+              className="px-3 py-2 text-sm text-gray-400 hover:text-gray-200 border border-border rounded-md hover:border-border-light transition-colors"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Market Stats */}
+      {!isEmpty && (
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="bg-surface-1 rounded-lg border border-border p-4 text-center">
+            <p className="text-xs text-gray-500 uppercase tracking-wide">Total</p>
+            <p className="text-xl font-bold font-mono text-gray-100">{totalMarkets}</p>
+          </div>
+          <div className="bg-surface-1 rounded-lg border border-border p-4 text-center">
+            <p className="text-xs text-gray-500 uppercase tracking-wide">Live</p>
+            <p className="text-xl font-bold font-mono text-accent">{liveMarkets}</p>
+          </div>
+          <div className="bg-surface-1 rounded-lg border border-border p-4 text-center">
+            <p className="text-xs text-gray-500 uppercase tracking-wide">Bullish</p>
+            <p className="text-xl font-bold font-mono text-accent">{priceRanges.bullish}</p>
+          </div>
+          <div className="bg-surface-1 rounded-lg border border-border p-4 text-center">
+            <p className="text-xs text-gray-500 uppercase tracking-wide">Bearish</p>
+            <p className="text-xl font-bold font-mono text-danger">{priceRanges.bearish}</p>
+          </div>
+          <div className="bg-surface-1 rounded-lg border border-border p-4 text-center">
+            <p className="text-xs text-gray-500 uppercase tracking-wide">Soon</p>
+            <p className="text-xl font-bold font-mono text-warning">{timeRanges.soon}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Markets Grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1">
+        {filteredMarkets.map((market) => (
+          <div
+            key={market.id}
+            className="bg-surface-1 rounded-lg border border-border p-5 hover:border-border-light transition-all duration-200 hover:shadow-card cursor-pointer"
+            onClick={() => handleMarketClick(market)}
+          >
+            <div className="flex flex-col space-y-4 md:flex-row md:items-start md:justify-between md:space-y-0">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center space-x-3 mb-3">
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCategoryColor(market.category)}`}
+                  >
+                    {market.category}
+                  </span>
+                  {market.isLive && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-accent-muted text-accent border border-accent/20">
+                      <div className="w-1.5 h-1.5 bg-accent rounded-full mr-1 animate-pulse"></div>
+                      Live
+                    </span>
+                  )}
+                </div>
+
+                <h3 className="text-lg font-semibold text-gray-100 mb-3">
+                  {market.description}
+                </h3>
+
+                <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">
+                  <div>
+                    <p className="text-gray-500 flex items-center text-xs uppercase tracking-wide">
+                      Price
+                      {livePrices[market.id] && (
+                        <span className="ml-1 w-1.5 h-1.5 bg-accent rounded-full animate-pulse"></span>
+                      )}
+                    </p>
+                    <p className={`font-semibold font-mono text-lg transition-all duration-300 ${getPriceColor(market.price)}`}>
+                      {(market.price * 100).toFixed(1)}¢
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 text-xs uppercase tracking-wide">Probability</p>
+                    <p className="font-semibold font-mono text-lg text-gray-200 transition-all duration-300">
+                      {(market.price * 100).toFixed(1)}%
+                    </p>
+                  </div>
+                  <div className="col-span-2 sm:col-span-1">
+                    <p className="text-gray-500 text-xs uppercase tracking-wide">Resolution</p>
+                    <p className="font-semibold font-mono text-lg text-gray-200">
+                      {formatTimeToResolution(market.resolutionTime)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="md:ml-6 flex-shrink-0">
+                <div className="flex space-x-2">
+                  <button
+                    onClick={(e) => handleTradeSelect(e, market.id, market.description, 'long')}
+                    className="bg-accent/10 text-accent border border-accent/30 px-5 py-2 rounded-md text-sm font-semibold hover:bg-accent/20 hover:border-accent/50 transition-all flex-1 md:flex-none"
+                  >
+                    Long
+                  </button>
+                  <button
+                    onClick={(e) => handleTradeSelect(e, market.id, market.description, 'short')}
+                    className="bg-danger/10 text-danger border border-danger/30 px-5 py-2 rounded-md text-sm font-semibold hover:bg-danger/20 hover:border-danger/50 transition-all flex-1 md:flex-none"
+                  >
+                    Short
+                  </button>
+                </div>
+                <p className="text-xs text-gray-600 text-center mt-2">
+                  Up to 30x leverage
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Loading State */}
+      {isLoading && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1">
+          {[1, 2, 3].map((index) => (
+            <div key={index} className="bg-surface-1 rounded-lg border border-border p-5">
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <Skeleton width="80px" height="24px" />
+                    <Skeleton width="40px" height="24px" />
+                  </div>
+
+                  <Skeleton height="28px" className="mb-2" />
+                  <Skeleton width="60%" height="20px" className="mb-4" />
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <Skeleton width="80px" height="16px" className="mb-1" />
+                      <Skeleton width="60px" height="20px" />
+                    </div>
+                    <div>
+                      <Skeleton width="70px" height="16px" className="mb-1" />
+                      <Skeleton width="50px" height="20px" />
+                    </div>
+                    <div>
+                      <Skeleton width="65px" height="16px" className="mb-1" />
+                      <Skeleton width="40px" height="20px" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="ml-6 flex-shrink-0">
+                  <div className="flex space-x-2">
+                    <Skeleton width="60px" height="36px" />
+                    <Skeleton width="60px" height="36px" />
+                  </div>
+                  <Skeleton width="90px" height="16px" className="mt-2 mx-auto" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Empty State */}
+      {isEmpty && !isLoading && (
+        <div className="text-center py-12">
+          <p className="text-gray-500">
+            {hasFilters ? 'No markets match your filters' : 'No active markets found'}
+          </p>
+          <p className="text-sm text-gray-600 mt-2">
+            {hasFilters ? (
+              <>
+                Try adjusting your search or{' '}
+                <button onClick={clearFilters} className="text-accent hover:underline">
+                  clear filters
+                </button>
+              </>
+            ) : (
+              'Markets will appear here once they are created'
+            )}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default MarketsOptimized;
