@@ -1,28 +1,5 @@
-// Contract addresses for Base Sepolia deployment
-export const CONTRACT_ADDRESSES = {
-  // Core contracts
-  usdt: "0x92c9711101bBB0B742d6320D52521FAd1712A85e",
-  marketRegistry: "0x463697f45a0dA6B247305bac56F68e37779ba6bF",
-  oracleAdapter: "0x4F0224F2cC6ab7acC1A913D06F055Ae8FA484d78",
-  accountManager: "0xe0f420dD416e6047fDA063d66292f7679160519B",
-  positionManager: "0x5D538d96735C4752fF12b590ff4737d856a6f484",
-
-  // Pool contracts
-  leverVault: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-  rewardsDistributor: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
-  insuranceFund: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
-  feeRouter: "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
-
-  // Engine contracts
-  leverageModel: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-  oiLimits: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-  borrowFeeEngine: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
-  fundingRateEngine: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
-  marginEngine: "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
-  executionEngine: "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
-  liquidationEngine: "0x0165878A594ca255338adfa4d48449f69242Eb8F",
-  settlementEngine: "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853"
-} as const;
+// Dynamic contract address configuration that reads from deployment JSONs
+// This replaces hardcoded addresses with runtime loading from deployment files
 
 // Chain configuration
 export const BASE_SEPOLIA_CHAIN_ID = 84532;
@@ -68,3 +45,142 @@ export const parseUsdt = (value: string): bigint => {
 export const parseWad = (value: string): bigint => {
   return BigInt(Math.floor(parseFloat(value) * Number(WAD)));
 };
+
+// Contract addresses type definition
+export interface ContractAddresses {
+  // Core contracts
+  usdt: string;
+  marketRegistry: string;
+  oracleAdapter: string;
+  accountManager: string;
+  positionManager: string;
+
+  // Pool contracts
+  leverVault: string;
+  rewardsDistributor: string;
+  insuranceFund: string;
+  feeRouter: string;
+
+  // Engine contracts
+  leverageModel: string;
+  oiLimits: string;
+  borrowFeeEngine: string;
+  fundingRateEngine: string;
+  marginEngine: string;
+  executionEngine: string;
+  liquidationEngine: string;
+  settlementEngine: string;
+}
+
+// Cached contract addresses
+let cachedAddresses: ContractAddresses | null = null;
+
+// Fallback addresses (current deployment for development)
+const FALLBACK_ADDRESSES: ContractAddresses = {
+  // Core contracts
+  usdt: "0x92c9711101bBB0B742d6320D52521FAd1712A85e",
+  marketRegistry: "0x463697f45a0dA6B247305bac56F68e37779ba6bF",
+  oracleAdapter: "0x4F0224F2cC6ab7acC1A913D06F055Ae8FA484d78",
+  accountManager: "0xe0f420dD416e6047fDA063d66292f7679160519B",
+  positionManager: "0x5D538d96735C4752fF12b590ff4737d856a6f484",
+
+  // Pool contracts
+  leverVault: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+  rewardsDistributor: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+  insuranceFund: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+  feeRouter: "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
+
+  // Engine contracts
+  leverageModel: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+  oiLimits: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+  borrowFeeEngine: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+  fundingRateEngine: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+  marginEngine: "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
+  executionEngine: "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
+  liquidationEngine: "0x0165878A594ca255338adfa4d48449f69242Eb8F",
+  settlementEngine: "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853"
+};
+
+/**
+ * Load contract addresses from deployment JSON files
+ * Falls back to hardcoded addresses if fetch fails
+ */
+export async function loadContractAddresses(): Promise<ContractAddresses> {
+  if (cachedAddresses) {
+    return cachedAddresses;
+  }
+
+  try {
+    // Fetch all three deployment files in parallel
+    const [coreResponse, poolResponse, enginesResponse] = await Promise.all([
+      fetch('/deployments/core-deployment.json'),
+      fetch('/deployments/pool-deployment.json'),
+      fetch('/deployments/engines-deployment.json')
+    ]);
+
+    if (!coreResponse.ok || !poolResponse.ok || !enginesResponse.ok) {
+      console.warn('Failed to fetch one or more deployment files, using fallback addresses');
+      cachedAddresses = FALLBACK_ADDRESSES;
+      return cachedAddresses;
+    }
+
+    const [coreDeployment, poolDeployment, enginesDeployment] = await Promise.all([
+      coreResponse.json(),
+      poolResponse.json(),
+      enginesResponse.json()
+    ]);
+
+    // Combine all deployments into a single ContractAddresses object
+    cachedAddresses = {
+      // Core contracts
+      usdt: coreDeployment.usdt,
+      marketRegistry: coreDeployment.marketRegistry,
+      oracleAdapter: coreDeployment.oracleAdapter,
+      accountManager: coreDeployment.accountManager,
+      positionManager: coreDeployment.positionManager,
+
+      // Pool contracts
+      leverVault: poolDeployment.leverVault,
+      rewardsDistributor: poolDeployment.rewardsDistributor,
+      insuranceFund: poolDeployment.insuranceFund,
+      feeRouter: poolDeployment.feeRouter,
+
+      // Engine contracts
+      leverageModel: enginesDeployment.leverageModel,
+      oiLimits: enginesDeployment.oiLimits,
+      borrowFeeEngine: enginesDeployment.borrowFeeEngine,
+      fundingRateEngine: enginesDeployment.fundingRateEngine,
+      marginEngine: enginesDeployment.marginEngine,
+      executionEngine: enginesDeployment.executionEngine,
+      liquidationEngine: enginesDeployment.liquidationEngine,
+      settlementEngine: enginesDeployment.settlementEngine
+    };
+
+    console.log('Contract addresses loaded from deployment files');
+    return cachedAddresses;
+
+  } catch (error) {
+    console.error('Error loading contract addresses:', error);
+    console.warn('Using fallback addresses');
+    cachedAddresses = FALLBACK_ADDRESSES;
+    return cachedAddresses;
+  }
+}
+
+/**
+ * Get contract addresses synchronously (returns fallback if not loaded)
+ * Use loadContractAddresses() for async loading with proper error handling
+ */
+export function getContractAddresses(): ContractAddresses {
+  return cachedAddresses || FALLBACK_ADDRESSES;
+}
+
+/**
+ * Clear cached addresses (useful for testing or redeployment)
+ */
+export function clearAddressCache(): void {
+  cachedAddresses = null;
+}
+
+// Export fallback for immediate use (deprecated - use loadContractAddresses)
+export const CONTRACT_ADDRESSES = FALLBACK_ADDRESSES;

@@ -38,33 +38,33 @@ const Positions: React.FC = () => {
   // Mock positions for demo purposes since we might not have real positions yet
   const mockPositions: Position[] = useMemo(() => [
     {
-      id: '0x1',
+      id: '1',
       marketId: '0x1',
       marketName: 'Bitcoin $100K by Mar 2026',
       isLong: true,
-      collateralAmount: BigInt('1000000000000000000'), // 1000 USDT (in WAD)
-      positionSize: BigInt('5000000000000000000000'), // 5000 USDT position
-      entryPrice: BigInt('650000000000000000'), // 0.65 (65%)
-      leverage: BigInt('5000000000000000000'), // 5x
-      currentPrice: BigInt('680000000000000000'), // 0.68 (68%)
-      pnl: BigInt('230000000000000000000'), // +230 USDT profit
+      collateralAmount: BigInt('1000000000000000000'),
+      positionSize: BigInt('5000000000000000000000'),
+      entryPrice: BigInt('650000000000000000'),
+      leverage: BigInt('5000000000000000000'),
+      currentPrice: BigInt('680000000000000000'),
+      pnl: BigInt('230000000000000000000'),
       pnlPercentage: 23.0,
-      liquidationPrice: BigInt('520000000000000000'), // 0.52 (52%)
+      liquidationPrice: BigInt('520000000000000000'),
       timeToResolution: '367d 14h',
     },
     {
-      id: '0x2',
+      id: '2',
       marketId: '0x2',
       marketName: 'US Election 2028 - Democrat Win',
       isLong: false,
-      collateralAmount: BigInt('500000000000000000'), // 500 USDT
-      positionSize: BigInt('2500000000000000000000'), // 2500 USDT position
-      entryPrice: BigInt('480000000000000000'), // 0.48 (48%)
-      leverage: BigInt('5000000000000000000'), // 5x
-      currentPrice: BigInt('450000000000000000'), // 0.45 (45%)
-      pnl: BigInt('75000000000000000000'), // +75 USDT profit
+      collateralAmount: BigInt('500000000000000000'),
+      positionSize: BigInt('2500000000000000000000'),
+      entryPrice: BigInt('480000000000000000'),
+      leverage: BigInt('5000000000000000000'),
+      currentPrice: BigInt('450000000000000000'),
+      pnl: BigInt('75000000000000000000'),
       pnlPercentage: 15.0,
-      liquidationPrice: BigInt('580000000000000000'), // 0.58 (58%)
+      liquidationPrice: BigInt('580000000000000000'),
       timeToResolution: '1095d 8h',
     },
   ], []);
@@ -78,15 +78,12 @@ const Positions: React.FC = () => {
   }, [address, positionIds, mockPositions]);
 
   const handleClosePosition = async (positionId: string) => {
-    if (!closeAmount) return;
-
     try {
-      const collateralToRemove = BigInt(Math.floor(parseFloat(closeAmount) * 1e18));
       await closePosition({
         address: CONTRACT_ADDRESSES.executionEngine as `0x${string}`,
         abi: EXECUTION_ENGINE_ABI,
         functionName: 'closePosition',
-        args: [positionId as `0x${string}`, collateralToRemove],
+        args: [BigInt(positionId)],
       });
       setSelectedPosition(null);
       setCloseAmount('');
@@ -115,7 +112,6 @@ const Positions: React.FC = () => {
   const calculateLiquidationDistance = (currentPrice: bigint, liquidationPrice: bigint, isLong: boolean): number => {
     const current = Number(currentPrice) / 1e18;
     const liquidation = Number(liquidationPrice) / 1e18;
-
     if (isLong) {
       return ((current - liquidation) / current) * 100;
     } else {
@@ -148,28 +144,19 @@ const Positions: React.FC = () => {
               {totalPnl >= 0 ? '+' : ''}{((totalPnl / totalCollateral) * 100).toFixed(2)}%
             </p>
           </div>
-
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h3 className="text-sm font-medium text-gray-500 mb-2">Total Collateral</h3>
-            <p className="text-2xl font-bold text-gray-900">
-              ${totalCollateral.toFixed(2)}
-            </p>
+            <p className="text-2xl font-bold text-gray-900">${totalCollateral.toFixed(2)}</p>
             <p className="text-sm text-gray-600 mt-1">USDT</p>
           </div>
-
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h3 className="text-sm font-medium text-gray-500 mb-2">Total Position Value</h3>
-            <p className="text-2xl font-bold text-gray-900">
-              ${totalPositionValue.toFixed(2)}
-            </p>
+            <p className="text-2xl font-bold text-gray-900">${totalPositionValue.toFixed(2)}</p>
             <p className="text-sm text-gray-600 mt-1">Notional value</p>
           </div>
-
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h3 className="text-sm font-medium text-gray-500 mb-2">Active Positions</h3>
-            <p className="text-2xl font-bold text-gray-900">
-              {positions.length}
-            </p>
+            <p className="text-2xl font-bold text-gray-900">{positions.length}</p>
             <p className="text-sm text-gray-600 mt-1">Open positions</p>
           </div>
         </div>
@@ -178,57 +165,38 @@ const Positions: React.FC = () => {
       {/* Positions List */}
       <div className="space-y-4">
         {positions.map((position) => (
-          <div
-            key={position.id}
-            className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
-          >
+          <div key={position.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-start justify-between">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-3 mb-3">
-                  <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      position.isLong
-                        ? 'bg-success-100 text-success-800'
-                        : 'bg-danger-100 text-danger-800'
-                    }`}
-                  >
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    position.isLong ? 'bg-success-100 text-success-800' : 'bg-danger-100 text-danger-800'
+                  }`}>
                     {position.isLong ? 'LONG' : 'SHORT'}
                   </span>
-                  <span
-                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getLeverageColor(position.leverage)} bg-gray-100`}
-                  >
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getLeverageColor(position.leverage)} bg-gray-100`}>
                     {(Number(position.leverage) / 1e18).toFixed(1)}x
                   </span>
                 </div>
 
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  {position.marketName}
-                </h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">{position.marketName}</h3>
 
                 <div className="grid grid-cols-2 md:grid-cols-6 gap-4 text-sm">
                   <div>
                     <p className="text-gray-500">Collateral</p>
-                    <p className="font-semibold text-gray-900">
-                      ${formatWad(position.collateralAmount)}
-                    </p>
+                    <p className="font-semibold text-gray-900">${formatWad(position.collateralAmount)}</p>
                   </div>
                   <div>
                     <p className="text-gray-500">Position Size</p>
-                    <p className="font-semibold text-gray-900">
-                      ${formatWad(position.positionSize)}
-                    </p>
+                    <p className="font-semibold text-gray-900">${formatWad(position.positionSize)}</p>
                   </div>
                   <div>
                     <p className="text-gray-500">Entry Price</p>
-                    <p className="font-semibold text-gray-900">
-                      {formatPrice(position.entryPrice)}
-                    </p>
+                    <p className="font-semibold text-gray-900">{formatPrice(position.entryPrice)}</p>
                   </div>
                   <div>
                     <p className="text-gray-500">Current Price</p>
-                    <p className="font-semibold text-gray-900">
-                      {formatPrice(position.currentPrice)}
-                    </p>
+                    <p className="font-semibold text-gray-900">{formatPrice(position.currentPrice)}</p>
                   </div>
                   <div>
                     <p className="text-gray-500">PnL</p>
@@ -241,9 +209,7 @@ const Positions: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-gray-500">Resolution</p>
-                    <p className="font-semibold text-gray-900">
-                      {position.timeToResolution}
-                    </p>
+                    <p className="font-semibold text-gray-900">{position.timeToResolution}</p>
                   </div>
                 </div>
 
@@ -252,9 +218,7 @@ const Positions: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                     <div>
                       <p className="text-gray-500">Liquidation Price</p>
-                      <p className="font-semibold text-gray-900">
-                        {formatPrice(position.liquidationPrice)}
-                      </p>
+                      <p className="font-semibold text-gray-900">{formatPrice(position.liquidationPrice)}</p>
                     </div>
                     <div>
                       <p className="text-gray-500">Distance to Liquidation</p>
@@ -262,8 +226,7 @@ const Positions: React.FC = () => {
                         calculateLiquidationDistance(position.currentPrice, position.liquidationPrice, position.isLong) > 20
                           ? 'text-success-600'
                           : calculateLiquidationDistance(position.currentPrice, position.liquidationPrice, position.isLong) > 10
-                          ? 'text-yellow-600'
-                          : 'text-danger-600'
+                          ? 'text-yellow-600' : 'text-danger-600'
                       }`}>
                         {calculateLiquidationDistance(position.currentPrice, position.liquidationPrice, position.isLong).toFixed(1)}%
                       </p>
@@ -274,15 +237,12 @@ const Positions: React.FC = () => {
                         calculateLiquidationDistance(position.currentPrice, position.liquidationPrice, position.isLong) > 20
                           ? 'bg-success-100 text-success-800'
                           : calculateLiquidationDistance(position.currentPrice, position.liquidationPrice, position.isLong) > 10
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-danger-100 text-danger-800'
+                          ? 'bg-yellow-100 text-yellow-800' : 'bg-danger-100 text-danger-800'
                       }`}>
                         {calculateLiquidationDistance(position.currentPrice, position.liquidationPrice, position.isLong) > 20
                           ? 'Healthy'
                           : calculateLiquidationDistance(position.currentPrice, position.liquidationPrice, position.isLong) > 10
-                          ? 'Warning'
-                          : 'At Risk'
-                        }
+                          ? 'Warning' : 'At Risk'}
                       </span>
                     </div>
                   </div>
@@ -310,10 +270,7 @@ const Positions: React.FC = () => {
                         Close
                       </button>
                       <button
-                        onClick={() => {
-                          setSelectedPosition(null);
-                          setCloseAmount('');
-                        }}
+                        onClick={() => { setSelectedPosition(null); setCloseAmount(''); }}
                         className="flex-1 bg-gray-300 text-gray-700 px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-400"
                       >
                         Cancel
@@ -329,10 +286,7 @@ const Positions: React.FC = () => {
                       Manage
                     </button>
                     <button
-                      onClick={() => {
-                        setSelectedPosition(position.id);
-                        setCloseAmount(formatWad(position.collateralAmount));
-                      }}
+                      onClick={() => { setSelectedPosition(position.id); setCloseAmount(formatWad(position.collateralAmount)); }}
                       className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-200"
                     >
                       Close All
@@ -354,12 +308,8 @@ const Positions: React.FC = () => {
             </svg>
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">No Positions</h3>
-          <p className="text-gray-600 mb-4">
-            You don't have any active positions yet.
-          </p>
-          <p className="text-sm text-gray-500">
-            Go to the Trading tab to open your first leveraged position
-          </p>
+          <p className="text-gray-600 mb-4">You don't have any active positions yet.</p>
+          <p className="text-sm text-gray-500">Go to the Trading tab to open your first leveraged position</p>
         </div>
       )}
     </div>

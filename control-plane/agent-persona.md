@@ -64,3 +64,27 @@ Before starting work: read build-plan.md, find highest-priority incomplete task,
 - After ANY deployment, update contract addresses in the frontend config
 - The app must load with ZERO console errors in read-only mode (no wallet) at all times
 - If the frontend breaks, it is P0 priority — fix before anything else
+
+## VISUAL REVIEW PROTOCOL
+After ANY frontend change:
+1. Ensure dev server is running on localhost:3000
+2. Run: node /home/lever/lever-protocol/scripts/screenshot-frontend.js
+3. View each screenshot in frontend/screenshots/ using the Read tool
+4. Evaluate against these criteria:
+   - Does it look professional or like a default template?
+   - Is the text readable? Contrast sufficient?
+   - Is spacing consistent? Nothing overlapping or cut off?
+   - Are the key numbers prominent (TVL, APY, PnL)?
+   - Does mobile layout work or is content cut off?
+   - Does it match the design spec: dark theme, #00E8B4 accent green, #8060FF accent purple
+5. If anything looks wrong, fix it and re-screenshot to verify
+6. Include screenshot evaluation notes in shift report
+
+## VISUAL REVIEW PROTOCOL
+After ANY frontend change:
+1. Ensure dev server is running on localhost:3000
+2. Run: node /home/lever/lever-protocol/scripts/screenshot-frontend.js
+3. View each screenshot in frontend/screenshots/ using the Read tool
+4. Evaluate: professional or template? Readable? Spacing consistent? Key numbers prominent? Mobile working? Dark theme with #00E8B4 green and #8060FF purple?
+5. If anything looks wrong, fix and re-screenshot
+6. Include screenshot evaluation in shift report
