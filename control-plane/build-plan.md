@@ -3,6 +3,11 @@
 # Eric can reorder. Agent never reorders — only marks complete.
 # Last updated: 2026-03-15 (synced with test-phase.log results)
 
+## Phase 0: Documentation (URGENT)
+- [x] **P0** Rewrite README.md — professional, investor-grade. Cover: what LEVER is (1 paragraph hook), the problem (no leverage on prediction markets), the solution (synthetic perps on binary outcomes), architecture overview with contract diagram, key numbers ($13B monthly spot volume, $65-130B addressable), how the vault works for LPs, how trading works for traders, tech stack, team mention, links. No fabricated metrics. Tone: institutional, not degen. Reference scripts/oracle/demo_markets.json for live market examples. — DONE 2026-03-15
+- [ ] **P0** Write docs/ARCHITECTURE.md — full technical architecture doc. Contract dependency graph, data flow for open/close/liquidate/settle, oracle flow from Polymarket to on-chain, fee distribution, vault mechanics, role/permission model. Mermaid diagrams where useful.
+- [ ] **P0** Write docs/PROTOCOL_OVERVIEW.md — non-technical explainer for investors. How LEVER works in plain English, yield model for LPs, risk model, competitive advantages vs Ultramarkets, market opportunity.
+
 ## Phase 1: Stabilize
 - [x] **P0** Fix OracleAdapter source validation — DONE 2026-03-15
 - [x] **P0** Commit all uncommitted changes — DONE 2026-03-15
@@ -115,3 +120,4 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 [2026-03-15] Price smoothing verification COMPLETE — OracleAdapter EMA smoothing verified with realistic price data. Created comprehensive test suite (6 verifications): volatility reduction (64.7%), EMA convergence (99.1%), epsilon rate limiting (1%), time weighting (29% difference), anti-manipulation filters (deltaMax, spread, depth), volatility dampening (2.5% buildup). All smoothing parameters working correctly with real market patterns.
 [2026-03-15] Feed monitoring dashboard COMPLETE — Comprehensive oracle monitoring solution deployed. SQLite-based persistent logging, gap detection (>5min), multi-tier alerting (stale@2min, critical@5min), web interface on port 8081. Includes management scripts, systemd service, 30-day retention. Database structure verified, all health checks passing. Fallback source tracking (CLOB→Gamma→cached) implemented.
 [2026-03-15] Market discovery system COMPLETE — Automated market discovery engine deployed. Python-based system with SQLite tracking, composite scoring algorithm (volume, liquidity, category, time-to-resolution, price balance), continuous monitoring daemon. Discovered 53 active Polymarket markets, identified 14 high-quality candidates (score ≥65). Integration with existing onboarding pipeline via candidates.json export. Includes shell script automation, systemd service configuration, and comprehensive test suite.
+[2026-03-15] README.md rewrite COMPLETE — Professional, investor-grade README deployed. Institutional tone, key market opportunity numbers ($13B volume, $65-130B addressable), clear problem/solution framing, comprehensive architecture overview with mermaid diagram, LP/trader flows, technical stack, team mention, no fabricated metrics. References demo_markets.json live examples across 10 categories (tech, geopolitics, sports, macro, crypto, forex).
