@@ -12,6 +12,9 @@ import {
 } from '../config/abis';
 import { useLivePrices } from '../hooks/useLivePrices';
 import TradeHistory from './TradeHistory';
+import PnLChart from './PnLChart';
+import FeeBreakdown from './FeeBreakdown';
+import MarginUsage from './MarginUsage';
 import Skeleton from './Skeleton';
 
 interface PositionData {
@@ -377,6 +380,51 @@ const Positions: React.FC = () => {
               </div>
             </>
           )}
+        </div>
+      )}
+
+      {/* Enhanced Portfolio Dashboard */}
+      {!isLoadingPositions && displayPositions.length > 0 && (
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* PnL Performance Chart */}
+          <PnLChart
+            positions={displayPositions.map(pos => ({
+              id: pos.id,
+              pnl: pos.pnl,
+              borrowFees: pos.borrowFees,
+              fundingAccrued: pos.fundingAccrued,
+              collateral: pos.collateral,
+              equity: pos.equity
+            }))}
+            className="lg:col-span-2"
+          />
+
+          {/* Fee Analysis */}
+          <FeeBreakdown
+            positions={displayPositions.map(pos => ({
+              id: pos.id,
+              borrowFees: pos.borrowFees,
+              fundingAccrued: pos.fundingAccrued,
+              positionSize: pos.positionSize,
+              isLong: pos.isLong
+            }))}
+          />
+
+          {/* Margin & Risk Analysis */}
+          <MarginUsage
+            positions={displayPositions.map(pos => ({
+              id: pos.id,
+              collateral: pos.collateral,
+              equity: pos.equity,
+              positionSize: pos.positionSize,
+              leverage: pos.leverage,
+              pnl: pos.pnl,
+              borrowFees: pos.borrowFees,
+              fundingAccrued: pos.fundingAccrued
+            }))}
+            accountBalance={accountBalance as bigint}
+            freeCollateral={freeCollateral as bigint}
+          />
         </div>
       )}
 
