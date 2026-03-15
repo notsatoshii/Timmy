@@ -11,14 +11,33 @@ interface TradeForm {
   leverage: string;
 }
 
-const Trading: React.FC = () => {
+interface TradingProps {
+  selectedTrade?: {
+    marketId: string;
+    marketName: string;
+    direction: 'long' | 'short';
+  } | null;
+}
+
+const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
   const { address } = useAccount();
   const [tradeForm, setTradeForm] = useState<TradeForm>({
-    marketId: '',
-    direction: 'long',
+    marketId: selectedTrade?.marketId || '',
+    direction: selectedTrade?.direction || 'long',
     collateral: '',
     leverage: '1',
   });
+
+  // Update form when selectedTrade changes
+  React.useEffect(() => {
+    if (selectedTrade) {
+      setTradeForm(prev => ({
+        ...prev,
+        marketId: selectedTrade.marketId,
+        direction: selectedTrade.direction,
+      }));
+    }
+  }, [selectedTrade]);
 
   const { writeContract: openPosition } = useWriteContract();
   const { writeContract: depositCollateral } = useWriteContract();
@@ -114,12 +133,14 @@ const Trading: React.FC = () => {
     return (collateral * leverage).toFixed(2);
   };
 
-  const mockMarkets = [
-    { id: '0x1', name: 'Bitcoin $100K by Mar 2026' },
-    { id: '0x2', name: 'US Election 2028 - Democrat Win' },
-    { id: '0x3', name: 'AI Protein Folding by 2027' },
-    { id: '0x4', name: 'Next Super Bowl - AFC Win' },
-  ];
+  const mockMarkets = selectedTrade
+    ? [{ id: selectedTrade.marketId, name: selectedTrade.marketName }]
+    : [
+      { id: 'demo-1', name: 'Largest IPO by Market Cap 2026: SpaceX?' },
+      { id: 'demo-2', name: 'US-Iran Ceasefire by April 30, 2026?' },
+      { id: 'demo-3', name: 'Nothing Ever Happens: 2026' },
+      { id: 'demo-4', name: '2026 FIFA World Cup Winner: Spain?' },
+    ];
 
   return (
     <div className="space-y-6">
@@ -128,6 +149,13 @@ const Trading: React.FC = () => {
         <p className="text-gray-600">
           Take leveraged positions on binary prediction markets
         </p>
+        {selectedTrade && (
+          <div className="mt-2 p-3 bg-success-50 border border-success-200 rounded-lg">
+            <p className="text-sm text-success-800">
+              <strong>Market selected:</strong> {selectedTrade.marketName} • Direction: {selectedTrade.direction.toUpperCase()}
+            </p>
+          </div>
+        )}
         {!address && (
           <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-800">

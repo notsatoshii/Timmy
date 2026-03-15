@@ -12,7 +12,17 @@ type TabType = 'markets' | 'trading' | 'vault' | 'positions';
 
 const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('markets');
+  const [selectedTrade, setSelectedTrade] = useState<{
+    marketId: string;
+    marketName: string;
+    direction: 'long' | 'short';
+  } | null>(null);
   const { isConnected } = useAccount();
+
+  const handleTradeSelection = (marketId: string, marketName: string, direction: 'long' | 'short') => {
+    setSelectedTrade({ marketId, marketName, direction });
+    setActiveTab('trading');
+  };
 
   const tabs = [
     { id: 'markets' as TabType, label: 'Markets', description: 'Browse prediction markets' },
@@ -26,13 +36,13 @@ const Dashboard: React.FC = () => {
       case 'markets':
         return (
           <ErrorBoundary panelName="Markets">
-            <Markets />
+            <Markets onTradeSelect={handleTradeSelection} />
           </ErrorBoundary>
         );
       case 'trading':
         return (
           <ErrorBoundary panelName="Trading">
-            <Trading />
+            <Trading selectedTrade={selectedTrade} />
           </ErrorBoundary>
         );
       case 'vault':

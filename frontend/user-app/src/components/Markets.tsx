@@ -12,7 +12,11 @@ interface Market {
   isLive: boolean;
 }
 
-const Markets: React.FC = () => {
+interface MarketsProps {
+  onTradeSelect?: (marketId: string, marketName: string, direction: 'long' | 'short') => void;
+}
+
+const Markets: React.FC<MarketsProps> = ({ onTradeSelect }) => {
   const [markets, setMarkets] = useState<Market[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -247,10 +251,16 @@ const Markets: React.FC = () => {
 
               <div className="ml-6 flex-shrink-0">
                 <div className="flex space-x-2">
-                  <button className="bg-success-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-success-700 transition-colors">
+                  <button
+                    onClick={() => onTradeSelect?.(market.id, market.description, 'long')}
+                    className="bg-success-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-success-700 transition-colors"
+                  >
                     Long
                   </button>
-                  <button className="bg-danger-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-danger-700 transition-colors">
+                  <button
+                    onClick={() => onTradeSelect?.(market.id, market.description, 'short')}
+                    className="bg-danger-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-danger-700 transition-colors"
+                  >
                     Short
                   </button>
                 </div>
