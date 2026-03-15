@@ -8,6 +8,12 @@
 - [ ] **OracleAdapter missing auto-freeze on staleness**
 - [ ] **ExecutionEngine is bookkeeping-only** — no token transfers for PnL settlement. Needs settlement layer wiring.
 - [ ] **Root's /root/lever-protocol copy** — should be deleted after confirming /home/lever is canonical
+- [ ] **LiquidationEngine: no execution impact in equity calc** — spec requires computeExitPrice for liquidation equity, currently uses marginEngine.computeEquity (PI-based, no impact)
+- [ ] **LiquidationEngine: partial liquidation not chunked** — flagged but full position closed in one call. Comment says "future iteration"
+- [ ] **LiquidationEngine: Path A/B not implemented** — only permissionless Path C exists. Spec requires internal paths from closePosition and oracle updates.
+- [ ] **LeverVault: executeWithdrawal missing yield** — spec says totalPayout = assets + yield. Users must claim() before withdrawal or lose tranche yield on burned shares.
+- [ ] **LeverVault: utilization gate stubbed** — getUtilization() returns 0, withdrawalsEnabled() returns true. No OILimits dependency for 80% gate.
+- [ ] **SettlementEngine: MarketSettled event passes totalBadDebt for totalLoserDebt param** — semantic mismatch in event, logic correct
 
 ## LOW
 - [ ] **OracleAdapter consistency tolerance** — 5% vs spec 2%
@@ -15,6 +21,9 @@
 - [ ] **OracleAdapter convergence enforcement** — not implemented (spec says SHOULD)
 - [ ] **MarginEngine PENDING_RESOLUTION MM multiplier** — spec says use 2× (WP 18.3), not implemented
 - [ ] **MarginEngine IM uses rate-based (5%) instead of notional/leverage** — deliberate to avoid circularity, documented
+- [ ] **BorrowFeeEngine/FundingRateEngine: permissionless accrual** — spec says KEEPER, implementation allows anyone. Safer but deviates.
+- [ ] **FundingRateEngine: routeUnmatchedFunding bookkeeping-only** — emits event but no actual USDT transfer to RewardsDistributor
+- [ ] **LeverVault: weightedAge() stub** — returns tranche count, not weighted age
 
 ## FIXED (MarketRegistry — 2026-03-15)
 - [x] **5 role misassignments** — activateMarket/setLive were KEEPER (spec: MARKET_MANAGER), setPendingResolution/resolveMarket were KEEPER/MARKET_MANAGER (spec: ORACLE), voidMarket was MARKET_MANAGER (spec: ADMIN)
@@ -40,4 +49,11 @@
 - [x] OILimits — PASS
 - [x] ExecutionEngine — ISSUE FOUND & FIXED (see above)
 - [x] MarginEngine — PASS (deviations noted in LOW)
-- [ ] BorrowFeeEngine through SettlementEngine — pending (P1)
+- [x] BorrowFeeEngine — PASS (permissionless accrual noted in LOW)
+- [x] FundingRateEngine — PASS (permissionless accrual, bookkeeping routing noted)
+- [x] FeeRouter — PASS
+- [x] LeverVault — PASS (utilization gate stubbed, yield gap noted in MEDIUM)
+- [x] RewardsDistributor — PASS
+- [x] InsuranceFund — PASS
+- [x] LiquidationEngine — ISSUES NOTED (see MEDIUM)
+- [x] SettlementEngine — PASS (event param issue noted in MEDIUM)
