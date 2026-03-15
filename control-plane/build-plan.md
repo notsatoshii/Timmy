@@ -63,7 +63,7 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 - [x] P0 Price feed reliability — heartbeat check, staleness detection, fallback on API failure — DONE 2026-03-15
 - [x] P1 Multi-source price validation — compare Polymarket REST vs WebSocket vs backup sources — CRITICAL ISSUES FOUND 2026-03-15
 - [x] **P1** Price smoothing verification — confirm OracleAdapter EMA smoothing works with real price data — VERIFIED 2026-03-15
-- [ ] P1 Feed monitoring dashboard — log price updates, detect gaps, alert on stale feeds
+- [x] **P1** Feed monitoring dashboard — log price updates, detect gaps, alert on stale feeds — DONE 2026-03-15
 - [ ] P1 Market discovery — auto-detect new high-volume Polymarket markets for onboarding
 
 ## Phase 4: Deployment Prep
@@ -113,3 +113,4 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 [2026-03-15] Price feed monitor — scripts/oracle/feed_monitor.py. Three-tier fallback (CLOB → Gamma → cached), heartbeat tracking per market, staleness alerts (2min stale, 5min critical), health reporting for dashboards.
 [2026-03-15] Multi-source price validation COMPLETE — CRITICAL ISSUES FOUND: Gamma API returns 0.0 prices (broken fallback), CLOB orderbook returns static 0.5 (empty books), only CLOB midpoint reliable. Created multi_source_validator.py + price_source_analysis.md. Single point of failure identified - requires immediate fix before mainnet.
 [2026-03-15] Price smoothing verification COMPLETE — OracleAdapter EMA smoothing verified with realistic price data. Created comprehensive test suite (6 verifications): volatility reduction (64.7%), EMA convergence (99.1%), epsilon rate limiting (1%), time weighting (29% difference), anti-manipulation filters (deltaMax, spread, depth), volatility dampening (2.5% buildup). All smoothing parameters working correctly with real market patterns.
+[2026-03-15] Feed monitoring dashboard COMPLETE — Comprehensive oracle monitoring solution deployed. SQLite-based persistent logging, gap detection (>5min), multi-tier alerting (stale@2min, critical@5min), web interface on port 8081. Includes management scripts, systemd service, 30-day retention. Database structure verified, all health checks passing. Fallback source tracking (CLOB→Gamma→cached) implemented.
