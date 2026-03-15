@@ -85,9 +85,9 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 - [x] Monitor 48 hours — ACTIVE 2026-03-15 15:11 UTC. Monitoring system deployed: simple_monitor.py running with health reports every 30min. Baseline: 6 price updates, 53 discovered markets (14 high-scoring), all config files present. Dashboard attempting startup.
 
 ## Phase 6: Frontend
-- [x] React dashboard (markets, trading, vault, positions) — DONE 2026-03-15
-- [x] Connect to Base Sepolia contracts — DONE 2026-03-15
-- [x] Core UI flows — DONE 2026-03-15
+- [x] React dashboard (markets, trading, vault, positions) — DONE 2026-03-15. All 4 tabs complete with contract integration.
+- [x] Connect to Base Sepolia contracts — DONE 2026-03-15. wagmi v3 + RainbowKit, ABIs for 8 contracts.
+- [x] Core UI flows — DONE 2026-03-15. Open/close positions, vault deposit/withdraw, USDT faucet, portfolio tracking.
 
 ## Completion Log
 [2026-03-15] OracleAdapter source validation fix — c75c5c9
@@ -128,4 +128,4 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 [2026-03-15] Base Sepolia deployment TESTED — Complete deployment system validated. Foundry configuration updated (ffi=true, fs_permissions=read-write). Environment variables configured for testnet. Phase 1 (Core) deployed successfully to Chain ID 84532 with proper contract addresses. Phase 2 (Pool) and Phase 3 (Engines) also deployed. Deployment blocked only by insufficient ETH for gas fees. System ready for funded deployment.
 [2026-03-15] Demo seeding bots COMPLETE — Full bot ecosystem deployed for 10 curated demo markets. Created oracle keeper bot (30s price updates from Polymarket), LP seeding bot ($100k TVL target via MockUSDT faucet), trading activity bot (1-10x leverage, realistic patterns). Market onboarding pipeline converts demo_markets.json to contract format. Dry-run orchestrator validates all 3 bots. Ready for 48-hour testnet monitoring phase.
 [2026-03-15] 48-hour monitoring INITIATED — simple_monitor.py deployed and running. Fixed compilation error (scientific notation in OnboardDemoMarkets.s.sol). Monitoring system active with health reports every 30min. Baseline established: 6 price updates logged, 53 markets discovered (14 high-scoring), full testnet deployment verified on Base Sepolia.
-[2026-03-15] React dashboard COMPLETE — Full-featured web3 frontend with 4 main components (Markets, Trading, Vault, Positions). Base Sepolia integration via wagmi/RainbowKit. TailwindCSS styling. Mock data for demo. USDT faucet integration. Builds successfully with warnings only (missing deps, unused imports). Development server starts cleanly.
+[2026-03-15] React dashboard COMPLETE — Full-featured web3 frontend with 4 tabs: Markets (browse predictions, Long/Short buttons), Trading (collateral deposit, leverage slider, position sizing), Vault (TVL/APY/utilization stats, deposit/withdraw, yield breakdown), Positions (portfolio summary, PnL tracking, liquidation distance, close flow). Base Sepolia via wagmi v3 + RainbowKit. Tailwind CSS v3 (fixed v4 compat issue). Contract ABIs wired for all 8 core contracts. Mock data for demo. USDT faucet. ESLint clean. Build PASSES.

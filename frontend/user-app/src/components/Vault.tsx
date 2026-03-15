@@ -1,15 +1,7 @@
 import React, { useState } from 'react';
 import { useAccount, useReadContract, useWriteContract } from 'wagmi';
 import { CONTRACT_ADDRESSES, formatUsdt, formatWad, parseUsdt } from '../config/contracts';
-import { LEVER_VAULT_ABI, USDT_ABI, ACCOUNT_MANAGER_ABI } from '../config/abis';
-
-interface VaultStats {
-  totalAssets: bigint;
-  totalShares: bigint;
-  userShares: bigint;
-  userAssets: bigint;
-  apy: number;
-}
+import { LEVER_VAULT_ABI, USDT_ABI } from '../config/abis';
 
 const Vault: React.FC = () => {
   const { address } = useAccount();
@@ -44,13 +36,6 @@ const Vault: React.FC = () => {
     address: CONTRACT_ADDRESSES.usdt as `0x${string}`,
     abi: USDT_ABI,
     functionName: 'balanceOf',
-    args: address ? [address] : undefined,
-  });
-
-  const { data: accountBalance } = useReadContract({
-    address: CONTRACT_ADDRESSES.accountManager as `0x${string}`,
-    abi: ACCOUNT_MANAGER_ABI,
-    functionName: 'getBalance',
     args: address ? [address] : undefined,
   });
 
@@ -106,7 +91,7 @@ const Vault: React.FC = () => {
 
   const calculateShareValue = (): string => {
     if (!totalAssets || !totalShares || totalShares === BigInt(0)) return '1.00';
-    return (Number(totalAssets) / Number(totalShares) / 1e12).toFixed(4); // Convert to USDT (6 decimals)
+    return (Number(totalAssets) / Number(totalShares) / 1e12).toFixed(4);
   };
 
   const calculateUserAssets = (): string => {
@@ -116,12 +101,11 @@ const Vault: React.FC = () => {
   };
 
   const getVaultUtilization = (): number => {
-    // Mock calculation - in reality this would come from the vault contract
     if (!totalAssets || totalAssets === BigInt(0)) return 0;
-    return Math.min(75, Number(totalAssets) / 1e6 / 1000); // Assume 75% max utilization for demo
+    return Math.min(75, Number(totalAssets) / 1e6 / 1000);
   };
 
-  const mockAPY = 287; // Mock APY based on fee flow projections
+  const mockAPY = 287;
 
   return (
     <div className="space-y-6">

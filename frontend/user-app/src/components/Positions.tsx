@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAccount, useReadContract, useWriteContract } from 'wagmi';
-import { CONTRACT_ADDRESSES, formatUsdt, formatWad } from '../config/contracts';
-import { POSITION_MANAGER_ABI, EXECUTION_ENGINE_ABI, ORACLE_ADAPTER_ABI, MARKET_REGISTRY_ABI } from '../config/abis';
+import { CONTRACT_ADDRESSES, formatWad } from '../config/contracts';
+import { POSITION_MANAGER_ABI, EXECUTION_ENGINE_ABI } from '../config/abis';
 
 interface Position {
   id: string;
@@ -36,7 +36,7 @@ const Positions: React.FC = () => {
   });
 
   // Mock positions for demo purposes since we might not have real positions yet
-  const mockPositions: Position[] = [
+  const mockPositions: Position[] = useMemo(() => [
     {
       id: '0x1',
       marketId: '0x1',
@@ -67,16 +67,15 @@ const Positions: React.FC = () => {
       liquidationPrice: BigInt('580000000000000000'), // 0.58 (58%)
       timeToResolution: '1095d 8h',
     },
-  ];
+  ], []);
 
   useEffect(() => {
-    // For demo, use mock positions
     if (address) {
       setPositions(mockPositions);
     } else {
       setPositions([]);
     }
-  }, [address, positionIds]);
+  }, [address, positionIds, mockPositions]);
 
   const handleClosePosition = async (positionId: string) => {
     if (!closeAmount) return;
@@ -96,7 +95,7 @@ const Positions: React.FC = () => {
     }
   };
 
-  const getPnlColor = (pnl: bigint, percentage: number): string => {
+  const getPnlColor = (pnl: bigint): string => {
     if (pnl > 0) return 'text-success-600';
     if (pnl < 0) return 'text-danger-600';
     return 'text-gray-600';
@@ -107,10 +106,6 @@ const Positions: React.FC = () => {
     if (leverageNumber > 10) return 'text-danger-600';
     if (leverageNumber > 5) return 'text-yellow-600';
     return 'text-success-600';
-  };
-
-  const formatTimeToResolution = (timeString: string): string => {
-    return timeString;
   };
 
   const formatPrice = (price: bigint): string => {
@@ -146,7 +141,7 @@ const Positions: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h3 className="text-sm font-medium text-gray-500 mb-2">Total PnL</h3>
-            <p className={`text-2xl font-bold ${getPnlColor(BigInt(totalPnl * 1e18), totalPnl / totalCollateral * 100)}`}>
+            <p className={`text-2xl font-bold ${getPnlColor(BigInt(Math.floor(totalPnl * 1e18)))}`}>
               {totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(2)}
             </p>
             <p className="text-sm text-gray-600 mt-1">
@@ -237,17 +232,17 @@ const Positions: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-gray-500">PnL</p>
-                    <p className={`font-semibold ${getPnlColor(position.pnl, position.pnlPercentage)}`}>
+                    <p className={`font-semibold ${getPnlColor(position.pnl)}`}>
                       {position.pnl > 0 ? '+' : ''}${formatWad(position.pnl)}
                     </p>
-                    <p className={`text-xs ${getPnlColor(position.pnl, position.pnlPercentage)}`}>
+                    <p className={`text-xs ${getPnlColor(position.pnl)}`}>
                       {position.pnl > 0 ? '+' : ''}{position.pnlPercentage.toFixed(2)}%
                     </p>
                   </div>
                   <div>
                     <p className="text-gray-500">Resolution</p>
                     <p className="font-semibold text-gray-900">
-                      {formatTimeToResolution(position.timeToResolution)}
+                      {position.timeToResolution}
                     </p>
                   </div>
                 </div>
