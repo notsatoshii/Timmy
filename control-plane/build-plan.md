@@ -89,6 +89,39 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 - [x] Connect to Base Sepolia contracts — DONE 2026-03-15. wagmi v3 + RainbowKit, ABIs for 8 contracts.
 - [x] Core UI flows — DONE 2026-03-15. Open/close positions, vault deposit/withdraw, USDT faucet, portfolio tracking.
 
+## Phase 8: Frontend Foundation (depends on Phase 5 deployment + Phase 7 seed bots)
+> RULE: No frontend task is complete until the automated test script passes. Timmy runs scripts/test-frontend.sh after EVERY frontend change.
+
+- [x] **P0** Fix webpack polyfill errors (crypto, buffer, stream) — install crypto-browserify, stream-browserify, buffer, process. Use craco or react-app-rewired for webpack config override. Verify npm run build exits clean with zero errors. — DONE 2026-03-15
+- [ ] **P0** Build scripts/test-frontend.sh — automated test that: 1) runs npm build, fails if errors 2) starts dev server 3) curls localhost:3000, checks HTTP 200 4) checks response contains expected component IDs 5) checks for no "Cannot find module" or "BREAKING CHANGE" in output 6) kills dev server. This script gates all frontend work.
+- [ ] **P0** Add ABI sync script — reads compiled artifacts from out/ and generates frontend/user-app/src/config/abis.ts automatically. Run after any contract change. Add to worker persona: always run ABI sync after contract modifications.
+- [ ] **P0** Add contract address config that reads from deployment JSONs — frontend/user-app/src/config/contracts.ts pulls addresses from core-deployment.json, pool-deployment.json, engines-deployment.json. No hardcoded addresses.
+- [ ] **P0** Read-only mode without wallet — all market data, prices, vault stats, recent trades visible without connecting wallet. Wallet only needed for transactions. This is what investors see first.
+- [ ] **P0** React error boundaries on every panel — one failed contract read must not crash the whole app. Each panel shows its own error state independently.
+- [ ] **P0** Verify app loads clean with zero console errors after all above fixes
+
+## Phase 9: Frontend Integration Testing (depends on Phase 8 + live testnet data)
+- [ ] **P0** Verify markets panel populates from MarketRegistry — shows all 10 demo markets with real names, categories, expiry dates, current probability from OracleAdapter
+- [ ] **P0** Verify vault panel shows real TVL, share price, APY calculated from borrow fee revenue
+- [ ] **P0** Test open position flow: select market, choose direction, set collateral, set leverage, approve USDT, confirm — position appears in Positions panel
+- [ ] **P0** Test close position flow: select position, close, PnL settled, collateral returned to AccountManager balance
+- [ ] **P0** Test vault deposit: approve USDT, deposit, receive lvUSDT shares, vault balance updates
+- [ ] **P0** Test vault withdraw: request withdrawal, wait 48h (or use time manipulation on testnet), execute, receive USDT
+- [ ] **P1** Live price updates — OracleAdapter prices refresh every 30s in Markets panel without page reload
+- [ ] **P1** Live PnL on positions — recalculates as prices change
+- [ ] **P1** Trade history — log of recent trades across all markets from events
+- [ ] **P1** Loading skeletons on all data-dependent components
+- [ ] **P1** Mobile responsive — test on 375px width, fix any overflow or unreadable text
+
+## Phase 10: Frontend Polish (investor demo ready)
+- [ ] **P1** Dark theme redesign — institutional aesthetic matching pitch deck. Not generic Tailwind template.
+- [ ] **P1** Protocol stats banner at top: TVL, 24h volume, total OI, LP APY, insurance fund — all live from contracts
+- [ ] **P1** Market detail view: click a market to see probability chart, OI breakdown long/short, funding rate, borrow rate, recent positions
+- [ ] **P1** Portfolio dashboard: total equity across positions, PnL curve over time, fee breakdown, margin usage
+- [ ] **P1** Notifications: toast on trade confirm, position opened/closed, liquidation warning when margin below 150%
+- [ ] **P1** Performance: batch contract reads with multicall, memoize computed values, lazy load market detail views
+- [ ] **P1** Final demo walkthrough: record screen capture of full flow (connect wallet, browse markets, open position, see PnL, deposit to vault, see yield) to verify everything works smooth
+
 ## Completion Log
 [2026-03-15] OracleAdapter source validation fix — c75c5c9
 [2026-03-15] All math verifications passed — exact match across 6 engines
@@ -129,3 +162,4 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 [2026-03-15] Demo seeding bots COMPLETE — Full bot ecosystem deployed for 10 curated demo markets. Created oracle keeper bot (30s price updates from Polymarket), LP seeding bot ($100k TVL target via MockUSDT faucet), trading activity bot (1-10x leverage, realistic patterns). Market onboarding pipeline converts demo_markets.json to contract format. Dry-run orchestrator validates all 3 bots. Ready for 48-hour testnet monitoring phase.
 [2026-03-15] 48-hour monitoring INITIATED — simple_monitor.py deployed and running. Fixed compilation error (scientific notation in OnboardDemoMarkets.s.sol). Monitoring system active with health reports every 30min. Baseline established: 6 price updates logged, 53 markets discovered (14 high-scoring), full testnet deployment verified on Base Sepolia.
 [2026-03-15] React dashboard COMPLETE — Full-featured web3 frontend with 4 tabs: Markets (browse predictions, Long/Short buttons), Trading (collateral deposit, leverage slider, position sizing), Vault (TVL/APY/utilization stats, deposit/withdraw, yield breakdown), Positions (portfolio summary, PnL tracking, liquidation distance, close flow). Base Sepolia via wagmi v3 + RainbowKit. Tailwind CSS v3 (fixed v4 compat issue). Contract ABIs wired for all 8 core contracts. Mock data for demo. USDT faucet. ESLint clean. Build PASSES.
+[2026-03-15] Frontend polyfill errors ALREADY FIXED — All required polyfills (crypto-browserify, stream-browserify, buffer, process) already installed and configured via react-app-rewired + config-overrides.js. npm run build completes successfully with zero critical errors (only minor warnings about optional wallet connectors). Webpack override functional.
