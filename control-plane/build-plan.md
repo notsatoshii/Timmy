@@ -46,7 +46,7 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 - [x] **P0** Verify LiquidationFlow.t.sol + LiquidationExecution.t.sol pass — PASSED 2026-03-15 (10/10 + 9/9 tests)
 - [x] **P0** Verify SettlementFlow.t.sol + SettlementExecution.t.sol pass — PASSED 2026-03-15 (11/11 + 12/12 tests)
 - [x] **P1** Verify MultiMarket.t.sol passes — PASSED 2026-03-15 (13/13 tests)
-- [ ] **P1** Verify NearResolution.t.sol passes (edge cases near 0/100)
+- [x] **P1** Verify NearResolution.t.sol passes (edge cases near 0/100) — PASSED 2026-03-15 (7/7 tests)
 - [ ] **P1** Verify WithdrawalQueue.t.sol passes (LP 80% utilization gate)
 - [ ] **P1** Verify InsuranceBadDebt.t.sol passes
 - [ ] **P1** Verify FeeFlow.t.sol passes
@@ -87,3 +87,4 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 [2026-03-15] Repo consolidation task investigated — Only /home/lever/lever-protocol found. /root/ access denied. Root processes run from /home/lever path. No duplicate copy accessible with current permissions.
 [2026-03-15] MultiMarket integration tests verified — 13/13 tests pass clean. Confirms independent operation across markets (OI tracking, fees, funding, leverage, PI movements, resolution).
 [2026-03-15] Root auto-backup cron investigation complete — No active root cron jobs doing git/backup operations found. Checked system cron directories, running processes, systemd timers. Only backup operation is lever user's nightly.py. Root process (dashboard.py) only reads git data. No conflicting operations detected.
+[2026-03-15] NearResolution integration tests verified — 7/7 tests pass clean. Edge cases confirmed working: leverage compression as τ→0, risk tightening near resolution, 1× leverage enforcement at τ=0, borrow rate escalation, and live market compression.
