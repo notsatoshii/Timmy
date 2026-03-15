@@ -1,0 +1,212 @@
+[
+  {
+    "marketId": "0x2841ef32b61fb3472aadbfc70d787a1bfaf5d0218c9601b87963af7bcca1bcf1",
+    "name": "Largest IPO by Market Cap 2026: SpaceX?",
+    "externalMarketId": "0x2841ef32b61fb3472aadbfc70d787a1bfaf5d0218c9601b87963af7bcca1bcf1",
+    "resolutionTime": 1798588800,
+    "category": 0,
+    "categoryName": "HIGH_LIQUIDITY",
+    "allocationWeight": "4e+16",
+    "_polymarket": {
+      "conditionId": "0x2841ef32b61fb3472aadbfc70d787a1bfaf5d0218c9601b87963af7bcca1bcf1",
+      "tokenIds": [
+        "115792089237316195423570985008687907853269984665640564039454315564889837250050",
+        "115792089237316195423570985008687907853269984665640564039448903982444989912877"
+      ],
+      "volume": 50000.0,
+      "liquidity": 10000.0,
+      "currentPrice": 0.88,
+      "endDate": "2026-12-30T00:00:00Z",
+      "polyCategory": "tech"
+    }
+  },
+  {
+    "marketId": "0x9fe694e72b00a6aab573e11a17e2240b64d7aca455305b65289b77cc2f2d077a",
+    "name": "US-Iran Ceasefire by April 30, 2026?",
+    "externalMarketId": "0x9fe694e72b00a6aab573e11a17e2240b64d7aca455305b65289b77cc2f2d077a",
+    "resolutionTime": 1777507200,
+    "category": 1,
+    "categoryName": "MEDIUM_LIQUIDITY",
+    "allocationWeight": "2.5e+16",
+    "_polymarket": {
+      "conditionId": "0x9fe694e72b00a6aab573e11a17e2240b64d7aca455305b65289b77cc2f2d077a",
+      "tokenIds": [
+        "115792089237316195423570985008687907853269984665640564039451494151264990771381",
+        "9067792092411977901"
+      ],
+      "volume": 50000.0,
+      "liquidity": 10000.0,
+      "currentPrice": 0.35,
+      "endDate": "2026-04-30T00:00:00Z",
+      "polyCategory": "geopolitics"
+    }
+  },
+  {
+    "marketId": "0x62fcede467dc87c6e1001987c73f5b90ddae5df334e990414a89b6e48cf1826d",
+    "name": "Nothing Ever Happens: 2026",
+    "externalMarketId": "0x62fcede467dc87c6e1001987c73f5b90ddae5df334e990414a89b6e48cf1826d",
+    "resolutionTime": 1798588800,
+    "category": 2,
+    "categoryName": "LOW_LIQUIDITY",
+    "allocationWeight": "1.5e+16",
+    "_polymarket": {
+      "conditionId": "0x62fcede467dc87c6e1001987c73f5b90ddae5df334e990414a89b6e48cf1826d",
+      "tokenIds": [
+        "3316425727090095771",
+        "115792089237316195423570985008687907853269984665640564039456757277378851797297"
+      ],
+      "volume": 15000.0,
+      "liquidity": 5000.0,
+      "currentPrice": 0.42,
+      "endDate": "2026-12-30T00:00:00Z",
+      "polyCategory": "speculative"
+    }
+  },
+  {
+    "marketId": "0xe824af6184169f8f70511158f848d86056ebcc5b283928333c722159bafd82e2",
+    "name": "2026 FIFA World Cup Winner: Spain?",
+    "externalMarketId": "0xe824af6184169f8f70511158f848d86056ebcc5b283928333c722159bafd82e2",
+    "resolutionTime": 1784419200,
+    "category": 0,
+    "categoryName": "HIGH_LIQUIDITY",
+    "allocationWeight": "4e+16",
+    "_polymarket": {
+      "conditionId": "0xe824af6184169f8f70511158f848d86056ebcc5b283928333c722159bafd82e2",
+      "tokenIds": [
+        "115792089237316195423570985008687907853269984665640564039453152411504431494984",
+        "115792089237316195423570985008687907853269984665640564039448971416902928367030"
+      ],
+      "volume": 50000.0,
+      "liquidity": 10000.0,
+      "currentPrice": 0.22,
+      "endDate": "2026-07-19T00:00:00Z",
+      "polyCategory": "sports"
+    }
+  },
+  {
+    "marketId": "0x14c648a4f4d0bc145e52ef68c38e29448c3f53a7856efe028b8b9282bb53ece7",
+    "name": "Fed Rate End of 2026: Below 4%?",
+    "externalMarketId": "0x14c648a4f4d0bc145e52ef68c38e29448c3f53a7856efe028b8b9282bb53ece7",
+    "resolutionTime": 1796688000,
+    "category": 1,
+    "categoryName": "MEDIUM_LIQUIDITY",
+    "allocationWeight": "2.5e+16",
+    "_polymarket": {
+      "conditionId": "0x14c648a4f4d0bc145e52ef68c38e29448c3f53a7856efe028b8b9282bb53ece7",
+      "tokenIds": [
+        "115792089237316195423570985008687907853269984665640564039453300265172480900389",
+        "115792089237316195423570985008687907853269984665640564039457579585066249586518"
+      ],
+      "volume": 50000.0,
+      "liquidity": 10000.0,
+      "currentPrice": 0.55,
+      "endDate": "2026-12-08T00:00:00Z",
+      "polyCategory": "macro"
+    }
+  },
+  {
+    "marketId": "0xc75c5438583a86308c965cee1a062f63b322bf00c9d47ccfc1c85b0b220111f2",
+    "name": "SpaceX IPO via Ackman SPAR?",
+    "externalMarketId": "0xc75c5438583a86308c965cee1a062f63b322bf00c9d47ccfc1c85b0b220111f2",
+    "resolutionTime": 1798675200,
+    "category": 0,
+    "categoryName": "HIGH_LIQUIDITY",
+    "allocationWeight": "4e+16",
+    "_polymarket": {
+      "conditionId": "0xc75c5438583a86308c965cee1a062f63b322bf00c9d47ccfc1c85b0b220111f2",
+      "tokenIds": [
+        "5652118587819141800",
+        "115792089237316195423570985008687907853269984665640564039448521756136504140705"
+      ],
+      "volume": 50000.0,
+      "liquidity": 10000.0,
+      "currentPrice": 0.3,
+      "endDate": "2026-12-31T00:00:00Z",
+      "polyCategory": "tech"
+    }
+  },
+  {
+    "marketId": "0x9f22dfb07feaf97cf92a3dc91483a9ecb508f5815f331b4611a8d582e2dd4554",
+    "name": "AAPL Above $250 in April 2026?",
+    "externalMarketId": "0x9f22dfb07feaf97cf92a3dc91483a9ecb508f5815f331b4611a8d582e2dd4554",
+    "resolutionTime": 1777507200,
+    "category": 0,
+    "categoryName": "HIGH_LIQUIDITY",
+    "allocationWeight": "4e+16",
+    "_polymarket": {
+      "conditionId": "0x9f22dfb07feaf97cf92a3dc91483a9ecb508f5815f331b4611a8d582e2dd4554",
+      "tokenIds": [
+        "4372564271937075286",
+        "115792089237316195423570985008687907853269984665640564039453380251740329971429"
+      ],
+      "volume": 50000.0,
+      "liquidity": 10000.0,
+      "currentPrice": 0.6,
+      "endDate": "2026-04-30T00:00:00Z",
+      "polyCategory": "stocks"
+    }
+  },
+  {
+    "marketId": "0x6dd2ecd673a166f34be2f101b96a048035bcfbcd0f98014491ca94449c159dbc",
+    "name": "OpenSea Token Launch by 2026?",
+    "externalMarketId": "0x6dd2ecd673a166f34be2f101b96a048035bcfbcd0f98014491ca94449c159dbc",
+    "resolutionTime": 1798675200,
+    "category": 0,
+    "categoryName": "HIGH_LIQUIDITY",
+    "allocationWeight": "4e+16",
+    "_polymarket": {
+      "conditionId": "0x6dd2ecd673a166f34be2f101b96a048035bcfbcd0f98014491ca94449c159dbc",
+      "tokenIds": [
+        "3402948082624581665",
+        "115792089237316195423570985008687907853269984665640564039449877575412331636814"
+      ],
+      "volume": 50000.0,
+      "liquidity": 10000.0,
+      "currentPrice": 0.45,
+      "endDate": "2026-12-31T00:00:00Z",
+      "polyCategory": "crypto"
+    }
+  },
+  {
+    "marketId": "0xf715c6d9592ef93a01ff357bb5a3514c22ceeaa60e06223c0dcf75afad145e9f",
+    "name": "Fed April 2026: Rate Cut?",
+    "externalMarketId": "0xf715c6d9592ef93a01ff357bb5a3514c22ceeaa60e06223c0dcf75afad145e9f",
+    "resolutionTime": 1777334400,
+    "category": 1,
+    "categoryName": "MEDIUM_LIQUIDITY",
+    "allocationWeight": "2.5e+16",
+    "_polymarket": {
+      "conditionId": "0xf715c6d9592ef93a01ff357bb5a3514c22ceeaa60e06223c0dcf75afad145e9f",
+      "tokenIds": [
+        "6456831258667679064",
+        "5118212561161662114"
+      ],
+      "volume": 50000.0,
+      "liquidity": 10000.0,
+      "currentPrice": 0.4,
+      "endDate": "2026-04-28T00:00:00Z",
+      "polyCategory": "macro"
+    }
+  },
+  {
+    "marketId": "0xe73fd3dd7e069a651cfc9d63dae43702c320a661ab5c9dada3678994d18dffea",
+    "name": "Argentina USD Rate Above 1500 ARS End of 2026?",
+    "externalMarketId": "0xe73fd3dd7e069a651cfc9d63dae43702c320a661ab5c9dada3678994d18dffea",
+    "resolutionTime": 1798675200,
+    "category": 1,
+    "categoryName": "MEDIUM_LIQUIDITY",
+    "allocationWeight": "2.5e+16",
+    "_polymarket": {
+      "conditionId": "0xe73fd3dd7e069a651cfc9d63dae43702c320a661ab5c9dada3678994d18dffea",
+      "tokenIds": [
+        "115792089237316195423570985008687907853269984665640564039457211163340354040581",
+        "8064139182287883745"
+      ],
+      "volume": 50000.0,
+      "liquidity": 10000.0,
+      "currentPrice": 0.65,
+      "endDate": "2026-12-31T00:00:00Z",
+      "polyCategory": "forex"
+    }
+  }
+]
