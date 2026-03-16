@@ -257,7 +257,7 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 
 - [x] **P0** Register oracle source and seed all 10 market prices: run RegisterOracleSource.s.sol then SeedPrices.s.sol (both with --private-key flag). VERIFY each market has a non-zero price by calling OracleAdapter on-chain for at least 3 different market IDs. Log the prices in the audit file. Do NOT mark done until cast calls return real prices. — DONE 2026-03-16
 
-- [ ] **P0** Verify vault TVL is still intact: run `cast call 0x84a1Eb3b1eFD60b193b271DCfaB2711cE1c41921 "totalAssets()(uint256)" --rpc-url https://sepolia.base.org`. Must return 20000000000000. If it returns 0, investigate and re-run SeedTVL.s.sol. If it returns 20000000000000, TVL is fine — do NOT re-run SeedTVL.
+- [x] **P0** Verify vault TVL is still intact: run `cast call 0x84a1Eb3b1eFD60b193b271DCfaB2711cE1c41921 "totalAssets()(uint256)" --rpc-url https://sepolia.base.org`. Must return 20000000000000. If it returns 0, investigate and re-run SeedTVL.s.sol. If it returns 20000000000000, TVL is fine — do NOT re-run SeedTVL. — VERIFIED 2026-03-16
 
 - [ ] **P0** Frontend contract wiring: ensure frontend/user-app/src/config/contracts.ts FALLBACK_ADDRESSES match the real deployed addresses above. Also ensure the exported CONTRACT_ADDRESSES constant uses the real addresses. Rebuild: `cd frontend/user-app && npm run build`. Copy deployment JSONs: `mkdir -p build/deployments public/deployments && cp ../../core-deployment.json ../../pool-deployment.json ../../engines-deployment.json build/deployments/ && cp ../../core-deployment.json ../../pool-deployment.json ../../engines-deployment.json public/deployments/`. Restart server: `fuser -k 3000/tcp 2>/dev/null; nohup npx serve -s build -l 3000 > /dev/null 2>&1 &`.
 
@@ -277,6 +277,8 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 [2026-03-16] Demo market registration VERIFIED — All 10 demo markets already exist on-chain at MarketRegistry 0x3Cc9E89DF048CE26Be380696E86814bEbB984DB7. OnboardDemoMarkets script failed with "MarketAlreadyExists" error, confirming previous successful creation. Verified 3 markets via getMarketState() calls: SpaceX IPO (0x2841ef32...), US-Iran Ceasefire (0x9fe694e7...), Argentina USD (0xe73fd3dd...) all return state 0 (ACTIVE). 10 markets spanning 6 categories confirmed operational.
 
 [2026-03-16] Oracle source registration and price seeding COMPLETE — Successfully registered deployer as oracle source with 90% weight via RegisterOracleSource.s.sol. Activated all 10 markets from LISTED to ACTIVE state via ActivateMarkets.s.sol. Seeded initial prices for all markets via SeedPrices.s.sol with realistic probabilities (SpaceX IPO: 88%, US-Iran Ceasefire: 35%, Argentina USD: 65%, etc.). Verified 3 markets return correct non-zero prices via OracleAdapter.getPI() calls. All oracle prices functional. Updated deployment audit with success status. Health check shows 10/12 tests pass (only frontend issues remain).
+
+[2026-03-16] Vault TVL verification COMPLETE — LeverVault.totalAssets() confirmed returning exactly 20,000,000,000,000 (20M USDT in 6-decimal format). TVL seeding integrity maintained, no re-seeding required. Vault operational with full $20M liquidity pool ready for trading and LP operations.
 
 
 ## Phase 7 REVISED: QA Bot System (76 bots, stress test, demo activity)
