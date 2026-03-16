@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 # Environment variables
 export RPC_URL="https://sepolia.base.org"
 export KEEPER_KEY="$(cat ../../.env.deployer)"
-export ORACLE_ADAPTER="0x13e01E7E58196cff03068FDf0bB29382ec60b676"
+export ORACLE_ADAPTER="0xf0698FCEDD3A212c5f1D78f7c4c008CB90efeA9c"
 export MARKET_CONFIG="market_config.json"
 export PUSH_INTERVAL="30"
 export DRY_RUN="false"
