@@ -12,7 +12,7 @@ import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol"
  */
 contract SetMarketRiskParams is Script {
 
-    address constant LEVERAGE_MODEL = 0x891b44d5fb7BBA7e68f27367f1E7b4FC74A1c850;
+    address constant LEVERAGE_MODEL = 0x63B98Ec1e559E3b24199eb2115F0a57222e9818c;
 
     // Market names from demo_markets.json
     string[] public marketNames = [

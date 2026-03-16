@@ -11,7 +11,7 @@ import {IMarketRegistry} from "../contracts/interfaces/IMarketRegistry.sol";
  */
 contract ActivateMarkets is Script {
 
-    address constant MARKET_REGISTRY = 0x89398FECE023cDD8c53eFD9a7C68a227eA139e1E;
+    address constant MARKET_REGISTRY = 0x3Cc9E89DF048CE26Be380696E86814bEbB984DB7;
 
     // Market names from demo_markets.json
     string[] public marketNames = [

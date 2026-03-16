@@ -12,7 +12,7 @@ import {MockUSDT} from "../contracts/periphery/MockUSDT.sol";
 contract MintToFeeRouter is Script {
 
     address constant USDT = 0x5DaA593b6D7A6F3D3224471aC2D3905B54c2966E;
-    address constant FEE_ROUTER = 0x304966042cfE06f5ff4347D8698B9CCa4F971335;
+    address constant FEE_ROUTER = 0x1d6e55260C6Dd2A20A5bb7Cb6331E6Ba2faB5b6F;
 
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
