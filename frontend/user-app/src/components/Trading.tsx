@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useWriteContract, useReadContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useWallet } from '../hooks/useWallet';
 import { parseUnits } from 'viem';
-import { CONTRACT_ADDRESSES, formatUsdt, parseUsdt } from '../config/contracts';
+import { CONTRACT_ADDRESSES, formatUsdt, parseUsdt, parseWad } from '../config/contracts';
 import { EXECUTION_ENGINE_ABI, ACCOUNT_MANAGER_ABI, USDT_ABI } from '../config/abis';
 import { useNotifications } from '../contexts/NotificationContext';
 import Skeleton from './Skeleton';
@@ -171,7 +171,7 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
     if (!tradeForm.marketId || !tradeForm.collateral || !tradeForm.leverage) return;
 
     try {
-      const collateralAmount = parseUsdt(tradeForm.collateral);
+      const collateralAmount = parseWad(tradeForm.collateral);
       const leverage = parseUnits(tradeForm.leverage, 18);
 
       await openPosition({
@@ -365,7 +365,7 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
                     Position value: {calculatePositionSize()} USDT &bull; Leverage: {tradeForm.leverage}x
                   </p>
                 </div>
-              ) : !accountBalance || accountBalance < parseUsdt(tradeForm.collateral || '0') ? (
+              ) : !accountBalance || accountBalance < parseWad(tradeForm.collateral || '0') ? (
                 <div className="space-y-2">
                   <button
                     onClick={handleApproveUsdt}

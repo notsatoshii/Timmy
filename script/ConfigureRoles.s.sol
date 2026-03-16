@@ -18,6 +18,7 @@ import { LeverVault } from "../contracts/LeverVault.sol";
 import { RewardsDistributor } from "../contracts/RewardsDistributor.sol";
 import { LiquidationEngine } from "../contracts/LiquidationEngine.sol";
 import { SettlementEngine } from "../contracts/SettlementEngine.sol";
+import { OILimits } from "../contracts/OILimits.sol";
 
 /// @title ConfigureRoles — Role configuration for LEVER Protocol (Phase 4)
 /// @notice Grants all necessary roles across deployed contracts
@@ -165,6 +166,10 @@ contract ConfigureRoles is Script {
         );
         LeverVault(addr.leverVault).grantRole(
             LeverVault(addr.leverVault).EXECUTION_ENGINE_ROLE(),
+            addr.executionEngine
+        );
+        OILimits(addr.oiLimits).grantRole(
+            OILimits(addr.oiLimits).EXECUTION_ENGINE_ROLE(),
             addr.executionEngine
         );
         console.log("  ExecutionEngine roles granted");
