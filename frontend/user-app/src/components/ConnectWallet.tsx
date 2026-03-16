@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { injected } from 'wagmi/connectors';
+import { setDemoMode } from '../connectors/demo';
 import { useDemo } from '../contexts/DemoContext';
 
 const ConnectWallet: React.FC = () => {
@@ -14,19 +15,15 @@ const ConnectWallet: React.FC = () => {
     try {
       setIsDemoConnecting(true);
 
-      // For demo mode, we'll create a mock connection state
-      // The test wallet address (derived from private key)
-      const demoAddress = '0x742d35Cc6634C0532925a3b8D0a2dfABb3b9c8A0'; // Test wallet address
+      // Enable demo mode
+      setDemoMode(true);
 
-      // Set demo mode in localStorage to persist across reloads
-      localStorage.setItem('demo-mode', 'true');
-      localStorage.setItem('demo-address', demoAddress);
-
-      // Refresh page to load in demo mode
+      // Force re-render by reloading the page
       window.location.reload();
 
     } catch (error) {
       console.error('Demo connection failed:', error);
+      setDemoMode(false);
     } finally {
       setIsDemoConnecting(false);
     }
@@ -53,8 +50,7 @@ const ConnectWallet: React.FC = () => {
         </span>
         <button
           onClick={() => {
-            localStorage.removeItem('demo-mode');
-            localStorage.removeItem('demo-address');
+            setDemoMode(false);
             window.location.reload();
           }}
           className="text-sm text-danger hover:text-danger-dim font-medium px-3 py-1.5 rounded-lg hover:bg-danger-muted transition-colors"
