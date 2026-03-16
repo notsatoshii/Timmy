@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAccount } from 'wagmi';
+import { useWallet } from '../hooks/useWallet';
 import ConnectWallet from './ConnectWallet';
 import Header from './Header';
 import ProtocolStats from './ProtocolStats';
@@ -29,7 +29,7 @@ const Dashboard: React.FC = () => {
     direction: 'long' | 'short';
   } | null>(null);
   const [selectedMarket, setSelectedMarket] = useState<Market | null>(null);
-  const { isConnected } = useAccount();
+  const { isConnected } = useWallet();
 
   const handleTradeSelection = (marketId: string, marketName: string, direction: 'long' | 'short') => {
     setSelectedTrade({ marketId, marketName, direction });

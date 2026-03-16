@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { useAccount, useWriteContract } from 'wagmi';
+import { useWriteContract } from 'wagmi';
+import { useWallet } from '../hooks/useWallet';
 import { CONTRACT_ADDRESSES, formatUsdt, formatWad, parseUsdt, WAD } from '../config/contracts';
 import { LEVER_VAULT_ABI, USDT_ABI, FEE_ROUTER_ABI, OI_LIMITS_ABI } from '../config/abis';
 import { useVaultMulticall } from '../hooks/useMulticall';
@@ -7,7 +8,7 @@ import { useMemoizedVaultCalculations } from '../hooks/useMemoizedCalculations';
 import Skeleton from './Skeleton';
 
 const VaultOptimized: React.FC = () => {
-  const { address } = useAccount();
+  const { address } = useWallet();
   const [depositAmount, setDepositAmount] = useState('');
   const [withdrawShares, setWithdrawShares] = useState('');
 

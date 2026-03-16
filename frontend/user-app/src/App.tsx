@@ -1,5 +1,6 @@
 import React from 'react';
-import { WagmiProvider } from 'wagmi';
+import { PrivyProvider } from '@privy-io/react-auth';
+import { WagmiProvider } from '@privy-io/wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { config } from './config/wagmi';
 import DashboardOptimized from './components/DashboardOptimized';
@@ -27,17 +28,28 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <WagmiProvider config={config}>
+    <PrivyProvider
+      appId="cmmsq4f1p03dg0cle3al028fj"
+      config={{
+        appearance: {
+          theme: 'dark',
+          accentColor: '#00E8B4',
+        },
+        loginMethods: ['email', 'wallet'],
+      }}
+    >
       <QueryClientProvider client={queryClient}>
-        <NotificationProvider>
-          <div className="min-h-screen bg-gray-50">
-            <ErrorBoundary panelName="Application">
-              <DashboardOptimized />
-            </ErrorBoundary>
-          </div>
-        </NotificationProvider>
+        <WagmiProvider config={config}>
+          <NotificationProvider>
+            <div className="min-h-screen bg-gray-50">
+              <ErrorBoundary panelName="Application">
+                <DashboardOptimized />
+              </ErrorBoundary>
+            </div>
+          </NotificationProvider>
+        </WagmiProvider>
       </QueryClientProvider>
-    </WagmiProvider>
+    </PrivyProvider>
   );
 }
 

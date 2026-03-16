@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { useAccount, useReadContract, useWriteContract } from 'wagmi';
+import { useReadContract, useWriteContract } from 'wagmi';
+import { useWallet } from '../hooks/useWallet';
 import { CONTRACT_ADDRESSES, formatUsdt, formatWad, parseUsdt, WAD } from '../config/contracts';
 import { LEVER_VAULT_ABI, USDT_ABI, FEE_ROUTER_ABI, OI_LIMITS_ABI } from '../config/abis';
 import Skeleton from './Skeleton';
 
 const Vault: React.FC = () => {
-  const { address } = useAccount();
+  const { address } = useWallet();
   const [depositAmount, setDepositAmount] = useState('');
   const [withdrawShares, setWithdrawShares] = useState('');
 

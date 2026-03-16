@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useWallet } from '../hooks/useWallet';
 import { CONTRACT_ADDRESSES, formatWad, WAD } from '../config/contracts';
 import {
   POSITION_MANAGER_ABI,
@@ -39,7 +40,7 @@ interface PositionData {
 type CloseState = 'idle' | 'confirming' | 'pending' | 'success' | 'error';
 
 const Positions: React.FC = () => {
-  const { address } = useAccount();
+  const { address } = useWallet();
   const { showTradeConfirmation, showErrorToast, showLiquidationWarning } = useNotifications();
   const [positions, setPositions] = useState<PositionData[]>([]);
   const [selectedPositionId, setSelectedPositionId] = useState<bigint | null>(null);

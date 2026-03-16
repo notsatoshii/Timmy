@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useAccount, useWriteContract, useReadContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useWriteContract, useReadContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useWallet } from '../hooks/useWallet';
 import { parseUnits } from 'viem';
 import { CONTRACT_ADDRESSES, formatUsdt, parseUsdt } from '../config/contracts';
 import { EXECUTION_ENGINE_ABI, ACCOUNT_MANAGER_ABI, USDT_ABI } from '../config/abis';
@@ -22,7 +23,7 @@ interface TradingProps {
 }
 
 const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
-  const { address } = useAccount();
+  const { address } = useWallet();
   const { showSuccessToast, showErrorToast, showTradeConfirmation } = useNotifications();
   const [tradeForm, setTradeForm] = useState<TradeForm>({
     marketId: selectedTrade?.marketId || '',

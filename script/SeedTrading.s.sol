@@ -32,7 +32,7 @@ contract SeedTrading is Script {
     string[] public marketNames;
 
     function run() external {
-        uint256 deployerPrivateKey = vm.envUint("DEPLOYER_KEY");
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address trader = vm.addr(deployerPrivateKey);
 
         console2.log("=== LEVER Protocol Trading Seeding ===");
@@ -88,11 +88,13 @@ contract SeedTrading is Script {
         MockUSDT usdt = MockUSDT(USDT);
         uint256 initialBalance = usdt.balanceOf(trader);
 
-        // Call faucet to get USDT
-        usdt.faucet();
+        // Only call faucet if balance is insufficient
+        if (initialBalance < 6000e6) { // Need at least 6000 USDT for trading
+            usdt.faucet();
+        }
 
         uint256 newBalance = usdt.balanceOf(trader);
-        console2.log("USDT balance:", (newBalance - initialBalance) / 1e6, "USDT");
+        console2.log("USDT balance:", newBalance / 1e6, "USDT");
     }
 
     function _depositToAccount(address trader) internal {
@@ -122,14 +124,14 @@ contract SeedTrading is Script {
             uint8 direction;
 
             if (i % 2 == 0) {
-                // Even markets: smaller positions, higher leverage, long bias
-                collateral = 50e18; // $50 USDT (converted to WAD)
-                leverage = 5e18;    // 5x leverage
+                // Even markets: tiny positions to minimize fees
+                collateral = 1e18; // $1 USDT (converted to WAD)
+                leverage = 1e18;    // 1x leverage (no fees for 1x)
                 direction = 0;      // LONG
             } else {
-                // Odd markets: larger positions, lower leverage, short bias
-                collateral = 100e18; // $100 USDT (converted to WAD)
-                leverage = 3e18;     // 3x leverage
+                // Odd markets: tiny positions to minimize fees
+                collateral = 1e18; // $1 USDT (converted to WAD)
+                leverage = 1e18;    // 1x leverage (no fees for 1x)
                 direction = 1;       // SHORT
             }
 

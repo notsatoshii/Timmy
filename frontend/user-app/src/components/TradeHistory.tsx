@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAccount } from 'wagmi';
+import { useWallet } from '../hooks/useWallet';
 import { useTradeHistory, TradeHistoryEntry } from '../hooks/useTradeHistory';
 import { formatWad } from '../config/contracts';
 
@@ -8,7 +8,7 @@ interface TradeHistoryProps {
 }
 
 const TradeHistory: React.FC<TradeHistoryProps> = ({ userOnly = false }) => {
-  const { address } = useAccount();
+  const { address } = useWallet();
   const [showAllTrades, setShowAllTrades] = useState(!userOnly);
 
   const { history, isLoading, error } = useTradeHistory({
