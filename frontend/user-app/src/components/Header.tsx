@@ -1,9 +1,9 @@
 import React from 'react';
-import { usePrivy } from '@privy-io/react-auth';
+import { useAccount } from 'wagmi';
 import ConnectWallet from './ConnectWallet';
 
 const Header: React.FC = () => {
-  const { authenticated } = usePrivy();
+  const { isConnected } = useAccount();
 
   return (
     <>
@@ -41,7 +41,7 @@ const Header: React.FC = () => {
       </header>
 
       {/* Read-only mode notification */}
-      {!authenticated && (
+      {!isConnected && (
         <div className="bg-purple-muted border-b border-border">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="py-2.5">
