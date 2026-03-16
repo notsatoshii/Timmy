@@ -61,3 +61,7 @@
 - [x] InsuranceFund — PASS
 - [x] LiquidationEngine — ISSUES NOTED (see MEDIUM)
 - [x] SettlementEngine — PASS (event param issue noted in MEDIUM)
+
+**CRITICAL (added 2026-03-16):**
+- Insurance Fund display shows raw undivided value ($1000000000000000.00). Likely WAD (1e18) value being displayed without conversion to USDT (1e6). Fix in frontend stats banner component.
+- Wallet button stuck on "Loading..." — PrivyProvider was removed from App.tsx but the connect button still references Privy hooks. Replace with standard wagmi ConnectButton or implement demo mode button.
