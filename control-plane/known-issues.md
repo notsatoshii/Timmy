@@ -6,7 +6,7 @@
 - [ ] **Feed monitor fallback chain non-functional** — DISCOVERED 2026-03-15. Current feed_monitor.py 3-tier fallback (CLOB→Gamma→cached) would fail in production due to broken Gamma integration. Single point of failure creates liquidation risk.
 
 ## MEDIUM
-- [ ] **OracleAdapter role assignments** — freezeMarket/unfreezeMarket/updateSmoothingParams use KEEPER not ADMIN
+- [x] **OracleAdapter role assignments** — FIXED 2026-03-16. freezeMarket/unfreezeMarket/updateSmoothingParams now use DEFAULT_ADMIN_ROLE as per spec.
 - [ ] **OracleAdapter missing auto-freeze on staleness**
 - [x] **ExecutionEngine is bookkeeping-only** — FIXED 2026-03-15. _settlePnL now moves USDT: vault↔AccountManager for price PnL, AccountManager→FeeRouter for borrow fees. Bad debt tracked via event.
 - [x] **Root's auto-backup cron conflict** — INVESTIGATION COMPLETE 2026-03-15: No active root cron jobs doing git/backup operations found. Checked system cron directories, running processes, systemd timers. Only backup operation is lever user's nightly.py. Root process (dashboard.py) only reads git data. No conflicting operations detected. Issue appears resolved or was preventative.
