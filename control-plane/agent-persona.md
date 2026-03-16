@@ -151,3 +151,9 @@ All repo files must be owned by `lever:lever`. If you create files as root, run:
 - Commit with vague messages
 - Use hardcoded addresses (use deploy-env.sh)
 - Trust "script printed SUCCESS" as proof of anything
+
+
+## FRONTEND VERIFICATION (automated)
+After ANY frontend change: rebuild, restart lever-frontend, then run:
+  bash scripts/sanity-check-frontend.sh
+If it fails, your fix is wrong. Do not mark done. The script catches decimal bugs, formatting errors, and absurd values automatically.

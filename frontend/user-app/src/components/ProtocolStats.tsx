@@ -9,6 +9,7 @@ import {
   BORROW_FEE_ENGINE_ABI,
 } from '../config/abis';
 import Skeleton from './Skeleton';
+import { useVolumeCalculation } from '../hooks/useVolumeCalculation';
 
 interface ProtocolStatsData {
   tvl: string;
@@ -52,9 +53,12 @@ const ProtocolStats: React.FC = () => {
     args: [spacexMarketId, true], // Use long side for representative rate
   });
 
+  // Calculate real 24h volume from position events
+  const { volume24h, isLoading: volumeLoading } = useVolumeCalculation(true);
+
   // Calculate derived stats
   useEffect(() => {
-    if (tvlRaw && totalOIRaw !== undefined && insuranceRaw !== undefined) {
+    if (tvlRaw && totalOIRaw !== undefined && insuranceRaw !== undefined && volume24h !== undefined) {
       // Calculate projected LP APY: (base_borrow_rate × Total_OI × 8760_hours × 0.50_LP_share) / TVL
       const BASE_BORROW_RATE = BigInt("200000000000000"); // 0.02% per hour in WAD
       const borrowRateToUse = currentBorrowRate && currentBorrowRate > BigInt(0) ? currentBorrowRate : BASE_BORROW_RATE;
@@ -73,20 +77,17 @@ const ProtocolStats: React.FC = () => {
       const tvlInWad = tvlRaw * BigInt(1e12);
       const apyBpsTimes100 = projectedAnnualRevenue * BigInt(10000) / tvlInWad;
 
-      // Mock 24h volume for now (would be calculated from events in real implementation)
-      const mockDailyVolume = totalOIRaw * BigInt(5) / BigInt(100); // 5% of total OI as daily volume estimate
-
       setStats({
         tvl: `$${formatUsdt(tvlRaw)}`,
-        dailyVolume: `$${formatUsdt(mockDailyVolume)}`,
+        dailyVolume: `$${formatUsdt(volume24h)}`,
         totalOI: `$${formatUsdt(totalOIRaw)}`,
         lpApy: `${(Number(apyBpsTimes100) / 100).toFixed(2)}%`,
         insuranceFund: `$${formatWad(insuranceRaw)}`, // InsuranceFund.getBalance() returns WAD values
       });
     }
-  }, [tvlRaw, totalOIRaw, insuranceRaw, currentBorrowRate]);
+  }, [tvlRaw, totalOIRaw, insuranceRaw, currentBorrowRate, volume24h]);
 
-  const isLoading = tvlLoading || oiLoading || insuranceLoading;
+  const isLoading = tvlLoading || oiLoading || insuranceLoading || volumeLoading;
 
   return (
     <div className="bg-gradient-to-r from-surface-1 via-surface-2 to-surface-1 border-b border-border">
