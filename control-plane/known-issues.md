@@ -133,3 +133,11 @@ This must work with positions OPEN — don't wait for closes/settlements to show
 - Frontend demo mode shows "Position Open Failed" when trying to trade
 - Contract is NOT the issue — frontend is sending the transaction incorrectly
 - Debug the Trading component: check how it encodes the openPosition call, what error it gets, and whether it's using the right contract address and ABI
+
+**CRITICAL: ACCOUNTMANAGER DECIMAL CONVERSION ISSUE (added 2026-03-16):**
+- AccountManager__InsufficientBalance errors when opening positions via ExecutionEngine despite sufficient USDT balances
+- Root cause: AccountManager stores balances in USDT 6-decimal format but position opening expects WAD 18-decimal format
+- Example: Test wallet has 2.999e12 USDT (3M USDT) but system requires 9.988e19 WAD (impossible conversion)
+- Affects both test wallet and deployer wallet position opening via cast send commands
+- Systematic issue blocking all new position creation despite proper funding
+- May require AccountManager balance getter/setter modification or ExecutionEngine parameter adjustment
