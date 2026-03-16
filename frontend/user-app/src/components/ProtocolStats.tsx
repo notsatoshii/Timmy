@@ -93,7 +93,7 @@ const ProtocolStats: React.FC = () => {
         dailyVolume: `$${formatUsdt(mockDailyVolume)}`,
         totalOI: `$${formatUsdt(totalOIRaw)}`,
         lpApy: `${formatWad(apyPercent)}%`,
-        insuranceFund: `$${formatUsdt(insuranceRaw)}`,
+        insuranceFund: `$${formatWad(insuranceRaw)}`,
       });
     }
   }, [tvlRaw, totalOIRaw, insuranceRaw, totalBorrowFees, totalTxFees, totalLiquidationFees, totalSettlementFees]);
