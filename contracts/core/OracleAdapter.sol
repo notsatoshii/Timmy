@@ -189,13 +189,13 @@ contract OracleAdapter is IOracleAdapter, AccessControl, ReentrancyGuard, Pausab
     // ──────────────────────────────────────────────
 
     /// @inheritdoc IOracleAdapter
-    function freezeMarket(bytes32 marketId) external onlyRole(KEEPER) {
+    function freezeMarket(bytes32 marketId) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _frozen[marketId] = true;
         emit MarketFrozen(marketId, "MANUAL_FREEZE");
     }
 
     /// @inheritdoc IOracleAdapter
-    function unfreezeMarket(bytes32 marketId) external onlyRole(KEEPER) {
+    function unfreezeMarket(bytes32 marketId) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _frozen[marketId] = false;
         emit MarketUnfrozen(marketId);
     }
@@ -204,7 +204,7 @@ contract OracleAdapter is IOracleAdapter, AccessControl, ReentrancyGuard, Pausab
     function updateSmoothingParams(
         bytes32 marketId,
         SmoothingParams calldata params
-    ) external onlyRole(KEEPER) {
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _smoothingParams[marketId] = params;
         emit SmoothingParamsUpdated(marketId);
     }

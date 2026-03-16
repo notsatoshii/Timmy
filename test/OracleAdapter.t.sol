@@ -230,7 +230,7 @@ contract OracleAdapterTest is Test {
             spreadLimit: 1e17,
             depthMin: 50_000e18
         });
-        vm.prank(keeper);
+        vm.prank(admin);
         oracle.updateSmoothingParams(MARKET_ID, params);
 
         _pushDefaultPrice(MARKET_ID, 0.5e18);
@@ -319,7 +319,7 @@ contract OracleAdapterTest is Test {
     }
 
     function test_pushPrice_revert_frozen() public {
-        vm.prank(keeper);
+        vm.prank(admin);
         oracle.freezeMarket(MARKET_ID);
 
         vm.expectRevert(abi.encodeWithSelector(IOracleAdapter.OracleAdapter__UpdateRejected.selector, MARKET_ID, "FROZEN"));
@@ -524,21 +524,21 @@ contract OracleAdapterTest is Test {
         vm.expectEmit(true, false, false, true);
         emit IOracleAdapter.MarketFrozen(MARKET_ID, "MANUAL_FREEZE");
 
-        vm.prank(keeper);
+        vm.prank(admin);
         oracle.freezeMarket(MARKET_ID);
 
         assertTrue(oracle.isFrozen(MARKET_ID));
     }
 
     function test_unfreezeMarket() public {
-        vm.prank(keeper);
+        vm.prank(admin);
         oracle.freezeMarket(MARKET_ID);
         assertTrue(oracle.isFrozen(MARKET_ID));
 
         vm.expectEmit(true, false, false, false);
         emit IOracleAdapter.MarketUnfrozen(MARKET_ID);
 
-        vm.prank(keeper);
+        vm.prank(admin);
         oracle.unfreezeMarket(MARKET_ID);
 
         assertFalse(oracle.isFrozen(MARKET_ID));
@@ -568,7 +568,7 @@ contract OracleAdapterTest is Test {
         vm.expectEmit(true, false, false, false);
         emit IOracleAdapter.SmoothingParamsUpdated(MARKET_ID);
 
-        vm.prank(keeper);
+        vm.prank(admin);
         oracle.updateSmoothingParams(MARKET_ID, params);
 
         IOracleAdapter.SmoothingParams memory fetched = oracle.getSmoothingParams(MARKET_ID);
@@ -709,7 +709,7 @@ contract OracleAdapterTest is Test {
         _pushDefaultPrice(MARKET_ID, 0.6e18);
         uint256 piBefore = oracle.getPI(MARKET_ID);
 
-        vm.prank(keeper);
+        vm.prank(admin);
         oracle.freezeMarket(MARKET_ID);
 
         // Verify PI is preserved
