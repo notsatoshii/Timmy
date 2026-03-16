@@ -305,3 +305,12 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 - [ ] **P1** Liquidator bot: monitors all open positions, liquidates any with margin below maintenance threshold. VERIFY by checking that no positions exist with margin ratio below 1.0.
 - [ ] **P1** Orchestrator: coordinates bot lifecycle. Commands via Telegram: /demo liquidation, /demo settle, /demo whale. Triggers scripted scenarios for investor demos.
 - [ ] **P1** 48-hour soak test: run all bots for 48 hours. Monitor for: crashes, stuck positions, oracle staleness, vault accounting errors. Log results to control-plane/soak-test-report.md.
+
+## Phase 0C: DEMO MODE & TEST WALLET
+**Context:** Automated testing and investor demos need a connected wallet with funds. Test wallet at .env.testwallet is funded with ETH + USDT.
+
+- [ ] **P0** Fund test wallet fully: deposit 5M USDT to vault (LP shares), deposit 2M USDT as trading collateral. VERIFY balances on-chain.
+- [ ] **P0** Add demo mode to frontend: "Try Demo" button that auto-connects using test wallet private key via viem/wagmi — no MetaMask needed. Replaces broken "Loading..." button.
+- [ ] **P0** Demo mode shows real data: stats banner with TVL, vault tab shows shares/yield, trading tab allows opening positions. VERIFY with visual-verify.js.
+- [ ] **P1** Open 3 demo positions via test wallet: long SpaceX 5x, short US-Iran 3x, long Fed Rate 2x. VERIFY in Positions tab.
+- [ ] **P1** Investor walkthrough screenshots: capture full flow in control-plane/screenshots/investor-walkthrough/.

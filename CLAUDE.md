@@ -250,46 +250,45 @@ All formulas with full variable definitions: see `KNOWLEDGE/FORMULAS.md`
 | `SPEC/*.md` | Per-contract build specs (Deliverable 4) |
 | `BUILD_LOG.md` | Running log of what's been built |
 
+---
 
-## DEPLOYMENT VERIFICATION
-- All deployed contract addresses are in control-plane/deploy-env.sh — this is the single source of truth
-- After every deployment task, run control-plane/health-check.sh — if it fails, the task is not done
-- Never trust script stdout ("SUCCESS") as proof — verify on-chain with cast calls
-- Read control-plane/worker-rule.md before any deployment work
+## Deployment & Operations
 
-## TESTING AND VERIFICATION
-Three mandatory scripts exist:
-- control-plane/health-check.sh -- system-wide pass/fail
-- scripts/visual-verify.js -- headless browser testing with screenshots
-- scripts/user-flow-test.sh -- on-chain user journey simulation
-Run appropriate scripts after every task. See control-plane/worker-rule.md for details.
+### Contract Addresses
+All deployed contract addresses are in `control-plane/deploy-env.sh` — single source of truth.
+Source it before any script: `source control-plane/deploy-env.sh`
 
+### Verification Scripts
+Three mandatory scripts — run after every task:
+- `bash control-plane/health-check.sh` — system-wide pass/fail
+- `node scripts/visual-verify.js` — headless browser testing with screenshots (frontend tasks)
+- `bash scripts/user-flow-test.sh` — on-chain user journey simulation (contract tasks)
 
-## MANDATORY TASK WORKFLOW
+See `control-plane/worker-rule.md` and `control-plane/thinking-protocol.md` for full protocols.
+
+### Task Workflow
 1. `bash control-plane/preflight.sh` — fix issues first
 2. `source control-plane/deploy-env.sh`
-3. Read control-plane/thinking-protocol.md
-4. Do the task
-5. `bash control-plane/health-check.sh` — must pass
-6. `node scripts/visual-verify.js` — frontend tasks
-7. `bash scripts/user-flow-test.sh` — contract tasks
-8. Commit with verification results
+3. Do the task
+4. Run applicable verification scripts — all must pass
+5. Commit with verification results
 
-## WALLETS
-- Deployer (.env.deployer): admin only
-- Test wallet (.env.testwallet): testing + demo
-- Bot wallets (control-plane/bot-wallets.json): 76 bots
-- Fund bots: python3 scripts/fund-all-bots.py
+### Wallets
+- Deployer (.env.deployer): admin, deployments, minting
+- Test wallet (.env.testwallet): testing + demo mode
+- Bot wallets (control-plane/bot-wallets.json): 76 bots, fund with `python3 scripts/fund-all-bots.py`
 - Every wallet needs ETH for gas
 
-## COMMON ERRORS
-- SourceNotActive = register oracle source
-- AccessControlUnauthorized = wrong wallet or missing role
-- MarketNotFound = markets not onboarded
-- Black screen = React provider crash
-- $0.00 stats = wrong addresses in config/contracts.ts
+### Services (systemd)
+- `lever-frontend` (port 3000), `lever-dashboard` (port 8080), `lever-worker`, `lever-bot`
 
-## FRONTEND DESIGN
-Design references in control-plane/design-reference/DESIGN_BRIEF.md.
-Read this before any UI work. Reference images are in the same folder.
+### Frontend Design
+Read `control-plane/design-reference/DESIGN_BRIEF.md` before any UI work.
 Primary references: lever-concept.png (trading), space-portfolio.png (positions), space-markets.png (browse).
+
+### Common Errors
+- `SourceNotActive` = register oracle source first
+- `AccessControlUnauthorized` = wrong wallet or missing role grant
+- `MarketNotFound` = markets not onboarded
+- Black screen = React provider crash (check App.tsx)
+- $0.00 stats = wrong addresses in frontend config/contracts.ts
