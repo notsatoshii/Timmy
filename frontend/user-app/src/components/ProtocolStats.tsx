@@ -63,14 +63,15 @@ const ProtocolStats: React.FC = () => {
       const lpShare = BigInt(50); // 50% LP share
       const hundredPercent = BigInt(100);
 
-      // projected_annual_revenue = borrow_rate_per_hour × total_OI × hours_per_year × LP_share_percent / 100
-      // Convert totalOI from USDT (6 decimal) to WAD (18 decimal) for calculation
+      // projected_annual_revenue = (borrow_rate × total_OI / WAD) × hours_per_year × LP_share / 100
+      // Must divide by WAD after multiplying two WAD-scale numbers to normalize
       const totalOIInWad = totalOIRaw * BigInt(1e12);
-      const projectedAnnualRevenue = borrowRateToUse * totalOIInWad * hoursPerYear * lpShare / hundredPercent;
+      const revenuePerHour = borrowRateToUse * totalOIInWad / WAD; // WAD × WAD / WAD = WAD
+      const projectedAnnualRevenue = revenuePerHour * hoursPerYear * lpShare / hundredPercent;
 
-      // APY = projected_annual_revenue / TVL × 100 (convert to percentage)
-      const tvlInWad = tvlRaw * BigInt(1e12); // Convert 6-decimal USDT to 18-decimal WAD
-      const apyBps = projectedAnnualRevenue * BigInt(100) / tvlInWad;
+      // APY = projected_annual_revenue / TVL (multiply by 10000 for basis point precision in BigInt)
+      const tvlInWad = tvlRaw * BigInt(1e12);
+      const apyBpsTimes100 = projectedAnnualRevenue * BigInt(10000) / tvlInWad;
 
       // Mock 24h volume for now (would be calculated from events in real implementation)
       const mockDailyVolume = totalOIRaw * BigInt(5) / BigInt(100); // 5% of total OI as daily volume estimate
@@ -79,7 +80,7 @@ const ProtocolStats: React.FC = () => {
         tvl: `$${formatUsdt(tvlRaw)}`,
         dailyVolume: `$${formatUsdt(mockDailyVolume)}`,
         totalOI: `$${formatUsdt(totalOIRaw)}`,
-        lpApy: `${Number(apyBps).toFixed(2)}%`,
+        lpApy: `${(Number(apyBpsTimes100) / 100).toFixed(2)}%`,
         insuranceFund: `$${formatWad(insuranceRaw)}`, // InsuranceFund.getBalance() returns WAD values
       });
     }

@@ -309,7 +309,7 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 **Context:** Stats banner shows wrong/misleading numbers. Bot positions use unrealistic 1-2x leverage. These must be fixed before any investor sees the product.
 
 ### Stats Banner Fixes
-- [x] **P0** LP APY — PROJECTED, not realized: Calculate from current open positions without waiting for closes. Formula: utilization = Total_OI / TVL. avg_borrow_rate = read from BorrowFeeEngine at current utilization. projected_APY = utilization x avg_borrow_rate x 8760_hours x 0.50_LP_share x 100. At 15% utilization with 0.02%/hr base rate, APY should show ~40%. MUST be non-zero whenever OI > 0. Update frontend Vault.tsx and stats banner. — FIXED 2026-03-16
+- [x] **P0** LP APY — FIXED 2026-03-16. Root cause: borrowRate (WAD) × OI (WAD) not divided by WAD before further multiplication, inflating APY by 1e18. Added /WAD normalization step. Also fixed Vault utilization (was comparing 6-dec vs WAD). Verified: OLD=200289%, NEW=0.20% with real on-chain values (OI $138K, TVL $60.5M). Health check 13/13 PASS.
 - [ ] **P0** 24h Volume — must be NOTIONAL: Volume = collateral x leverage for each trade. A 1000 USDT trade at 10x = 10,000 notional volume. Currently showing only collateral amount. Fix in frontend stats calculation.
 - [ ] **P0** Insurance Fund — verify fee routing: Check if FeeRouter.distributeFees() is being called. If fees only route on position close, add periodic fee distribution (cron or keeper). InsuranceFund balance should grow beyond 10K bootstrap whenever there is active OI.
 - [ ] **P0** Add Utilization Rate to stats banner: Utilization = Total_OI / TVL as percentage. This is a key LP metric. Display next to LP APY.
@@ -318,6 +318,9 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 - [ ] **P0** Close all existing 1-2x test positions. Open new positions with REALISTIC leverage: minimum 5x, average 5-10x, range 3x-15x. Use test wallet and deployer. Target: at least 10 open positions across 5+ markets.
 - [ ] **P0** Update trader bot scripts: when trader bots open positions, use leverage range 3x-15x with average ~7x. This produces realistic OI: 30 traders x 133K collateral x 7x = 8M OI against 0M TVL = 46% utilization.
 - [ ] **P0** Update market maker bot scripts: MMs should use 5x-10x leverage on both sides.
+
+
+- [ ] **P0** Frontend position opening broken in demo mode: cast send openPosition works from CLI but frontend shows Position Open Failed. Debug the Trading component: (1) check if demo wallet has collateral deposited in AccountManager — if not, the Trading UI must handle the full flow: approve USDT -> deposit to AccountManager -> then openPosition. (2) Check if the struct encoding matches what the contract expects. (3) Add proper error messages showing the actual revert reason, not generic Position Open Failed. MUST test by actually opening a position through the UI in demo mode.
 
 ### Price Chart Fix
 - [ ] **P0** Market detail 24H Price Chart: replace current blocky bar chart with a proper candlestick or line chart. Reference lever-concept.png in control-plane/design-reference/ — it shows correct candlestick format with 1m/5m/15m/1h/4h/1D timeframe selectors.

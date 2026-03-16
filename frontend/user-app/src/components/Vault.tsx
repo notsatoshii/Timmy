@@ -127,8 +127,8 @@ const Vault: React.FC = () => {
 
   const getVaultUtilization = (): number => {
     if (!totalAssets || !globalOI || totalAssets === BigInt(0)) return 0;
-    const tvlInWad = totalAssets * BigInt(1e12);
-    const utilizationBps = Number(globalOI * BigInt(10000) / tvlInWad);
+    // Both globalOI and totalAssets are in USDT 6-decimal format — compare directly
+    const utilizationBps = Number(globalOI * BigInt(10000) / totalAssets);
     return Math.min(100, utilizationBps / 100);
   };
 
@@ -144,16 +144,17 @@ const Vault: React.FC = () => {
     const lpShare = BigInt(50); // 50% LP share
     const hundredPercent = BigInt(100);
 
-    // projected_annual_revenue = borrow_rate_per_hour × total_OI × hours_per_year × LP_share_percent / 100
-    // Convert globalOI from USDT (6 decimal) to WAD (18 decimal) for calculation
+    // projected_annual_revenue = (borrow_rate × total_OI / WAD) × hours_per_year × LP_share / 100
+    // Must divide by WAD after multiplying two WAD-scale numbers to normalize
     const globalOIInWad = globalOI * BigInt(1e12);
-    const projectedAnnualRevenue = borrowRateToUse * globalOIInWad * hoursPerYear * lpShare / hundredPercent;
+    const revenuePerHour = borrowRateToUse * globalOIInWad / WAD; // WAD × WAD / WAD = WAD
+    const projectedAnnualRevenue = revenuePerHour * hoursPerYear * lpShare / hundredPercent;
 
-    // APY = projected_annual_revenue / TVL × 100 (convert to percentage)
-    const tvlInWad = totalAssets * BigInt(1e12); // Convert 6-decimal USDT to 18-decimal WAD
-    const apyBps = projectedAnnualRevenue * BigInt(100) / tvlInWad;
+    // APY = projected_annual_revenue / TVL (multiply by 10000 for basis point precision in BigInt)
+    const tvlInWad = totalAssets * BigInt(1e12);
+    const apyBpsTimes100 = projectedAnnualRevenue * BigInt(10000) / tvlInWad;
 
-    return Math.min(999, Number(apyBps));
+    return Math.min(999, Number(apyBpsTimes100) / 100);
   };
 
   return (
