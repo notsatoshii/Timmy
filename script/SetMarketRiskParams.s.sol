@@ -29,7 +29,7 @@ contract SetMarketRiskParams is Script {
     ];
 
     function run() external {
-        uint256 deployerPrivateKey = vm.envUint("DEPLOYER_KEY");
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address deployer = vm.addr(deployerPrivateKey);
 
         console2.log("=== Setting Market Risk Parameters ===");

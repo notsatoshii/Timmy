@@ -12,7 +12,7 @@ import {MockUSDT} from "../contracts/periphery/MockUSDT.sol";
  */
 contract SeedFeeRouter is Script {
 
-    address constant USDT = 0xf846E395219200cAeB12e802349EC67fecB28Ea8;
+    address constant USDT = 0x5DaA593b6D7A6F3D3224471aC2D3905B54c2966E;
     address constant FEE_ROUTER = 0x304966042cfE06f5ff4347D8698B9CCa4F971335;
 
     function run() external {

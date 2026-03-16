@@ -13,11 +13,11 @@ contract SeedTVL is Script {
     uint256 private constant SEED_AMOUNT = 20_000_000e6; // 20M USDT (6 decimals)
 
     // Contract addresses from deployment.json
-    MockUSDT private constant usdt = MockUSDT(0xf846E395219200cAeB12e802349EC67fecB28Ea8);
-    LeverVault private constant vault = LeverVault(0x1acab9966Bde1d7ED16f4BeAca97d65E97e81069);
+    MockUSDT private constant usdt = MockUSDT(0x5DaA593b6D7A6F3D3224471aC2D3905B54c2966E);
+    LeverVault private constant vault = LeverVault(0x84a1Eb3b1eFD60b193b271DCfaB2711cE1c41921);
 
     function run() external {
-        uint256 deployerPrivateKey = vm.envUint("DEPLOYER_KEY");
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address deployer = vm.addr(deployerPrivateKey);
 
         console.log("=== LEVER TVL Seeding ===");

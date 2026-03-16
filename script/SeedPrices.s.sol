@@ -11,7 +11,7 @@ import {IOracleAdapter} from "../contracts/interfaces/IOracleAdapter.sol";
  */
 contract SeedPrices is Script {
 
-    address constant ORACLE_ADAPTER = 0x13e01E7E58196cff03068FDf0bB29382ec60b676;
+    address constant ORACLE_ADAPTER = 0xf0698FCEDD3A212c5f1D78f7c4c008CB90efeA9c;
 
     // Market names and their initial probabilities from demo_markets.json
     string[] public marketNames = [
@@ -42,7 +42,7 @@ contract SeedPrices is Script {
     ];
 
     function run() external {
-        uint256 deployerPrivateKey = vm.envUint("DEPLOYER_KEY");
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
 
         console2.log("=== Seeding Initial Prices ===");
 

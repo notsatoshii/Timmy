@@ -127,6 +127,6 @@ contract OnboardDemoMarkets is Script {
         vm.stopBroadcast();
 
         console2.log("Demo markets created successfully");
-        console2.log("Total markets:", vm.envUint("DEMO_MARKET_COUNT"));
+        // removed
     }
 }

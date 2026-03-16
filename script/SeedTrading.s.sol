@@ -17,7 +17,7 @@ import {MockUSDT} from "../contracts/periphery/MockUSDT.sol";
 contract SeedTrading is Script {
 
     // Deployed contract addresses
-    address constant USDT = 0xf846E395219200cAeB12e802349EC67fecB28Ea8;
+    address constant USDT = 0x5DaA593b6D7A6F3D3224471aC2D3905B54c2966E;
     address constant EXECUTION_ENGINE = 0x913aAf91bf11A281f74BF5A47a05b44Ad1E123E4;
     address constant ACCOUNT_MANAGER = 0xdA4163d7b04eE74016962A3AB121fcb103041709;
     address constant MARKET_REGISTRY = 0x89398FECE023cDD8c53eFD9a7C68a227eA139e1E;

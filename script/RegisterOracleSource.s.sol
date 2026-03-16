@@ -11,10 +11,10 @@ import {IOracleAdapter} from "../contracts/interfaces/IOracleAdapter.sol";
  */
 contract RegisterOracleSource is Script {
 
-    address constant ORACLE_ADAPTER = 0x13e01E7E58196cff03068FDf0bB29382ec60b676;
+    address constant ORACLE_ADAPTER = 0xf0698FCEDD3A212c5f1D78f7c4c008CB90efeA9c;
 
     function run() external {
-        uint256 deployerPrivateKey = vm.envUint("DEPLOYER_KEY");
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address deployer = vm.addr(deployerPrivateKey);
 
         console2.log("=== Registering Oracle Source ===");
