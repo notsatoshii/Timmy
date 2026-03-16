@@ -6,7 +6,7 @@ import {
   BORROW_FEE_ENGINE_ABI,
   FUNDING_RATE_ENGINE_ABI
 } from '../config/abis';
-import { useLivePrices } from '../hooks/useLivePrices';
+import { useMarketProbabilities } from '../hooks/useMarketProbabilities';
 import {
   ComposedChart,
   Bar,
@@ -59,27 +59,22 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack }) => {
   const [selectedTimeframe, setSelectedTimeframe] = useState<TimeFrame>('1h');
   const [recentPositions, setRecentPositions] = useState<PositionData[]>([]);
 
-  // Helper function to convert market ID to bytes32 format
-  const marketIdToBytes32 = (marketId: string): `0x${string}` => {
-    // Convert demo market ID to bytes32
-    // For demo purposes, we'll create a pseudo-hash from the ID
-    const paddedId = marketId.padEnd(32, '0').slice(0, 32);
-    const hex = Array.from(paddedId)
-      .map(char => char.charCodeAt(0).toString(16).padStart(2, '0'))
-      .join('')
-      .slice(0, 64); // Ensure it's exactly 32 bytes (64 hex chars)
-    return `0x${hex}` as `0x${string}`;
-  };
-
-  // Live price for this market
-  const { prices: livePrices } = useLivePrices({
-    marketIds: [market.id],
+  // Get real-time price from the same source as Markets component
+  const {
+    markets: oracleMarkets,
+    hasOracleData,
+    refreshProbabilities
+  } = useMarketProbabilities({
     pollingInterval: 30000,
     enabled: true,
   });
 
-  // Convert market ID to bytes32 format for contract calls
-  const marketBytes32 = marketIdToBytes32(market.id);
+  // Find current market in oracle data
+  const currentMarketData = oracleMarkets.find(m => m.id === market.id);
+  const currentPrice = currentMarketData ? currentMarketData.probability : market.price;
+
+  // Convert market ID to bytes32 format for contract calls (already in correct format)
+  const marketBytes32 = market.id as `0x${string}`;
 
   // Get OI data
   const { data: longOI = 0 } = useReadContract({
@@ -117,7 +112,6 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack }) => {
     const generateCandlestickData = (): CandlestickData[] => {
       const data: CandlestickData[] = [];
       const now = Date.now();
-      const currentPrice = livePrices[market.id]?.pi || market.price;
 
       // Timeframe intervals in milliseconds
       const intervals: Record<TimeFrame, number> = {
@@ -184,14 +178,13 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack }) => {
     };
 
     setCandlestickData(generateCandlestickData());
-  }, [market.id, livePrices, selectedTimeframe]);
+  }, [market.id, currentPrice, selectedTimeframe]);
 
   // Generate demo recent positions
   useEffect(() => {
     const generateRecentPositions = (): PositionData[] => {
       const positions = [];
       const now = Date.now();
-      const currentPrice = livePrices[market.id]?.pi || market.price;
 
       for (let i = 0; i < 8; i++) {
         const direction: 'long' | 'short' = Math.random() > 0.5 ? 'long' : 'short';
@@ -217,7 +210,7 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack }) => {
     };
 
     setRecentPositions(generateRecentPositions());
-  }, [market.id, livePrices]);
+  }, [market.id, currentPrice]);
 
   const formatTimeToResolution = (timestamp: number): string => {
     const now = new Date().getTime();
@@ -358,7 +351,6 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack }) => {
     return null;
   };
 
-  const currentPrice = livePrices[market.id]?.pi || market.price;
   const totalOI = Number(longOI || 0) + Number(shortOI || 0);
   const longPercentage = totalOI > 0 ? (Number(longOI || 0) / totalOI) * 100 : 50;
   const shortPercentage = 100 - longPercentage;
@@ -375,6 +367,13 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack }) => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           <span>Back to Markets</span>
+        </button>
+
+        <button
+          onClick={refreshProbabilities}
+          className="text-sm text-gray-500 hover:text-gray-300 px-3 py-1 rounded border border-border hover:border-border-light transition-colors"
+        >
+          Refresh Price
         </button>
       </div>
 
@@ -402,9 +401,17 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack }) => {
 
             <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
               <div>
-                <p className="text-gray-500 text-sm">Current Price</p>
+                <p className="text-gray-500 text-sm flex items-center">
+                  Current Price
+                  <span className={`ml-2 w-2 h-2 rounded-full animate-pulse ${
+                    hasOracleData ? 'bg-accent' : 'bg-warning'
+                  }`}></span>
+                </p>
                 <p className="text-2xl font-bold text-accent font-mono">
                   {(currentPrice * 100).toFixed(1)}¢
+                </p>
+                <p className="text-xs text-gray-600">
+                  {hasOracleData ? 'Live Oracle' : 'Demo Fallback'}
                 </p>
               </div>
               <div>
