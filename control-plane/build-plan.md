@@ -303,7 +303,7 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 - 1 orchestrator: coordinates all bot activity, triggers scenarios
 
 ### Tasks
-- [ ] **P0** Fund all 76 bot wallets: run `python3 scripts/fund-all-bots.py`. VERIFY by checking 5 random bot addresses have both ETH and USDT balances. This takes ~5 minutes and ~0.5 ETH from deployer. Check deployer balance first — if below 0.6 ETH, get more from Base Sepolia faucet. — **BLOCKED 2026-03-16**: Deployer has only 0.052 ETH, needs 0.65 ETH total. Requires manual Base Sepolia faucet funding first.
+- [ ] **P0** Fund all 76 bot wallets: run `python3 scripts/fund-all-bots.py`. VERIFY by checking 5 random bot addresses have both ETH and USDT balances. This takes ~5 minutes and ~0.5 ETH from deployer. Check deployer balance first — if below 0.6 ETH, get more from Base Sepolia faucet. — **BLOCKED 2026-03-16**: Deployer has only 0.0517 ETH (balance check 12:12 UTC), needs 0.65 ETH total. Requires manual Base Sepolia faucet funding for address 0x0e4D636c6D79c380A137f28EF73E054364cd5434.
 - [ ] **P0** LP bot script: each LP bot approves and deposits its 500K USDT into LeverVault. Run sequentially with 1s delay between bots to avoid nonce collisions. VERIFY total vault TVL increases to ~$40M (existing $20M + new $20M).
 - [ ] **P0** Trader bot script: each trader bot deposits collateral to AccountManager, then opens a random position (random market, random direction, 2-10x leverage). VERIFY by checking PositionManager for open positions.
 - [ ] **P1** Market maker bot script: continuously places positions on both sides of 3 top markets to create activity. Rebalances every 5 minutes.
