@@ -3,7 +3,7 @@ import { useWriteContract, useReadContract, useWaitForTransactionReceipt } from 
 import { useWallet } from '../hooks/useWallet';
 import { parseUnits } from 'viem';
 import { CONTRACT_ADDRESSES, formatUsdt, parseUsdt } from '../config/contracts';
-import { EXECUTION_ENGINE_ABI, ACCOUNT_MANAGER_ABI, USDT_ABI } from '../config/abis';
+import { EXECUTION_ENGINE_ABI, ACCOUNT_MANAGER_ABI, USDT_ABI, LEVERAGE_MODEL_ABI } from '../config/abis';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useMarketProbabilities } from '../hooks/useMarketProbabilities';
 import Skeleton from './Skeleton';
@@ -72,10 +72,28 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
 
   React.useEffect(() => {
     if (openError) {
+      let errorMessage = 'There was an error opening your position. Please try again.';
+
+      // Try to extract meaningful error from the revert
+      if (openError.message) {
+        if (openError.message.includes('LeverageExceedsMax')) {
+          errorMessage = 'The requested leverage exceeds the maximum allowed for this market. Try reducing leverage.';
+        } else if (openError.message.includes('InsufficientBalance')) {
+          errorMessage = 'Insufficient balance. Please deposit more USDT to your account.';
+        } else if (openError.message.includes('ZeroDepthThreshold')) {
+          errorMessage = 'Market depth is too low for this trade size. Try a smaller position.';
+        } else if (openError.message.includes('MarketNotFound')) {
+          errorMessage = 'Market not found. Please select a valid market.';
+        } else if (openError.message.includes('AccessControlUnauthorized')) {
+          errorMessage = 'Access denied. Please try reconnecting your wallet.';
+        }
+      }
+
       showErrorToast(
         'Position Open Failed',
-        'There was an error opening your position. Please try again.'
+        errorMessage
       );
+      console.error('Position opening error details:', openError);
     }
   }, [openError, showErrorToast]);
 
@@ -133,7 +151,24 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
     args: address ? [address] : undefined,
   });
 
+  // Read maximum leverage for selected market
+  const { data: maxLeverageRaw, isLoading: loadingMaxLeverage } = useReadContract({
+    address: CONTRACT_ADDRESSES.leverageModel,
+    abi: LEVERAGE_MODEL_ABI,
+    functionName: 'getEffectiveMaxLeverage',
+    args: tradeForm.marketId ? [tradeForm.marketId as `0x${string}`] : undefined,
+  });
+
+  const maxLeverage = maxLeverageRaw ? Number(maxLeverageRaw) / 1e18 : 30; // Convert from WAD to decimal, default to 30
+
   const handleInputChange = (field: keyof TradeForm, value: string) => {
+    // Cap leverage to maximum allowed
+    if (field === 'leverage') {
+      const leverageValue = parseFloat(value);
+      if (leverageValue > maxLeverage) {
+        value = maxLeverage.toFixed(1);
+      }
+    }
     setTradeForm(prev => ({ ...prev, [field]: value }));
   };
 
@@ -319,20 +354,27 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-2">
                   Leverage: <span className="text-accent font-mono">{tradeForm.leverage}x</span>
+                  {loadingMaxLeverage ? (
+                    <span className="ml-2 text-xs text-gray-500">Loading max...</span>
+                  ) : (
+                    <span className="ml-2 text-xs text-gray-500">
+                      (max: {maxLeverage.toFixed(1)}x)
+                    </span>
+                  )}
                 </label>
                 <input
                   type="range"
                   min="1"
-                  max="30"
-                  step="0.5"
-                  value={tradeForm.leverage}
+                  max={Math.min(maxLeverage, 30)}
+                  step="0.1"
+                  value={Math.min(parseFloat(tradeForm.leverage), maxLeverage)}
                   onChange={(e) => handleInputChange('leverage', e.target.value)}
                   className="w-full"
                 />
                 <div className="flex justify-between text-xs text-gray-600 mt-1 font-mono">
                   <span>1x</span>
-                  <span>15x</span>
-                  <span>30x</span>
+                  <span>{Math.min(maxLeverage / 2, 15).toFixed(1)}x</span>
+                  <span>{Math.min(maxLeverage, 30).toFixed(1)}x</span>
                 </div>
               </div>
             </div>

@@ -1,0 +1,1 @@
+"use strict";(globalThis.webpackChunkuser_app=globalThis.webpackChunkuser_app||[]).push([[360],{3360(a,p,s){s.d(p,{readContract:()=>e.J});var e=s(2975)}}]);
