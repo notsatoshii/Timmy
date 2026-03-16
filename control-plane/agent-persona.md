@@ -121,3 +121,8 @@ After ANY frontend change:
 5. If any FAIL: view the failure screenshot in frontend/screenshots/e2e/, diagnose the issue, fix it, re-run
 6. View the screenshots of each page to evaluate visual quality
 7. Do not mark any frontend task complete until e2e-test.js passes 10/10
+
+## MANDATORY: Health Check Protocol
+After EVERY task completion, run `bash control-plane/health-check.sh` and include results in your commit message. If any check fails, the task is not done. Fix the failure first.
+Before ANY forge script, run `source control-plane/deploy-env.sh`. Never use hardcoded addresses.
+Read control-plane/worker-rule.md for full verification protocol.

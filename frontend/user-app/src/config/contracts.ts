@@ -78,27 +78,27 @@ let cachedAddresses: ContractAddresses | null = null;
 // Fallback addresses (current deployment for development)
 const FALLBACK_ADDRESSES: ContractAddresses = {
   // Core contracts
-  usdt: "0x92c9711101bBB0B742d6320D52521FAd1712A85e" as `0x${string}`,
-  marketRegistry: "0x463697f45a0dA6B247305bac56F68e37779ba6bF" as `0x${string}`,
-  oracleAdapter: "0x4F0224F2cC6ab7acC1A913D06F055Ae8FA484d78" as `0x${string}`,
-  accountManager: "0xe0f420dD416e6047fDA063d66292f7679160519B" as `0x${string}`,
-  positionManager: "0x5D538d96735C4752fF12b590ff4737d856a6f484" as `0x${string}`,
+  usdt: "0x5DaA593b6D7A6F3D3224471aC2D3905B54c2966E" as `0x${string}`,
+  marketRegistry: "0x3Cc9E89DF048CE26Be380696E86814bEbB984DB7" as `0x${string}`,
+  oracleAdapter: "0xf0698FCEDD3A212c5f1D78f7c4c008CB90efeA9c" as `0x${string}`,
+  accountManager: "0x6D2231BB7E8704C1e76de63A06A16d9B59bA6684" as `0x${string}`,
+  positionManager: "0x25ba54a7b2fBac753B601Da05e3661F2E959510b" as `0x${string}`,
 
   // Pool contracts
-  leverVault: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512" as `0x${string}`,
-  rewardsDistributor: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0" as `0x${string}`,
-  insuranceFund: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9" as `0x${string}`,
-  feeRouter: "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9" as `0x${string}`,
+  leverVault: "0x84a1Eb3b1eFD60b193b271DCfaB2711cE1c41921" as `0x${string}`,
+  rewardsDistributor: "0xab8DFA8cF72b054c356961026F8648dB7D860Cb0" as `0x${string}`,
+  insuranceFund: "0x39Aca7F8CbB4b054C2f6aaD637a61942898B1Ae8" as `0x${string}`,
+  feeRouter: "0x1d6e55260C6Dd2A20A5bb7Cb6331E6Ba2faB5b6F" as `0x${string}`,
 
   // Engine contracts
-  leverageModel: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512" as `0x${string}`,
-  oiLimits: "0x5FbDB2315678afecb367f032d93F642f64180aa3" as `0x${string}`,
-  borrowFeeEngine: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0" as `0x${string}`,
-  fundingRateEngine: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9" as `0x${string}`,
-  marginEngine: "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9" as `0x${string}`,
-  executionEngine: "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707" as `0x${string}`,
-  liquidationEngine: "0x0165878A594ca255338adfa4d48449f69242Eb8F" as `0x${string}`,
-  settlementEngine: "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853" as `0x${string}`
+  leverageModel: "0x63B98Ec1e559E3b24199eb2115F0a57222e9818c" as `0x${string}`,
+  oiLimits: "0x5B9820B789785f62349bAE7e2B8A17a8e4A3E7cd" as `0x${string}`,
+  borrowFeeEngine: "0x706578de003912C71e534949d8b8DDd5108950e1" as `0x${string}`,
+  fundingRateEngine: "0x1C538eFA480C85D032c0ad45Dd87f9876c16Cbbe" as `0x${string}`,
+  marginEngine: "0xd4e840487bFE3Ca7448BcdB41a7972DfA29B6fce" as `0x${string}`,
+  executionEngine: "0x081F77C848EaaCfBfCD06E159C6B8d437db6F386" as `0x${string}`,
+  liquidationEngine: "0x2A42Ef441CAbF34D3Ff9B9867CAf4Ae087FEC42E" as `0x${string}`,
+  settlementEngine: "0x9c7E9496A25Bf06f163A4483e5702ac350e8e9aD" as `0x${string}`
 };
 
 /**

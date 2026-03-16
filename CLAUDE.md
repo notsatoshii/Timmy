@@ -250,3 +250,9 @@ All formulas with full variable definitions: see `KNOWLEDGE/FORMULAS.md`
 | `SPEC/*.md` | Per-contract build specs (Deliverable 4) |
 | `BUILD_LOG.md` | Running log of what's been built |
 
+
+## DEPLOYMENT VERIFICATION
+- All deployed contract addresses are in control-plane/deploy-env.sh — this is the single source of truth
+- After every deployment task, run control-plane/health-check.sh — if it fails, the task is not done
+- Never trust script stdout ("SUCCESS") as proof — verify on-chain with cast calls
+- Read control-plane/worker-rule.md before any deployment work
