@@ -1,8 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useReadContract } from 'wagmi';
-import { CONTRACT_ADDRESSES } from '../config/contracts';
-import { MARKET_REGISTRY_ABI, ORACLE_ADAPTER_ABI } from '../config/abis';
-import { useLivePrices } from '../hooks/useLivePrices';
+import React, { useMemo } from 'react';
+import { useMarketProbabilities } from '../hooks/useMarketProbabilities';
 import Skeleton from './Skeleton';
 
 interface Market {
@@ -12,6 +9,7 @@ interface Market {
   resolutionTime: number;
   category: string;
   isLive: boolean;
+  source?: 'oracle' | 'fallback';
 }
 
 interface MarketsProps {
@@ -20,113 +18,30 @@ interface MarketsProps {
 }
 
 const Markets: React.FC<MarketsProps> = ({ onTradeSelect, onMarketDetail }) => {
-  const [markets, setMarkets] = useState<Market[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Read active markets from MarketRegistry
-  const { data: activeMarketIds, isLoading: loadingMarketIds } = useReadContract({
-    address: CONTRACT_ADDRESSES.marketRegistry,
-    abi: MARKET_REGISTRY_ABI,
-    functionName: 'getActiveMarkets',
-  });
-
-  // Demo market IDs for live price updates
-  const demoMarketIds = useMemo(() => [
-    'demo-1', 'demo-2', 'demo-3', 'demo-4', 'demo-5',
-    'demo-6', 'demo-7', 'demo-8', 'demo-9', 'demo-10'
-  ], []);
-
-  // Live price updates (30-second polling)
-  const { prices: livePrices, lastUpdate, refreshPrices } = useLivePrices({
-    marketIds: demoMarketIds,
+  // Use new hook that reads from OracleAdapter with demo_markets.json fallback
+  const {
+    markets: marketData,
+    isLoading,
+    lastUpdate,
+    refreshProbabilities,
+    hasOracleData
+  } = useMarketProbabilities({
     pollingInterval: 30000,
     enabled: true,
   });
 
-  // Base market data
-  const baseMarkets = useMemo(() => [
-    {
-      id: 'demo-1',
-      description: 'Largest IPO by Market Cap 2026: SpaceX?',
-      resolutionTime: new Date('2026-12-30').getTime(),
-      category: 'Technology',
-      isLive: true,
-    },
-    {
-      id: 'demo-2',
-      description: 'US-Iran Ceasefire by April 30, 2026?',
-      resolutionTime: new Date('2026-04-30').getTime(),
-      category: 'Geopolitics',
-      isLive: true,
-    },
-    {
-      id: 'demo-3',
-      description: 'Nothing Ever Happens: 2026',
-      resolutionTime: new Date('2026-12-30').getTime(),
-      category: 'Speculative',
-      isLive: true,
-    },
-    {
-      id: 'demo-4',
-      description: '2026 FIFA World Cup Winner: Spain?',
-      resolutionTime: new Date('2026-07-19').getTime(),
-      category: 'Sports',
-      isLive: true,
-    },
-    {
-      id: 'demo-5',
-      description: 'Fed Rate End of 2026: Below 4%?',
-      resolutionTime: new Date('2026-12-08').getTime(),
-      category: 'Economy',
-      isLive: true,
-    },
-    {
-      id: 'demo-6',
-      description: 'SpaceX IPO via Ackman SPAR?',
-      resolutionTime: new Date('2026-12-31').getTime(),
-      category: 'Technology',
-      isLive: true,
-    },
-    {
-      id: 'demo-7',
-      description: 'AAPL Above $250 in April 2026?',
-      resolutionTime: new Date('2026-04-30').getTime(),
-      category: 'Stocks',
-      isLive: true,
-    },
-    {
-      id: 'demo-8',
-      description: 'OpenSea Token Launch by 2026?',
-      resolutionTime: new Date('2026-12-31').getTime(),
-      category: 'Crypto',
-      isLive: true,
-    },
-    {
-      id: 'demo-9',
-      description: 'Fed April 2026: Rate Cut?',
-      resolutionTime: new Date('2026-04-28').getTime(),
-      category: 'Economy',
-      isLive: true,
-    },
-    {
-      id: 'demo-10',
-      description: 'Argentina USD Rate Above 1500 ARS End of 2026?',
-      resolutionTime: new Date('2026-12-31').getTime(),
-      category: 'Forex',
-      isLive: true,
-    },
-  ], []);
-
-  // Combine base market data with live prices
-  useEffect(() => {
-    const marketsWithLivePrices = baseMarkets.map(market => ({
-      ...market,
-      price: livePrices[market.id]?.pi || 0.5,
-    }));
-
-    setMarkets(marketsWithLivePrices);
-    setIsLoading(false);
-  }, [baseMarkets, livePrices]);
+  // Transform market data to component format
+  const markets = useMemo(() =>
+    marketData.map(market => ({
+      id: market.id,
+      description: market.name,
+      price: market.probability,
+      resolutionTime: market.expiryTimestamp,
+      category: market.category,
+      isLive: market.isLive,
+      source: market.source,
+    }))
+  , [marketData]);
 
   const formatTimeToResolution = (timestamp: number): string => {
     const now = new Date().getTime();
@@ -186,11 +101,13 @@ const Markets: React.FC<MarketsProps> = ({ onTradeSelect, onMarketDetail }) => {
         <div className="flex flex-col space-y-3 md:text-right">
           <div className="flex items-center justify-start md:justify-end space-x-3">
             <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-accent rounded-full animate-pulse"></div>
-              <span className="text-sm text-accent font-medium">Live Prices</span>
+              <div className={`w-2 h-2 rounded-full animate-pulse ${hasOracleData ? 'bg-accent' : 'bg-warning'}`}></div>
+              <span className={`text-sm font-medium ${hasOracleData ? 'text-accent' : 'text-warning'}`}>
+                {hasOracleData ? 'Live Oracle' : 'Demo Fallback'}
+              </span>
             </div>
             <button
-              onClick={refreshPrices}
+              onClick={refreshProbabilities}
               className="text-sm text-gray-500 hover:text-gray-300 px-2 py-1 rounded border border-border hover:border-border-light transition-colors"
             >
               Refresh
@@ -199,6 +116,9 @@ const Markets: React.FC<MarketsProps> = ({ onTradeSelect, onMarketDetail }) => {
           <div className="text-left md:text-right">
             <p className="text-sm text-gray-500">
               Showing {markets.length} active markets
+            </p>
+            <p className="text-xs text-gray-600">
+              Source: {hasOracleData ? 'OracleAdapter contract' : 'demo_markets.json fallback'}
             </p>
             {lastUpdate > 0 && (
               <p className="text-xs text-gray-600">
@@ -240,9 +160,9 @@ const Markets: React.FC<MarketsProps> = ({ onTradeSelect, onMarketDetail }) => {
                   <div>
                     <p className="text-gray-500 flex items-center text-xs uppercase tracking-wide">
                       Price
-                      {livePrices[market.id] && (
-                        <span className="ml-1 w-1.5 h-1.5 bg-accent rounded-full animate-pulse"></span>
-                      )}
+                      <span className={`ml-1 w-1.5 h-1.5 rounded-full animate-pulse ${
+                        market.source === 'oracle' ? 'bg-accent' : 'bg-warning'
+                      }`}></span>
                     </p>
                     <p className={`font-semibold font-mono text-lg transition-all duration-300 ${getPriceColor(market.price)}`}>
                       {(market.price * 100).toFixed(1)}¢
