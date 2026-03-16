@@ -1,6 +1,6 @@
 {
-  "leverVault": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-  "rewardsDistributor": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
-  "insuranceFund": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
-  "feeRouter": "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9"
+  "leverVault": "0x1acab9966Bde1d7ED16f4BeAca97d65E97e81069",
+  "rewardsDistributor": "0x9B53DF7bf07e522Aab92fF9160E1DC9a136E0938",
+  "insuranceFund": "0xeF259c45bFD47eeb2d1bD1ce660115E4c2172d14",
+  "feeRouter": "0x304966042cfE06f5ff4347D8698B9CCa4F971335"
 }

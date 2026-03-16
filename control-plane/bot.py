@@ -150,7 +150,7 @@ def run_claude_code(prompt: str, continue_session: bool = True, cwd: str = PROJE
     """
     log.info(f"Claude Code invocation (continue={continue_session}): {prompt[:100]}...")
 
-    cmd = [CLAUDE_CODE_BIN]
+    cmd = [CLAUDE_CODE_BIN, "--dangerously-skip-permissions"]
     if continue_session:
         cmd.append("-c")
     cmd.extend(["-p", prompt])
