@@ -265,7 +265,7 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 
 - [x] **P0** Fix Privy wallet integration: the PrivyProvider in App.tsx crashes the entire React app (black screen). Current App.tsx has Privy removed as a workaround. Debug the root cause — likely version mismatch between wagmi@3.5.0 and @privy-io/wagmi@4.0.2, or PrivyProvider needs different config. Options: (a) fix Privy versions and config, (b) replace with standard wagmi ConnectButton. Whichever you choose, VERIFY by loading the page and confirming the wallet connect button renders without crashing the app. Screenshot to confirm. — DONE 2026-03-16
 
-- [ ] **P1** Seed trading activity: run SeedTrading.s.sol (after fixing addresses). Open 5+ positions across different markets. VERIFY positions exist on-chain by calling PositionManager. Log position IDs.
+- [ ] **P1** Seed trading activity: run SeedTrading.s.sol (after fixing addresses). Open 5+ positions across different markets. VERIFY positions exist on-chain by calling PositionManager. Log position IDs. — **BLOCKED 2026-03-16**: MarginEngine throws RiskCurves__ZeroDepthThreshold() error during validateMarginChecks(). Risk parameters are correctly set in LeverageModel (confirmed via getMarketRiskParams), but MarginEngine cannot access them. All position opening blocked regardless of size/funding. Critical contract integration bug requiring investigation.
 
 - [ ] **P1** Start oracle keeper as background process: `nohup python3 scripts/oracle/keeper.py > /dev/null 2>&1 &`. Verify prices update by calling OracleAdapter twice with 60s gap and confirming timestamps change.
 
