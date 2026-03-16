@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../contracts/core/AccountManager.sol";
 import "../contracts/ExecutionEngine.sol";
 import "../contracts/interfaces/IExecutionEngine.sol";
+import "../contracts/interfaces/ILeverageModel.sol";
 
 /**
  * @title TraderBotDeposit
@@ -18,6 +19,7 @@ contract TraderBotDeposit is Script {
     address constant USDT = 0x5DaA593b6D7A6F3D3224471aC2D3905B54c2966E;
     address constant ACCOUNT_MANAGER = 0x6D2231BB7E8704C1e76de63A06A16d9B59bA6684;
     address constant EXECUTION_ENGINE = 0x081F77C848EaaCfBfCD06E159C6B8d437db6F386;
+    address constant LEVERAGE_MODEL = 0x63B98Ec1e559E3b24199eb2115F0a57222e9818c;
 
     // Deposit 50K USDT to AccountManager (6 decimals)
     uint256 constant DEPOSIT_AMOUNT = 50_000 * 1e6;
@@ -75,13 +77,15 @@ contract TraderBotDeposit is Script {
 
     function run() external {
         console.log("=== Trader Bot Deposit & Position Opening ===");
-        console.log("Bots: 30 | Deposit: 50K USDT each | Position: 2K USDT @ 2x");
+        console.log("Bots: 30 | Deposit: 50K USDT each | Position: 2K USDT collateral");
 
         IERC20 usdt = IERC20(USDT);
         ExecutionEngine engine = ExecutionEngine(EXECUTION_ENGINE);
+        ILeverageModel levModel = ILeverageModel(LEVERAGE_MODEL);
 
-        uint256 successCount;
-        uint256 failCount;
+        uint256 depositCount;
+        uint256 positionCount;
+        uint256 skipCount;
 
         for (uint256 i = 0; i < 30; i++) {
             uint256 privateKey = vm.parseUint(string.concat("0x", traderKeys[i]));
@@ -94,8 +98,24 @@ contract TraderBotDeposit is Script {
 
             if (usdtBalance < DEPOSIT_AMOUNT) {
                 console.log("  SKIP: Insufficient USDT");
-                failCount++;
+                skipCount++;
                 continue;
+            }
+
+            // Pick market and direction deterministically
+            uint256 marketIndex = i % 10;
+            bool isLong = (i % 2 == 0);
+
+            // Query max leverage for this market
+            uint256 maxLev = levModel.getEffectiveMaxLeverage(marketIds[marketIndex]);
+            console.log("  Market", marketIndex, "max leverage:", maxLev);
+
+            // Use min(maxLev, desired) — desired is 2x but cap at what market allows
+            uint256 leverage = maxLev < 2e18 ? maxLev : 2e18;
+
+            // Need at least 1x to open a position
+            if (leverage < 1e18) {
+                leverage = 1e18;
             }
 
             vm.startBroadcast(privateKey);
@@ -106,18 +126,9 @@ contract TraderBotDeposit is Script {
             // Step 2: Deposit to AccountManager
             AccountManager(ACCOUNT_MANAGER).deposit(DEPOSIT_AMOUNT);
             console.log("  Deposited 50K USDT to AccountManager");
+            depositCount++;
 
-            // Step 3: Open position
-            // Market selection: bot index mod 10 (skip market 4 = Fed Rate, max lev 1x)
-            uint256 marketIndex = i % 10;
-            if (marketIndex == 4) marketIndex = 0; // Redirect Fed Rate to SpaceX
-
-            // Direction: alternating long/short
-            bool isLong = (i % 2 == 0);
-
-            // Leverage: 2x (safe under 3x cap for all markets except Fed Rate)
-            uint256 leverage = 2e18;
-
+            // Step 3: Open position with dynamic leverage
             IExecutionEngine.OpenParams memory params = IExecutionEngine.OpenParams({
                 marketId: marketIds[marketIndex],
                 isLong: isLong,
@@ -127,11 +138,11 @@ contract TraderBotDeposit is Script {
 
             uint256 positionId = engine.openPosition(params);
             console.log("  Position opened! ID:", positionId);
-            console.log("  Market:", marketIndex, isLong ? "LONG" : "SHORT", "2x");
+            console.log("  Market:", marketIndex, isLong ? "LONG" : "SHORT");
+            console.log("  Leverage used:", leverage);
+            positionCount++;
 
             vm.stopBroadcast();
-
-            successCount++;
 
             // 1s delay between bots to avoid nonce collisions
             if (i < 29) {
@@ -140,7 +151,8 @@ contract TraderBotDeposit is Script {
         }
 
         console.log("\n=== Results ===");
-        console.log("Success:", successCount);
-        console.log("Failed:", failCount);
+        console.log("Deposits:", depositCount);
+        console.log("Positions opened:", positionCount);
+        console.log("Skipped:", skipCount);
     }
 }

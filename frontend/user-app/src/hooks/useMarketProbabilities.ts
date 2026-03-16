@@ -91,8 +91,12 @@ export const useMarketProbabilities = (options: UseMarketProbabilitiesOptions = 
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<number>(0);
 
-  // Try to read probabilities from OracleAdapter for the first market as a test
-  const { data: firstMarketPI, error: oracleError } = useReadContract({
+  // State to track oracle probabilities
+  const [oracleProbabilities, setOracleProbabilities] = useState<Record<string, number> | null>(null);
+  const [oracleError, setOracleError] = useState<string | null>(null);
+
+  // Read PI for the first market to test oracle connectivity
+  const { data: firstMarketPI, error: firstMarketError } = useReadContract({
     address: CONTRACT_ADDRESSES.oracleAdapter,
     abi: ORACLE_ADAPTER_ABI,
     functionName: 'getPI',
@@ -100,116 +104,148 @@ export const useMarketProbabilities = (options: UseMarketProbabilitiesOptions = 
     query: {
       enabled: enabled && !!CONTRACT_ADDRESSES.oracleAdapter,
       refetchInterval: pollingInterval,
-      retry: false, // Don't retry on failure, fallback instead
+      retry: false,
     }
   });
 
   // Function to fetch all market probabilities from OracleAdapter
   const fetchOracleProbabilities = useCallback(async (): Promise<Record<string, number> | null> => {
-    if (!CONTRACT_ADDRESSES.oracleAdapter || oracleError) {
+    if (!CONTRACT_ADDRESSES.oracleAdapter || firstMarketError) {
       return null;
     }
 
     try {
-      // If we got a successful read for the first market, we can assume oracle is working
-      if (firstMarketPI !== undefined) {
-        const probabilities: Record<string, number> = {};
+      // Use the readContract action for batch reading
+      const { readContract } = await import('wagmi/actions');
+      const { config } = await import('../config/wagmi');
 
-        // For now, we'll use the first market's PI as a test
-        // In a real implementation, you'd batch read all markets
-        probabilities[REAL_MARKET_IDS[0]] = Number(firstMarketPI) / 1e18; // Convert from WAD to decimal
+      const probabilities: Record<string, number> = {};
+      let successCount = 0;
 
-        // For demo purposes, use fallback data for other markets but mark as oracle source
-        REAL_MARKET_IDS.slice(1).forEach(marketId => {
-          const fallbackData = DEMO_MARKETS_FALLBACK[marketId as keyof typeof DEMO_MARKETS_FALLBACK];
-          if (fallbackData) {
-            probabilities[marketId] = fallbackData.initial_probability;
+      // Read PI for each market
+      for (const marketId of REAL_MARKET_IDS) {
+        try {
+          const pi = await readContract(config, {
+            address: CONTRACT_ADDRESSES.oracleAdapter,
+            abi: ORACLE_ADAPTER_ABI,
+            functionName: 'getPI',
+            args: [marketId as `0x${string}`],
+          });
+
+          const piValue = Number(pi) / 1e18; // Convert from WAD to decimal
+
+          // Sanity check: PI should be between 0 and 1
+          if (piValue >= 0 && piValue <= 1) {
+            probabilities[marketId] = piValue;
+            successCount++;
+          } else {
+            console.warn(`Invalid PI value for market ${marketId}: ${piValue}`);
           }
-        });
+        } catch (error) {
+          console.warn(`Failed to read PI for market ${marketId}:`, error);
+        }
+      }
 
+      if (successCount > 0) {
+        console.log(`✓ Oracle read ${successCount}/${REAL_MARKET_IDS.length} markets successfully`);
         return probabilities;
+      } else {
+        console.warn('⚠ Oracle read 0 markets successfully, using fallback');
+        return null;
       }
     } catch (error) {
       console.warn('Failed to read from OracleAdapter:', error);
+      return null;
     }
+  }, [firstMarketError]);
 
-    return null;
-  }, [firstMarketPI, oracleError]);
-
-  // Main effect to fetch and update market data
+  // Effect to fetch oracle probabilities periodically
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || !CONTRACT_ADDRESSES.oracleAdapter) return;
 
-    const updateMarkets = async () => {
+    const updateOracleData = async () => {
       try {
-        setIsLoading(true);
-
-        // Try to fetch from oracle first
-        const oracleProbabilities = await fetchOracleProbabilities();
-        const source: 'oracle' | 'fallback' = oracleProbabilities ? 'oracle' : 'fallback';
-
-        // Build market data array
-        const marketData: MarketData[] = REAL_MARKET_IDS.map(marketId => {
-          const fallbackData = DEMO_MARKETS_FALLBACK[marketId as keyof typeof DEMO_MARKETS_FALLBACK];
-          if (!fallbackData) return null;
-
-          const probability = oracleProbabilities
-            ? (oracleProbabilities[marketId] ?? fallbackData.initial_probability)
-            : fallbackData.initial_probability;
-
-          return {
-            id: marketId,
-            name: fallbackData.name,
-            category: fallbackData.category,
-            probability,
-            expiryTimestamp: new Date(fallbackData.expiry).getTime(),
-            isLive: true, // All demo markets are live
-            source
-          };
-        }).filter(Boolean) as MarketData[];
-
-        setMarkets(marketData);
-        setLastUpdate(Date.now());
-
-        if (source === 'oracle') {
-          console.log('✓ Using OracleAdapter probabilities');
-        } else {
-          console.log('ℹ Fallback to demo_markets.json data (oracle unavailable)');
-        }
-
+        const probabilities = await fetchOracleProbabilities();
+        setOracleProbabilities(probabilities);
+        setOracleError(null);
       } catch (error) {
-        console.error('Error updating market probabilities:', error);
-
-        // Final fallback - use static demo data
-        const fallbackMarkets: MarketData[] = REAL_MARKET_IDS.map(marketId => {
-          const fallbackData = DEMO_MARKETS_FALLBACK[marketId as keyof typeof DEMO_MARKETS_FALLBACK];
-          if (!fallbackData) return null;
-
-          return {
-            id: marketId,
-            name: fallbackData.name,
-            category: fallbackData.category,
-            probability: fallbackData.initial_probability,
-            expiryTimestamp: new Date(fallbackData.expiry).getTime(),
-            isLive: true,
-            source: 'fallback'
-          };
-        }).filter(Boolean) as MarketData[];
-
-        setMarkets(fallbackMarkets);
-        setLastUpdate(Date.now());
-      } finally {
-        setIsLoading(false);
+        console.error('Error fetching oracle probabilities:', error);
+        setOracleError(error instanceof Error ? error.message : 'Unknown error');
+        setOracleProbabilities(null);
       }
     };
 
-    // Initial load
-    updateMarkets();
+    // Initial fetch
+    updateOracleData();
 
     // Set up polling interval
-    const interval = setInterval(updateMarkets, pollingInterval);
+    const interval = setInterval(updateOracleData, pollingInterval);
     return () => clearInterval(interval);
   }, [enabled, pollingInterval, fetchOracleProbabilities]);
+
+  // Effect to build market data from oracle + fallback
+  useEffect(() => {
+    if (!enabled) return;
+
+    try {
+      setIsLoading(true);
+
+      const source: 'oracle' | 'fallback' = oracleProbabilities ? 'oracle' : 'fallback';
+
+      // Build market data array
+      const marketData: MarketData[] = REAL_MARKET_IDS.map(marketId => {
+        const fallbackData = DEMO_MARKETS_FALLBACK[marketId as keyof typeof DEMO_MARKETS_FALLBACK];
+        if (!fallbackData) return null;
+
+        const probability = oracleProbabilities
+          ? (oracleProbabilities[marketId] ?? fallbackData.initial_probability)
+          : fallbackData.initial_probability;
+
+        return {
+          id: marketId,
+          name: fallbackData.name,
+          category: fallbackData.category,
+          probability,
+          expiryTimestamp: new Date(fallbackData.expiry).getTime(),
+          isLive: true, // All demo markets are live
+          source
+        };
+      }).filter(Boolean) as MarketData[];
+
+      setMarkets(marketData);
+      setLastUpdate(Date.now());
+
+      if (source === 'oracle') {
+        console.log(`✓ Live Oracle Update: ${Object.keys(oracleProbabilities || {}).length} markets`);
+      } else {
+        console.log('ℹ Fallback to demo_markets.json data (oracle unavailable)');
+      }
+
+    } catch (error) {
+      console.error('Error building market data:', error);
+
+      // Final fallback - use static demo data
+      const fallbackMarkets: MarketData[] = REAL_MARKET_IDS.map(marketId => {
+        const fallbackData = DEMO_MARKETS_FALLBACK[marketId as keyof typeof DEMO_MARKETS_FALLBACK];
+        if (!fallbackData) return null;
+
+        return {
+          id: marketId,
+          name: fallbackData.name,
+          category: fallbackData.category,
+          probability: fallbackData.initial_probability,
+          expiryTimestamp: new Date(fallbackData.expiry).getTime(),
+          isLive: true,
+          source: 'fallback'
+        };
+      }).filter(Boolean) as MarketData[];
+
+      setMarkets(fallbackMarkets);
+      setLastUpdate(Date.now());
+    } finally {
+      setIsLoading(false);
+    }
+  }, [enabled, oracleProbabilities]);
 
   const refreshProbabilities = useCallback(() => {
     setLastUpdate(0); // Force refresh on next effect run
@@ -220,6 +256,7 @@ export const useMarketProbabilities = (options: UseMarketProbabilitiesOptions = 
     isLoading,
     lastUpdate,
     refreshProbabilities,
-    hasOracleData: markets.length > 0 && markets[0]?.source === 'oracle'
+    hasOracleData: !!oracleProbabilities && Object.keys(oracleProbabilities).length > 0,
+    oracleError
   };
 };

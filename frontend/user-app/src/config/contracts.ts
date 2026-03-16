@@ -29,13 +29,22 @@ export const WAD = BigInt('1000000000000000000'); // 1e18
 export const USDT_DECIMALS = 6;
 export const USDT_SCALE = BigInt('1000000'); // 1e6
 
+// Helper: add commas to a number string (handles decimals)
+const addCommas = (numStr: string): string => {
+  const [intPart, decPart] = numStr.split('.');
+  const withCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return decPart !== undefined ? `${withCommas}.${decPart}` : withCommas;
+};
+
 // Helper functions
 export const formatWad = (value: bigint): string => {
-  return (Number(value) / Number(WAD)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const num = Number(value) / Number(WAD);
+  return addCommas(num.toFixed(2));
 };
 
 export const formatUsdt = (value: bigint): string => {
-  return (Number(value) / Number(USDT_SCALE)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const num = Number(value) / Number(USDT_SCALE);
+  return addCommas(num.toFixed(2));
 };
 
 export const parseUsdt = (value: string): bigint => {

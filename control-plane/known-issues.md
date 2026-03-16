@@ -65,3 +65,28 @@
 **CRITICAL (added 2026-03-16):**
 - Insurance Fund display shows raw undivided value ($1000000000000000.00). Likely WAD (1e18) value being displayed without conversion to USDT (1e6). Fix in frontend stats banner component.
 - ~~Wallet button stuck on "Loading..."~~ — FIXED 2026-03-16. Replaced Privy with standard wagmi injected connector. Connect Wallet button renders correctly.
+
+**STATS CALCULATION BUGS (added 2026-03-16 by Eric):**
+- CRITICAL: LP APY shows 0.00% despite active OI ($30,400) generating borrow fees. APY must be calculated as: (annualized borrow fee revenue flowing to LPs) / TVL. The LP share is 50% of borrow fees via FeeRouter. Check if RewardsDistributor is receiving fees and if the frontend APY calculation reads from it.
+- MEDIUM: Insurance Fund shows $10,000 (bootstrap only). Verify FeeRouter is actually routing 20% of fees to InsuranceFund. If fees are accruing in BorrowFeeEngine but not being distributed, the router needs to be called.
+- MEDIUM: Total OI is only $30,400 against $60M TVL (~0.05% utilization). This will improve when trader bots deposit and open positions (Phase 7 task). Not a bug, just needs bot activity.
+- NOTE: 24h Volume $1,520 is low but accurate for current test trades. Will increase with bot activity.
+
+**STATS CALCULATION BUGS (added 2026-03-16 by Eric):**
+- CRITICAL: LP APY shows 0.00% despite active OI ($30,400) generating borrow fees. APY must be calculated as: (annualized borrow fee revenue flowing to LPs) / TVL. The LP share is 50% of borrow fees via FeeRouter. Check if RewardsDistributor is receiving fees and if the frontend APY calculation reads from it.
+- MEDIUM: Insurance Fund shows $10,000 (bootstrap only). Verify FeeRouter is actually routing 20% of fees to InsuranceFund. If fees are accruing in BorrowFeeEngine but not being distributed, the router needs to be called.
+- MEDIUM: Total OI is only $30,400 against $60M TVL (~0.05% utilization). This will improve when trader bots deposit and open positions (Phase 7 task). Not a bug, just needs bot activity.
+- NOTE: 24h Volume $1,520 is low but accurate for current test trades. Will increase with bot activity.
+
+**UI/UX BUGS (added 2026-03-16 by Eric):**
+
+- CRITICAL: Price mismatch between Markets browse cards and Market Detail view. Markets page shows different price than when you click into a market. Both should read from OracleAdapter and show identical current price.
+
+- CRITICAL: 24H Price Chart uses blocky bar chart format. Must be a candlestick chart (1m, 5m, 15m, 1h, 4h, 1D timeframes) like any real trading platform. Reference: lever-concept.png in control-plane/design-reference/ shows the correct candlestick chart format.
+
+- Insurance Fund display shows $10,000.00 — verify this is correct formatting (was previously showing raw WAD value)
+
+- SpaceX market showing 50.0¢/50.0% probability — verify oracle price is correct (was 88.0¢ earlier)
+
+- LP APY shows 0.00% despite $60M TVL and active trading — check if APY calculation is wired to BorrowFeeEngine revenue
+
