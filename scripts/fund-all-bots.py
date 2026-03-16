@@ -63,12 +63,12 @@ def main():
 
     # Funding amounts per role
     ETH_AMOUNTS = {
-        "lp": "0.001ether",        # 40 bots x 0.001 = 0.04 ETH
-        "trader": "0.0015ether",    # 30 bots x 0.0015 = 0.045 ETH
-        "market_maker": "0.002ether", # 3 bots x 0.002 = 0.006 ETH
-        "oracle": "0.005ether",     # 1 bot x 0.005 = 0.005 ETH
-        "liquidator": "0.003ether", # 1 bot x 0.003 = 0.003 ETH
-        "orchestrator": "0.001ether", # 1 bot x 0.001 = 0.001 ETH
+        "lp": "0.0004ether",        # 40 bots x 0.001 = 0.04 ETH
+        "trader": "0.0005ether",    # 30 bots x 0.0015 = 0.045 ETH
+        "market_maker": "0.001ether", # 3 bots x 0.002 = 0.006 ETH
+        "oracle": "0.003ether",     # 1 bot x 0.005 = 0.005 ETH
+        "liquidator": "0.002ether", # 1 bot x 0.003 = 0.003 ETH
+        "orchestrator": "0.0005ether", # 1 bot x 0.001 = 0.001 ETH
     }
 
     USDT_AMOUNTS = {
