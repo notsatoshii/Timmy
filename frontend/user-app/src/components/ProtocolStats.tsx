@@ -64,7 +64,9 @@ const ProtocolStats: React.FC = () => {
       const hundredPercent = BigInt(100);
 
       // projected_annual_revenue = borrow_rate_per_hour × total_OI × hours_per_year × LP_share_percent / 100
-      const projectedAnnualRevenue = borrowRateToUse * totalOIRaw * hoursPerYear * lpShare / hundredPercent;
+      // Convert totalOI from USDT (6 decimal) to WAD (18 decimal) for calculation
+      const totalOIInWad = totalOIRaw * BigInt(1e12);
+      const projectedAnnualRevenue = borrowRateToUse * totalOIInWad * hoursPerYear * lpShare / hundredPercent;
 
       // APY = projected_annual_revenue / TVL × 100 (convert to percentage)
       const tvlInWad = tvlRaw * BigInt(1e12); // Convert 6-decimal USDT to 18-decimal WAD
@@ -78,7 +80,7 @@ const ProtocolStats: React.FC = () => {
         dailyVolume: `$${formatUsdt(mockDailyVolume)}`,
         totalOI: `$${formatUsdt(totalOIRaw)}`,
         lpApy: `${Number(apyBps).toFixed(2)}%`,
-        insuranceFund: `$${formatUsdt(insuranceRaw)}`, // Fixed: use formatUsdt not formatWad
+        insuranceFund: `$${formatWad(insuranceRaw)}`, // InsuranceFund.getBalance() returns WAD values
       });
     }
   }, [tvlRaw, totalOIRaw, insuranceRaw, currentBorrowRate]);
