@@ -31,11 +31,11 @@ export const USDT_SCALE = BigInt('1000000'); // 1e6
 
 // Helper functions
 export const formatWad = (value: bigint): string => {
-  return (Number(value) / Number(WAD)).toFixed(2);
+  return (Number(value) / Number(WAD)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
 export const formatUsdt = (value: bigint): string => {
-  return (Number(value) / Number(USDT_SCALE)).toFixed(2);
+  return (Number(value) / Number(USDT_SCALE)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
 export const parseUsdt = (value: string): bigint => {

@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { useWriteContract, useReadContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useWallet } from '../hooks/useWallet';
 import { parseUnits } from 'viem';
-import { CONTRACT_ADDRESSES, formatUsdt, parseUsdt, parseWad } from '../config/contracts';
+import { CONTRACT_ADDRESSES, formatUsdt, parseUsdt } from '../config/contracts';
 import { EXECUTION_ENGINE_ABI, ACCOUNT_MANAGER_ABI, USDT_ABI } from '../config/abis';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useMarketProbabilities } from '../hooks/useMarketProbabilities';
 import Skeleton from './Skeleton';
 
 interface TradeForm {
@@ -25,6 +26,7 @@ interface TradingProps {
 const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
   const { address } = useWallet();
   const { showSuccessToast, showErrorToast, showTradeConfirmation } = useNotifications();
+  const { markets: onChainMarkets } = useMarketProbabilities();
   const [tradeForm, setTradeForm] = useState<TradeForm>({
     marketId: selectedTrade?.marketId || '',
     direction: selectedTrade?.direction || 'long',
@@ -171,7 +173,7 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
     if (!tradeForm.marketId || !tradeForm.collateral || !tradeForm.leverage) return;
 
     try {
-      const collateralAmount = parseWad(tradeForm.collateral);
+      const collateralAmount = parseUsdt(tradeForm.collateral);
       const leverage = parseUnits(tradeForm.leverage, 18);
 
       await openPosition({
@@ -205,14 +207,9 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
     return (collateral * leverage).toFixed(2);
   };
 
-  const mockMarkets = selectedTrade
+  const availableMarkets = selectedTrade
     ? [{ id: selectedTrade.marketId, name: selectedTrade.marketName }]
-    : [
-      { id: 'demo-1', name: 'Largest IPO by Market Cap 2026: SpaceX?' },
-      { id: 'demo-2', name: 'US-Iran Ceasefire by April 30, 2026?' },
-      { id: 'demo-3', name: 'Nothing Ever Happens: 2026' },
-      { id: 'demo-4', name: '2026 FIFA World Cup Winner: Spain?' },
-    ];
+    : onChainMarkets.map(m => ({ id: m.id, name: m.name }));
 
   return (
     <div className="space-y-6">
@@ -256,7 +253,7 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
                   className="w-full rounded-md bg-surface-3 border-border text-gray-200 shadow-sm focus:border-accent focus:ring-accent/30"
                 >
                   <option value="">Choose a market...</option>
-                  {mockMarkets.map((market) => (
+                  {availableMarkets.map((market) => (
                     <option key={market.id} value={market.id}>
                       {market.name}
                     </option>
@@ -365,7 +362,7 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
                     Position value: {calculatePositionSize()} USDT &bull; Leverage: {tradeForm.leverage}x
                   </p>
                 </div>
-              ) : !accountBalance || accountBalance < parseWad(tradeForm.collateral || '0') ? (
+              ) : !accountBalance || accountBalance < parseUsdt(tradeForm.collateral || '0') ? (
                 <div className="space-y-2">
                   <button
                     onClick={handleApproveUsdt}
