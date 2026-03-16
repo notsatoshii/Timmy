@@ -16,6 +16,7 @@ interface ProtocolStatsData {
   dailyVolume: string;
   totalOI: string;
   lpApy: string;
+  utilizationRate: string;
   insuranceFund: string;
 }
 
@@ -77,11 +78,15 @@ const ProtocolStats: React.FC = () => {
       const tvlInWad = tvlRaw * BigInt(1e12);
       const apyBpsTimes100 = projectedAnnualRevenue * BigInt(10000) / tvlInWad;
 
+      // Calculate utilization rate: Total_OI / TVL * 100
+      const utilizationBpsTimes100 = totalOIInWad * BigInt(10000) / tvlInWad;
+
       setStats({
         tvl: `$${formatUsdt(tvlRaw)}`,
         dailyVolume: `$${formatUsdt(volume24h)}`,
         totalOI: `$${formatUsdt(totalOIRaw)}`,
         lpApy: `${(Number(apyBpsTimes100) / 100).toFixed(2)}%`,
+        utilizationRate: `${(Number(utilizationBpsTimes100) / 100).toFixed(2)}%`,
         insuranceFund: `$${formatWad(insuranceRaw)}`, // InsuranceFund.getBalance() returns WAD values
       });
     }
@@ -92,7 +97,7 @@ const ProtocolStats: React.FC = () => {
   return (
     <div className="bg-gradient-to-r from-surface-1 via-surface-2 to-surface-1 border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 lg:gap-6">
           {/* TVL */}
           <div className="text-center">
             <div className="text-sm font-medium text-gray-400 mb-1">Total TVL</div>
@@ -137,6 +142,18 @@ const ProtocolStats: React.FC = () => {
             ) : (
               <div className="text-xl md:text-2xl font-bold font-mono text-accent">
                 {stats?.lpApy || '0.00%'}
+              </div>
+            )}
+          </div>
+
+          {/* Utilization Rate */}
+          <div className="text-center">
+            <div className="text-sm font-medium text-gray-400 mb-1">Utilization</div>
+            {isLoading ? (
+              <Skeleton variant="text" className="h-6 w-20 mx-auto" />
+            ) : (
+              <div className="text-xl md:text-2xl font-bold font-mono text-gray-100">
+                {stats?.utilizationRate || '0.00%'}
               </div>
             )}
           </div>
