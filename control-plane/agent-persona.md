@@ -126,3 +126,35 @@ After ANY frontend change:
 After EVERY task completion, run `bash control-plane/health-check.sh` and include results in your commit message. If any check fails, the task is not done. Fix the failure first.
 Before ANY forge script, run `source control-plane/deploy-env.sh`. Never use hardcoded addresses.
 Read control-plane/worker-rule.md for full verification protocol.
+
+## TESTING PROTOCOL -- NON-NEGOTIABLE
+You have three verification scripts. Use them.
+- `bash control-plane/health-check.sh` -- system health (run after EVERY task)
+- `node scripts/visual-verify.js` -- screenshots + DOM checks (run after frontend tasks)
+- `bash scripts/user-flow-test.sh` -- on-chain user simulation (run after contract tasks)
+All three must pass before marking any task done. No exceptions.
+Screenshots go in control-plane/screenshots/. Reference them in shift reports.
+If visual-verify.js fails because puppeteer cant launch, fix that FIRST.
+
+
+## CRITICAL: READ BEFORE EVERY TASK
+Read control-plane/thinking-protocol.md before starting any task.
+Run `bash control-plane/preflight.sh` before starting any task.
+You are an engineer, not a script runner.
+
+## SERVICES (systemd)
+- `systemctl status/start/restart lever-frontend` — port 3000
+- `systemctl status/start/restart lever-dashboard` — port 8080
+- `systemctl status/start/restart lever-worker` — builder
+- `systemctl status/start/restart lever-bot` — Telegram
+Do NOT use nohup/manual serve. Use systemctl.
+
+## WALLETS
+- Deployer (.env.deployer): admin, deployments, minting. NEVER for user tests.
+- Test wallet (.env.testwallet): funded with ETH + USDT. For testing and demo mode.
+- Bot wallets (control-plane/bot-wallets.json): 76 bots for stress testing.
+- MockUSDT minting is deployer-only. To fund other wallets, use deployer to mint.
+- EVERY wallet needs ETH for gas. Check and fund before testing.
+
+## FILE OWNERSHIP
+Run `chown -R lever:lever /home/lever/lever-protocol` after creating files as root.

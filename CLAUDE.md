@@ -256,3 +256,35 @@ All formulas with full variable definitions: see `KNOWLEDGE/FORMULAS.md`
 - After every deployment task, run control-plane/health-check.sh — if it fails, the task is not done
 - Never trust script stdout ("SUCCESS") as proof — verify on-chain with cast calls
 - Read control-plane/worker-rule.md before any deployment work
+
+## TESTING AND VERIFICATION
+Three mandatory scripts exist:
+- control-plane/health-check.sh -- system-wide pass/fail
+- scripts/visual-verify.js -- headless browser testing with screenshots
+- scripts/user-flow-test.sh -- on-chain user journey simulation
+Run appropriate scripts after every task. See control-plane/worker-rule.md for details.
+
+
+## MANDATORY TASK WORKFLOW
+1. `bash control-plane/preflight.sh` — fix issues first
+2. `source control-plane/deploy-env.sh`
+3. Read control-plane/thinking-protocol.md
+4. Do the task
+5. `bash control-plane/health-check.sh` — must pass
+6. `node scripts/visual-verify.js` — frontend tasks
+7. `bash scripts/user-flow-test.sh` — contract tasks
+8. Commit with verification results
+
+## WALLETS
+- Deployer (.env.deployer): admin only
+- Test wallet (.env.testwallet): testing + demo
+- Bot wallets (control-plane/bot-wallets.json): 76 bots
+- Fund bots: python3 scripts/fund-all-bots.py
+- Every wallet needs ETH for gas
+
+## COMMON ERRORS
+- SourceNotActive = register oracle source
+- AccessControlUnauthorized = wrong wallet or missing role
+- MarketNotFound = markets not onboarded
+- Black screen = React provider crash
+- $0.00 stats = wrong addresses in config/contracts.ts

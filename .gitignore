@@ -16,3 +16,6 @@ control-plane/venv/
 Thumbs.db
 *.log
 .env.deployer
+
+.env.testwallet
+control-plane/bot-wallets.json

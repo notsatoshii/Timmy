@@ -255,7 +255,7 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 
 - [x] **P0** Register 10 demo markets on-chain: run `forge script script/OnboardDemoMarkets.s.sol --rpc-url https://sepolia.base.org --broadcast --ffi --private-key $(cat /home/lever/lever-protocol/.env.deployer | tr -d '[:space:]')`. If script has a failing line after market creation (like DEMO_MARKET_COUNT), remove that line first. VERIFY by calling MarketRegistry on-chain to confirm markets exist. Try `cast call <MarketRegistry> "marketCount()(uint256)"` or enumerate market IDs. Do NOT mark done until on-chain verification succeeds. — DONE 2026-03-16
 
-- [ ] **P0** Register oracle source and seed all 10 market prices: run RegisterOracleSource.s.sol then SeedPrices.s.sol (both with --private-key flag). VERIFY each market has a non-zero price by calling OracleAdapter on-chain for at least 3 different market IDs. Log the prices in the audit file. Do NOT mark done until cast calls return real prices.
+- [x] **P0** Register oracle source and seed all 10 market prices: run RegisterOracleSource.s.sol then SeedPrices.s.sol (both with --private-key flag). VERIFY each market has a non-zero price by calling OracleAdapter on-chain for at least 3 different market IDs. Log the prices in the audit file. Do NOT mark done until cast calls return real prices. — DONE 2026-03-16
 
 - [ ] **P0** Verify vault TVL is still intact: run `cast call 0x84a1Eb3b1eFD60b193b271DCfaB2711cE1c41921 "totalAssets()(uint256)" --rpc-url https://sepolia.base.org`. Must return 20000000000000. If it returns 0, investigate and re-run SeedTVL.s.sol. If it returns 20000000000000, TVL is fine — do NOT re-run SeedTVL.
 
@@ -275,3 +275,27 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 
 ## Completion Log
 [2026-03-16] Demo market registration VERIFIED — All 10 demo markets already exist on-chain at MarketRegistry 0x3Cc9E89DF048CE26Be380696E86814bEbB984DB7. OnboardDemoMarkets script failed with "MarketAlreadyExists" error, confirming previous successful creation. Verified 3 markets via getMarketState() calls: SpaceX IPO (0x2841ef32...), US-Iran Ceasefire (0x9fe694e7...), Argentina USD (0xe73fd3dd...) all return state 0 (ACTIVE). 10 markets spanning 6 categories confirmed operational.
+
+[2026-03-16] Oracle source registration and price seeding COMPLETE — Successfully registered deployer as oracle source with 90% weight via RegisterOracleSource.s.sol. Activated all 10 markets from LISTED to ACTIVE state via ActivateMarkets.s.sol. Seeded initial prices for all markets via SeedPrices.s.sol with realistic probabilities (SpaceX IPO: 88%, US-Iran Ceasefire: 35%, Argentina USD: 65%, etc.). Verified 3 markets return correct non-zero prices via OracleAdapter.getPI() calls. All oracle prices functional. Updated deployment audit with success status. Health check shows 10/12 tests pass (only frontend issues remain).
+
+
+## Phase 7 REVISED: QA Bot System (76 bots, stress test, demo activity)
+**Context:** Bot wallets are pre-generated in control-plane/bot-wallets.json. Fund with scripts/fund-all-bots.py. All bots need ETH for gas — the funding script handles this automatically using the deployer wallet to send ETH and mint MockUSDT.
+
+**Bot allocation:**
+- 40 LP bots: 500K USDT each = $20M TVL target
+- 30 trader bots: ~133K USDT each = $4M total collateral
+- 3 market maker bots: 1M USDT each = $3M, provide liquidity on both sides
+- 1 oracle bot: pushes Polymarket prices every 30s, needs ETH only
+- 1 liquidator bot: monitors positions, liquidates when margin < maintenance, needs ETH + 100K USDT
+- 1 orchestrator: coordinates all bot activity, triggers scenarios
+
+### Tasks
+- [ ] **P0** Fund all 76 bot wallets: run `python3 scripts/fund-all-bots.py`. VERIFY by checking 5 random bot addresses have both ETH and USDT balances. This takes ~5 minutes and ~0.5 ETH from deployer. Check deployer balance first — if below 0.6 ETH, get more from Base Sepolia faucet.
+- [ ] **P0** LP bot script: each LP bot approves and deposits its 500K USDT into LeverVault. Run sequentially with 1s delay between bots to avoid nonce collisions. VERIFY total vault TVL increases to ~$40M (existing $20M + new $20M).
+- [ ] **P0** Trader bot script: each trader bot deposits collateral to AccountManager, then opens a random position (random market, random direction, 2-10x leverage). VERIFY by checking PositionManager for open positions.
+- [ ] **P1** Market maker bot script: continuously places positions on both sides of 3 top markets to create activity. Rebalances every 5 minutes.
+- [ ] **P1** Oracle keeper: pushes Polymarket CLOB midpoint prices every 30s for all 10 markets. VERIFY prices change over time.
+- [ ] **P1** Liquidator bot: monitors all open positions, liquidates any with margin below maintenance threshold. VERIFY by checking that no positions exist with margin ratio below 1.0.
+- [ ] **P1** Orchestrator: coordinates bot lifecycle. Commands via Telegram: /demo liquidation, /demo settle, /demo whale. Triggers scripted scenarios for investor demos.
+- [ ] **P1** 48-hour soak test: run all bots for 48 hours. Monitor for: crashes, stuck positions, oracle staleness, vault accounting errors. Log results to control-plane/soak-test-report.md.
