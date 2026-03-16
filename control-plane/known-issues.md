@@ -90,3 +90,32 @@
 
 - LP APY shows 0.00% despite $60M TVL and active trading — check if APY calculation is wired to BorrowFeeEngine revenue
 
+
+**LP APY CALCULATION (added 2026-03-16 by Eric):**
+- CRITICAL: LP APY must show PROJECTED APY based on current utilization and fee model, not wait for actual accrued fees. Formula: Projected_APY = (base_borrow_rate × M_ttR × Total_OI × 8760_hours × 0.50_LP_share) / TVL. At current state (30K OI, 60M TVL, 0.02%/hr base rate), projected APY is tiny but non-zero. As trader bots push OI to $4M+, APY should show ~40%+ at 15% utilization. The frontend stats banner must compute this from on-chain values (BorrowFeeEngine rate, total OI, TVL), not read a stored APY value.
+
+**STATS BANNER CALCULATION FIXES (added 2026-03-16 by Eric — HIGH PRIORITY):**
+- CRITICAL: 24h Volume shows only collateral amount, not notional. Volume = collateral × leverage. A $1000 trade at 10x is $10,000 notional volume, not $1,000. Fix frontend to read notional from position events or compute collateral × leverage.
+- CRITICAL: LP APY still 0.00%. Must show projected APY: (base_borrow_rate × borrow_multiplier × Total_OI × 8760 × 0.50) / TVL. Read current borrow rate from BorrowFeeEngine, multiply by OI, annualize, take LP's 50% share, divide by TVL.
+- CRITICAL: Insurance Fund stuck at $10,000 bootstrap. Either FeeRouter is not distributing fees, or frontend is reading wrong value. Check: (1) are borrow fees accruing in BorrowFeeEngine? (2) has anyone called distributeFees() on FeeRouter? (3) is InsuranceFund.totalBalance() returning more than bootstrap?
+- NEW: Add Utilization Rate to stats banner. Utilization = Total OI / TVL. Currently $137K / $60.5M = 0.23%. Display as percentage next to or replacing one of the existing stats.
+
+**LP APY MUST BE PROJECTED, NOT REALIZED (added 2026-03-16 by Eric — URGENT):**
+LP APY should calculate from CURRENT open positions, not wait for positions to close and fees to settle. Formula:
+
+  current_hourly_revenue = sum of (each open position's borrow_rate × position_notional) across all positions
+  annual_lp_revenue = current_hourly_revenue × 8,760 hours × 0.50 (LP share)
+  projected_APY = annual_lp_revenue / TVL × 100
+
+Alternatively, simpler approximation:
+  utilization = Total_OI / TVL
+  avg_borrow_rate = read from BorrowFeeEngine (base_rate × M_ttR multiplier at current utilization)
+  projected_APY = utilization × avg_borrow_rate × 8,760 × 0.50 × 100
+
+This must work with positions OPEN — don't wait for closes/settlements to show APY. The number should update live as OI changes. At 15% utilization with 0.02%/hr base rate, APY should be ~40%+.
+
+**BOT POSITIONS MUST USE REALISTIC LEVERAGE (added 2026-03-16 by Eric):**
+- Current test positions were opened at 1x and 2x leverage — this is unrealistic and produces tiny OI/volume numbers.
+- All trader bot and market maker bot positions should use 5x leverage MINIMUM, with an average of 5-10x across the portfolio.
+- This dramatically changes the numbers: 30 traders × $133K collateral × 5x average = $20M OI (vs $4M at 1x). At $20M OI against $60M TVL, utilization = 33%, projected APY = ~100%+.
+- Update TraderBotDeposit and any position-opening scripts to use leverage range of 3x-15x with 5x-10x average. The demo should show realistic leveraged trading, not spot-equivalent 1x positions.

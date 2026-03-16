@@ -6,6 +6,7 @@ import {
   OI_LIMITS_ABI,
   INSURANCE_FUND_ABI,
   FEE_ROUTER_ABI,
+  BORROW_FEE_ENGINE_ABI,
 } from '../config/abis';
 import Skeleton from './Skeleton';
 
@@ -42,48 +43,32 @@ const ProtocolStats: React.FC = () => {
     functionName: 'getBalance',
   });
 
-  // Read fee router data for APY calculation
-  const { data: totalBorrowFees } = useReadContract({
-    address: addresses.feeRouter,
-    abi: FEE_ROUTER_ABI,
-    functionName: 'getTotalFeesRouted',
-    args: [0], // BORROW type
-  });
-
-  const { data: totalTxFees } = useReadContract({
-    address: addresses.feeRouter,
-    abi: FEE_ROUTER_ABI,
-    functionName: 'getTotalFeesRouted',
-    args: [1], // TRANSACTION type
-  });
-
-  const { data: totalLiquidationFees } = useReadContract({
-    address: addresses.feeRouter,
-    abi: FEE_ROUTER_ABI,
-    functionName: 'getTotalFeesRouted',
-    args: [2], // LIQUIDATION type
-  });
-
-  const { data: totalSettlementFees } = useReadContract({
-    address: addresses.feeRouter,
-    abi: FEE_ROUTER_ABI,
-    functionName: 'getTotalFeesRouted',
-    args: [3], // SETTLEMENT type
+  // Read current borrow rate for projected APY calculation
+  const spacexMarketId = '0x2841ef32b61fb3472aadbfc70d787a1bfaf5d0218c9601b87963af7bcca1bcf1';
+  const { data: currentBorrowRate } = useReadContract({
+    address: addresses.borrowFeeEngine,
+    abi: BORROW_FEE_ENGINE_ABI,
+    functionName: 'getCurrentBorrowRate',
+    args: [spacexMarketId, true], // Use long side for representative rate
   });
 
   // Calculate derived stats
   useEffect(() => {
     if (tvlRaw && totalOIRaw !== undefined && insuranceRaw !== undefined) {
-      // Calculate LP APY from fee revenue (same logic as Vault component)
-      const totalFees =
-        (totalBorrowFees || BigInt(0)) +
-        (totalTxFees || BigInt(0)) +
-        (totalLiquidationFees || BigInt(0)) +
-        (totalSettlementFees || BigInt(0));
+      // Calculate projected LP APY: (base_borrow_rate × Total_OI × 8760_hours × 0.50_LP_share) / TVL
+      const BASE_BORROW_RATE = BigInt("200000000000000"); // 0.02% per hour in WAD
+      const borrowRateToUse = currentBorrowRate && currentBorrowRate > BigInt(0) ? currentBorrowRate : BASE_BORROW_RATE;
 
-      const lpFeeShare = totalFees * BigInt(50) / BigInt(100); // 50% to LPs
-      const annualizedYield = lpFeeShare * BigInt(365) * BigInt(24); // Hourly → annual
-      const apyPercent = tvlRaw > BigInt(0) ? (annualizedYield * BigInt(10000) / tvlRaw) / BigInt(100) : BigInt(0);
+      const hoursPerYear = BigInt(8760);
+      const lpShare = BigInt(50); // 50% LP share
+      const hundredPercent = BigInt(100);
+
+      // projected_annual_revenue = borrow_rate_per_hour × total_OI × hours_per_year × LP_share_percent / 100
+      const projectedAnnualRevenue = borrowRateToUse * totalOIRaw * hoursPerYear * lpShare / hundredPercent;
+
+      // APY = projected_annual_revenue / TVL × 100 (convert to percentage)
+      const tvlInWad = tvlRaw * BigInt(1e12); // Convert 6-decimal USDT to 18-decimal WAD
+      const apyBps = projectedAnnualRevenue * BigInt(100) / tvlInWad;
 
       // Mock 24h volume for now (would be calculated from events in real implementation)
       const mockDailyVolume = totalOIRaw * BigInt(5) / BigInt(100); // 5% of total OI as daily volume estimate
@@ -92,11 +77,11 @@ const ProtocolStats: React.FC = () => {
         tvl: `$${formatUsdt(tvlRaw)}`,
         dailyVolume: `$${formatUsdt(mockDailyVolume)}`,
         totalOI: `$${formatUsdt(totalOIRaw)}`,
-        lpApy: `${formatWad(apyPercent)}%`,
-        insuranceFund: `$${formatWad(insuranceRaw)}`,
+        lpApy: `${Number(apyBps).toFixed(2)}%`,
+        insuranceFund: `$${formatUsdt(insuranceRaw)}`, // Fixed: use formatUsdt not formatWad
       });
     }
-  }, [tvlRaw, totalOIRaw, insuranceRaw, totalBorrowFees, totalTxFees, totalLiquidationFees, totalSettlementFees]);
+  }, [tvlRaw, totalOIRaw, insuranceRaw, currentBorrowRate]);
 
   const isLoading = tvlLoading || oiLoading || insuranceLoading;
 

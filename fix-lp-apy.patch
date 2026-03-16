@@ -1,0 +1,97 @@
+--- a/frontend/user-app/src/components/Vault.tsx
++++ b/frontend/user-app/src/components/Vault.tsx
+@@ -2,7 +2,7 @@ import React, { useState } from 'react';
+ import { useReadContract, useWriteContract } from 'wagmi';
+ import { useWallet } from '../hooks/useWallet';
+ import { CONTRACT_ADDRESSES, formatUsdt, formatWad, parseUsdt, WAD } from '../config/contracts';
+-import { LEVER_VAULT_ABI, USDT_ABI, FEE_ROUTER_ABI, OI_LIMITS_ABI } from '../config/abis';
++import { LEVER_VAULT_ABI, USDT_ABI, FEE_ROUTER_ABI, OI_LIMITS_ABI, BORROW_FEE_ENGINE_ABI } from '../config/abis';
+ import Skeleton from './Skeleton';
+
+ const Vault: React.FC = () => {
+@@ -42,24 +42,20 @@ const Vault: React.FC = () => {
+   });
+
+   // Read fee data for APY calculation
+-  const { data: borrowFees, isLoading: loadingBorrowFees } = useReadContract({
+-    address: CONTRACT_ADDRESSES.feeRouter,
+-    abi: FEE_ROUTER_ABI,
+-    functionName: 'getTotalFeesRouted',
+-    args: [0],
+-  });
+-
+-  const { data: transactionFees, isLoading: loadingTransactionFees } = useReadContract({
+-    address: CONTRACT_ADDRESSES.feeRouter,
+-    abi: FEE_ROUTER_ABI,
+-    functionName: 'getTotalFeesRouted',
+-    args: [1],
+-  });
+-
+-  const { data: liquidationFees, isLoading: loadingLiquidationFees } = useReadContract({
+-    address: CONTRACT_ADDRESSES.feeRouter,
+-    abi: FEE_ROUTER_ABI,
+-    functionName: 'getTotalFeesRouted',
+-    args: [2],
++  // Get current borrow rate from BorrowFeeEngine for SpaceX market (as representative rate)
++  const spacexMarketId = '0x2841ef32b61fb3472aadbfc70d787a1bfaf5d0218c9601b87963af7bcca1bcf1';
++  const { data: currentBorrowRate, isLoading: loadingBorrowRate } = useReadContract({
++    address: CONTRACT_ADDRESSES.borrowFeeEngine,
++    abi: BORROW_FEE_ENGINE_ABI,
++    functionName: 'getCurrentBorrowRate',
++    args: [spacexMarketId],
+   });
+
+-  const { data: settlementFees, isLoading: loadingSettlementFees } = useReadContract({
+-    address: CONTRACT_ADDRESSES.feeRouter,
+-    abi: FEE_ROUTER_ABI,
+-    functionName: 'getTotalFeesRouted',
+-    args: [3],
+-  });
+-
+   const { data: globalOI, isLoading: loadingGlobalOI } = useReadContract({
+     address: CONTRACT_ADDRESSES.oiLimits,
+@@ -155,22 +139,18 @@ const Vault: React.FC = () => {
+   };
+
+   const calculateAPY = (): number => {
+-    if (!totalAssets || totalAssets === BigInt(0)) return 0;
+-
+-    const totalFees =
+-      (borrowFees || BigInt(0)) +
+-      (transactionFees || BigInt(0)) +
+-      (liquidationFees || BigInt(0)) +
+-      (settlementFees || BigInt(0));
+-
+-    if (totalFees === BigInt(0)) return 0;
+-
+-    const lpShare = totalFees / BigInt(2);
+-    const annualReturn = Number(lpShare * BigInt(100)) / Number(totalAssets);
+-
+-    return Math.min(999, annualReturn);
++    // Calculate projected APY: (base_borrow_rate × Total_OI × 8760_hours × 0.50_LP_share) / TVL
++    if (!totalAssets || !globalOI || !currentBorrowRate || totalAssets === BigInt(0)) return 0;
++
++    const hoursPerYear = BigInt(8760);
++    const lpShare = BigInt(50); // 50% LP share
++    const hundredPercent = BigInt(100);
++
++    // projected_annual_revenue = borrow_rate_per_hour × total_OI × hours_per_year × LP_share_percent / 100
++    const projectedAnnualRevenue = currentBorrowRate * globalOI * hoursPerYear * lpShare / hundredPercent;
++
++    // APY = projected_annual_revenue / TVL × 100 (convert to percentage)
++    const tvlInWad = totalAssets * BigInt(1e12); // Convert 6-decimal USDT to 18-decimal WAD
++    const apyBps = projectedAnnualRevenue * BigInt(100) / tvlInWad;
++
++    return Math.min(999, Number(apyBps));
+   };
+
+   return (
+@@ -181,7 +161,7 @@ const Vault: React.FC = () => {
+       </div>
+
+       {/* Vault Stats */}
+-      const isLoadingVaultData = loadingTotalAssets || loadingTotalShares || loadingBorrowFees || loadingTransactionFees || loadingLiquidationFees || loadingSettlementFees || loadingGlobalOI;
++      const isLoadingVaultData = loadingTotalAssets || loadingTotalShares || loadingBorrowRate || loadingGlobalOI;
+
+       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+         {isLoadingVaultData ? (

@@ -300,8 +300,16 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 **Context:** MarginEngine throws RiskCurves__ZeroDepthThreshold() on ALL position opens. This blocks trader bots, market makers, fee generation, APY calculation, and the entire investor demo. NOTHING else matters until this is fixed.
 
 - [x] **P0** Debug ZeroDepthThreshold: The error comes from ExecutionEngine computing market depth as zero. Investigate: (1) call LeverageModel.getMarketRiskParams() for a demo market — are params set? (2) call ExecutionEngine to check what Execution_Depth_Mult returns for R_adjusted. (3) Check if OILimits.getMarketOICap() returns non-zero for demo markets. (4) Check if MarginEngine can read from LeverageModel — may be a missing role grant or wrong address wired. The fix is likely one of: setting risk params on markets, granting a role, or wiring a missing contract reference. VERIFY by successfully opening a test position with cast send. — FIXED 2026-03-16
-- [ ] **P0** After fix: open 5 test positions across different markets using test wallet. VERIFY positions exist in PositionManager. VERIFY frontend Positions tab shows them.
+- [x] **P0** After fix: open 5 test positions across different markets using test wallet. VERIFY positions exist in PositionManager. VERIFY frontend Positions tab shows them. — COMPLETE 2026-03-16
 - [ ] **P0** Unblock all BLOCKED tasks: once positions work, re-run trader bots, verify fee flow to RewardsDistributor and InsuranceFund, confirm LP APY > 0%.
+
+
+## Phase 0E: STATS BANNER FIXES (Eric-reported, blocks investor demo)
+
+- [ ] **P0** Fix 24h Volume calculation: Volume must be NOTIONAL (collateral x leverage), not just collateral. Read from position open/close events or compute from on-chain position data. A 1000 USDT position at 10x = 10,000 USDT volume.
+- [ ] **P0** Fix LP APY to show projected yield: APY = (current_borrow_rate x Total_OI x 8760_hours x 0.50_LP_share) / TVL. Read borrow rate from BorrowFeeEngine, OI from PositionManager or ExecutionEngine, TVL from LeverVault. Must be non-zero whenever OI > 0.
+- [ ] **P0** Fix Insurance Fund display: verify FeeRouter is routing 20% of fees to InsuranceFund. If distributeFees() needs to be called manually, add it to the oracle keeper or create a fee distribution cron. Frontend should show InsuranceFund.totalBalance() which should grow beyond the 10K bootstrap.
+- [ ] **P0** Add Utilization Rate to stats banner: Utilization = Total_OI / TVL as percentage. Display prominently — this is a key metric for LPs.
 
 ## Phase 7 REVISED: QA Bot System (76 bots, stress test, demo activity)
 **Context:** Bot wallets are pre-generated in control-plane/bot-wallets.json. Fund with scripts/fund-all-bots.py. All bots need ETH for gas — the funding script handles this automatically using the deployer wallet to send ETH and mint MockUSDT.
