@@ -92,7 +92,7 @@
 
 
 **LP APY CALCULATION (added 2026-03-16 by Eric):**
-- CRITICAL: LP APY must show PROJECTED APY based on current utilization and fee model, not wait for actual accrued fees. Formula: Projected_APY = (base_borrow_rate × M_ttR × Total_OI × 8760_hours × 0.50_LP_share) / TVL. At current state (30K OI, 60M TVL, 0.02%/hr base rate), projected APY is tiny but non-zero. As trader bots push OI to $4M+, APY should show ~40%+ at 15% utilization. The frontend stats banner must compute this from on-chain values (BorrowFeeEngine rate, total OI, TVL), not read a stored APY value.
+- ~~CRITICAL: LP APY must show PROJECTED APY~~ **FIXED 2026-03-16**: Root cause was decimal format mismatch - OILimits.getGlobalOI() returns USDT format (6 decimal) but APY calculation treated as WAD format (18 decimal). Fixed by adding OI conversion: `totalOIInWad = totalOIRaw * BigInt(1e12)` in both ProtocolStats.tsx and Vault.tsx. With current $138K OI / $60.5M TVL, LP APY now correctly shows ~0.20% projected yield.
 
 **STATS BANNER CALCULATION FIXES (added 2026-03-16 by Eric — HIGH PRIORITY):**
 - CRITICAL: 24h Volume shows only collateral amount, not notional. Volume = collateral × leverage. A $1000 trade at 10x is $10,000 notional volume, not $1,000. Fix frontend to read notional from position events or compute collateral × leverage.
@@ -119,3 +119,17 @@ This must work with positions OPEN — don't wait for closes/settlements to show
 - All trader bot and market maker bot positions should use 5x leverage MINIMUM, with an average of 5-10x across the portfolio.
 - This dramatically changes the numbers: 30 traders × $133K collateral × 5x average = $20M OI (vs $4M at 1x). At $20M OI against $60M TVL, utilization = 33%, projected APY = ~100%+.
 - Update TraderBotDeposit and any position-opening scripts to use leverage range of 3x-15x with 5x-10x average. The demo should show realistic leveraged trading, not spot-equivalent 1x positions.
+
+**MANDATORY FOR ALL FRONTEND FIXES (Eric directive):**
+- After EVERY frontend fix, Timmy MUST: rebuild, restart lever-frontend, take a screenshot with visual-verify.js or screenshot tool, and LOOK AT IT to confirm the fix actually works visually. Do NOT mark done based on code changes alone. The screenshot must show correct values.
+- Demo mode position opening is broken — "Position Open Failed" error when trying to trade. Debug why.
+
+**MANDATORY FOR ALL FRONTEND FIXES (Eric directive):**
+- After EVERY frontend fix, Timmy MUST: rebuild, restart lever-frontend, take a screenshot with visual-verify.js or screenshot tool, and LOOK AT IT to confirm the fix actually works visually. Do NOT mark done based on code changes alone. The screenshot must show correct values.
+- Demo mode position opening is broken — "Position Open Failed" error when trying to trade. Debug why.
+
+**POSITION OPEN FROM FRONTEND BROKEN (2026-03-16):**
+- cast send openPosition works fine from CLI with test wallet
+- Frontend demo mode shows "Position Open Failed" when trying to trade
+- Contract is NOT the issue — frontend is sending the transaction incorrectly
+- Debug the Trading component: check how it encodes the openPosition call, what error it gets, and whether it's using the right contract address and ABI
