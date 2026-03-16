@@ -158,3 +158,14 @@ Do NOT use nohup/manual serve. Use systemctl.
 
 ## FILE OWNERSHIP
 Run `chown -R lever:lever /home/lever/lever-protocol` after creating files as root.
+
+## DESIGN REFERENCE — READ BEFORE ANY FRONTEND VISUAL WORK
+Before making ANY visual/UI changes, read control-plane/design-reference/DESIGN_BRIEF.md.
+Reference screenshots are in control-plane/design-reference/ — view them with the screenshot tool.
+Key rules:
+- LEVER has NO orderbook, NO spread, NO limit orders — do NOT copy those from Hyperliquid
+- Use Long/Short, not Buy/Sell or Yes/No
+- Dark theme (#0a0a0f background), green #00E8B4, red for short
+- The LEVER team concept (lever-concept.png) is the PRIMARY reference for the Trading tab
+- Space portfolio view is the PRIMARY reference for the Positions tab
+- Space/Polymarket market browse is the reference for the Markets tab

@@ -288,3 +288,8 @@ Run appropriate scripts after every task. See control-plane/worker-rule.md for d
 - MarketNotFound = markets not onboarded
 - Black screen = React provider crash
 - $0.00 stats = wrong addresses in config/contracts.ts
+
+## FRONTEND DESIGN
+Design references in control-plane/design-reference/DESIGN_BRIEF.md.
+Read this before any UI work. Reference images are in the same folder.
+Primary references: lever-concept.png (trading), space-portfolio.png (positions), space-markets.png (browse).
