@@ -49,7 +49,7 @@ WAD = 10**18
 DEFAULT_INTERVAL = 60  # 1 minute
 DEFAULT_MIN_SIZE = 100  # $100 USDT
 DEFAULT_MAX_SIZE = 2000  # $2k USDT
-DEFAULT_MAX_LEVERAGE = 10
+DEFAULT_MAX_LEVERAGE = 15
 FAUCET_AMOUNT = 10000  # MockUSDT faucet gives 10k
 
 # Trading patterns - realistic behavior
@@ -288,9 +288,9 @@ class TradingBot:
         if random.random() < 0.7:  # 70% chance of smaller position
             size = random.uniform(self.min_size, (self.min_size + self.max_size) / 2)
 
-        # Leverage (favor moderate leverage)
-        leverage_weights = [0.4, 0.3, 0.2, 0.1]  # Favor 1-2×, then 3-5×, then higher
-        leverage_ranges = [(1, 2), (3, 5), (6, 8), (9, self.max_leverage)]
+        # Leverage (realistic range 3x-15x, average ~7x)
+        leverage_weights = [0.2, 0.4, 0.3, 0.1]  # Favor 5-8×, then 3-5×, then 8-12×, then 12-15×
+        leverage_ranges = [(3, 5), (5, 8), (8, 12), (12, min(15, self.max_leverage))]
         leverage_range = random.choices(leverage_ranges, weights=leverage_weights)[0]
         leverage = random.uniform(*leverage_range)
 

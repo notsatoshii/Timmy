@@ -136,15 +136,14 @@ contract TraderBotActivity is Script {
             // Random direction (50/50 long/short)
             bool isLong = (seed >> 8) % 2 == 0;
 
-            // Random leverage (2x-10x, weighted toward lower leverage)
-            // 2x: 40%, 3x: 25%, 4x: 15%, 5x: 10%, 6x-10x: 2% each
+            // Random leverage (3x-15x, average ~7x for realistic OI)
+            // 3-5x: 20%, 5-8x: 40%, 8-12x: 30%, 12-15x: 10%
             uint256 leverageRoll = (seed >> 16) % 100;
             uint256 leverage;
-            if (leverageRoll < 40) leverage = 2;
-            else if (leverageRoll < 65) leverage = 3;
-            else if (leverageRoll < 80) leverage = 4;
-            else if (leverageRoll < 90) leverage = 5;
-            else leverage = 6 + (leverageRoll - 90) % 5; // 6x-10x
+            if (leverageRoll < 20) leverage = 3 + (leverageRoll % 3); // 3-5x
+            else if (leverageRoll < 60) leverage = 5 + ((leverageRoll - 20) % 4); // 5-8x
+            else if (leverageRoll < 90) leverage = 8 + ((leverageRoll - 60) % 5); // 8-12x
+            else leverage = 12 + ((leverageRoll - 90) % 4); // 12-15x
 
             // Position collateral: 5K-15K USDT (based on leverage)
             uint256 positionCollateral = (8_000 + (seed >> 24) % 7_000) * 1e6; // 8K-15K USDT

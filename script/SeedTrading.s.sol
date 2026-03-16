@@ -12,7 +12,7 @@ import {MockUSDT} from "../contracts/periphery/MockUSDT.sol";
 /**
  * @title SeedTrading
  * @notice Seed trading activity across demo markets
- * @dev Opens positions on multiple markets with varying sizes and leverage
+ * @dev Opens realistic leveraged positions on all 10 demo markets (3x-15x leverage range)
  */
 contract SeedTrading is Script {
 
@@ -89,7 +89,7 @@ contract SeedTrading is Script {
         uint256 initialBalance = usdt.balanceOf(trader);
 
         // Only call faucet if balance is insufficient
-        if (initialBalance < 6000e6) { // Need at least 6000 USDT for trading
+        if (initialBalance < 10000e6) { // Need at least 10K USDT for realistic trading
             usdt.faucet();
         }
 
@@ -101,7 +101,7 @@ contract SeedTrading is Script {
         IERC20 usdt = IERC20(USDT);
         IAccountManager accountManager = IAccountManager(ACCOUNT_MANAGER);
 
-        uint256 depositAmount = 5000e6; // $5000 USDT
+        uint256 depositAmount = 8000e6; // $8000 USDT (increased for larger positions)
 
         // Approve and deposit
         usdt.approve(ACCOUNT_MANAGER, depositAmount);
@@ -114,25 +114,41 @@ contract SeedTrading is Script {
     function _openPositions() internal {
         IExecutionEngine executionEngine = IExecutionEngine(EXECUTION_ENGINE);
 
-        // Open positions on first 5 markets to demonstrate trading activity
-        for (uint256 i = 0; i < 5 && i < marketIds.length; i++) {
+        // Open positions on all 10 markets for realistic trading activity
+        for (uint256 i = 0; i < marketIds.length; i++) {
             bytes32 marketId = marketIds[i];
 
-            // Vary position parameters for realistic activity
+            // Vary position parameters for realistic trading activity
             uint256 collateral;
             uint256 leverage;
             uint8 direction;
 
-            if (i % 2 == 0) {
-                // Even markets: tiny positions to minimize fees
-                collateral = 1e18; // $1 USDT (converted to WAD)
-                leverage = 1e18;    // 1x leverage (no fees for 1x)
+            // Realistic position sizes and leverage for demo (vary across all 10 markets)
+            if (i % 5 == 0) {
+                // Conservative positions
+                collateral = 600e6; // $600 USDT (6 decimals)
+                leverage = 3e18;    // 3x leverage
                 direction = 0;      // LONG
+            } else if (i % 5 == 1) {
+                // Moderate positions
+                collateral = 400e6; // $400 USDT (6 decimals)
+                leverage = 5e18;    // 5x leverage
+                direction = 1;      // SHORT
+            } else if (i % 5 == 2) {
+                // Aggressive positions
+                collateral = 300e6; // $300 USDT (6 decimals)
+                leverage = 8e18;    // 8x leverage
+                direction = 0;      // LONG
+            } else if (i % 5 == 3) {
+                // High leverage positions
+                collateral = 200e6; // $200 USDT (6 decimals)
+                leverage = 12e18;   // 12x leverage
+                direction = 1;      // SHORT
             } else {
-                // Odd markets: tiny positions to minimize fees
-                collateral = 1e18; // $1 USDT (converted to WAD)
-                leverage = 1e18;    // 1x leverage (no fees for 1x)
-                direction = 1;       // SHORT
+                // Maximum leverage positions
+                collateral = 150e6; // $150 USDT (6 decimals)
+                leverage = 15e18;   // 15x leverage
+                direction = 0;      // LONG
             }
 
             console2.log("\nOpening position on market:", i);

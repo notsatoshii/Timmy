@@ -167,10 +167,23 @@ for i in $(seq 0 $((NUM_BOTS - 1))); do
   # Query max leverage
   MAX_LEV=$(cast call "$LEVERAGE_MODEL" "getEffectiveMaxLeverage(bytes32)(uint256)" "$MARKET_ID" --rpc-url "$RPC" 2>/dev/null | head -1 | awk '{print $1}')
 
-  # Cap at 2x, floor at 1x
-  LEV="2000000000000000000"
+  # Realistic leverage: 3x-15x range, vary by trader index for distribution
+  # Trader 0-5: 3-5x, 6-15: 5-8x, 16-25: 8-12x, 26-29: 12-15x
+  if [ $i -lt 6 ]; then
+    LEV_TARGET=$((3 + (i % 3)))  # 3-5x
+  elif [ $i -lt 16 ]; then
+    LEV_TARGET=$((5 + (i % 4)))  # 5-8x
+  elif [ $i -lt 26 ]; then
+    LEV_TARGET=$((8 + (i % 5)))  # 8-12x
+  else
+    LEV_TARGET=$((12 + (i % 4))) # 12-15x
+  fi
+
+  LEV=$((LEV_TARGET * 1000000000000000000))  # Convert to WAD
+  # Cap at protocol max if needed
   if [ "$MAX_LEV" -lt "$LEV" ] 2>/dev/null; then LEV="$MAX_LEV"; fi
-  if [ "$LEV" -lt "1000000000000000000" ] 2>/dev/null; then LEV="1000000000000000000"; fi
+  # Floor at 3x minimum
+  if [ "$LEV" -lt "3000000000000000000" ] 2>/dev/null; then LEV="3000000000000000000"; fi
 
   echo -n "  Trader $i: $MARKET_NAME $DIR_STR (lev=$(echo "scale=1; $LEV / 1000000000000000000" | bc)x)... "
 
