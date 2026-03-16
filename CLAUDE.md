@@ -261,7 +261,7 @@ Source it before any script: `source control-plane/deploy-env.sh`
 ### Verification Scripts
 Three mandatory scripts — run after every task:
 - `bash control-plane/health-check.sh` — system-wide pass/fail
-- `node scripts/visual-verify.js` — headless browser testing with screenshots (frontend tasks)
+- `node scripts/take-screenshots.js then VIEW screenshots directly (frontend tasks)` — headless browser testing with screenshots (frontend tasks)
 - `bash scripts/user-flow-test.sh` — on-chain user journey simulation (contract tasks)
 
 See `control-plane/worker-rule.md` and `control-plane/thinking-protocol.md` for full protocols.

@@ -38,7 +38,7 @@ Sharp, efficient, allergic to bullshit. Dry humor — the kind where people aren
 
 ### After completing:
 1. `bash control-plane/health-check.sh` — system health, MUST exit 0
-2. `node scripts/visual-verify.js` — for frontend tasks, MUST exit 0
+2. `node scripts/take-screenshots.js` then VIEW each screenshot and evaluate (frontend tasks)
 3. `bash scripts/user-flow-test.sh` — for contract tasks, MUST exit 0
 4. Commit with verification results in the message
 5. Report via Telegram
@@ -90,16 +90,32 @@ ALL applicable verification scripts pass. "Script stdout said SUCCESS" is NEVER 
 
 ---
 
-## VISUAL REVIEW PROTOCOL
+## VISUAL REVIEW PROTOCOL — YOU ARE THE REVIEWER
 After ANY frontend change:
 1. Ensure frontend is serving: `systemctl start lever-frontend`
-2. Run: `node /home/lever/lever-protocol/scripts/visual-verify.js`
-3. Check `control-plane/visual-report.json` and screenshots in `control-plane/screenshots/`
-4. Evaluate: professional or template? Readable? Spacing consistent? Key numbers prominent? Mobile working?
-5. If anything fails or looks wrong, fix and re-run
-6. Include screenshot evaluation in shift report
+2. Take screenshots: `node /home/lever/lever-protocol/scripts/take-screenshots.js`
+3. Read `control-plane/screenshots/latest-review.json` for console errors
+4. **View each screenshot** using your image viewing capability:
+   - `control-plane/screenshots/markets-*.png`
+   - `control-plane/screenshots/trading-*.png`
+   - `control-plane/screenshots/vault-*.png`
+   - `control-plane/screenshots/positions-*.png`
+   - `control-plane/screenshots/mobile-*.png`
+5. For EACH screenshot, evaluate like an investor seeing it for the first time:
+   - Any error messages, stack traces, error boundaries, or blank sections?
+   - Are numbers reasonable? TVL ~$20M, prices 0-100 cents, no raw WAD/wei values
+   - Insurance fund should NOT show astronomical numbers like $1000000000000000
+   - Dollar amounts formatted with commas and 2 decimal places?
+   - Anything overlapping, cut off, misaligned, or overflowing?
+   - Wallet button: should say "Connect Wallet" or "Try Demo", NOT "Loading..."
+   - Does it match the design brief in control-plane/design-reference/DESIGN_BRIEF.md?
+   - Would an investor be impressed or concerned?
+6. Grade the UI: A (investor ready) / B (minor issues) / C (needs work) / D-F (broken)
+7. Log ALL issues found to known-issues.md
+8. Include grade and issue list in shift report and commit message
+9. If grade is C or below, fix the issues before marking the task done
 
----
+You ARE Claude — you can see images. Do not skip this step or claim you cannot view screenshots.
 
 ## DESIGN REFERENCE — READ BEFORE ANY FRONTEND VISUAL WORK
 Before making ANY visual/UI changes, read `control-plane/design-reference/DESIGN_BRIEF.md`.

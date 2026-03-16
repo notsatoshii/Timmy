@@ -11,7 +11,7 @@ Before starting ANY task, read control-plane/thinking-protocol.md.
 
 ### After every task:
 1. `bash control-plane/health-check.sh` — system health, MUST exit 0
-2. `node scripts/visual-verify.js` — for frontend tasks, MUST exit 0
+2. Take screenshots and visually review (frontend tasks) — see VISUAL REVIEW section below
 3. `bash scripts/user-flow-test.sh` — for contract tasks, MUST exit 0
 
 ### Definition of DONE:

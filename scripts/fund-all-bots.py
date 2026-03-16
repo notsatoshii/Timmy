@@ -26,7 +26,8 @@ def get_env():
             line = line.strip()
             if line.startswith("export ") and "=" in line and "$(" not in line:
                 parts = line.replace("export ", "").split("=", 1)
-                env[parts[0]] = parts[1]
+                value = parts[1].strip('"')  # Remove quotes from values
+                env[parts[0]] = value
     return env
 
 def run_cast(args, check=True):
