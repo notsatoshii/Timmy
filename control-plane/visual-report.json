@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-03-16T11-54-21-170Z",
+  "checks": [
+    {
+      "name": "browser_launch",
+      "status": "FAIL",
+      "detail": "Failed to launch the browser process:  Code: 1\n\nstderr:\n/usr/bin/chromium-browser: 12: xdg-settings: not found\n/system.slice/lever-worker.service is not a snap cgroup for tag snap.chromium.chromium\n\nTROUBLESHOOTING: https://pptr.dev/troubleshooting\n"
+    }
+  ],
+  "pass": 0,
+  "fail": 1
+}
