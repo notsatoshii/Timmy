@@ -25,11 +25,12 @@ import time
 from pathlib import Path
 
 # Use oracle venv if available
-VENV_PATH = Path(__file__).parent.parent / "oracle" / ".venv" / "lib"
-if VENV_PATH.exists():
-    import site
-    for p in VENV_PATH.glob("python*/site-packages"):
-        site.addsitedir(str(p))
+# TEMPORARY FIX: Skip venv path injection to avoid typing_extensions conflict
+# VENV_PATH = Path(__file__).parent.parent / "oracle" / ".venv" / "lib"
+# if VENV_PATH.exists():
+#     import site
+#     for p in VENV_PATH.glob("python*/site-packages"):
+#         site.addsitedir(str(p))
 
 from web3 import Web3
 from web3.middleware import ExtraDataToPOAMiddleware
