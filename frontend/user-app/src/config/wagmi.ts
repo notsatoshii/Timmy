@@ -1,12 +1,14 @@
 import { createConfig, http } from 'wagmi';
 import { baseSepolia } from 'wagmi/chains';
-import { injected } from 'wagmi/connectors';
+import { injected, metaMask, coinbaseWallet } from 'wagmi/connectors';
 
-// Only injected connector — no WalletConnect, no WebSocket origin errors
-// Covers MetaMask, Coinbase Wallet, Rabby, and any browser extension wallet
 export const config = createConfig({
   chains: [baseSepolia],
-  connectors: [injected()],
+  connectors: [
+    injected(),
+    metaMask({ dappMetadata: { name: 'LEVER Protocol' } }),
+    coinbaseWallet({ appName: 'LEVER Protocol' }),
+  ],
   transports: {
     [baseSepolia.id]: http(),
   },

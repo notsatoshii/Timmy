@@ -1,19 +1,30 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useReadContract } from 'wagmi';
-import { CONTRACT_ADDRESSES } from '../config/contracts';
-import { ORACLE_ADAPTER_ABI } from '../config/abis';
 
 interface LivePrice {
   marketId: string;
-  pi: number; // Probability Index (0-1)
+  pi: number;
   lastUpdated: number;
 }
 
 interface UseLivePricesOptions {
   marketIds: string[];
-  pollingInterval?: number; // in milliseconds, default 30 seconds
+  pollingInterval?: number;
   enabled?: boolean;
 }
+
+// Demo market initial prices
+const DEMO_INITIAL_PRICES: Record<string, number> = {
+  'demo-1': 0.88,
+  'demo-2': 0.35,
+  'demo-3': 0.42,
+  'demo-4': 0.22,
+  'demo-5': 0.55,
+  'demo-6': 0.30,
+  'demo-7': 0.60,
+  'demo-8': 0.45,
+  'demo-9': 0.40,
+  'demo-10': 0.65,
+};
 
 export const useLivePrices = (options: UseLivePricesOptions) => {
   const { marketIds, pollingInterval = 30000, enabled = true } = options;
@@ -21,102 +32,60 @@ export const useLivePrices = (options: UseLivePricesOptions) => {
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<number>(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  // Ref to read current prices without creating callback dependency
+  const pricesRef = useRef(prices);
+  pricesRef.current = prices;
 
-  // Fetch a single market's price
-  const fetchMarketPrice = useCallback(async (marketId: string) => {
-    try {
-      // For now, we'll simulate price updates since we're using demo data
-      // In production, this would call the actual contract read
-      const currentPrice = prices[marketId]?.pi || 0.5;
+  // Stable market IDs string for dependency comparison
+  const marketIdsKey = marketIds.join(',');
 
-      // Simulate small random price movements (±2%)
+  // Initialize prices once
+  useEffect(() => {
+    const initialPrices: Record<string, LivePrice> = {};
+    marketIds.forEach(marketId => {
+      initialPrices[marketId] = {
+        marketId,
+        pi: DEMO_INITIAL_PRICES[marketId] || 0.5,
+        lastUpdated: Date.now(),
+      };
+    });
+    setPrices(initialPrices);
+    setIsLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [marketIdsKey]);
+
+  // Simulate price movements — reads from ref, no circular dep
+  const simulatePriceUpdate = useCallback(() => {
+    const current = pricesRef.current;
+    const updated: Record<string, LivePrice> = {};
+
+    marketIds.forEach(marketId => {
+      const currentPrice = current[marketId]?.pi || DEMO_INITIAL_PRICES[marketId] || 0.5;
       const volatility = 0.02;
       const randomChange = (Math.random() - 0.5) * 2 * volatility;
-      let newPrice = currentPrice + randomChange;
+      const newPrice = Math.max(0.01, Math.min(0.99, currentPrice + randomChange));
 
-      // Keep price within bounds [0.01, 0.99]
-      newPrice = Math.max(0.01, Math.min(0.99, newPrice));
-
-      return {
+      updated[marketId] = {
         marketId,
         pi: newPrice,
         lastUpdated: Date.now(),
       };
-    } catch (error) {
-      console.warn(`Failed to fetch price for market ${marketId}:`, error);
-      return null;
-    }
-  }, [prices]);
+    });
 
-  // Fetch all market prices
-  const fetchAllPrices = useCallback(async () => {
-    if (!enabled || marketIds.length === 0) return;
+    setPrices(prev => ({ ...prev, ...updated }));
+    setLastUpdate(Date.now());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [marketIdsKey]);
 
-    try {
-      const pricePromises = marketIds.map(marketId => fetchMarketPrice(marketId));
-      const results = await Promise.all(pricePromises);
-
-      const newPrices: Record<string, LivePrice> = {};
-      results.forEach(result => {
-        if (result) {
-          newPrices[result.marketId] = result;
-        }
-      });
-
-      setPrices(prev => ({ ...prev, ...newPrices }));
-      setLastUpdate(Date.now());
-      setIsLoading(false);
-    } catch (error) {
-      console.error('Failed to fetch market prices:', error);
-      setIsLoading(false);
-    }
-  }, [enabled, marketIds, fetchMarketPrice]);
-
-  // Initialize prices with demo data
-  useEffect(() => {
-    if (marketIds.length > 0 && Object.keys(prices).length === 0) {
-      const initialPrices: Record<string, LivePrice> = {};
-
-      // Demo market initial prices matching the Markets component
-      const demoInitialPrices = {
-        'demo-1': 0.88, // SpaceX IPO
-        'demo-2': 0.35, // US-Iran Ceasefire
-        'demo-3': 0.42, // Nothing Ever Happens
-        'demo-4': 0.22, // FIFA World Cup Spain
-        'demo-5': 0.55, // Fed Rate Below 4%
-        'demo-6': 0.30, // SpaceX SPAR IPO
-        'demo-7': 0.60, // AAPL $250
-        'demo-8': 0.45, // OpenSea Token
-        'demo-9': 0.40, // Fed Rate Cut April
-        'demo-10': 0.65, // Argentina USD Rate
-      };
-
-      marketIds.forEach(marketId => {
-        initialPrices[marketId] = {
-          marketId,
-          pi: demoInitialPrices[marketId as keyof typeof demoInitialPrices] || 0.5,
-          lastUpdated: Date.now(),
-        };
-      });
-
-      setPrices(initialPrices);
-      setIsLoading(false);
-    }
-  }, [marketIds, prices]);
-
-  // Set up polling
+  // Polling on a stable interval — no dependency on prices
   useEffect(() => {
     if (!enabled || marketIds.length === 0) return;
 
-    // Initial fetch
-    fetchAllPrices();
-
-    // Set up polling interval
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
 
-    intervalRef.current = setInterval(fetchAllPrices, pollingInterval);
+    intervalRef.current = setInterval(simulatePriceUpdate, pollingInterval);
 
     return () => {
       if (intervalRef.current) {
@@ -124,12 +93,12 @@ export const useLivePrices = (options: UseLivePricesOptions) => {
         intervalRef.current = null;
       }
     };
-  }, [enabled, marketIds, pollingInterval, fetchAllPrices]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled, marketIdsKey, pollingInterval, simulatePriceUpdate]);
 
-  // Manual refresh function
   const refreshPrices = useCallback(() => {
-    fetchAllPrices();
-  }, [fetchAllPrices]);
+    simulatePriceUpdate();
+  }, [simulatePriceUpdate]);
 
   return {
     prices,
@@ -139,7 +108,6 @@ export const useLivePrices = (options: UseLivePricesOptions) => {
   };
 };
 
-// Helper hook for a single market price
 export const useLivePrice = (marketId: string, pollingInterval?: number) => {
   const { prices, isLoading, lastUpdate, refreshPrices } = useLivePrices({
     marketIds: [marketId],
