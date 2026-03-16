@@ -35,26 +35,26 @@ contract OpenDemoPositions is Script {
 
         vm.startBroadcast(testKey);
 
-        // Position 1: Long SpaceX IPO 5x leverage
-        // Collateral: 100 USDT, Size: 500 USDT notional
-        console.log("\nOpening Position 1: Long SpaceX IPO 5x");
+        // Position 1: Long SpaceX IPO 2x leverage (reduced from 5x due to market conditions)
+        // Collateral: 100 USDT, Size: 200 USDT notional
+        console.log("\nOpening Position 1: Long SpaceX IPO 2x");
         IExecutionEngine.OpenParams memory params1 = IExecutionEngine.OpenParams({
             marketId: spacexMarket,
             isLong: true, // direction: true = long
-            collateral: 100 * 1e18, // collateral: 100 USDT in WAD
-            leverage: 5 * 1e18 // leverage: 5x in WAD
+            collateral: 100 * 1e6, // collateral: 100 USDT in 6 decimals (native USDT format)
+            leverage: 2 * 1e18 // leverage: 2x in WAD
         });
         uint256 positionId1 = executionEngine.openPosition(params1);
         console.log("Position 1 ID:", positionId1);
 
-        // Position 2: Short US-Iran Ceasefire 3x leverage
-        // Collateral: 150 USDT, Size: 450 USDT notional
-        console.log("\nOpening Position 2: Short US-Iran Ceasefire 3x");
+        // Position 2: Short US-Iran Ceasefire 2x leverage (reduced from 3x due to market conditions)
+        // Collateral: 150 USDT, Size: 300 USDT notional
+        console.log("\nOpening Position 2: Short US-Iran Ceasefire 2x");
         IExecutionEngine.OpenParams memory params2 = IExecutionEngine.OpenParams({
             marketId: iranMarket,
             isLong: false, // direction: false = short
-            collateral: 150 * 1e18, // collateral: 150 USDT in WAD
-            leverage: 3 * 1e18 // leverage: 3x in WAD
+            collateral: 150 * 1e6, // collateral: 150 USDT in 6 decimals (native USDT format)
+            leverage: 2 * 1e18 // leverage: 2x in WAD
         });
         uint256 positionId2 = executionEngine.openPosition(params2);
         console.log("Position 2 ID:", positionId2);
@@ -65,7 +65,7 @@ contract OpenDemoPositions is Script {
         IExecutionEngine.OpenParams memory params3 = IExecutionEngine.OpenParams({
             marketId: fedMarket,
             isLong: true, // direction: true = long
-            collateral: 200 * 1e18, // collateral: 200 USDT in WAD
+            collateral: 200 * 1e6, // collateral: 200 USDT in 6 decimals (native USDT format)
             leverage: 2 * 1e18 // leverage: 2x in WAD
         });
         uint256 positionId3 = executionEngine.openPosition(params3);
