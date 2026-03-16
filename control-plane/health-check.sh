@@ -24,12 +24,12 @@ check() {
 
 # Contracts exist
 check "usdt" "$(cast call $USDT_ADDRESS 'decimals()(uint8)' --rpc-url $RPC_URL 2>&1)"
-check "market_registry" "$(cast call $MARKET_REGISTRY 'owner()(address)' --rpc-url $RPC_URL 2>&1)"
-check "oracle_adapter" "$(cast call $ORACLE_ADAPTER 'owner()(address)' --rpc-url $RPC_URL 2>&1)"
-check "account_manager" "$(cast call $ACCOUNT_MANAGER 'owner()(address)' --rpc-url $RPC_URL 2>&1)"
-check "position_manager" "$(cast call $POSITION_MANAGER 'owner()(address)' --rpc-url $RPC_URL 2>&1)"
+check "market_registry" "$(cast call $MARKET_REGISTRY 'hasRole(bytes32,address)(bool)' 0x0000000000000000000000000000000000000000000000000000000000000000 $DEPLOYER --rpc-url $RPC_URL 2>&1)"
+check "oracle_adapter" "$(cast call $ORACLE_ADAPTER 'hasRole(bytes32,address)(bool)' 0x0000000000000000000000000000000000000000000000000000000000000000 $DEPLOYER --rpc-url $RPC_URL 2>&1)"
+check "account_manager" "$(cast call $ACCOUNT_MANAGER 'hasRole(bytes32,address)(bool)' 0x0000000000000000000000000000000000000000000000000000000000000000 $DEPLOYER --rpc-url $RPC_URL 2>&1)"
+check "position_manager" "$(cast call $POSITION_MANAGER 'hasRole(bytes32,address)(bool)' 0x0000000000000000000000000000000000000000000000000000000000000000 $DEPLOYER --rpc-url $RPC_URL 2>&1)"
 check "lever_vault" "$(cast call $LEVER_VAULT 'totalAssets()(uint256)' --rpc-url $RPC_URL 2>&1)"
-check "fee_router" "$(cast call $FEE_ROUTER 'owner()(address)' --rpc-url $RPC_URL 2>&1)"
+check "fee_router" "$(cast call $FEE_ROUTER 'hasRole(bytes32,address)(bool)' 0x0000000000000000000000000000000000000000000000000000000000000000 $DEPLOYER --rpc-url $RPC_URL 2>&1)"
 
 # TVL
 TVL=$(cast call $LEVER_VAULT 'totalAssets()(uint256)' --rpc-url $RPC_URL 2>&1)
