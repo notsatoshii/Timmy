@@ -16,6 +16,7 @@
 ## RESOLVED
 - LeverageModel TVL decimal bug PARTIALLY FIXED — Platform ceiling improved 3x→12x. Root cause: LeverVault returns USDT 6-decimal but LeverageModel expected WAD 18-decimal, crushing TVL multiplier 0.1x→1.0x. Deployed new LeverageModel (0xf649e342...F9EF). ExecutionEngine still uses old address (immutable). (2026-03-17)
 - Trading tab "error boundary crash" was stale — tab renders clean. Fixed BigInt(float) bug in useTradeHistory.ts timestamps, made ErrorBoundary always show details. No actual crash existed. (2026-03-17)
+- Positions tab error boundary crash — fixed BigInt(float) conversion errors in useTradeHistory.ts on lines 77, 93, 110, 126. Changed BigInt(Math.floor(Date.now() / 1000 - offset)) to BigInt(Math.floor(Date.now() / 1000) - offset) to avoid floating-point intermediate values. (2026-03-17)
 - LP APY was showing 200289% — fixed (decimal conversion bug)
 - Insurance Fund was showing $10 quadrillion — fixed (WAD vs USDT formatting)
 - ZeroDepthThreshold blocking all positions — fixed (MarginEngine params unset)
