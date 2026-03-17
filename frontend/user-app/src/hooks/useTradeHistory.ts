@@ -74,7 +74,7 @@ export const useTradeHistory = (options: UseTradeHistoryOptions = {}) => {
             entryPrice: BigInt('380000000000000000'), // 38.0c
             positionSize: BigInt('8000000000000000000000'), // 8000 USDT notional
             impact: BigInt('15000000000000000'), // 1.5%
-            timestamp: BigInt(Date.now() / 1000 - 3600), // 1 hour ago
+            timestamp: BigInt(Math.floor(Date.now() / 1000 - 3600)), // 1 hour ago
             txHash: '0xabcd1234efgh5678ijkl9012mnop3456qrst7890uvwx1234yzab5678cdef9012',
             blockNumber: BigInt(12345678),
           },
@@ -90,7 +90,7 @@ export const useTradeHistory = (options: UseTradeHistoryOptions = {}) => {
             realizedPnL: BigInt('450000000000000000000'), // +450 USDT profit
             borrowFeesPaid: BigInt('25000000000000000000'), // 25 USDT
             fundingPaid: BigInt('-8000000000000000000'), // -8 USDT paid
-            timestamp: BigInt(Date.now() / 1000 - 1800), // 30 min ago
+            timestamp: BigInt(Math.floor(Date.now() / 1000 - 1800)), // 30 min ago
             txHash: '0x1234abcd5678efgh9012ijkl3456mnop7890qrst1234uvwx5678yzab9012cdef',
             blockNumber: BigInt(12345690),
           },
@@ -107,7 +107,7 @@ export const useTradeHistory = (options: UseTradeHistoryOptions = {}) => {
             entryPrice: BigInt('220000000000000000'), // 22.0c
             positionSize: BigInt('4800000000000000000000'), // 4800 USDT notional
             impact: BigInt('12000000000000000'), // 1.2%
-            timestamp: BigInt(Date.now() / 1000 - 900), // 15 min ago
+            timestamp: BigInt(Math.floor(Date.now() / 1000 - 900)), // 15 min ago
             txHash: '0x5678cdef9012abcd3456efgh7890ijkl1234mnop5678qrst9012uvwx3456yzab',
             blockNumber: BigInt(12345695),
           },
@@ -123,7 +123,7 @@ export const useTradeHistory = (options: UseTradeHistoryOptions = {}) => {
             realizedPnL: BigInt('-120000000000000000000'), // -120 USDT loss
             borrowFeesPaid: BigInt('35000000000000000000'), // 35 USDT
             fundingPaid: BigInt('12000000000000000000'), // +12 USDT received
-            timestamp: BigInt(Date.now() / 1000 - 600), // 10 min ago
+            timestamp: BigInt(Math.floor(Date.now() / 1000 - 600)), // 10 min ago
             txHash: '0x9012ijkl3456mnop7890qrst1234uvwx5678yzab9012cdef3456abcd7890efgh',
             blockNumber: BigInt(12345698),
           }
