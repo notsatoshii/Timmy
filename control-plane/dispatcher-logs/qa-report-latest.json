@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-17T14:16:52.869288+00:00",
+  "timestamp": "2026-03-17T14:32:11.753168+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,12 +11,12 @@
     },
     {
       "name": "Positions",
-      "value": "193",
+      "value": "198",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "9974767554735 [9.974e12]",
+      "value": "10339767554735 [1.033e13]",
       "status": "ok"
     },
     {
@@ -27,29 +27,7 @@
   ],
   "sprint_checks": {},
   "critical_blockers": [],
-  "visual_issues": [
-    "Vision: HTML shell only - React SPA requires JavaScript execution to evaluate actual content",
-    "Vision: Cannot assess real functionality, data accuracy, or UI quality from static HTML",
-    "Vision: og:url references lever.finance domain which may not be live",
-    "Vision: No fallback content for disabled JavaScript beyond generic noscript message"
-  ],
+  "visual_issues": [],
   "functional_issues": [],
-  "score": 68,
-  "vision_review": {
-    "professional_score": 7,
-    "trust_score": 6,
-    "issues": [
-      "HTML shell only - React SPA requires JavaScript execution to evaluate actual content",
-      "Cannot assess real functionality, data accuracy, or UI quality from static HTML",
-      "og:url references lever.finance domain which may not be live",
-      "No fallback content for disabled JavaScript beyond generic noscript message"
-    ],
-    "improvements": [
-      "Add server-side rendering or static generation for better SEO and investor previews",
-      "Include meaningful noscript fallback content showing key features",
-      "Verify og:url domain is properly configured and accessible",
-      "Consider adding loading indicators or skeleton content in HTML for better UX",
-      "Add structured data markup for better search engine understanding"
-    ]
-  }
+  "score": 100
 }
