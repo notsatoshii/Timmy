@@ -1,36 +1,24 @@
 {
   "tasks": [
     {
-      "id": "1",
+      "id": "fix_vault_data_pipeline",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Frontend React hook (useVaultMulticall) and RPC timeout issues in vault data fetching - frontend data layer problem"
+      "reason": "Frontend React hooks and data fetching issue - useVaultMulticall undefined and RPC timeouts are client-side problems requiring changes to React components and data fetching logic"
     },
     {
-      "id": "2",
-      "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "Frontend position display and getPosition() contract calls - React component data fetching and rendering issue"
-    },
-    {
-      "id": "3",
-      "lane": "CONTRACT",
-      "depends_on": [],
-      "reason": "ExecutionEngine and LeverageModel contract interaction issue - Solidity contract logic needs fixing"
-    },
-    {
-      "id": "4",
-      "lane": "INFRA",
-      "depends_on": [],
-      "reason": "Backend contract data pipeline and RPC error handling - infrastructure scripts and data aggregation services"
-    },
-    {
-      "id": "5",
+      "id": "fix_position_values_display",
       "lane": "FRONTEND",
       "depends_on": [
-        "3"
+        "resolve_executionengine_leverage"
       ],
-      "reason": "Frontend testing of MarketDetail and position opening flow - depends on Task 3 fixing position opening failures"
+      "reason": "Frontend position display issue requiring React component changes, but depends on ExecutionEngine fix since positions must open successfully before position value display can be properly tested and verified"
+    },
+    {
+      "id": "resolve_executionengine_leverage",
+      "lane": "CONTRACT",
+      "depends_on": [],
+      "reason": "Contract-level issue with ExecutionEngine using old LeverageModel causing leverage limits and position open failures - requires Solidity contract logic fixes or reconfigurations"
     }
   ]
 }

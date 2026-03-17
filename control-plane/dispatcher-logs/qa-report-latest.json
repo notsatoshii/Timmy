@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-17T08:57:02.450761+00:00",
+  "timestamp": "2026-03-17T09:10:23.401047+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -28,36 +28,34 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Contract data pipeline shows all error status (TVL, Positions, Global OI, Insurance Fund)",
-    "Vision: Vault displays $NaN share price due to undefined useVaultMulticall returns",
-    "Vision: Positions showing $0.00 values despite claiming real on-chain data",
-    "Vision: 413 RPC errors preventing proper data retrieval",
-    "Vision: ExecutionEngine limited to 1x leverage due to immutable LeverageModel mismatch",
-    "Vision: Core metrics failing would signal broken infrastructure to investors",
-    "Vision: Technical errors visible in investor-facing interface undermine credibility"
+    "Vision: Running on Base Sepolia testnet instead of mainnet",
+    "Vision: 24h volume shows $0 indicating no real trading activity",
+    "Vision: TVL at $50K is extremely small for institutional consideration",
+    "Vision: Uses fallback/demo values when contract calls fail",
+    "Vision: No audit information or security credentials visible",
+    "Vision: No team information or company credentials displayed"
   ],
   "functional_issues": [],
-  "score": 44,
+  "score": 52,
   "vision_review": {
-    "professional_score": 3,
-    "trust_score": 2,
+    "professional_score": 8,
+    "trust_score": 6,
     "issues": [
-      "Contract data pipeline shows all error status (TVL, Positions, Global OI, Insurance Fund)",
-      "Vault displays $NaN share price due to undefined useVaultMulticall returns",
-      "Positions showing $0.00 values despite claiming real on-chain data",
-      "413 RPC errors preventing proper data retrieval",
-      "ExecutionEngine limited to 1x leverage due to immutable LeverageModel mismatch",
-      "Core metrics failing would signal broken infrastructure to investors",
-      "Technical errors visible in investor-facing interface undermine credibility"
+      "Running on Base Sepolia testnet instead of mainnet",
+      "24h volume shows $0 indicating no real trading activity",
+      "TVL at $50K is extremely small for institutional consideration",
+      "Uses fallback/demo values when contract calls fail",
+      "No audit information or security credentials visible",
+      "No team information or company credentials displayed"
     ],
     "improvements": [
-      "Fix contract data pipeline to show accurate TVL and position data",
-      "Resolve vault multicall issues to display proper share prices",
-      "Debug and fix 413 RPC timeout errors for reliable data fetching",
-      "Ensure positions display real equity, PnL, and collateral values",
-      "Address ExecutionEngine/LeverageModel integration for full leverage functionality",
-      "Implement proper error handling to hide technical errors from investors",
-      "Add data validation to prevent $NaN/$0.00 displays reaching production"
+      "Deploy to mainnet and show mainnet status prominently",
+      "Display audit reports and security certifications",
+      "Add team credentials and company information",
+      "Include risk warnings and regulatory disclaimers",
+      "Show historical performance data and track record",
+      "Add institutional-grade documentation links",
+      "Display insurance coverage and smart contract security measures"
     ]
   }
 }
