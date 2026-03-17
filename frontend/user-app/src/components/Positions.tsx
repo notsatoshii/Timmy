@@ -513,8 +513,8 @@ const Positions: React.FC = () => {
     createLivePosition(basePos, demoMarketIds[index])
   );
 
-  // Always show demo positions if no real positions exist, regardless of wallet connection
-  const displayPositions = positions.length > 0 ? positions : demoPositions;
+  // Show real positions if they exist, otherwise show demo positions when no wallet is connected
+  const displayPositions = positions.length > 0 ? positions : (!address ? demoPositions : []);
 
   console.log('[Positions] Display positions logic:', {
     positionsCount: positions.length,
@@ -1064,7 +1064,7 @@ const Positions: React.FC = () => {
       </div>
 
       {/* Empty State */}
-      {positions.length === 0 && !address && (
+      {displayPositions.length === 0 && (
         <div className="space-y-8">
           {!address && (
             <div className="bg-surface-1 rounded-lg border border-border p-6">
