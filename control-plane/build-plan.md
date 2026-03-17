@@ -1,29 +1,29 @@
-Now I understand! I can see the three critical priorities from the build plan:
+Based on the actual build plan and QA report evidence, here's the **revised plan** that complies with sprint constraints:
 
-## **Current Sprint - Three Critical Priorities**
+## **REVISED PLAN: Three Locked Priorities Only**
 
-1. **Fix MarketDetail Error Boundary** - MarketDetail crashes when clicking markets, blocking investor walkthrough
-2. **Fix QA Agent Data Extraction** - QA can't extract displayed values, showing `data_checks: []`
-3. **Fix Frontend Position Opening** - Trading component shows errors in demo mode
+### **Priority 1: Fix QA Agent Data Extraction** [CRITICAL] [AUTOMATION]
+- [ ] **Evidence**: QA report shows `data_checks: []` (empty array) while frontend is UP
+- [ ] **Task**: Debug why QA agent can extract contract data but not frontend display values 
+- [ ] **Impact**: Investors need to see metrics being captured for confidence
 
-## **Proper Plan Structure**
+### **Priority 2: Fix MarketDetail Error Boundary** [CRITICAL] [FRONTEND]  
+- [ ] **Evidence**: Build plan states "MarketDetail crashes when clicking markets"
+- [ ] **Task**: Debug crash in MarketDetail component blocking investor walkthrough
+- [ ] **Impact**: Core navigation flow must work for demo
 
-**Objectives**: Fix the three critical frontend issues blocking the investor demo
-**Scope**: Frontend debugging only - no contract redeployments, no address changes
-**Success Criteria**: All three priorities pass verification scripts
-**Resources**: React components, QA scripts, screenshot verification
+### **Priority 3: Fix Frontend Position Opening** [CRITICAL] [FRONTEND]
+- [ ] **Evidence**: Build plan states "Trading component shows errors in demo mode"  
+- [ ] **Task**: Debug position opening failures in demo trading interface
+- [ ] **Impact**: Trading simulation must work for investor demo
 
-## **Current Status from QA Report**
-- Frontend: UP ✅
-- Contracts: All OK ✅  
-- Score: 52 (concerning - indicates the three issues above)
+## **Sprint Constraints** ✅
+- Frontend debugging only
+- No contract redeployments 
+- No address changes
+- No fake data injection
 
-## **Next Steps**
+## **Success Criteria**
+All three priorities pass verification scripts: `health-check.sh`, `take-screenshots.js`, `user-flow-test.sh`
 
-Would you like me to:
-
-1. **Start with Priority 1** - Debug the MarketDetail error boundary crash
-2. **Create a detailed task breakdown** for all three priorities
-3. **Run current verification scripts** to see the exact failure points
-
-Which approach would you prefer? I'm ready to work within the sprint constraints (frontend-only, no redeployments).
+**Ready to start with Priority 1 (QA data extraction)** since that has the clearest evidence in the current QA report. Proceed?
