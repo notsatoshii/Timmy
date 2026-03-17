@@ -1,30 +1,27 @@
-Perfect! Your corrected understanding is exactly right. You've identified all the critical mistakes from the original approach and properly aligned with the sprint constraints.
+You're absolutely right. I need to strictly adhere to the sprint constraints. Here's the revised plan with only the 3 approved priorities:
 
-## **Validation of Your Corrected Understanding:**
+## Revised Sprint Plan - Investor Demo (3 Priorities Only)
 
-✅ **Correctly Identified the 3 Priorities** - You found the actual priorities from build-plan.md (though that file seems to contain a previous response rather than the clean priority list)
+### **Priority 1: Fix Screenshot Verification System** [HIGH] [QA]
+- [ ] Resolve visual evaluation blockers - QA can only see HTML shell via curl, cannot verify actual UI/UX quality
+- [ ] Enable browser-based testing to capture real frontend screenshots 
+- [ ] Verify screenshots in `scripts/take-screenshots.js` are working properly
+- **Rationale**: Score 44/100 primarily due to inability to verify UI. Fix QA infrastructure first to validate other improvements.
 
-✅ **Recognized Protected Contract Violations** - Critical catch on ExecutionEngine and the "Do NOT redeploy any contracts" rule
+### **Priority 2: Fix Vault Tab Data Display** [HIGH] [FRONTEND]
+- [ ] Resolve `$NaN` share price and `$0 TVL` in demo mode
+- [ ] Debug `useVaultMulticall` returning undefined (413 RPC errors)
+- [ ] Ensure vault metrics display correctly for investor demo
+- **Rationale**: Critical investor-facing tab showing broken data. Frontend-only fix, no contract changes needed.
 
-✅ **Sprint Lock Compliance** - Frontend-only fixes, no contract changes whatsoever
+### **Priority 3: Fix Position Values Display** [HIGH] [FRONTEND] 
+- [ ] Resolve positions tab showing `$0.00` for all position values in demo mode
+- [ ] Fix stub positions displaying zero values instead of actual position data
+- [ ] Verify position PnL, collateral, and notional display correctly
+- **Rationale**: Core functionality must work for investor demo. Frontend data formatting issue.
 
-✅ **Proper Escalation Path** - "log the issue instead" for contract problems
+**Sprint Constraints**: Frontend-only fixes. No contract redeployments. No address changes. Work ONLY on these 3 priorities.
 
-## **Your Priority Sequencing Makes Sense:**
+**Next Steps**: Once all 3 priorities pass verification scripts, transition to Phase 2 (auto-improve mode) as described in build-plan.md.
 
-**Priority 1: Fix Screenshot System** is the logical starting point because:
-- It's blocking verification of the other fixes
-- QA infrastructure must work to validate frontend improvements  
-- Without screenshots, we can't prove the UI works for investors
-
-## **Ready to Execute:**
-
-Your approach is now fully compliant with:
-- The investor demo sprint lock
-- The three-priority constraint  
-- The no-redeployment rule
-- The frontend-focus requirement
-
-**Yes, start with Priority 1: Fix Screenshot System.** Once the QA infrastructure captures working visuals, you can tackle the frontend data display and navigation issues with proper verification.
-
-This corrected plan should get you from 60/100 to the target 85/100+ QA score.
+Let me start with Priority 1 - fixing the screenshot verification system.
