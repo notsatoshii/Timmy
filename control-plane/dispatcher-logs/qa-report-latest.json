@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-17T16:03:00.754205+00:00",
+  "timestamp": "2026-03-17T16:17:42.154647+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,12 +11,12 @@
     },
     {
       "name": "Positions",
-      "value": "209",
+      "value": "210",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "10949767554735 [1.094e13]",
+      "value": "10979767554735 [1.097e13]",
       "status": "ok"
     },
     {
@@ -28,35 +28,27 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Testnet-only deployment reduces investor confidence",
-    "Vision: Demo fallback values visible when contracts fail",
-    "Vision: TVL amounts appear small ($50K) for institutional appeal",
-    "Vision: Volume may show $0 indicating low trading activity",
-    "Vision: Oracle status shows 'Demo Fallback' mode when contracts unavailable",
-    "Vision: Insurance fund balance appears modest for risk coverage"
+    "Vision: Oracle price freshness failure - no successful price updates detected",
+    "Vision: Unable to verify visual UI functionality due to screenshot system errors",
+    "Vision: Live pricing data not updating which is critical for trading platform credibility",
+    "Vision: No confirmation that real market data is displaying to users"
   ],
   "functional_issues": [],
-  "score": 52,
+  "score": 68,
   "vision_review": {
-    "professional_score": 8,
-    "trust_score": 7,
+    "professional_score": 6,
+    "trust_score": 4,
     "issues": [
-      "Testnet-only deployment reduces investor confidence",
-      "Demo fallback values visible when contracts fail",
-      "TVL amounts appear small ($50K) for institutional appeal",
-      "Volume may show $0 indicating low trading activity",
-      "Oracle status shows 'Demo Fallback' mode when contracts unavailable",
-      "Insurance fund balance appears modest for risk coverage"
+      "Oracle price freshness failure - no successful price updates detected",
+      "Unable to verify visual UI functionality due to screenshot system errors",
+      "Live pricing data not updating which is critical for trading platform credibility",
+      "No confirmation that real market data is displaying to users"
     ],
     "improvements": [
-      "Deploy to mainnet with real TVL to demonstrate traction",
-      "Hide fallback indicators in production mode",
-      "Increase minimum demo values to appear more established",
-      "Add trading volume history and market depth indicators",
-      "Include institutional-focused metrics (daily volume trends, user growth)",
-      "Add whitepaper and audit links for credibility",
-      "Display total users/positions count",
-      "Add market maker participation indicators"
+      "Fix oracle keeper service to ensure price feeds are updating regularly",
+      "Verify that live market data is displaying in the frontend UI",
+      "Fix screenshot system for proper QA visual verification",
+      "Add real-time price update indicators so investors can see data is live"
     ]
   }
 }

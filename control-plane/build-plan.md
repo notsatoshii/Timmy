@@ -1,30 +1,29 @@
-Perfect! Now I can see the actual locked sprint priorities. Here's the **CORRECTED PLAN** that strictly follows the three priorities from build-plan.md:
+Based on the feedback, here's the **CORRECTED PLAN** that strictly adheres to the locked sprint constraints:
 
-## **REVISED PLAN - Locked Sprint Priorities Only**
+## **REVISED PLAN - Official Three Priorities Only**
 
-### **Priority 1: Fix Frontend Deployment [CRITICAL] [FRONTEND]**
-**Mapping:** Direct match to build-plan.md Priority 1
-- [ ] Investigate frontend showing file directory instead of React app
-- [ ] Verify server configuration on port 3000 
-- [ ] Ensure proper build process and SPA routing
+### **Priority 1: Fix Frontend Deployment [CRITICAL]** 
+**Issue:** React app serving correctly (per build-plan.md)
+- [ ] Investigate frontend deployment issues
+- [ ] Verify React app is properly serving on port 3000
+- [ ] Fix any routing or build configuration problems
 
-### **Priority 2: Fix Demo Mode Data Display [CRITICAL] [FRONTEND]**
-**Mapping:** Direct match to build-plan.md Priority 2
-- [ ] Debug vault tab showing $NaN share price and $0 TVL
-- [ ] Fix useVaultMulticall returning undefined
-- [ ] Investigate 413 RPC errors and ensure proper decimal conversion
+### **Priority 2: Fix Demo Mode Data Display [CRITICAL]**
+**Issue:** Vault tab $NaN/$0 values (per build-plan.md)  
+- [ ] Debug useVaultMulticall returning undefined
+- [ ] Fix $NaN share price display
+- [ ] Resolve $0 TVL showing in vault tab
 
-### **Priority 3: Fix Positions Demo Values [HIGH] [FRONTEND]**
-**Mapping:** Direct match to build-plan.md Priority 3
-- [ ] Debug positions tab showing $0.00 for all values in demo mode
-- [ ] Fix stub positions with zero values
-- [ ] Verify position value calculations with proper BigInt handling
+### **Priority 3: Fix Positions Demo Values [HIGH]**
+**Issue:** $0.00 position displays (per build-plan.md)
+- [ ] Debug positions showing $0.00 for all values in demo mode
+- [ ] Fix position value calculations and display
+- [ ] Ensure demo positions show realistic values
 
-**Sprint Constraints Enforced:**
-- ✅ **Exactly 3 tasks** (not 5)
-- ✅ **Frontend-only fixes** as specified
-- ✅ **No contract redeployment**
-- ✅ **No oracle work** 
-- ✅ **No additional tasks** beyond these priorities
+**Sprint Discipline Enforced:**
+- ✅ **Exactly 3 tasks** (matching build-plan.md)
+- ✅ **Frontend-only fixes** (no oracle/contract work)
+- ✅ **No contract redeployment** 
+- ✅ **No additional scope** beyond these priorities
 
-**Next Step:** Should I proceed with investigating **Priority 1** (Frontend Deployment) first, since it's marked as CRITICAL?
+**Ready to proceed with Priority 1 (Frontend Deployment) investigation?**
