@@ -1,25 +1,43 @@
-Thank you for the correction. You're absolutely right - I violated the protected contracts policy and exceeded the scope. Let me provide the corrected plan based on your feedback:
+Based on the QA report and investigating the actual issues, here's the **CORRECTED PLAN** that addresses the real problems and respects the protected contracts policy:
 
-## CORRECTED PLAN: Three Critical Priorities Only
+## REVISED PLAN: Critical Frontend Build Failure
 
-### 1. **Investigate Leverage Limitation Issue** [INVESTIGATION]
-- [ ] **Document the issue** without touching protected ExecutionEngine (0xc749C6aAe8a5ACBDD924DF7f833Dd3115307a60D)
-- [ ] **Verify integration** between ExecutionEngine and LeverageModel (0x474E2eE2911544a385eb017369e8516Ad6DcCAbd) 
-- [ ] **Log findings** for configuration vs contract issue determination
-- [ ] **Test current behavior** to understand limitation scope
+### **Priority 1: Fix Frontend Build System [CRITICAL]** 
+**Evidence:** Frontend serving directory listing instead of React app (QA score: 52/100)
 
-### 2. **Fix Vault Tab $NaN Display** [FRONTEND]
-- [ ] **Debug useVaultMulticall** returning undefined values
-- [ ] **Investigate 413 RPC errors** affecting vault data fetching
-- [ ] **Implement error handling** for share price display
-- [ ] **Verify TVL display** functions correctly
+- [ ] **Frontend build directory missing compiled assets** - no index.html, no JS/CSS bundles
+- [ ] **React build process completely broken** - `npm run build` likely failing or incomplete  
+- [ ] **Service running but serving raw build folder** instead of compiled React application
+- [ ] **Complete application failure** - investors cannot access any product functionality
 
-### 3. **Fix Position Values Display** [FRONTEND]  
-- [ ] **Debug $0.00 position values** in demo mode
-- [ ] **Verify position data flow** from contracts to frontend
-- [ ] **Test collateral/PnL calculations** display properly
-- [ ] **Add fallback handling** for undefined position data
+**Actions:**
+- [ ] Navigate to `/home/lever/lever-protocol/frontend/` and run `npm run build`
+- [ ] Verify build process generates `build/index.html` and JS/CSS assets
+- [ ] Test that localhost:3000 serves React app instead of directory listing
+- [ ] Ensure all required dependencies are installed and build scripts work
 
-**Scope:** Work ONLY on these three priorities. Respect all protected contracts. Focus on investigation and frontend fixes only, no contract redeployments.
+### **Priority 2: Investigate Leverage Limitation Issue [INVESTIGATION ONLY]**
+**Policy:** ExecutionEngine (0xc749C6aAe8a5ACBDD924DF7f833Dd3115307a60D) is PROTECTED - no redeployment allowed
 
-This aligns with the build plan requirements and protects existing infrastructure while addressing the most critical demo blockers.
+- [ ] **Document the leverage limitation issue** without touching protected contracts
+- [ ] **Test current behavior** to understand if it's configuration vs contract issue
+- [ ] **Log findings** for future investigation if needed
+- [ ] **Verify integration** between ExecutionEngine and LeverageModel addresses
+
+### **Priority 3: Verify Demo Mode Data Display [LOW]**
+**Note:** QA report shows contract data is working (TVL: 6.05e13, Positions: 215, all "ok" status)
+
+- [ ] **Verify actual data display issues exist** before fixing (no evidence of $NaN in QA report)
+- [ ] **Test vault and positions tabs** once frontend is rebuilt
+- [ ] **Only fix if issues are confirmed** after frontend build is working
+
+---
+
+## **What Changed from Original Plan:**
+
+❌ **REMOVED:** ExecutionEngine redeployment (violates protected contracts policy)  
+❌ **REMOVED:** Assumptions about $NaN/$0 display issues (not confirmed in QA report)  
+✅ **FOCUSED:** Actual critical issue - frontend build failure blocking entire demo  
+✅ **EVIDENCE-BASED:** All tasks now based on confirmed QA report findings  
+
+**The frontend build failure is blocking everything else** - investors see a file directory instead of the trading application. This must be fixed first before any other issues can be assessed.
