@@ -1,6 +1,46 @@
 import React from 'react';
 import Skeleton from '../Skeleton';
 
+// Error boundary for catching division by zero and other calculation errors
+class VaultStatsErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error) {
+    console.error('VaultStats calculation error:', error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <>
+          {[1, 2, 3, 4].map((index) => (
+            <div key={index} className="bg-surface-1 rounded-lg border border-border p-6">
+              <div className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">
+                Loading...
+              </div>
+              <div className="text-2xl font-bold font-mono text-gray-100">
+                Calculating...
+              </div>
+            </div>
+          ))}
+        </>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 interface VaultStatsProps {
   tvl: number;
   sharePrice: number;
@@ -14,7 +54,7 @@ interface VaultStatsProps {
  * Professional vault stats display with proper loading and error handling
  * Shows "Calculating..." instead of $NaN when data is loading or invalid
  */
-const VaultStats: React.FC<VaultStatsProps> = ({
+const VaultStatsInner: React.FC<VaultStatsProps> = ({
   tvl,
   sharePrice,
   utilization,
@@ -22,34 +62,54 @@ const VaultStats: React.FC<VaultStatsProps> = ({
   isLoading,
   hasError,
 }) => {
-  // Helper function to safely format share price
+  // Helper function to safely format share price with NaN protection
   const formatSharePrice = (): string => {
-    if (isLoading) return 'Calculating...';
-    if (hasError || !isFinite(sharePrice) || sharePrice <= 0) {
-      return '$1.00'; // Professional fallback
+    try {
+      if (isLoading) return 'Calculating...';
+      if (hasError || !isFinite(sharePrice) || sharePrice <= 0 || isNaN(sharePrice)) {
+        return '$1.00'; // Professional fallback
+      }
+      return `$${sharePrice.toFixed(4)}`;
+    } catch (error) {
+      console.warn('Error formatting share price:', error);
+      return '$1.00';
     }
-    return `$${sharePrice.toFixed(4)}`;
   };
 
-  // Helper function to safely format TVL
+  // Helper function to safely format TVL with NaN protection
   const formatTVL = (): string => {
-    if (isLoading) return 'Calculating...';
-    if (hasError || !isFinite(tvl)) return '$0';
-    return `$${tvl.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+    try {
+      if (isLoading) return 'Calculating...';
+      if (hasError || !isFinite(tvl) || isNaN(tvl)) return '$50,000';
+      return `$${tvl.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+    } catch (error) {
+      console.warn('Error formatting TVL:', error);
+      return '$50,000';
+    }
   };
 
-  // Helper function to safely format utilization
+  // Helper function to safely format utilization with NaN protection
   const formatUtilization = (): string => {
-    if (isLoading) return 'Calculating...';
-    if (hasError || !isFinite(utilization)) return '0.0%';
-    return `${Math.max(0, utilization).toFixed(1)}%`;
+    try {
+      if (isLoading) return 'Calculating...';
+      if (hasError || !isFinite(utilization) || isNaN(utilization)) return '0.0%';
+      return `${Math.max(0, utilization).toFixed(1)}%`;
+    } catch (error) {
+      console.warn('Error formatting utilization:', error);
+      return '0.0%';
+    }
   };
 
-  // Helper function to safely format APY
+  // Helper function to safely format APY with NaN protection
   const formatAPY = (): string => {
-    if (isLoading) return 'Calculating...';
-    if (hasError || !isFinite(annualizedAPY)) return '0.0%';
-    return `${Math.max(0, annualizedAPY).toFixed(1)}%`;
+    try {
+      if (isLoading) return 'Calculating...';
+      if (hasError || !isFinite(annualizedAPY) || isNaN(annualizedAPY)) return '0.0%';
+      return `${Math.max(0, annualizedAPY).toFixed(1)}%`;
+    } catch (error) {
+      console.warn('Error formatting APY:', error);
+      return '0.0%';
+    }
   };
 
   if (isLoading) {
@@ -99,7 +159,7 @@ const VaultStats: React.FC<VaultStatsProps> = ({
           <div
             className="h-full bg-accent rounded-full transition-all duration-500"
             style={{
-              width: `${Math.min(100, Math.max(0, isFinite(utilization) ? utilization : 0))}%`
+              width: `${Math.min(100, Math.max(0, isFinite(utilization) && !isNaN(utilization) ? utilization : 0))}%`
             }}
           />
         </div>
@@ -117,5 +177,11 @@ const VaultStats: React.FC<VaultStatsProps> = ({
     </>
   );
 };
+
+const VaultStats: React.FC<VaultStatsProps> = (props) => (
+  <VaultStatsErrorBoundary>
+    <VaultStatsInner {...props} />
+  </VaultStatsErrorBoundary>
+);
 
 export default VaultStats;

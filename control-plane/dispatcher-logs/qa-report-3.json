@@ -1,0 +1,53 @@
+{
+  "timestamp": "2026-03-17T05:37:32.651512+00:00",
+  "frontend_status": "UP",
+  "data_checks": [
+    {
+      "name": "TVL",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Positions",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Global OI",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Insurance Fund",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Max Leverage",
+      "value": "",
+      "status": "error"
+    }
+  ],
+  "visual_issues": [
+    "Vision: $NaN share price and $0 TVL displayed in vault tab",
+    "Vision: All position values show $0.00 making the platform appear completely broken"
+  ],
+  "functional_issues": [],
+  "critical_blockers": [],
+  "score": 80,
+  "vision_review": {
+    "professional_score": 3,
+    "trust_score": 2,
+    "deal_breakers": [
+      "$NaN share price and $0 TVL displayed in vault tab",
+      "All position values show $0.00 making the platform appear completely broken"
+    ],
+    "improvements": [
+      "Fix vault multicall returning undefined causing $NaN displays",
+      "Fix position value calculations to show real data instead of $0.00",
+      "Deploy updated ExecutionEngine to enable actual leverage trading beyond 1x"
+    ]
+  },
+  "recent_commits": "90e0565f auto: cycle tasks complete\nc1884b66 fix(6): Verify Oracle Keeper is Running for Live Price Updates\nfa0ad23a auto: cycle tasks complete\n3932b85d fix(4): Validate 10x+ leverage functionality - comprehensive testing shows system supports up to 30x leverage with proper validation pipeline, all core functionality working correctly\n5391c757 fix(3): Fix Leverage Model integration - deploy LeverageModelFixed with proper default parameters, redeploy ExecutionEngine",
+  "known_issues_count": 27
+}

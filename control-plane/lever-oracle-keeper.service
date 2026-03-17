@@ -1,0 +1,23 @@
+[Unit]
+Description=LEVER Protocol Oracle Keeper
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=forking
+User=lever
+WorkingDirectory=/home/lever/lever-protocol/scripts/oracle
+Environment=RPC_URL=https://sepolia.base.org
+Environment=ORACLE_ADAPTER=0xf0698FCEDD3A212c5f1D78f7c4c008CB90efeA9c
+Environment=PUSH_INTERVAL=30
+Environment=DRY_RUN=false
+ExecStart=/home/lever/lever-protocol/scripts/oracle/start_mock_keeper.sh
+ExecStop=/usr/bin/pkill -f mock_keeper.py
+PIDFile=/home/lever/lever-protocol/scripts/oracle/keeper.pid
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

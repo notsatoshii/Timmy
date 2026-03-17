@@ -24,6 +24,10 @@ echo "NOTE: Using simulated prices due to Polymarket API issues"
 # Activate venv and run mock keeper
 source .venv/bin/activate
 nohup python3 mock_keeper.py > mock_keeper.log 2>&1 &
+KEEPER_PID=$!
 
-echo "Mock keeper started as PID $!"
+# Save PID for systemd service
+echo $KEEPER_PID > keeper.pid
+
+echo "Mock keeper started as PID $KEEPER_PID"
 echo "Monitor with: tail -f mock_keeper.log"

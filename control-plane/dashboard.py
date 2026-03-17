@@ -580,7 +580,7 @@ def get_contract_data():
 
 def get_loop_data():
     """Get autonomous loop state for dashboard."""
-    import glob as _glob
+    
     logs_dir = f"{CONTROL}/dispatcher-logs"
     result = {
         "cycle": 0,
@@ -597,8 +597,8 @@ def get_loop_data():
 
     # Check if loop service is running
     try:
-        import subprocess as _sp
-        r = _sp.run(['systemctl', 'is-active', 'lever-loop'], capture_output=True, text=True, timeout=5)
+        
+        r = subprocess.run(['systemctl', 'is-active', 'lever-loop'], capture_output=True, text=True, timeout=5)
         result["loop_running"] = r.stdout.strip() == 'active'
     except:
         pass
@@ -612,8 +612,8 @@ def get_loop_data():
         # Parse current phase from last lines
         for line in reversed(lines[-20:]):
             if 'CYCLE' in line:
-                import re as _re
-                m = _re.search(r'CYCLE\s+(\d+)', line)
+                
+                m = re.search(r'CYCLE\s+(\d+)', line)
                 if m:
                     result["cycle"] = int(m.group(1))
             if 'QA PHASE' in line:
@@ -625,7 +625,7 @@ def get_loop_data():
             elif 'DISPATCH PHASE' in line or 'Dispatcher running' in line:
                 result["phase"] = "dispatching"
             elif 'QA Score' in line:
-                m2 = _re.search(r'QA Score:\s*(\d+)', line)
+                m2 = re.search(r'QA Score:\s*(\d+)', line)
                 if m2:
                     result["qa_score"] = int(m2.group(1))
             elif 'APPROVED' in line:
@@ -636,19 +636,19 @@ def get_loop_data():
         pass
 
     # Read latest QA report
-    qa_reports = sorted(_glob.glob(f"{logs_dir}/qa-report-*.json"), reverse=True)
+    qa_reports = sorted(glob.glob(f"{logs_dir}/qa-report-*.json"), reverse=True)
     if qa_reports:
         try:
-            import json as _json
+            
             with open(qa_reports[0]) as f:
-                qa = _json.load(f)
+                qa = json.load(f)
             result["qa_score"] = qa.get("score", result["qa_score"])
-            result["qa_checks"] = qa.get("checks", [])
+            result["qa_checks"] = qa.get("data_checks", qa.get("checks", []))
         except:
             pass
 
     # Read latest plan
-    plans = sorted(_glob.glob(f"{logs_dir}/plan-*.md"), reverse=True)
+    plans = sorted(glob.glob(f"{logs_dir}/plan-*.md"), reverse=True)
     if plans:
         try:
             with open(plans[0]) as f:
@@ -657,7 +657,7 @@ def get_loop_data():
             pass
 
     # Read latest critique
-    critiques = sorted(_glob.glob(f"{logs_dir}/critique-*.md"), reverse=True)
+    critiques = sorted(glob.glob(f"{logs_dir}/critique-*.md"), reverse=True)
     if critiques:
         try:
             with open(critiques[0]) as f:
@@ -668,13 +668,13 @@ def get_loop_data():
     # Build cycle history from QA reports
     for qr in sorted(qa_reports)[-10:]:
         try:
-            import json as _json
+            
             with open(qr) as f:
-                q = _json.load(f)
-            import os as _os
-            fname = _os.path.basename(qr)
+                q = json.load(f)
+            
+            fname = os.path.basename(qr)
             # Extract cycle number from filename: qa-report-1.json
-            m3 = _re.search(r'qa-report-(\d+)', fname)
+            m3 = re.search(r'qa-report-(\d+)', fname)
             cnum = int(m3.group(1)) if m3 else 0
             result["cycle_history"].append({
                 "cycle": cnum,
@@ -688,9 +688,9 @@ def get_loop_data():
     # Read loop state file
     state_file = f"{logs_dir}/loop-state.json"
     try:
-        import json as _json
+        
         with open(state_file) as f:
-            state = _json.load(f)
+            state = json.load(f)
         result["cycle"] = max(result["cycle"], state.get("next_cycle", 1) - 1)
     except:
         pass
@@ -752,6 +752,7 @@ def api_status():
         "health": contract_health(),
         "contract_data": get_contract_data(),
         "timeline": build_timeline(),
+        "loop": get_loop_data(),
         "qa_log": read_file(f"{CONTROL}/dispatcher-logs/qa-agent.log", tail=30),
         "watchdog_log": read_file(f"{CONTROL}/dispatcher-logs/watchdog.log", tail=15),
     }

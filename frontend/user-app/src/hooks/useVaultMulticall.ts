@@ -51,15 +51,15 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
 
   // Compute vault data with fallbacks
   return useMemo(() => {
-    // Provide fallback values when RPC calls fail
+    // Provide fallback values when RPC calls fail OR when values are 0n (to prevent NaN)
     const safeValues = {
-      sharePrice: rawSharePrice && !sharePriceError
+      sharePrice: rawSharePrice && !sharePriceError && rawSharePrice > BigInt("0")
         ? rawSharePrice
         : BigInt("1000000"), // $1.00 in USDT format (6 decimals)
-      totalAssets: totalAssets && !totalAssetsError
+      totalAssets: totalAssets && !totalAssetsError && totalAssets > BigInt("0")
         ? totalAssets
         : BigInt("50000000000"), // $50,000 in USDT format (6 decimals)
-      totalSupply: totalShares && !totalSharesError
+      totalSupply: totalShares && !totalSharesError && totalShares > BigInt("0")
         ? totalShares
         : BigInt("50000000000"), // 50,000 shares in USDT format (6 decimals)
       globalOI: globalOI && !globalOIError

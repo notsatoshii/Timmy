@@ -1,0 +1,8 @@
+{
+  "task_id": "3",
+  "lane": "CONTRACT",
+  "title": "Redeploy ExecutionEngine with Correct LeverageModel Address [CRITICAL]",
+  "started": "2026-03-17T05:42:24.806058",
+  "pid": 936111,
+  "log": "/home/lever/lever-protocol/control-plane/dispatcher-logs/task-3-054224.log"
+}
