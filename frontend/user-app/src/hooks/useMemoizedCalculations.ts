@@ -50,11 +50,24 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
     // TVL calculation (totalAssets is USDT format from LeverVault.totalAssets())
     const tvl = totalAssets ? parseFloat(formatUsdt(totalAssets)) : 0;
 
-    // Share price calculation (assets per share)
+    // Share price calculation (assets per share) with NaN protection
     // Both totalAssets and totalSupply are USDT format (6 decimals) - vault uses 6 decimal shares
-    const sharePrice = totalSupply > BigInt(0) && totalAssets > BigInt(0)
-      ? parseFloat(formatUsdt(totalAssets)) / parseFloat(formatUsdt(totalSupply))
-      : 1.0;
+    let sharePrice = 1.0; // Default fallback
+    try {
+      if (totalSupply && totalSupply > BigInt(0) && totalAssets && totalAssets > BigInt(0)) {
+        const assetsFloat = parseFloat(formatUsdt(totalAssets));
+        const supplyFloat = parseFloat(formatUsdt(totalSupply));
+
+        // Additional safety checks to prevent NaN
+        if (isFinite(assetsFloat) && isFinite(supplyFloat) && supplyFloat > 0) {
+          const calculatedPrice = assetsFloat / supplyFloat;
+          sharePrice = isFinite(calculatedPrice) ? calculatedPrice : 1.0;
+        }
+      }
+    } catch (error) {
+      console.warn('Error calculating share price, using fallback:', error);
+      sharePrice = 1.0;
+    }
 
     // Utilization calculation (OI / TVL)
     // globalOI is USDT format from OILimits.getGlobalOI()

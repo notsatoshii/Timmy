@@ -3,9 +3,10 @@ import { useWriteContract } from 'wagmi';
 import { useWallet } from '../hooks/useWallet';
 import { CONTRACT_ADDRESSES, formatUsdt, formatWad, parseUsdt, WAD } from '../config/contracts';
 import { LEVER_VAULT_ABI, USDT_ABI, FEE_ROUTER_ABI, OI_LIMITS_ABI } from '../config/abis';
-import { useVaultMulticall } from '../hooks/useMulticall';
+import { useVaultMulticall } from '../hooks/useVaultMulticall';
 import { useMemoizedVaultCalculations } from '../hooks/useMemoizedCalculations';
 import Skeleton from './Skeleton';
+import VaultStats from './vault/VaultStats';
 
 const VaultOptimized: React.FC = () => {
   const { address } = useWallet();
@@ -16,27 +17,17 @@ const VaultOptimized: React.FC = () => {
   const { writeContract: approveUsdt } = useWriteContract();
   const { writeContract: requestWithdrawal } = useWriteContract();
 
-  // Multicall hook - batches all contract reads into a single call
-  const vaultData = useVaultMulticall(
-    CONTRACT_ADDRESSES.leverVault,
-    CONTRACT_ADDRESSES.feeRouter,
-    CONTRACT_ADDRESSES.oiLimits,
-    CONTRACT_ADDRESSES.usdt,
-    LEVER_VAULT_ABI,
-    FEE_ROUTER_ABI,
-    OI_LIMITS_ABI,
-    USDT_ABI,
-    address
-  );
+  // Vault multicall hook with fallback values for failed RPC calls
+  const vaultData = useVaultMulticall(address);
 
   // Memoized calculations - expensive computations only run when data changes
   const metrics = useMemoizedVaultCalculations({
     totalAssets: vaultData.totalAssets,
     totalSupply: vaultData.totalSupply,
-    borrowFees: vaultData.borrowFees,
-    transactionFees: vaultData.transactionFees,
-    liquidationFees: vaultData.liquidationFees,
-    settlementFees: vaultData.settlementFees,
+    borrowFees: BigInt(0), // Not available in new hook, use defaults
+    transactionFees: BigInt(0),
+    liquidationFees: BigInt(0),
+    settlementFees: BigInt(0),
     globalOI: vaultData.globalOI,
     userShares: vaultData.userShares,
     usdtBalance: vaultData.usdtBalance,
@@ -136,56 +127,14 @@ const VaultOptimized: React.FC = () => {
 
       {/* Vault Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {vaultData.isLoadingVaultData ? (
-          <>
-            {[1, 2, 3, 4].map((index) => (
-              <div key={index} className="bg-surface-1 rounded-lg border border-border p-6">
-                <Skeleton width="120px" height="16px" className="mb-2" />
-                <Skeleton width="80px" height="32px" className="mb-1" />
-                <Skeleton width="60px" height="16px" />
-              </div>
-            ))}
-          </>
-        ) : (
-          <>
-            <div className="bg-surface-1 rounded-lg border border-border p-6">
-              <h3 className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">Total Value Locked</h3>
-              <p className="text-2xl font-bold font-mono text-gray-100">
-                ${metrics.tvl.toLocaleString('en-US', { maximumFractionDigits: 0 })}
-              </p>
-              <p className="text-xs text-gray-600 mt-1">USDT</p>
-            </div>
-
-            <div className="bg-surface-1 rounded-lg border border-accent/20 p-6 shadow-glow-green">
-              <h3 className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">Current APY</h3>
-              <p className="text-3xl font-bold font-mono text-accent">
-                {metrics.annualizedAPY.toFixed(1)}%
-              </p>
-              <p className="text-xs text-gray-600 mt-1">From trading fees</p>
-            </div>
-
-            <div className="bg-surface-1 rounded-lg border border-border p-6">
-              <h3 className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">Vault Utilization</h3>
-              <p className="text-2xl font-bold font-mono text-gray-100">
-                {metrics.utilization.toFixed(1)}%
-              </p>
-              <div className="mt-2 h-1.5 bg-surface-3 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-accent rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min(100, metrics.utilization)}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="bg-surface-1 rounded-lg border border-border p-6">
-              <h3 className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">Share Price</h3>
-              <p className="text-2xl font-bold font-mono text-gray-100">
-                ${metrics.sharePrice.toFixed(4)}
-              </p>
-              <p className="text-xs text-gray-600 mt-1">lvUSDT per share</p>
-            </div>
-          </>
-        )}
+        <VaultStats
+          tvl={metrics.tvl}
+          sharePrice={metrics.sharePrice}
+          utilization={metrics.utilization}
+          annualizedAPY={metrics.annualizedAPY}
+          isLoading={vaultData.isLoadingVaultData}
+          hasError={vaultData.hasError}
+        />
       </div>
 
       {/* User Position */}

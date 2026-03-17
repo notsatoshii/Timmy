@@ -1,0 +1,57 @@
+{
+  "tasks": [
+    {
+      "id": "1",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "Fixing React hooks and components for vault display, no dependencies on other fixes"
+    },
+    {
+      "id": "2",
+      "lane": "CONTRACT",
+      "depends_on": [],
+      "reason": "Contract deployment and address fixing, independent of frontend display issues"
+    },
+    {
+      "id": "3",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "Frontend hook debugging with demo fallback, can proceed independently"
+    },
+    {
+      "id": "4",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "Simple frontend config update, no dependencies on other work"
+    },
+    {
+      "id": "5",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "Frontend RPC resilience improvements, independent of other data fixes"
+    },
+    {
+      "id": "6",
+      "lane": "INFRA",
+      "depends_on": [],
+      "reason": "Infrastructure service management, independent of contract and frontend fixes"
+    },
+    {
+      "id": "7",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "Frontend decimal formatting fix for existing contract data"
+    },
+    {
+      "id": "8",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "1",
+        "3",
+        "5",
+        "7"
+      ],
+      "reason": "Polish work adding loading states should come after underlying data issues are resolved to avoid component conflicts"
+    }
+  ]
+}

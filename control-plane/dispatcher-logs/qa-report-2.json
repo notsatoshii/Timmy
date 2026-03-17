@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-03-17T05:29:48.440028+00:00",
+  "frontend_status": "UP",
+  "data_checks": [
+    {
+      "name": "TVL",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Positions",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Global OI",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Insurance Fund",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Max Leverage",
+      "value": "",
+      "status": "error"
+    }
+  ],
+  "visual_issues": [
+    "Vision: $NaN share price in vault tab",
+    "Vision: All position values showing $0.00",
+    "Vision: Position opening fails with error message"
+  ],
+  "functional_issues": [],
+  "critical_blockers": [],
+  "score": 70,
+  "vision_review": {
+    "professional_score": 4,
+    "trust_score": 2,
+    "deal_breakers": [
+      "$NaN share price in vault tab",
+      "All position values showing $0.00",
+      "Position opening fails with error message"
+    ],
+    "improvements": [
+      "Fix vault data display showing real TVL instead of $0",
+      "Fix position values to show actual amounts instead of zeros",
+      "Resolve ExecutionEngine integration so positions can actually open"
+    ]
+  },
+  "recent_commits": "fa0ad23a auto: cycle tasks complete\n3932b85d fix(4): Validate 10x+ leverage functionality - comprehensive testing shows system supports up to 30x leverage with proper validation pipeline, all core functionality working correctly\n5391c757 fix(3): Fix Leverage Model integration - deploy LeverageModelFixed with proper default parameters, redeploy ExecutionEngine\n36ca264b fix(5): Dashboard Data Display with Proper Error Handling\n5cee559c fix(2): Update contract address configuration - Fixed leverageModel and executionEngine addresses to match deployed contracts",
+  "known_issues_count": 27
+}

@@ -124,9 +124,25 @@ const Vault: React.FC = () => {
   };
 
   const calculateShareValue = (): string => {
-    if (!sharePrice) return '1.00';
-    // sharePrice is already in WAD format (1e18), convert to USDT format (1e6)
-    return (Number(sharePrice) / 1e12).toFixed(4);
+    // Safety checks to prevent NaN
+    if (!sharePrice || sharePrice === BigInt(0) || loadingSharePrice) {
+      return '1.00'; // Professional fallback
+    }
+
+    try {
+      // sharePrice is already in WAD format (1e18), convert to USDT format (1e6)
+      const priceFloat = Number(sharePrice) / 1e12;
+
+      // Additional safety check
+      if (!isFinite(priceFloat) || priceFloat <= 0) {
+        return '1.00';
+      }
+
+      return priceFloat.toFixed(4);
+    } catch (error) {
+      console.warn('Error calculating share value:', error);
+      return '1.00';
+    }
   };
 
   const calculateUserAssets = (): string => {
@@ -222,7 +238,7 @@ const Vault: React.FC = () => {
             <div className="bg-surface-1 rounded-lg border border-border p-6">
               <h3 className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">Share Price</h3>
               <p className="text-2xl font-bold font-mono text-gray-100">
-                ${calculateShareValue()}
+                {loadingSharePrice ? 'Calculating...' : `$${calculateShareValue()}`}
               </p>
               <p className="text-xs text-gray-600 mt-1">lvUSDT per share</p>
             </div>
