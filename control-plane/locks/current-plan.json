@@ -4,56 +4,54 @@
       "id": "1",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Frontend build and service configuration issue. Root cause is in Vite config, dist files, and service setup. No dependencies as this is foundational infrastructure."
+      "reason": "Frontend hook and component fixes for RPC handling. Self-contained vault display issue."
     },
     {
       "id": "2",
       "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "Frontend RPC data handling issue in React hooks. Root cause is in useVaultMulticall.ts and BigInt formatting. Independent of other tasks."
+      "depends_on": [
+        "4"
+      ],
+      "reason": "Frontend error handling for position opening, but depends on contract version investigation since ExecutionEngine mismatch could be root cause of position failures."
     },
     {
       "id": "3",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Frontend position opening flow debugging. Root cause is in React components and contract config files. Contract testing is for verification only, not redeployment."
+      "reason": "Frontend multicall hook fixes for dashboard data. Self-contained RPC error handling issue."
     },
     {
       "id": "4",
-      "lane": "FRONTEND",
+      "lane": "CONTRACT",
       "depends_on": [],
-      "reason": "Frontend demo mode position display. Root cause is in React hooks and position calculation utilities. Independent frontend-only fix."
+      "reason": "Contract investigation task to read and analyze deployed contract versions. Independent analysis needed early."
     },
     {
       "id": "5",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Frontend volume calculation formula. Root cause is in React stats hooks. Independent calculation fix."
+      "reason": "Frontend calculation logic fix for volume display. Self-contained component and hook changes."
     },
     {
       "id": "6",
-      "lane": "FRONTEND",
-      "depends_on": [
-        "4"
-      ],
-      "reason": "Frontend demo mode UI improvements. Depends on task 4 because it builds comprehensive demo experience on top of fixed demo position values."
+      "lane": "CONTRACT",
+      "depends_on": [],
+      "reason": "Contract integration verification and potential fixes for fee routing. Independent contract-level issue."
     },
     {
       "id": "7",
-      "lane": "FRONTEND",
-      "depends_on": [
-        "2"
-      ],
-      "reason": "Frontend error handling utilities. Depends on task 2 because it builds comprehensive error handling on top of the RPC failure and retry logic work."
+      "lane": "INFRA",
+      "depends_on": [],
+      "reason": "Systemd service verification and price update infrastructure. Independent service management task."
     },
     {
       "id": "8",
       "lane": "FRONTEND",
       "depends_on": [
         "1",
-        "2"
+        "3"
       ],
-      "reason": "Frontend performance optimization. Depends on task 1 (homepage must load) and task 2 (RPC issues fixed) before optimizing performance makes sense."
+      "reason": "Frontend error boundary implementation touches same hook files as vault and multicall fixes. Should come after major RPC issues are resolved."
     }
   ]
 }

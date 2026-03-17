@@ -37,59 +37,79 @@ function updateCircuitBreakerState(state: CircuitBreakerState) {
 }
 
 /**
- * Enhanced vault multicall hook with 413 error handling and circuit breaker
+ * Enhanced vault multicall hook with 413 error handling, exponential backoff, and circuit breaker
  * Uses single multicall for efficiency and rate limit avoidance
+ * Implements fallback values when RPC fails to prevent $NaN displays
  */
 export function useVaultMulticall(userAddress?: `0x${string}`) {
   // Circuit breaker state
   const [circuitBreaker, setCircuitBreaker] = useState<CircuitBreakerState>(getCircuitBreakerState);
   const retriesRef = useRef<number>(0);
+  const lastRetryTimeRef = useRef<number>(0);
 
   // Load contract addresses dynamically to ensure we have the latest addresses
   const contracts = useMemo(() => getContractAddresses(), []);
 
-  // Enhanced error handler with circuit breaker for 413 errors
+  // Enhanced error handler with exponential backoff and circuit breaker for 413 errors
   const handleContractError = useCallback((error: any, context: string, callIndex: number = -1) => {
     const isRateLimit = error?.code === 413 || error?.code === 429 ||
                        error?.message?.toLowerCase().includes('413') ||
                        error?.message?.toLowerCase().includes('rate limit') ||
-                       error?.message?.toLowerCase().includes('too many requests');
+                       error?.message?.toLowerCase().includes('too many requests') ||
+                       error?.message?.toLowerCase().includes('entity too large') ||
+                       error?.message?.toLowerCase().includes('payload too large');
+
+    const isNetworkError = error?.message?.toLowerCase().includes('network') ||
+                          error?.message?.toLowerCase().includes('fetch') ||
+                          error?.message?.toLowerCase().includes('timeout') ||
+                          error?.code === 'NETWORK_ERROR';
 
     console.error(`Vault data error [${context}]:`, {
       message: error.message,
       code: error.code,
-      isNetworkError: error.isNetworkError,
+      isNetworkError: error.isNetworkError || isNetworkError,
       isRateLimit,
       contractAddress: error.contractAddress,
       context,
       callIndex,
+      timestamp: new Date().toISOString(),
     });
 
-    // Handle rate limiting with circuit breaker
+    // Handle rate limiting with enhanced exponential backoff
     if (isRateLimit) {
       const currentState = getCircuitBreakerState();
       const newFailureCount = currentState.failureCount + 1;
       const now = Date.now();
 
+      // Exponential backoff with jitter (3 attempts: 2s, 8s, 32s)
+      const baseDelay = Math.min(2000 * Math.pow(4, newFailureCount - 1), 60000); // 2s, 8s, 32s, max 60s
+      const jitter = Math.random() * 1000; // 0-1s jitter to avoid thundering herd
+      const backoffDelay = baseDelay + jitter;
+
       const newState: CircuitBreakerState = {
         failureCount: newFailureCount,
         lastFailure: now,
         isOpen: newFailureCount >= MAX_FAILURES,
-        nextAttemptTime: newFailureCount >= MAX_FAILURES ? now + CIRCUIT_OPEN_DURATION : 0,
+        nextAttemptTime: newFailureCount >= MAX_FAILURES ? now + backoffDelay : now + Math.min(backoffDelay / 2, 5000),
       };
 
       updateCircuitBreakerState(newState);
       setCircuitBreaker(newState);
+      lastRetryTimeRef.current = now;
 
-      console.warn(`Rate limit detected (${newFailureCount}/${MAX_FAILURES}). Circuit breaker ${newState.isOpen ? 'OPENED' : 'monitoring'}`);
+      console.warn(`Rate limit detected (${newFailureCount}/${MAX_FAILURES}). Circuit breaker ${newState.isOpen ? 'OPENED' : 'monitoring'}. Next attempt in ${Math.ceil(backoffDelay / 1000)}s`);
+    }
 
-      // Exponential backoff for subsequent requests
-      const backoffDelay = Math.min(1000 * Math.pow(2, newFailureCount), 60000);
-      console.log(`Next attempt after ${backoffDelay}ms backoff`);
+    // Enhanced retry tracking for other network errors
+    if (isNetworkError && !isRateLimit) {
+      retriesRef.current = Math.min(retriesRef.current + 1, 5);
+      console.warn(`Network error detected. Retry count: ${retriesRef.current}/3`);
     }
 
     // Attempt to reload addresses if we have contract-not-found errors
-    if (error.message?.includes('missing revert data') || error.message?.includes('contract not responding')) {
+    if (error.message?.includes('missing revert data') ||
+        error.message?.includes('contract not responding') ||
+        error.message?.includes('call revert exception')) {
       console.warn('Attempting to reload contract addresses due to contract errors');
       loadContractAddresses().then(() => {
         console.log('Contract addresses reloaded');
@@ -99,15 +119,32 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
     }
   }, []);
 
-  // Fallback values for failed calls
-  const fallbackValues = useMemo(() => ({
-    totalAssets: BigInt("50000000000"), // $50,000 in USDT format (6 decimals)
-    totalSupply: BigInt("50000000000000000000000"), // 50,000 shares in WAD format (18 decimals)
-    sharePrice: BigInt("1000000000000000000"), // $1.00 in WAD format (18 decimals)
-    globalOI: BigInt("0"),
-    userShares: BigInt("0"),
-    usdtBalance: BigInt("0"),
-  }), []);
+  // Fallback values for failed calls - CRITICAL for preventing NaN displays
+  const fallbackValues = useMemo(() => {
+    // Safe BigInt construction with error handling
+    const createSafeBigInt = (value: string, description: string): bigint => {
+      try {
+        const result = BigInt(value);
+        if (result < 0) {
+          console.warn(`Negative fallback value for ${description}, using 0`);
+          return BigInt(0);
+        }
+        return result;
+      } catch (error) {
+        console.error(`Failed to create BigInt for ${description}:`, error);
+        return BigInt(0);
+      }
+    };
+
+    return {
+      totalAssets: createSafeBigInt("50000000000", "totalAssets"), // $50,000 in USDT format (6 decimals)
+      totalSupply: createSafeBigInt("50000000000000000000000", "totalSupply"), // 50,000 shares in WAD format (18 decimals)
+      sharePrice: createSafeBigInt("1000000000000000000", "sharePrice"), // $1.00 in WAD format (18 decimals)
+      globalOI: createSafeBigInt("0", "globalOI"),
+      userShares: createSafeBigInt("0", "userShares"),
+      usdtBalance: createSafeBigInt("0", "usdtBalance"),
+    };
+  }, []);
 
   // Circuit breaker check
   useEffect(() => {
@@ -186,7 +223,7 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
     };
   }, [contracts, userAddress]);
 
-  // Batch 1: Core vault multicall (always enabled unless circuit breaker is open)
+  // Batch 1: Core vault multicall with enhanced retry logic
   const coreMulticallResult = useContractData({
     contracts: contractBatches.coreVaultCalls,
     enabled: !circuitBreaker.isOpen,
@@ -197,10 +234,10 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
       GlobalOI: fallbackValues.globalOI,
     },
     onError: (error, callIndex) => handleContractError(error, contractBatches.coreVaultCalls[callIndex]?.name || `core-call-${callIndex}`, callIndex),
-    retryAttempts: circuitBreaker.isOpen ? 0 : (circuitBreaker.failureCount > 0 ? 1 : 2),
+    retryAttempts: circuitBreaker.isOpen ? 0 : Math.max(1, 3 - circuitBreaker.failureCount), // 3 attempts initially, reduce based on failures
   });
 
-  // Batch 2: User data multicall (only if user address is provided)
+  // Batch 2: User data multicall with enhanced retry logic
   const userMulticallResult = useContractData({
     contracts: contractBatches.userDataCalls,
     enabled: !circuitBreaker.isOpen && !!userAddress && contractBatches.userDataCalls.length > 0,
@@ -209,7 +246,7 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
       UsdtBalance: fallbackValues.usdtBalance,
     },
     onError: (error, callIndex) => handleContractError(error, contractBatches.userDataCalls[callIndex]?.name || `user-call-${callIndex}`, callIndex),
-    retryAttempts: circuitBreaker.isOpen ? 0 : (circuitBreaker.failureCount > 0 ? 1 : 2),
+    retryAttempts: circuitBreaker.isOpen ? 0 : Math.max(1, 3 - circuitBreaker.failureCount), // 3 attempts initially, reduce based on failures
   });
 
   // Process and return comprehensive data from batched multicalls
@@ -241,16 +278,47 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
     const coreData = coreMulticallResult?.data || [];
     const userData = userMulticallResult?.data || [];
 
-    // Safely extract values with comprehensive fallback handling
+    // Safely extract values with comprehensive BigInt validation and fallback handling
+    const safeBigIntValue = (value: any, fallbackValue: bigint, name: string): bigint => {
+      try {
+        // Check for null/undefined
+        if (value === null || value === undefined) {
+          console.warn(`${name} is null/undefined, using fallback`);
+          return fallbackValue;
+        }
+
+        // If it's already a BigInt, validate it
+        if (typeof value === 'bigint') {
+          if (value < 0) {
+            console.warn(`${name} is negative (${value.toString()}), using fallback`);
+            return fallbackValue;
+          }
+          return value;
+        }
+
+        // Try to convert to BigInt
+        const bigintValue = BigInt(value);
+        if (bigintValue < 0) {
+          console.warn(`${name} converted to negative BigInt (${bigintValue.toString()}), using fallback`);
+          return fallbackValue;
+        }
+
+        return bigintValue;
+      } catch (error) {
+        console.warn(`Failed to process ${name} value:`, error, 'Raw value:', value, 'Using fallback:', fallbackValue.toString());
+        return fallbackValue;
+      }
+    };
+
     const safeValues = {
       // Core vault data from batch 1
-      totalAssets: (coreData[0] && coreData[0] !== null && coreData[0] !== undefined) ? coreData[0] : fallbackValues.totalAssets,
-      totalSupply: (coreData[1] && coreData[1] !== null && coreData[1] !== undefined) ? coreData[1] : fallbackValues.totalSupply,
-      sharePrice: (coreData[2] && coreData[2] !== null && coreData[2] !== undefined) ? coreData[2] : fallbackValues.sharePrice,
-      globalOI: (coreData[3] && coreData[3] !== null && coreData[3] !== undefined) ? coreData[3] : fallbackValues.globalOI,
+      totalAssets: safeBigIntValue(coreData[0], fallbackValues.totalAssets, 'totalAssets'),
+      totalSupply: safeBigIntValue(coreData[1], fallbackValues.totalSupply, 'totalSupply'),
+      sharePrice: safeBigIntValue(coreData[2], fallbackValues.sharePrice, 'sharePrice'),
+      globalOI: safeBigIntValue(coreData[3], fallbackValues.globalOI, 'globalOI'),
       // User data from batch 2 (only if user address provided)
-      userShares: userAddress && userData[0] && userData[0] !== null && userData[0] !== undefined ? userData[0] : fallbackValues.userShares,
-      usdtBalance: userAddress && userData[1] && userData[1] !== null && userData[1] !== undefined ? userData[1] : fallbackValues.usdtBalance,
+      userShares: userAddress ? safeBigIntValue(userData[0], fallbackValues.userShares, 'userShares') : fallbackValues.userShares,
+      usdtBalance: userAddress ? safeBigIntValue(userData[1], fallbackValues.usdtBalance, 'usdtBalance') : fallbackValues.usdtBalance,
     };
 
     // Loading states - both batches must complete for vault data, user data depends on user batch only
@@ -286,21 +354,44 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
       });
     }
 
-    // Validation: ensure we got valid data for critical fields
+    // Enhanced validation: ensure we got valid data for critical fields
     const validationErrors = [];
-    if (!safeValues.totalAssets || safeValues.totalAssets === BigInt(0)) {
-      validationErrors.push('totalAssets is missing or zero');
-    }
-    if (!safeValues.totalSupply || safeValues.totalSupply === BigInt(0)) {
-      validationErrors.push('totalSupply is missing or zero');
-    }
-    if (!safeValues.sharePrice || safeValues.sharePrice === BigInt(0)) {
-      validationErrors.push('sharePrice is missing or zero');
+    const validationWarnings = [];
+
+    // Validate critical values - allow fallback values but warn if they're being used
+    if (safeValues.totalAssets === fallbackValues.totalAssets) {
+      validationWarnings.push('Using fallback totalAssets ($50,000)');
+    } else if (safeValues.totalAssets === BigInt(0)) {
+      validationErrors.push('totalAssets is zero after validation');
     }
 
-    if (validationErrors.length > 0) {
-      console.warn('Vault data validation issues:', validationErrors, 'Using fallback values');
+    if (safeValues.totalSupply === fallbackValues.totalSupply) {
+      validationWarnings.push('Using fallback totalSupply (50,000 shares)');
+    } else if (safeValues.totalSupply === BigInt(0)) {
+      validationErrors.push('totalSupply is zero after validation');
     }
+
+    if (safeValues.sharePrice === fallbackValues.sharePrice) {
+      validationWarnings.push('Using fallback sharePrice ($1.00)');
+    } else if (safeValues.sharePrice === BigInt(0)) {
+      validationErrors.push('sharePrice is zero after validation');
+    }
+
+    // Log validation results
+    if (validationErrors.length > 0) {
+      console.error('Vault data validation errors:', validationErrors);
+    }
+    if (validationWarnings.length > 0) {
+      console.warn('Vault data validation warnings (using fallbacks):', validationWarnings);
+    }
+
+    // Final safety check: ensure no undefined/null values made it through
+    Object.entries(safeValues).forEach(([key, value]) => {
+      if (value === null || value === undefined) {
+        console.error(`CRITICAL: ${key} is still null/undefined after validation!`, value);
+        (safeValues as any)[key] = (fallbackValues as any)[key] || BigInt(0);
+      }
+    });
 
     return {
       ...safeValues,

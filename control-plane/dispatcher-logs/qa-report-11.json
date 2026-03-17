@@ -1,0 +1,53 @@
+{
+  "timestamp": "2026-03-17T07:02:55.356650+00:00",
+  "frontend_status": "UP",
+  "data_checks": [
+    {
+      "name": "TVL",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Positions",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Global OI",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Insurance Fund",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Max Leverage",
+      "value": "",
+      "status": "error"
+    }
+  ],
+  "visual_issues": [
+    "Vision: $NaN share price and TVL values",
+    "Vision: Position opening shows 'Position Open Failed'"
+  ],
+  "functional_issues": [],
+  "critical_blockers": [],
+  "score": 80,
+  "vision_review": {
+    "professional_score": 3,
+    "trust_score": 2,
+    "deal_breakers": [
+      "$NaN share price and TVL values",
+      "Position opening shows 'Position Open Failed'"
+    ],
+    "improvements": [
+      "Fix RPC errors causing NaN display values",
+      "Resolve ExecutionEngine leverage limitations blocking position opening",
+      "Display accurate 24h volume as notional rather than just collateral"
+    ]
+  },
+  "recent_commits": "8de2f013 auto: cycle tasks complete\n6fdab784 fix(1): Homepage Not Loading - Fixed React build artifacts missing from dist/ directory\nc32e7cc6 auto: cycle tasks complete\ne896c0a1 fix(7): Oracle Keeper verified running with live price updates - enhanced health-check.sh with 5min stale price detection, added verification script\n0a1fa0e3 shield: 5-layer protection against agent contract redeployment",
+  "known_issues_count": 27
+}
