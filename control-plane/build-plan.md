@@ -393,7 +393,7 @@ NOTE: Test files already exist in test/integration/. Verify they pass, don't rew
 
 ### Step 1: Fix broken tabs
 - [x] **P0** Fix Trading tab error boundary — DONE 2026-03-17. No crash existed (stale known-issue). Fixed BigInt(float) in useTradeHistory.ts, ErrorBoundary always shows details. All tabs render clean.
-- [ ] **P0** Fix Vault tab error boundary. Same process. Screenshot after.
+- [x] **P0** Fix Vault tab error boundary. Same process. Screenshot after. — DONE 2026-03-17. No crash exists (stale known-issue). ErrorBoundary already fixed to always show details, Vault properly wrapped in ErrorBoundary, no BigInt issues. VaultOptimized.tsx renders clean.
 - [ ] **P0** Fix Positions tab error boundary. Same process. Screenshot after.
 - [ ] **P0** Fix MarketDetail error boundary (shown when clicking a market). Screenshot after.
 
