@@ -1,38 +1,18 @@
-Based on the current status, I can see the situation has changed significantly since the original plan:
+Based on the QA report showing frontend DOWN (HTTP 000) and multiple critical data display issues, here are the prioritized tasks for the investor demo:
 
-## Current Status Assessment:
-- **QA Score: 100/100** (perfect)
-- **Mode: AUTO-IMPROVE** (investor demo phase complete)
-- **System Status: UP** with no critical blockers
+### 1. Fix Frontend Server [CRITICAL] [INFRA]
+- [ ] 1. Frontend is completely down (HTTP 000) - investigate and restore service. Check systemd status, rebuild if needed, verify port 3000 binding. This blocks all investor evaluation.
 
-## Revised Plan - AUTO-IMPROVE Phase
+### 2. Fix Vault Data Display [CRITICAL] [FRONTEND]  
+- [ ] 2. Vault tab shows $NaN share price and $0 TVL in demo mode. Root cause: useVaultMulticall returns undefined, 413 RPC errors. Fix RPC calls and data formatting for proper vault metrics display.
 
-Since the investor demo priorities appear to have been successfully completed (evidenced by the perfect QA score and transition to AUTO-IMPROVE mode), here's the revised plan:
+### 3. Fix Position Values Display [CRITICAL] [FRONTEND]
+- [ ] 3. Positions tab shows $0.00 for all position values in demo mode. Stub positions have zero values - need proper PnL calculation and formatting to show realistic position data to investors.
 
-### Phase 2: Post-Demo Optimization [AUTO-IMPROVE MODE]
+### 4. Fix Position Opening Limitations [HIGH] [CONTRACTS]
+- [ ] 4. ExecutionEngine uses old LeverageModel address - positions limited to 1x leverage only. Update ExecutionEngine to use new LeverageModel (0xf649e342...F9EF) to enable proper leveraged trading demo.
 
-**Current Priority: System Enhancement & Monitoring**
+### 5. Fix Volume Calculation [MEDIUM] [FRONTEND]
+- [ ] 5. 24h Volume shows collateral only instead of notional (collateral × leverage). Update volume calculation to display proper trading volumes for investor metrics.
 
-1. **Continuous Quality Monitoring** [ONGOING]
-   - ✅ QA score maintained at 100
-   - ✅ All critical systems operational
-   - ✅ No functional or visual issues detected
-
-2. **Performance Optimization** [ACTIVE]
-   - Monitor and optimize frontend response times
-   - Fine-tune contract interactions for efficiency
-   - Enhance user experience based on demo feedback
-
-3. **System Resilience** [ACTIVE]
-   - Monitor RPC stability and error handling
-   - Enhance error recovery mechanisms
-   - Maintain vault and position data consistency
-
-### Next Actions:
-- **Continue automated improvement cycles** (currently on cycle 27)
-- **Monitor for any degradation** in the perfect QA score
-- **Focus on incremental enhancements** rather than critical fixes
-
-**Status**: The investor demo blockers from the original plan appear to have been resolved successfully. The system is now in maintenance and optimization mode.
-
-Would you like me to focus on any specific area for further improvement, or investigate any particular aspect of the current system performance?
+**Priority Focus**: Tasks 1-3 are blocking all investor evaluation. Task 1 must be completed first as it prevents any frontend access. Tasks 2-3 address immediate data display issues that investors will see. Task 4 enables core functionality demonstration.
