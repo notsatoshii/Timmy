@@ -4,31 +4,31 @@
       "id": "2",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Frontend lane: modifying React hooks and utility functions for position value calculations. No dependencies as this is a standalone display bug fix."
+      "reason": "Root cause is React hooks/utils for position value display. No dependencies - standalone frontend calculation issue."
     },
     {
       "id": "4",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Frontend lane: modifying hooks and display formatting for volume calculations. No dependencies as this is an independent calculation change."
+      "reason": "Root cause is React hooks for volume calculation. No dependencies - independent frontend calculation change."
+    },
+    {
+      "id": "5",
+      "lane": "INFRA",
+      "depends_on": [],
+      "reason": "Root cause is systemd service management and Python scripts. No dependencies - standalone infrastructure service restart."
     },
     {
       "id": "6",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Frontend lane: updating config files and regenerating ABIs after contract deployment. No dependencies as ExecutionEngine redeployment already completed."
+      "reason": "Root cause is React frontend config files. No dependencies - ExecutionEngine already deployed per git history."
     },
     {
       "id": "7",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Frontend lane: enhancing React components for error handling and user feedback. No dependencies as this is UI/UX improvement independent of other fixes."
-    },
-    {
-      "id": "8",
-      "lane": "CONTRACT",
-      "depends_on": [],
-      "reason": "Contract lane: using forge console and cast commands to verify contract state and fee distribution. No dependencies as this is investigating existing contract functionality."
+      "reason": "Root cause is React component error handling enhancement. No dependencies - independent UI/UX improvement."
     }
   ]
 }
