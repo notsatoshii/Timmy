@@ -1,8 +1,0 @@
-{
-  "task_id": "1",
-  "lane": "FRONTEND",
-  "title": "Fix $NaN Share Price Display in Vault Tab [CRITICAL]",
-  "started": "2026-03-17T05:42:24.805358",
-  "pid": 936110,
-  "log": "/home/lever/lever-protocol/control-plane/dispatcher-logs/task-1-054224.log"
-}

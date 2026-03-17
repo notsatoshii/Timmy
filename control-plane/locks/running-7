@@ -1,8 +1,0 @@
-{
-  "task_id": "7",
-  "lane": "INFRA",
-  "title": "Ensure Oracle Keeper is Running for Live Price Updates [HIGH]",
-  "started": "2026-03-17T05:42:24.806780",
-  "pid": 936112,
-  "log": "/home/lever/lever-protocol/control-plane/dispatcher-logs/task-7-054224.log"
-}
