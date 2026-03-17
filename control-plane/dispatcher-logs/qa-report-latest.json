@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-17T21:23:59.260117+00:00",
+  "timestamp": "2026-03-17T21:39:57.638658+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -28,11 +28,11 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Screenshot system failed - unable to visually verify UI rendering",
-    "Vision: Markets component relies on demo_markets.json fallback data",
-    "Vision: Complex multi-contract architecture may overwhelm non-technical investors",
-    "Vision: Testnet deployment (Base Sepolia) - investors expect mainnet readiness",
-    "Vision: No visual verification of actual market data display or trading interface"
+    "Vision: Testnet environment clearly marked but may reduce perceived legitimacy for mainstream investors",
+    "Vision: Demo fallback values displayed when oracle data unavailable - could appear as 'fake' data",
+    "Vision: No clear disclaimer about risks of leveraged trading visible on landing",
+    "Vision: Complex prediction market concepts may confuse traditional finance investors",
+    "Vision: Volume showing $0 in some cases which looks inactive"
   ],
   "functional_issues": [],
   "score": 60,
@@ -40,19 +40,20 @@
     "professional_score": 8,
     "trust_score": 7,
     "issues": [
-      "Screenshot system failed - unable to visually verify UI rendering",
-      "Markets component relies on demo_markets.json fallback data",
-      "Complex multi-contract architecture may overwhelm non-technical investors",
-      "Testnet deployment (Base Sepolia) - investors expect mainnet readiness",
-      "No visual verification of actual market data display or trading interface"
+      "Testnet environment clearly marked but may reduce perceived legitimacy for mainstream investors",
+      "Demo fallback values displayed when oracle data unavailable - could appear as 'fake' data",
+      "No clear disclaimer about risks of leveraged trading visible on landing",
+      "Complex prediction market concepts may confuse traditional finance investors",
+      "Volume showing $0 in some cases which looks inactive"
     ],
     "improvements": [
-      "Fix Chrome dependencies for screenshot system to enable visual QA",
-      "Display clear mainnet timeline/roadmap on frontend",
-      "Add visual indicators for demo vs live data sources",
-      "Implement investor-focused landing page with simplified value proposition",
-      "Add system status dashboard showing contract health and data freshness",
-      "Include clear risk disclaimers and testnet warnings"
+      "Add prominent risk disclaimers for leveraged trading",
+      "Include educational tooltips explaining prediction market mechanics",
+      "Add mainnet migration timeline/roadmap visibility",
+      "Show more prominent 'TESTNET' badges to set proper expectations",
+      "Add comparison metrics to traditional perpetuals platforms",
+      "Include team/backers information for credibility",
+      "Add audit reports or security information section"
     ]
   }
 }
