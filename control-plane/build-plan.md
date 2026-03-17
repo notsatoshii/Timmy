@@ -1,29 +1,24 @@
-You're absolutely right. I violated the sprint constraints by adding tasks not in the official build plan. Let me revise the plan to strictly focus on the 3 CRITICAL priorities from the official build plan.
+Perfect! Now I can see the actual **three critical priorities** from the official build plan. Here's the **corrected plan** that strictly follows the locked sprint:
 
-## Revised Plan - Sprint Lock Compliance
+## Revised Plan - Official Build Plan Compliance
 
-### 1. Fix Vault Data Pipeline [CRITICAL] [FRONTEND]
-- [ ] Resolve useVaultMulticall returning undefined causing $NaN share price and $0 TVL display
-- [ ] Debug and fix 413 RPC timeout errors in vault data fetching  
-- [ ] Ensure vault tab shows accurate TVL and share price for investor demo
-- **Verification**: Vault tab displays real numbers, no $NaN errors
+### **Step 1: Fix Broken Tabs [CRITICAL] [FRONTEND]**
+- [ ] **P0** Fix MarketDetail error boundary (shown when clicking a market). Screenshot after.
+- **Verification**: MarketDetail tab renders without crashes, error boundary shows details properly
 
-### 2. Fix Position Values Display [CRITICAL] [FRONTEND]
-- [ ] Debug positions showing $0.00 for all values despite claiming real on-chain data
-- [ ] Verify getPosition() calls are working correctly and returning proper equity/PnL/collateral
-- [ ] Replace any remaining stub position data with actual on-chain values
-- **Verification**: Position cards show real values, not $0.00
+### **Step 2: Fix the Sanity Check [CRITICAL] [FRONTEND]**  
+- [ ] **P0** Rewrite sanity-check-frontend.sh: must click ALL 4 tabs, screenshot each, FAIL if any shows error boundary text or crashes. Save screenshots to control-plane/screenshots/ with tab name.
+- **Verification**: Automated sanity check passes for all 4 tabs with clean screenshots
 
-### 3. Resolve ExecutionEngine Leverage Limitation [CRITICAL] [CONTRACTS] 
-- [ ] Address ExecutionEngine using old LeverageModel causing 1x leverage limit
-- [ ] Fix "Position Open Failed" errors in frontend position opening
-- [ ] Ensure platform can demonstrate full leverage functionality to investors
-- **Verification**: Positions open successfully with proper leverage
+### **Step 3: Fix Leverage Model [CRITICAL] [CONTRACTS]**
+- [ ] **P0** Leverage bug: SpaceX resolves Dec 2026 (288 days). Max leverage should be 20-30x but returns 1.8x. Debug LeverageModel — check tau units, R(tau) calculation, Platform Ceiling. Fix so markets with >30 days to resolution allow 10x+ leverage.
+- [ ] **P0** After leverage fix: open 10 positions at 5-15x leverage across 5 markets using test wallet. Verify on-chain.
+- **Verification**: Markets with >30 days allow 10x+ leverage, positions open successfully
 
-## Sprint Rule Compliance
-- Work ONLY on these 3 tasks until ALL pass verification scripts
-- Do NOT redeploy protected contracts (ExecutionEngine, LeverageModel, LeverVault, PositionManager) 
-- Do NOT add tasks beyond these 3 priorities
-- Once all 3 pass verification, transition to Phase 2 per build plan
+## Sprint Lock Rules
+- **NO contract redeployment** - Debug existing LeverageModel configuration instead
+- **Work ONLY on these 3 steps** until ALL pass verification 
+- **Run mandatory verification** after each step: `npm run build && systemctl restart lever-frontend && sleep 3 && take screenshots of ALL tabs`
+- **Transition to Phase 2** only after all three steps pass completely
 
-This revised plan strictly aligns with the locked sprint priorities to ensure investor demo credibility.
+This plan now correctly aligns with the locked sprint priorities and respects the contract redeployment constraints.

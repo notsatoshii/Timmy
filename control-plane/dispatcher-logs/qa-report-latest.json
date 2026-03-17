@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-17T09:10:23.401047+00:00",
+  "timestamp": "2026-03-17T09:25:24.146051+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -28,34 +28,33 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Running on Base Sepolia testnet instead of mainnet",
-    "Vision: 24h volume shows $0 indicating no real trading activity",
-    "Vision: TVL at $50K is extremely small for institutional consideration",
-    "Vision: Uses fallback/demo values when contract calls fail",
-    "Vision: No audit information or security credentials visible",
-    "Vision: No team information or company credentials displayed"
+    "Vision: Leverage capped at 1x (health check shows market_max_leverage = 1e18) preventing core leveraged trading functionality",
+    "Vision: Build plan identifies critical $NaN share prices and $0 TVL display issues in vault data pipeline",
+    "Vision: Position values displaying as $0.00 despite claiming real on-chain data",
+    "Vision: Running on Base Sepolia testnet instead of mainnet reduces investor confidence",
+    "Vision: Cannot open positions due to ExecutionEngine leverage limitations (Position Open Failed errors)",
+    "Vision: Frontend data pipeline has 413 RPC timeout errors affecting vault data fetching"
   ],
   "functional_issues": [],
   "score": 52,
   "vision_review": {
-    "professional_score": 8,
-    "trust_score": 6,
+    "professional_score": 4,
+    "trust_score": 3,
     "issues": [
-      "Running on Base Sepolia testnet instead of mainnet",
-      "24h volume shows $0 indicating no real trading activity",
-      "TVL at $50K is extremely small for institutional consideration",
-      "Uses fallback/demo values when contract calls fail",
-      "No audit information or security credentials visible",
-      "No team information or company credentials displayed"
+      "Leverage capped at 1x (health check shows market_max_leverage = 1e18) preventing core leveraged trading functionality",
+      "Build plan identifies critical $NaN share prices and $0 TVL display issues in vault data pipeline",
+      "Position values displaying as $0.00 despite claiming real on-chain data",
+      "Running on Base Sepolia testnet instead of mainnet reduces investor confidence",
+      "Cannot open positions due to ExecutionEngine leverage limitations (Position Open Failed errors)",
+      "Frontend data pipeline has 413 RPC timeout errors affecting vault data fetching"
     ],
     "improvements": [
-      "Deploy to mainnet and show mainnet status prominently",
-      "Display audit reports and security certifications",
-      "Add team credentials and company information",
-      "Include risk warnings and regulatory disclaimers",
-      "Show historical performance data and track record",
-      "Add institutional-grade documentation links",
-      "Display insurance coverage and smart contract security measures"
+      "Fix vault data multicall returning undefined to show accurate TVL and share prices",
+      "Resolve ExecutionEngine leverage model integration to enable proper leverage functionality",
+      "Fix position value displays to show real equity/PnL/collateral instead of $0.00",
+      "Deploy to mainnet for production investor demonstration",
+      "Implement proper error handling for RPC timeouts in data fetching",
+      "Add loading states and fallback displays for failed data calls"
     ]
   }
 }
