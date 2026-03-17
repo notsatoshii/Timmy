@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useWriteContract, useReadContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useWallet } from '../hooks/useWallet';
-import { parseUnits } from 'viem';
+import { parseUnits, createWalletClient, createPublicClient, http } from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
+import { baseSepolia } from 'wagmi/chains';
 import { CONTRACT_ADDRESSES, formatUsdt, parseUsdt } from '../config/contracts';
 import { EXECUTION_ENGINE_ABI, ACCOUNT_MANAGER_ABI, USDT_ABI, LEVERAGE_MODEL_ABI } from '../config/abis';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useMarketProbabilities } from '../hooks/useMarketProbabilities';
+import { useDemo } from '../contexts/DemoContext';
 import Skeleton from './Skeleton';
 
 interface TradeForm {
@@ -24,9 +27,10 @@ interface TradingProps {
 }
 
 const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
-  const { address } = useWallet();
+  const { address, isDemoMode } = useWallet();
   const { showSuccessToast, showErrorToast, showTradeConfirmation } = useNotifications();
   const { markets: onChainMarkets } = useMarketProbabilities();
+  const { testWalletKey } = useDemo();
   const [tradeForm, setTradeForm] = useState<TradeForm>({
     marketId: selectedTrade?.marketId || '',
     direction: selectedTrade?.direction || 'long',
@@ -48,6 +52,43 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
   const { writeContract: openPosition, data: openTxHash, error: openError } = useWriteContract();
   const { writeContract: depositCollateral, data: depositTxHash, error: depositError } = useWriteContract();
   const { writeContract: approveUsdt, data: approveTxHash, error: approveError } = useWriteContract();
+
+  // Demo mode transaction handler
+  const sendDemoTransaction = async (contractAddress: `0x${string}`, abi: any, functionName: string, args: any[]) => {
+    if (!isDemoMode) return;
+
+    try {
+      const account = privateKeyToAccount(`0x${testWalletKey}` as `0x${string}`);
+
+      const publicClient = createPublicClient({
+        chain: baseSepolia,
+        transport: http(),
+      });
+
+      const walletClient = createWalletClient({
+        account,
+        chain: baseSepolia,
+        transport: http(),
+      });
+
+      // Simulate the transaction first
+      const { request } = await publicClient.simulateContract({
+        address: contractAddress,
+        abi,
+        functionName,
+        args,
+        account: account.address,
+      });
+
+      // Execute the transaction
+      const hash = await walletClient.writeContract(request);
+      console.log('Demo transaction sent:', hash);
+      return hash;
+    } catch (error) {
+      console.error('Demo transaction failed:', error);
+      throw error;
+    }
+  };
 
   // Watch for transaction confirmations
   const { isSuccess: openSuccess } = useWaitForTransactionReceipt({
@@ -177,14 +218,27 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
 
     try {
       const amount = parseUsdt(tradeForm.collateral);
-      await approveUsdt({
-        address: CONTRACT_ADDRESSES.usdt,
-        abi: USDT_ABI,
-        functionName: 'approve',
-        args: [CONTRACT_ADDRESSES.accountManager, amount],
-      });
+      if (isDemoMode) {
+        const hash = await sendDemoTransaction(
+          CONTRACT_ADDRESSES.usdt,
+          USDT_ABI,
+          'approve',
+          [CONTRACT_ADDRESSES.accountManager, amount]
+        );
+        if (hash) {
+          showSuccessToast('USDT Approved', 'Your USDT spending has been approved.', hash);
+        }
+      } else {
+        await approveUsdt({
+          address: CONTRACT_ADDRESSES.usdt,
+          abi: USDT_ABI,
+          functionName: 'approve',
+          args: [CONTRACT_ADDRESSES.accountManager, amount],
+        });
+      }
     } catch (error) {
       console.error('Error approving USDT:', error);
+      showErrorToast('Approval Failed', 'There was an error approving your USDT spending. Please try again.');
     }
   };
 
@@ -193,14 +247,27 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
 
     try {
       const amount = parseUsdt(tradeForm.collateral);
-      await depositCollateral({
-        address: CONTRACT_ADDRESSES.accountManager,
-        abi: ACCOUNT_MANAGER_ABI,
-        functionName: 'deposit',
-        args: [amount],
-      });
+      if (isDemoMode) {
+        const hash = await sendDemoTransaction(
+          CONTRACT_ADDRESSES.accountManager,
+          ACCOUNT_MANAGER_ABI,
+          'deposit',
+          [amount]
+        );
+        if (hash) {
+          showSuccessToast('Collateral Deposited', 'Your collateral has been successfully deposited to your account.', hash);
+        }
+      } else {
+        await depositCollateral({
+          address: CONTRACT_ADDRESSES.accountManager,
+          abi: ACCOUNT_MANAGER_ABI,
+          functionName: 'deposit',
+          args: [amount],
+        });
+      }
     } catch (error) {
       console.error('Error depositing collateral:', error);
+      showErrorToast('Deposit Failed', 'There was an error depositing your collateral. Please try again.');
     }
   };
 
@@ -211,17 +278,36 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
       const collateralAmount = parseUsdt(tradeForm.collateral);
       const leverage = parseUnits(tradeForm.leverage, 18);
 
-      await openPosition({
-        address: CONTRACT_ADDRESSES.executionEngine,
-        abi: EXECUTION_ENGINE_ABI,
-        functionName: 'openPosition',
-        args: [{
-          marketId: tradeForm.marketId as `0x${string}`,
-          isLong: tradeForm.direction === 'long',
-          collateral: collateralAmount,
-          leverage: leverage,
-        }],
-      });
+      if (isDemoMode) {
+        const hash = await sendDemoTransaction(
+          CONTRACT_ADDRESSES.executionEngine,
+          EXECUTION_ENGINE_ABI,
+          'openPosition',
+          [{
+            marketId: tradeForm.marketId as `0x${string}`,
+            isLong: tradeForm.direction === 'long',
+            collateral: collateralAmount,
+            leverage: leverage,
+          }]
+        );
+
+        if (hash) {
+          const marketName = selectedTrade?.marketName || 'Market Position';
+          showTradeConfirmation('open', marketName, hash);
+        }
+      } else {
+        await openPosition({
+          address: CONTRACT_ADDRESSES.executionEngine,
+          abi: EXECUTION_ENGINE_ABI,
+          functionName: 'openPosition',
+          args: [{
+            marketId: tradeForm.marketId as `0x${string}`,
+            isLong: tradeForm.direction === 'long',
+            collateral: collateralAmount,
+            leverage: leverage,
+          }],
+        });
+      }
 
       // Reset form
       setTradeForm({
@@ -232,6 +318,10 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
       });
     } catch (error) {
       console.error('Error opening position:', error);
+      showErrorToast(
+        'Position Open Failed',
+        'There was an error opening your position. Please try again.'
+      );
     }
   };
 
@@ -260,11 +350,11 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
             </p>
           </div>
         )}
-        {!address && (
+        {isDemoMode && (
           <div className="mt-2 p-3 bg-purple-muted border border-purple/20 rounded-lg">
             <p className="text-sm text-gray-300">
               <span className="font-medium text-purple">Demo mode:</span> Configure your position parameters below.
-              Connect wallet to execute trades.
+              Transactions will be executed with the test wallet.
             </p>
           </div>
         )}
@@ -397,7 +487,7 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
             </div>
 
             <div className="mt-6 space-y-3">
-              {!address ? (
+              {!address && !isDemoMode ? (
                 <div className="text-center py-4 bg-surface-0 rounded-lg border border-border">
                   <p className="text-sm text-gray-400 mb-3">Connect wallet to execute this trade</p>
                   <p className="text-xs text-gray-600 font-mono">
@@ -469,13 +559,29 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
               Get free test USDT for Base Sepolia testnet
             </p>
             <button
-              onClick={() => {
-                approveUsdt({
-                  address: CONTRACT_ADDRESSES.usdt,
-                  abi: USDT_ABI,
-                  functionName: 'faucet',
-                  args: [],
-                });
+              onClick={async () => {
+                if (isDemoMode) {
+                  try {
+                    const hash = await sendDemoTransaction(
+                      CONTRACT_ADDRESSES.usdt,
+                      USDT_ABI,
+                      'faucet',
+                      []
+                    );
+                    if (hash) {
+                      showSuccessToast('USDT Faucet', 'You received 10,000 test USDT.', hash);
+                    }
+                  } catch (error) {
+                    showErrorToast('Faucet Failed', 'There was an error getting test USDT.');
+                  }
+                } else {
+                  approveUsdt({
+                    address: CONTRACT_ADDRESSES.usdt,
+                    abi: USDT_ABI,
+                    functionName: 'faucet',
+                    args: [],
+                  });
+                }
               }}
               className="w-full bg-warning text-surface-0 py-2 px-3 rounded-md text-sm font-semibold hover:bg-warning-dim transition-colors"
             >

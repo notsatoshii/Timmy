@@ -1,8 +1,0 @@
-{
-  "task_id": "6b",
-  "lane": "INFRA",
-  "title": "Verify Oracle Keeper",
-  "started": "2026-03-17T03:54:25.638092",
-  "pid": 838678,
-  "log": "/home/lever/lever-protocol/control-plane/dispatcher-logs/task-6b-035425.log"
-}

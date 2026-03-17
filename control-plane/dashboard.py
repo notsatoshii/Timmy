@@ -1,67 +1,12 @@
 #!/usr/bin/env python3
 """
-LEVER Protocol — Timmy Dashboard v3
-All timestamps ICT (UTC+7). Live terminal. Lazy-loaded logs. Debug endpoint.
-Run: python3 dashboard.py — Access: http://SERVER_IP:8080
+LEVER Protocol — Timmy Dashboard v4
+Supports: parallel dispatcher lanes, old worker logs, execution plan, live progress.
+All timestamps ICT (UTC+7). Run: python3 dashboard.py — Access: http://SERVER_IP:8080
 """
 
 import http.server, json, os, subprocess, glob, urllib.parse, re, time, traceback
 from datetime import datetime, timezone, timedelta
-
-
-def parse_stream_json(raw_text):
-    """Parse stream-json log into readable text."""
-    lines = raw_text.strip().split('\n')
-    output = []
-    for line in lines:
-        line = line.strip()
-        if not line:
-            continue
-        if not line.startswith('{'):
-            output.append(line)
-            continue
-        try:
-            chunk = json.loads(line)
-            ctype = chunk.get('type', '')
-            if ctype == 'system':
-                model = chunk.get('model', '?')
-                output.append(f'[Session started — model: {model}]')
-            elif ctype == 'assistant':
-                msg = chunk.get('message', {})
-                for block in msg.get('content', []):
-                    bt = block.get('type', '')
-                    if bt == 'text':
-                        output.append(block['text'])
-                    elif bt == 'thinking':
-                        thought = block.get('thinking', '')
-                        if thought:
-                            output.append(f'[Thinking] {thought[:500]}')
-                    elif bt == 'tool_use':
-                        name = block.get('name', '?')
-                        inp = block.get('input', {})
-                        output.append(f'[Tool: {name}]')
-                        if isinstance(inp, dict):
-                            cmd = inp.get('command', inp.get('content', inp.get('path', '')))
-                            if cmd:
-                                output.append(f'  > {str(cmd)[:300]}')
-                    elif bt == 'tool_result':
-                        content = block.get('content', '')
-                        if isinstance(content, str) and content:
-                            output.append(content[:500])
-                        elif isinstance(content, list):
-                            for sub in content:
-                                if isinstance(sub, dict) and sub.get('text'):
-                                    output.append(sub['text'][:500])
-            elif ctype == 'result':
-                output.append('')
-                output.append('=== RESULT ===')
-                output.append(chunk.get('result', ''))
-                cost = chunk.get('total_cost_usd', 0)
-                dur = chunk.get('duration_ms', 0)
-                output.append(f'Cost: ${round(cost, 4)} | Duration: {dur // 1000}s')
-        except (json.JSONDecodeError, Exception):
-            output.append(line)
-    return '\n'.join(output)
 
 PORT = 8080
 PROJECT = "/home/lever/lever-protocol"
@@ -69,6 +14,9 @@ CONTROL = f"{PROJECT}/control-plane"
 ICT = timezone(timedelta(hours=7))
 TRIGGER_COOLDOWN = 60
 _last_trigger = 0
+
+
+# ── Helpers ─────────────────────────────────────────────────────────────────
 
 def now_ict():
     return datetime.now(ICT)
@@ -97,8 +45,8 @@ def read_file(path, tail=None, head=None):
             lines = c.strip().split('\n')
             return '\n'.join(lines[:head])
         return c
-    except Exception as ex:
-        return f"[Error reading {path}: {ex}]"
+    except:
+        return ""
 
 def fsize(path):
     try: return os.path.getsize(path)
@@ -110,21 +58,145 @@ def run_cmd(cmd, cwd=PROJECT, timeout=15):
     except:
         return ""
 
-def git_log(n=25):
-    return run_cmd(['git', 'log', '--oneline', '--format=%h %s (%ar)', f'-{n}'])
 
-def git_status():
-    return run_cmd(['git', 'status', '--short']) or "Clean — no changes"
+# ── Log parsing ─────────────────────────────────────────────────────────────
 
-def git_diff_stat():
-    return run_cmd(['git', 'diff', '--stat']) or "No uncommitted changes"
+def parse_stream_json(raw_text):
+    """Parse Claude Code stream-json log into readable text."""
+    lines = raw_text.strip().split('\n')
+    output = []
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        if not line.startswith('{'):
+            output.append(line)
+            continue
+        try:
+            chunk = json.loads(line)
+            ctype = chunk.get('type', '')
+            if ctype == 'system':
+                output.append(f'[Session started — model: {chunk.get("model", "?")}]')
+            elif ctype == 'assistant':
+                msg = chunk.get('message', {})
+                for block in msg.get('content', []):
+                    bt = block.get('type', '')
+                    if bt == 'text':
+                        output.append(block['text'])
+                    elif bt == 'thinking':
+                        thought = block.get('thinking', '')
+                        if thought:
+                            output.append(f'[Thinking] {thought[:500]}')
+                    elif bt == 'tool_use':
+                        name = block.get('name', '?')
+                        inp = block.get('input', {})
+                        output.append(f'[Tool: {name}]')
+                        if isinstance(inp, dict):
+                            cmd = inp.get('command', inp.get('content', inp.get('path', '')))
+                            if cmd:
+                                output.append(f'  > {str(cmd)[:300]}')
+                    elif bt == 'tool_result':
+                        content = block.get('content', '')
+                        if isinstance(content, str) and content:
+                            output.append(content[:500])
+                        elif isinstance(content, list):
+                            for sub in content:
+                                if isinstance(sub, dict) and sub.get('text'):
+                                    output.append(sub['text'][:500])
+            elif ctype == 'result':
+                output.append('\n=== RESULT ===')
+                output.append(chunk.get('result', ''))
+                cost = chunk.get('total_cost_usd', 0)
+                dur = chunk.get('duration_ms', 0)
+                output.append(f'Cost: ${round(cost, 4)} | Duration: {dur // 1000}s')
+        except:
+            output.append(line)
+    return '\n'.join(output)
 
-def git_last_diff():
-    return run_cmd(['git', 'diff', 'HEAD~1', '--stat'])
+
+# ── Dispatcher-aware state ──────────────────────────────────────────────────
+
+def get_dispatcher_running():
+    """Check if dispatcher service is active."""
+    try:
+        r = subprocess.run(['systemctl', 'is-active', 'lever-dispatcher'],
+                           capture_output=True, text=True, timeout=5)
+        return r.stdout.strip() == 'active'
+    except:
+        return False
+
+def get_running_agents():
+    """Get currently running agent tasks from lock files."""
+    agents = []
+    for lock in glob.glob(f"{CONTROL}/locks/running-*"):
+        try:
+            meta = json.loads(open(lock).read())
+            meta['age_s'] = int(time.time() - os.path.getmtime(lock))
+            agents.append(meta)
+        except:
+            tid = os.path.basename(lock).replace('running-', '')
+            agents.append({'task_id': tid, 'lane': '?', 'age_s': 0})
+    return agents
+
+def get_completed_tasks():
+    """Get completed task IDs from done- lock files."""
+    done = []
+    for f in glob.glob(f"{CONTROL}/locks/done-*"):
+        tid = os.path.basename(f).replace('done-', '')
+        done.append({'task_id': tid, 'time': mtime_ict(f)})
+    return done
+
+def get_failed_tasks():
+    """Get failed task IDs and reasons."""
+    failed = []
+    for f in glob.glob(f"{CONTROL}/locks/fail-*"):
+        tid = os.path.basename(f).replace('fail-', '')
+        reason = read_file(f, head=3).strip()
+        failed.append({'task_id': tid, 'reason': reason, 'time': mtime_ict(f)})
+    return failed
+
+def get_execution_plan():
+    """Read the planner's cached execution plan."""
+    path = f"{CONTROL}/locks/current-plan.json"
+    try:
+        return json.loads(open(path).read())
+    except:
+        return None
+
+def worker_running():
+    """Check if any build agent is actively working."""
+    # Dispatcher agents
+    if glob.glob(f"{CONTROL}/locks/running-*"):
+        return True
+    # Old worker lock
+    if os.path.exists("/tmp/lever-worker.lock"):
+        if time.time() - os.path.getmtime("/tmp/lever-worker.lock") < 3600:
+            return True
+    return False
+
+def worker_elapsed():
+    if not worker_running():
+        return None
+    # Dispatcher: time since oldest running agent started
+    running = glob.glob(f"{CONTROL}/locks/running-*")
+    if running:
+        try:
+            oldest = min(os.path.getmtime(l) for l in running)
+            return int(time.time() - oldest)
+        except:
+            pass
+    try:
+        return int(time.time() - os.path.getmtime("/tmp/lever-worker.lock"))
+    except:
+        return None
+
+
+# ── Data functions ──────────────────────────────────────────────────────────
 
 def find_latest_log():
-    """Find most recently modified log. Returns (path, age_seconds) or (None, None)."""
-    logs = glob.glob(f"{CONTROL}/worker-logs/worker-*.log") + glob.glob(f"{CONTROL}/nightly-logs/cycle-*.log")
+    logs = (glob.glob(f"{CONTROL}/worker-logs/worker-*.log") +
+            glob.glob(f"{CONTROL}/nightly-logs/cycle-*.log") +
+            glob.glob(f"{CONTROL}/dispatcher-logs/dispatcher.log"))
     if not logs:
         return None, None
     newest = max(logs, key=os.path.getmtime)
@@ -132,7 +204,7 @@ def find_latest_log():
     return newest, age
 
 def list_logs(subdir, pattern, n=30):
-    logs = sorted(glob.glob(f"{CONTROL}/{subdir}/{pattern}"), reverse=True)[:n]
+    logs = sorted(glob.glob(f"{CONTROL}/{subdir}/{pattern}"), key=os.path.getmtime, reverse=True)[:n]
     result = []
     for l in logs:
         name = os.path.basename(l)
@@ -140,13 +212,14 @@ def list_logs(subdir, pattern, n=30):
         mt = mtime_ict(l)
         ep = mtime_epoch(l)
         dur = None
-        m = re.search(r'(\d{8})-(\d{6})', name)
+        m = re.search(r'(\d{8})-?(\d{6})', name)
         if m:
             try:
                 start = datetime.strptime(m.group(1) + m.group(2), '%Y%m%d%H%M%S')
                 start = start.replace(tzinfo=timezone.utc).timestamp()
                 dur = max(0, int(ep - start))
-            except: pass
+            except:
+                pass
         result.append({
             "name": name, "path": l, "size": size, "time": mt,
             "duration_s": dur,
@@ -162,58 +235,63 @@ def list_summaries(n=10):
     return [{"name": os.path.basename(s), "time": mtime_ict(s), "content": read_file(s)}
             for s in sorted(glob.glob(f"{CONTROL}/nightly-logs/summary-*.md"), reverse=True)[:n]]
 
+def git_log(n=25):
+    return run_cmd(['git', 'log', '--oneline', '--format=%h %s (%ar)', f'-{n}'])
+
+def git_status():
+    return run_cmd(['git', 'status', '--short']) or "Clean"
+
+def git_diff_stat():
+    return run_cmd(['git', 'diff', '--stat']) or "No uncommitted changes"
+
+def git_last_diff():
+    return run_cmd(['git', 'diff', 'HEAD~1', '--stat'])
+
 def parse_plan(content):
-    phases, cur = [], None
+    """Parse new build-plan.md format: ### id. Title [PRIORITY]"""
+    phases = [{"name": "Phase 0-FINAL: Ship Investor Demo", "tasks": [], "done": 0, "total": 0}]
+    cur = phases[0]
     for line in content.split('\n'):
-        if line.startswith('## Phase'):
-            if cur: phases.append(cur)
-            cur = {"name": line.replace('## ', ''), "tasks": [], "done": 0, "total": 0}
-        elif cur and line.strip().startswith('- ['):
-            done = line.strip().startswith('- [x]')
-            task = line.strip()[6:].strip()
-            cur["tasks"].append({"task": task, "done": done})
+        m = re.match(r'\s*-\s*\[([ x])\]\s*(\w+)\.\s*(.*)', line)
+        if m:
+            done = m.group(1) == 'x'
+            tid = m.group(2)
+            desc = m.group(3).strip()
+            # Truncate long descriptions for display
+            if len(desc) > 120:
+                desc = desc[:117] + '...'
+            cur["tasks"].append({"task": f"{tid}. {desc}", "done": done, "id": tid})
             cur["total"] += 1
-            if done: cur["done"] += 1
-    if cur: phases.append(cur)
+            if done:
+                cur["done"] += 1
     return phases
 
-def completion_log():
-    content = read_file(f"{CONTROL}/build-plan.md")
-    lines, capture = [], False
-    for line in content.split('\n'):
-        if '## Completion Log' in line: capture = True; continue
-        if capture and line.strip() and not line.strip().startswith('<!--'):
-            lines.append(line.strip())
-    return lines
-
-def worker_running():
-    if not os.path.exists("/tmp/lever-worker.lock"): return False
-    if time.time() - os.path.getmtime("/tmp/lever-worker.lock") > 3600: return False
-    return True
-
-def worker_elapsed():
-    if not worker_running(): return None
-    try: return int(time.time() - os.path.getmtime("/tmp/lever-worker.lock"))
-    except: return None
-
-def next_task():
+def next_task_label():
+    """Summary of what's currently being worked on."""
+    agents = get_running_agents()
+    if agents:
+        parts = []
+        for a in agents:
+            lane = a.get('lane', '?')
+            tid = a.get('task_id', '?')
+            title = a.get('title', '')
+            short = title[:40] + '...' if len(title) > 40 else title
+            parts.append(f"[{lane[0] if lane else '?'}] {tid}: {short}")
+        return " | ".join(parts)
     content = read_file(f"{CONTROL}/build-plan.md")
     for line in content.split('\n'):
-        if re.match(r'\s*-\s*\[\s*\]\s*\*\*P0\*\*', line):
-            return line.strip().replace('- [ ] ', '')
-    for line in content.split('\n'):
-        if re.match(r'\s*-\s*\[\s*\]\s*\*\*P1\*\*', line):
-            return line.strip().replace('- [ ] ', '')
+        m = re.match(r'\s*-\s*\[\s*\]\s*(\w+)\.\s*(.*)', line)
+        if m:
+            return f"{m.group(1)}. {m.group(2)[:80]}"
     return "All tasks complete"
 
 def contract_health():
-    contracts = [c for c in glob.glob(f"{PROJECT}/contracts/**/*.sol", recursive=True)
-                 if '/interfaces/' not in c and '/libraries/' not in c]
+    contracts = [c for c in glob.glob(f"{PROJECT}/src/**/*.sol", recursive=True)]
     tests = glob.glob(f"{PROJECT}/test/*.t.sol") + glob.glob(f"{PROJECT}/test/**/*.t.sol", recursive=True)
-    libs = glob.glob(f"{PROJECT}/contracts/libraries/*.sol")
-    return {"contracts": len(contracts), "tests": len(tests), "libraries": len(libs)}
+    return {"contracts": len(contracts), "tests": len(tests)}
 
-# --- API Endpoints ---
+
+# ── API ─────────────────────────────────────────────────────────────────────
 
 def api_status():
     bp = read_file(f"{CONTROL}/build-plan.md")
@@ -222,17 +300,24 @@ def api_status():
     return {
         "now": fmt_ict(),
         "build_plan": parse_plan(bp),
-        "completion_log": completion_log(),
         "known_issues": read_file(f"{CONTROL}/known-issues.md"),
-        "git_log": git_log(), "git_status": git_status(),
-        "git_diff": git_diff_stat(), "git_last_diff": git_last_diff(),
+        "git_log": git_log(),
+        "git_status": git_status(),
+        "git_diff": git_diff_stat(),
+        "git_last_diff": git_last_diff(),
         "running": worker_running(),
+        "dispatcher_active": get_dispatcher_running(),
+        "agents": get_running_agents(),
+        "completed": get_completed_tasks(),
+        "failed": get_failed_tasks(),
+        "execution_plan": get_execution_plan(),
         "elapsed_s": el,
         "elapsed": f"{el // 60}m {el % 60}s" if el else None,
-        "next_task": next_task(),
+        "next_task": next_task_label(),
         "active_log": os.path.basename(log_path) if log_path else None,
         "active_log_age": int(log_age) if log_age is not None else None,
         "worker_logs": list_logs("worker-logs", "worker-*.log"),
+        "dispatcher_logs": list_logs("dispatcher-logs", "task-*.log"),
         "nightly_logs": list_logs("nightly-logs", "cycle-*.log"),
         "reports": list_reports(),
         "summaries": list_summaries(),
@@ -240,25 +325,35 @@ def api_status():
         "health": contract_health(),
     }
 
-def api_live(n=200):
+def api_live(n=250):
+    # Prefer dispatcher log
+    dlog = f"{CONTROL}/dispatcher-logs/dispatcher.log"
     log_path, log_age = find_latest_log()
     el = worker_elapsed()
     running = worker_running()
-    if not log_path:
-        # No logs at all — check if test-phase.log exists as fallback
-        fallback = f"{PROJECT}/test-phase.log"
-        if os.path.exists(fallback):
-            return {
-                "log": read_file(fallback, tail=n),
-                "file": "test-phase.log (fallback)", "size": fsize(fallback),
-                "running": running, "stale": True,
-                "elapsed": None, "next_task": next_task(),
-            }
+
+    # Use dispatcher log if it exists and is fresh
+    if os.path.exists(dlog) and (time.time() - mtime_epoch(dlog)) < 120:
+        content = read_file(dlog, tail=n)
         return {
-            "log": "No log files found yet.\n\nWorker logs appear in: control-plane/worker-logs/\nNightly logs appear in: control-plane/nightly-logs/\n\nTrigger a worker run with the Run button above.",
-            "file": None, "size": 0, "running": running, "stale": True,
-            "elapsed": None, "next_task": next_task(),
+            "log": content,  # dispatcher log is plain text, not stream-json
+            "file": "dispatcher.log",
+            "size": fsize(dlog),
+            "running": running,
+            "stale": False,
+            "elapsed_s": el,
+            "elapsed": f"{el // 60}m {el % 60}s" if el else None,
+            "next_task": next_task_label(),
+            "agents": get_running_agents(),
         }
+
+    if not log_path:
+        return {
+            "log": "No log files found.\nDispatcher and worker logs appear in control-plane/",
+            "file": None, "size": 0, "running": running, "stale": True,
+            "elapsed": None, "next_task": next_task_label(), "agents": [],
+        }
+
     return {
         "log": parse_stream_json(read_file(log_path, tail=n)),
         "file": os.path.basename(log_path),
@@ -267,24 +362,21 @@ def api_live(n=200):
         "stale": log_age is not None and log_age > 300,
         "elapsed_s": el,
         "elapsed": f"{el // 60}m {el % 60}s" if el else None,
-        "next_task": next_task(),
+        "next_task": next_task_label(),
+        "agents": get_running_agents(),
     }
 
 def api_log(path):
     if not path:
         return "[No path specified]"
     real = os.path.realpath(path)
-    allowed_dirs = [
-        os.path.realpath(CONTROL),
-        os.path.realpath(f"{PROJECT}/test-phase.log"),
-    ]
-    ok = any(real.startswith(d) or real == d for d in allowed_dirs)
+    ok = real.startswith(os.path.realpath(CONTROL)) or real.startswith(os.path.realpath(PROJECT))
     if not ok:
-        return f"[Access denied: {path} not in allowed directories]"
+        return f"[Access denied: {path}]"
     if not os.path.exists(real):
         return f"[File not found: {path}]"
     content = read_file(path)
-    if path.endswith(".log"):
+    if path.endswith(".log") and content.strip().startswith('{'):
         return parse_stream_json(content)
     return content
 
@@ -294,50 +386,26 @@ def api_trigger():
     if now - _last_trigger < TRIGGER_COOLDOWN:
         return {"ok": False, "msg": f"Cooldown — wait {int(TRIGGER_COOLDOWN - (now - _last_trigger))}s"}
     if worker_running():
-        return {"ok": False, "msg": "Worker already running."}
+        return {"ok": False, "msg": "Agents already running."}
     try:
         subprocess.Popen(
-            ['su', '-', 'lever', '-c', f'{CONTROL}/proactive-worker.sh'],
+            ['systemctl', 'restart', 'lever-dispatcher'],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
         )
         _last_trigger = now
-        return {"ok": True, "msg": "Worker triggered. Watch the Live tab."}
+        return {"ok": True, "msg": "Dispatcher restarted. Watch the Live tab."}
     except Exception as e:
         return {"ok": False, "msg": str(e)}
 
-def api_debug():
-    log_path, log_age = find_latest_log()
-    wlogs = glob.glob(f"{CONTROL}/worker-logs/worker-*.log")
-    nlogs = glob.glob(f"{CONTROL}/nightly-logs/cycle-*.log")
-    return {
-        "now": fmt_ict(),
-        "project_dir": PROJECT,
-        "control_dir": CONTROL,
-        "project_exists": os.path.isdir(PROJECT),
-        "control_exists": os.path.isdir(CONTROL),
-        "worker_log_count": len(wlogs),
-        "nightly_log_count": len(nlogs),
-        "worker_logs": sorted([os.path.basename(l) for l in wlogs], reverse=True)[:5],
-        "nightly_logs": sorted([os.path.basename(l) for l in nlogs], reverse=True)[:5],
-        "latest_log": os.path.basename(log_path) if log_path else None,
-        "latest_log_age_s": int(log_age) if log_age is not None else None,
-        "latest_log_size": fsize(log_path) if log_path else 0,
-        "lock_exists": os.path.exists("/tmp/lever-worker.lock"),
-        "build_plan_exists": os.path.exists(f"{CONTROL}/build-plan.md"),
-        "persona_exists": os.path.exists(f"{CONTROL}/agent-persona.md"),
-        "known_issues_exists": os.path.exists(f"{CONTROL}/known-issues.md"),
-        "dashboard_pid": os.getpid(),
-    }
 
-
-# === HTML ===
+# ── HTML ────────────────────────────────────────────────────────────────────
 
 HTML = r'''<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Timmy — LEVER</title>
+<title>Timmy — LEVER Protocol</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>&#x1F916;</text></svg>">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Instrument+Sans:wght@400;500;600;700&display=swap');
@@ -350,13 +418,12 @@ HTML = r'''<!DOCTYPE html>
 --rd:#ff4868;--rdd:rgba(255,72,104,.1);
 --yl:#ffb830;--yld:rgba(255,184,48,.1);
 --bl:#4898ff;--bld:rgba(72,152,255,.1);
+--or:#ff8c42;--ord:rgba(255,140,66,.1);
 --r:10px}
 *{margin:0;padding:0;box-sizing:border-box}
 html{font-size:14px}
-body{background:var(--bg);color:var(--tx);font-family:'Instrument Sans',sans-serif;-webkit-font-smoothing:antialiased;padding-bottom:60px}
+body{background:var(--bg);color:var(--tx);font-family:'Instrument Sans',sans-serif;-webkit-font-smoothing:antialiased}
 .mono{font-family:'JetBrains Mono',monospace}
-
-/* Layout */
 .app{max-width:1440px;margin:0 auto;padding:16px 16px 80px}
 
 /* Header */
@@ -396,26 +463,41 @@ body{background:var(--bg);color:var(--tx);font-family:'Instrument Sans',sans-ser
 .card-flush{padding:0}
 .card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .card-label{font:700 10px 'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:1px;color:var(--dim)}
-.badge{font:500 9px 'JetBrains Mono',monospace;padding:2px 6px;border-radius:99px}
-.b-ac{background:var(--acd);color:var(--ac)}.b-rd{background:var(--rdd);color:var(--rd)}.b-yl{background:var(--yld);color:var(--yl)}.b-pp{background:var(--ppd);color:var(--pp)}.b-bl{background:var(--bld);color:var(--bl)}
+.badge{font:500 9px 'JetBrains Mono',monospace;padding:2px 6px;border-radius:99px;display:inline-block}
+.b-ac{background:var(--acd);color:var(--ac)}.b-rd{background:var(--rdd);color:var(--rd)}.b-yl{background:var(--yld);color:var(--yl)}.b-pp{background:var(--ppd);color:var(--pp)}.b-bl{background:var(--bld);color:var(--bl)}.b-or{background:var(--ord);color:var(--or)}
 
-/* Grid */
+/* Stats grid */
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-@media(max-width:768px){.g2,.g4{grid-template-columns:1fr 1fr}}
-@media(max-width:400px){.g2,.g4{grid-template-columns:1fr}}
-
-/* Stats */
+@media(max-width:768px){.g2,.g3,.g4{grid-template-columns:1fr 1fr}}
+@media(max-width:400px){.g2,.g3,.g4{grid-template-columns:1fr}}
 .stat-n{font:700 26px 'JetBrains Mono',monospace;color:var(--wh);line-height:1}
 .stat-l{font:500 9px 'JetBrains Mono',monospace;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
 .pbar{height:5px;background:var(--s3);border-radius:3px;margin:8px 0;overflow:hidden}
 .pfill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--ac),var(--pp));transition:width .4s}
 
+/* Lane cards */
+.lane{border-radius:var(--r);padding:14px;border:1px solid var(--bdr);background:var(--s1);position:relative;overflow:hidden}
+.lane-active{border-color:var(--acb);background:linear-gradient(135deg,var(--acd),transparent)}
+.lane-idle{opacity:.5}
+.lane-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.lane-name{font:700 11px 'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:1px}
+.lane-c{color:var(--pp)}.lane-f{color:var(--bl)}.lane-i{color:var(--or)}
+.lane-task{font:500 12px 'Instrument Sans',sans-serif;color:var(--wh);margin-bottom:4px}
+.lane-meta{font:400 10px 'JetBrains Mono',monospace;color:var(--dim)}
+.lane-bar{position:absolute;bottom:0;left:0;right:0;height:2px}
+.lane-bar-active{background:linear-gradient(90deg,var(--ac),var(--pp));animation:lanePulse 2s infinite}
+@keyframes lanePulse{0%,100%{opacity:.5}50%{opacity:1}}
+
 /* Tasks */
-.task{display:flex;gap:8px;padding:4px 0;font-size:12px;line-height:1.5;align-items:flex-start}
-.task-ck{width:15px;height:15px;border-radius:4px;flex-shrink:0;border:1.5px solid var(--bdr2);display:grid;place-items:center;font-size:9px;margin-top:2px}
+.task{display:flex;gap:8px;padding:5px 0;font-size:12px;line-height:1.5;align-items:flex-start}
+.task-ck{width:16px;height:16px;border-radius:4px;flex-shrink:0;border:1.5px solid var(--bdr2);display:grid;place-items:center;font-size:9px;margin-top:1px}
 .task-ck.done{background:var(--ac);border-color:var(--ac);color:var(--bg)}
-.task-tx{color:var(--tx)}.task-tx.done{color:var(--dim);text-decoration:line-through}
+.task-ck.running{background:var(--ppd);border-color:var(--pp);animation:pulse 1.5s infinite}
+.task-ck.failed{background:var(--rdd);border-color:var(--rd)}
+.task-tx{color:var(--tx)}.task-tx.done{color:var(--dim);text-decoration:line-through}.task-tx.running{color:var(--wh);font-weight:600}.task-tx.failed{color:var(--rd)}
+.task-badge{margin-left:6px}
 
 /* Terminal */
 .term{background:#020208;border:1px solid var(--bdr);border-radius:8px;overflow:hidden}
@@ -427,7 +509,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Instrument Sans',sans-ser
 .term-body{padding:12px;max-height:72vh;overflow-y:auto;overflow-x:hidden;font:400 11px/1.7 'JetBrains Mono',monospace;color:#9898b0;white-space:pre-wrap;word-break:break-word;scroll-behavior:smooth}
 .term-body .c-err{color:var(--rd)}.term-body .c-warn{color:var(--yl)}.term-body .c-ok{color:var(--ac)}.term-body .c-head{color:var(--pp);font-weight:600}.term-body .c-info{color:var(--bl)}
 
-/* Log list items */
+/* Log list */
 .log-item{border-bottom:1px solid var(--bdr)}
 .log-item:last-child{border-bottom:none}
 .log-hdr{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;cursor:pointer;transition:.1s}
@@ -447,7 +529,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Instrument Sans',sans-ser
 .issue-crit{border-left:3px solid var(--rd)}.issue-med{border-left:3px solid var(--yl)}.issue-low{border-left:3px solid var(--bl)}.issue-done{opacity:.4}
 
 /* Banner */
-.banner{border-radius:var(--r);padding:12px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.banner{border-radius:var(--r);padding:14px 18px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
 .banner-active{background:var(--acd);border:1px solid var(--acb)}
 .banner-idle{background:var(--s1);border:1px solid var(--bdr)}
 .banner h3{font:600 13px 'Instrument Sans',sans-serif;margin:0}
@@ -456,32 +538,28 @@ body{background:var(--bg);color:var(--tx);font-family:'Instrument Sans',sans-ser
 .banner-active p{color:var(--tx)}.banner-idle p{color:var(--dim)}
 .banner .timer{font:700 14px 'JetBrains Mono',monospace;color:var(--ac)}
 
-/* Search */
+/* Dep graph */
+.dep-row{display:flex;gap:8px;padding:4px 0;font:400 11px 'JetBrains Mono',monospace;align-items:center}
+.dep-id{color:var(--wh);font-weight:600;min-width:30px}
+.dep-lane{min-width:70px}
+.dep-arrow{color:var(--dim)}
+.dep-deps{color:var(--dim)}
+
 .search{width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--bdr);background:var(--s2);color:var(--tx);font:400 12px 'Instrument Sans',sans-serif;margin-bottom:12px;outline:none}
 .search:focus{border-color:var(--ac)}.search::placeholder{color:var(--dim)}
-
-/* Toast */
 .toast{position:fixed;top:16px;right:16px;background:var(--ac);color:var(--bg);padding:10px 16px;border-radius:8px;font:600 12px 'Instrument Sans',sans-serif;z-index:999;transform:translateY(-60px);opacity:0;transition:.3s;pointer-events:none}
 .toast.show{transform:translateY(0);opacity:1}
-
-/* Status bar */
 .status-bar{position:fixed;bottom:0;left:0;right:0;background:var(--s1);border-top:1px solid var(--bdr);padding:3px 12px;font:400 9px 'JetBrains Mono',monospace;color:var(--dim);display:flex;justify-content:space-between;z-index:50}
 @media(max-width:768px){.status-bar{bottom:52px}}
-
-/* Loading */
-.loading{color:var(--dim);padding:20px;text-align:center;font:400 12px 'JetBrains Mono',monospace}
-.spin{display:inline-block;animation:spin 1s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-
+.spin{display:inline-block;animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
 ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px}
 </style>
 </head>
 <body>
 <div id="toast" class="toast"></div>
-
 <div class="app">
 <div class="hdr">
-<div class="logo"><div class="logo-icon">T</div><div class="logo-title"><h1>Timmy</h1><span>LEVER Protocol</span></div></div>
+<div class="logo"><div class="logo-icon">T</div><div class="logo-title"><h1>Timmy</h1><span>LEVER Protocol — Parallel Build</span></div></div>
 <div class="hdr-r">
 <div class="pill" id="status-pill"><div class="dot dot-off"></div><span>—</span></div>
 <div class="clock" id="clock"></div>
@@ -492,17 +570,16 @@ body{background:var(--bg);color:var(--tx);font-family:'Instrument Sans',sans-ser
 
 <div class="tabs">
 <button class="tab on" data-v="v-live">&#9889; Live</button>
-<button class="tab" data-v="v-overview">&#9632; Overview</button>
-<button class="tab" data-v="v-worker">&#128295; Worker</button>
-<button class="tab" data-v="v-nightly">&#127769; Nightly</button>
+<button class="tab" data-v="v-plan">&#9632; Plan</button>
+<button class="tab" data-v="v-work">&#128295; Work</button>
 <button class="tab" data-v="v-issues">&#9888; Issues</button>
 <button class="tab" data-v="v-git">&#128200; Git</button>
-<button class="tab" data-v="v-models">&#129504; Models</button>
 </div>
 
 <!-- LIVE -->
 <div id="v-live" class="view on">
 <div id="live-banner"></div>
+<div class="g3" id="lane-cards" style="margin-bottom:14px"></div>
 <div class="term">
 <div class="term-bar"><div class="term-dots"><div class="term-dot dot-r"></div><div class="term-dot dot-y"></div><div class="term-dot dot-g"></div></div><div class="term-title" id="live-title">Connecting...</div></div>
 <div class="term-body" id="live-term"><span class="c-info">Loading live feed...</span></div>
@@ -513,26 +590,21 @@ body{background:var(--bg);color:var(--tx);font-family:'Instrument Sans',sans-ser
 </div>
 </div>
 
-<!-- OVERVIEW -->
-<div id="v-overview" class="view">
-<div id="ov-banner"></div>
-<div class="g4" id="ov-stats"></div>
-<div id="ov-phases" style="margin-top:10px"></div>
-<div class="card" style="margin-top:10px"><div class="card-head"><span class="card-label">Shift Reports</span></div><div id="ov-reports"></div></div>
-<div class="card" style="margin-top:10px"><div class="card-head"><span class="card-label">Completion Timeline</span></div><div id="ov-timeline" class="mono" style="font-size:11px;line-height:1.8;padding:0 4px"></div></div>
+<!-- PLAN -->
+<div id="v-plan" class="view">
+<div id="plan-banner"></div>
+<div class="g4" id="plan-stats"></div>
+<div class="card" style="margin-top:10px"><div class="card-head"><span class="card-label">Execution Plan</span><span class="badge b-pp" id="plan-mode">—</span></div><div id="dep-graph"></div></div>
+<div id="plan-phases" style="margin-top:10px"></div>
+<div class="card" style="margin-top:10px"><div class="card-head"><span class="card-label">Shift Reports</span></div><div id="plan-reports"></div></div>
 </div>
 
-<!-- WORKER -->
-<div id="v-worker" class="view">
-<input class="search" placeholder="Filter worker logs..." oninput="filterItems('worker-list',this.value)">
-<div id="worker-list"></div>
-</div>
-
-<!-- NIGHTLY -->
-<div id="v-nightly" class="view">
-<input class="search" placeholder="Filter nightly logs..." oninput="filterItems('nightly-list',this.value)">
-<div id="nightly-list"></div>
-<div class="card" style="margin-top:10px"><div class="card-head"><span class="card-label">Summaries</span></div><div id="nightly-sums"></div></div>
+<!-- WORK (logs) -->
+<div id="v-work" class="view">
+<input class="search" placeholder="Filter logs..." oninput="filterItems('work-list',this.value)">
+<div class="card" style="margin-bottom:10px"><div class="card-head"><span class="card-label">Dispatcher Task Logs</span></div><div id="disp-list" class="card-flush"></div></div>
+<div class="card"><div class="card-head"><span class="card-label">Worker Logs (Legacy)</span></div><div id="work-list" class="card-flush"></div></div>
+<div class="card" style="margin-top:10px"><div class="card-head"><span class="card-label">Nightly Logs</span></div><div id="nightly-list" class="card-flush"></div></div>
 </div>
 
 <!-- ISSUES -->
@@ -544,379 +616,244 @@ body{background:var(--bg);color:var(--tx);font-family:'Instrument Sans',sans-ser
 <div class="card"><div class="card-head"><span class="card-label">Commits</span></div><div class="term"><div class="term-body" id="git-log" style="max-height:400px"></div></div></div>
 <div class="card"><div class="card-head"><span class="card-label">Working Tree</span></div><div class="term"><div class="term-body" id="git-st" style="max-height:400px"></div></div></div>
 </div>
-<div class="card" style="margin-top:10px"><div class="card-head"><span class="card-label">Last Commit Changes</span></div><div class="term"><div class="term-body" id="git-d1" style="max-height:300px"></div></div></div>
-<div class="card" style="margin-top:10px"><div class="card-head"><span class="card-label">Uncommitted Diff</span></div><div class="term"><div class="term-body" id="git-d2" style="max-height:300px"></div></div></div>
+<div class="card" style="margin-top:10px"><div class="card-head"><span class="card-label">Last Commit</span></div><div class="term"><div class="term-body" id="git-d1" style="max-height:300px"></div></div></div>
 </div>
 
-<!-- MODELS -->
-<div id="v-models" class="view">
-<div class="card"><div class="card-head"><span class="card-label">Model Router</span></div><div class="term"><div class="term-body" id="model-log" style="max-height:500px"></div></div></div>
-</div>
-</div>
-
-<!-- Mobile nav -->
 <nav class="mnav"><div class="mnav-row">
 <button class="on" data-v="v-live"><em>&#9889;</em>Live</button>
-<button data-v="v-overview"><em>&#9632;</em>Plan</button>
-<button data-v="v-worker"><em>&#128295;</em>Work</button>
+<button data-v="v-plan"><em>&#9632;</em>Plan</button>
+<button data-v="v-work"><em>&#128295;</em>Work</button>
 <button data-v="v-issues"><em>&#9888;</em>Issues</button>
 <button data-v="v-git"><em>&#128200;</em>Git</button>
 </div></nav>
-
 <div class="status-bar"><span id="sb-left">—</span><span id="sb-right">—</span></div>
+</div>
 
 <script>
-// ========== State ==========
-let DATA = {};
-let liveTimer = null;
-let prevLogLen = -1;
-let wasRunning = false;
-let lastRefresh = 0;
+let DATA={},liveTimer=null,prevLogLen=-1,wasRunning=false,lastRefresh=0;
+const loadedLogs={};
 
-// ========== Utils ==========
-function esc(s) { return s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : '' }
+function esc(s){return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):''}
+function colorize(t){if(!t)return'';return t.split('\n').map(l=>{let c='';if(/error|fail|FAIL|panic|revert|CRITICAL|❌|💀/i.test(l))c='c-err';else if(/warn|WARN|⚠/i.test(l))c='c-warn';else if(/PASS|pass|success|DONE|✅|🎉|COMPLETE/i.test(l))c='c-ok';else if(/^={3,}|^#{1,3} |PHASE|🚀|LAUNCH|📋/i.test(l))c='c-head';else if(/INFO|🧠|⚡/i.test(l))c='c-info';return c?'<span class="'+c+'">'+esc(l)+'</span>':esc(l)}).join('\n')}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500)}
+function statusBar(l,r){document.getElementById('sb-left').textContent=l||'';document.getElementById('sb-right').textContent=r||''}
 
-function colorize(text) {
-  if (!text) return '';
-  return text.split('\n').map(function(line) {
-    var cls = '';
-    if (/error|fail|FAIL|panic|revert|CRITICAL/i.test(line)) cls = 'c-err';
-    else if (/warn|WARN|WARNING|MEDIUM/i.test(line)) cls = 'c-warn';
-    else if (/PASS|pass|success|FINISHED|Done|FIXED|COMPLETE/i.test(line)) cls = 'c-ok';
-    else if (/^={3,}|^#{1,3} |PHASE|STEP:|Phase |---/i.test(line)) cls = 'c-head';
-    else if (/INFO|info|Note/i.test(line)) cls = 'c-info';
-    return cls ? '<span class="' + cls + '">' + esc(line) + '</span>' : esc(line);
-  }).join('\n');
+// Clock
+function tickClock(){const n=new Date(),utc=n.getTime()+n.getTimezoneOffset()*60000,ict=new Date(utc+7*3600000);document.getElementById('clock').innerHTML=ict.toLocaleTimeString('en-GB')+' ICT<br>'+ict.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})}
+tickClock();setInterval(tickClock,1000);
+
+// Tabs
+function switchView(id){document.querySelectorAll('.tab,.mnav button').forEach(x=>x.classList.remove('on'));document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));document.querySelectorAll('[data-v="'+id+'"]').forEach(x=>x.classList.add('on'));const el=document.getElementById(id);if(el)el.classList.add('on');if(id==='v-live')startLive();else stopLive()}
+document.querySelectorAll('.tab,.mnav button').forEach(t=>t.addEventListener('click',()=>switchView(t.getAttribute('data-v'))));
+
+// Live
+function startLive(){if(liveTimer)return;fetchLive();liveTimer=setInterval(fetchLive,3000)}
+function stopLive(){if(liveTimer){clearInterval(liveTimer);liveTimer=null}}
+function fetchLive(){
+  fetch('/api/live?n=300').then(r=>r.json()).then(d=>{
+    const el=document.getElementById('live-term');
+    const newLen=d.log?d.log.length:0;
+    if(newLen!==prevLogLen||prevLogLen===-1){
+      el.innerHTML=colorize(d.log||'Waiting for output...');
+      prevLogLen=newLen;
+      if(document.getElementById('autoscroll').checked)el.scrollTop=el.scrollHeight;
+    }
+    document.getElementById('live-title').textContent=(d.file||'No log')+(d.stale?' (stale)':'');
+    const meta=[];if(d.file)meta.push(d.file);if(d.size)meta.push((d.size/1024).toFixed(1)+'KB');if(d.elapsed)meta.push(d.elapsed);
+    document.getElementById('live-meta').textContent=meta.join(' · ')||'—';
+
+    // Banner
+    const ban=document.getElementById('live-banner');
+    const agents=d.agents||[];
+    if(d.running&&agents.length>0){
+      ban.innerHTML='<div class="banner banner-active"><div><h3>&#9889; '+agents.length+' Agent'+(agents.length>1?'s':'')+' Working</h3><p>'+esc(d.next_task||'—')+'</p></div><div class="timer">'+esc(d.elapsed||'0m 0s')+'</div></div>';
+    } else if(d.running){
+      ban.innerHTML='<div class="banner banner-active"><div><h3>&#9889; Working</h3><p>'+esc(d.next_task||'—')+'</p></div><div class="timer">'+esc(d.elapsed||'0m 0s')+'</div></div>';
+    } else {
+      ban.innerHTML='<div class="banner banner-idle"><div><h3>Idle</h3><p>'+esc(d.next_task||'All complete')+'</p></div></div>';
+    }
+
+    // Lane cards
+    renderLaneCards(agents);
+    updateStatusPill(d.running,d.elapsed,agents.length);
+    if(!d.running&&wasRunning)toast('Build shift complete!');
+    wasRunning=d.running;
+    statusBar(d.running?agents.length+' agent'+(agents.length>1?'s':'')+' active':'Idle','Live feed OK');
+  }).catch(err=>statusBar('Live error',err.message));
 }
-
-function toast(msg) {
-  var t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(function() { t.classList.remove('show') }, 3500);
-}
-
-function statusBar(left, right) {
-  document.getElementById('sb-left').textContent = left || '';
-  document.getElementById('sb-right').textContent = right || '';
-}
-
-// ========== Clock ==========
-function tickClock() {
-  var n = new Date();
-  var utc = n.getTime() + n.getTimezoneOffset() * 60000;
-  var ict = new Date(utc + 7 * 3600000);
-  var time = ict.toLocaleTimeString('en-GB');
-  var date = ict.toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short'});
-  document.getElementById('clock').innerHTML = time + ' ICT<br>' + date;
-}
-tickClock();
-setInterval(tickClock, 1000);
-
-// ========== Tabs ==========
-function switchView(id) {
-  document.querySelectorAll('.tab,.mnav button').forEach(function(x) { x.classList.remove('on') });
-  document.querySelectorAll('.view').forEach(function(x) { x.classList.remove('on') });
-  document.querySelectorAll('[data-v="' + id + '"]').forEach(function(x) { x.classList.add('on') });
-  var el = document.getElementById(id);
-  if (el) el.classList.add('on');
-  if (id === 'v-live') startLive(); else stopLive();
-}
-
-document.querySelectorAll('.tab,.mnav button').forEach(function(t) {
-  t.addEventListener('click', function() { switchView(t.getAttribute('data-v')) });
-});
-
-// ========== Live Feed ==========
-function startLive() {
-  if (liveTimer) return;
-  fetchLive();
-  liveTimer = setInterval(fetchLive, 3000);
-}
-
-function stopLive() {
-  if (liveTimer) { clearInterval(liveTimer); liveTimer = null; }
-}
-
-function fetchLive() {
-  fetch('/api/live?n=250')
-    .then(function(r) { return r.json() })
-    .then(function(d) {
-      var el = document.getElementById('live-term');
-      var newLen = d.log ? d.log.length : 0;
-
-      // Only re-render if content changed
-      if (newLen !== prevLogLen || prevLogLen === -1) {
-        el.innerHTML = colorize(d.log || 'Claude Code is thinking... output appears when it starts writing.');
-        prevLogLen = newLen;
-        if (document.getElementById('autoscroll').checked) {
-          el.scrollTop = el.scrollHeight;
-        }
-      }
-
-      // Title
-      var title = d.file || 'No active log';
-      if (d.stale && d.file) title += ' (stale)';
-      document.getElementById('live-title').textContent = title;
-
-      // Meta
-      var meta = [];
-      if (d.file) meta.push(d.file);
-      if (d.size) meta.push((d.size / 1024).toFixed(1) + 'KB');
-      if (d.elapsed) meta.push(d.elapsed);
-      document.getElementById('live-meta').textContent = meta.join(' · ') || '—';
-
-      // Banner
-      var ban = document.getElementById('live-banner');
-      if (d.running) {
-        ban.innerHTML = '<div class="banner banner-active"><div><h3>&#9889; Working</h3><p>' + esc(d.next_task || '—') + '</p></div><div class="timer">' + esc(d.elapsed || '0m 0s') + '</div></div>';
-      } else {
-        ban.innerHTML = '<div class="banner banner-idle"><div><h3>Idle</h3><p>Next: ' + esc(d.next_task || '—') + '</p></div></div>';
-      }
-
-      updateStatusPill(d.running, d.elapsed);
-
-      // Completion toast
-      if (!d.running && wasRunning) toast('Worker shift complete!');
-      wasRunning = d.running;
-
-      statusBar(d.running ? 'Worker active' : 'Worker idle', 'Live feed OK');
-    })
-    .catch(function(err) {
-      statusBar('Live feed error', err.message || 'fetch failed');
-    });
-}
-
 startLive();
 
-function updateStatusPill(running, elapsed) {
-  var p = document.getElementById('status-pill');
-  if (running) {
-    p.innerHTML = '<div class="dot dot-on"></div><span>' + (elapsed || 'Active') + '</span>';
-  } else {
-    p.innerHTML = '<div class="dot dot-off"></div><span>Idle</span>';
-  }
-}
-
-// ========== Trigger ==========
-function triggerRun() {
-  if (!confirm('Start a worker shift now?')) return;
-  fetch('/api/trigger')
-    .then(function(r) { return r.json() })
-    .then(function(d) { toast(d.msg) })
-    .catch(function() { toast('Failed to trigger') });
-}
-
-// ========== Lazy Log Loading ==========
-var loadedLogs = {};
-
-function lazyLoad(path, elemId) {
-  if (loadedLogs[elemId]) return;
-  var el = document.getElementById(elemId);
-  if (!el) return;
-  el.innerHTML = '<span class="c-info"><span class="spin">&#8635;</span> Loading full log...</span>';
-  fetch('/api/log?path=' + encodeURIComponent(path))
-    .then(function(r) { return r.text() })
-    .then(function(text) {
-      el.innerHTML = colorize(text);
-      loadedLogs[elemId] = true;
-    })
-    .catch(function(err) {
-      el.innerHTML = '<span class="c-err">Failed to load: ' + esc(err.message) + '</span>';
-    });
-}
-
-function toggleLog(itemEl) {
-  var body = itemEl.querySelector('.log-body');
-  var chev = itemEl.querySelector('.log-chev');
-  var path = itemEl.getAttribute('data-path');
-  var tid = itemEl.getAttribute('data-tid');
-
-  if (body.classList.contains('open')) {
-    body.classList.remove('open');
-    if (chev) chev.classList.remove('open');
-  } else {
-    body.classList.add('open');
-    if (chev) chev.classList.add('open');
-    if (path && tid) lazyLoad(path, tid);
-  }
-}
-
-// ========== Search ==========
-function filterItems(containerId, query) {
-  var el = document.getElementById(containerId);
-  if (!el) return;
-  var q = query.toLowerCase();
-  el.querySelectorAll('.log-item').forEach(function(item) {
-    var name = item.querySelector('.log-name');
-    var match = !q || (name && name.textContent.toLowerCase().indexOf(q) >= 0);
-    item.style.display = match ? '' : 'none';
-  });
-}
-
-// ========== Render: Overview ==========
-function renderOverview(d) {
-  var done = 0, total = 0;
-  (d.build_plan || []).forEach(function(p) { done += p.done; total += p.total });
-  var pct = total ? Math.round(done / total * 100) : 0;
-  var issues = (d.known_issues || '').match(/-\s*\[\s*\]/g);
-  var openIssues = issues ? issues.length : 0;
-  var h = d.health || {};
-
-  document.getElementById('ov-stats').innerHTML =
-    '<div class="card"><div class="stat-n">' + pct + '%</div><div class="stat-l">Build Progress</div><div class="pbar"><div class="pfill" style="width:' + pct + '%"></div></div></div>' +
-    '<div class="card"><div class="stat-n">' + openIssues + '</div><div class="stat-l">Open Issues</div></div>' +
-    '<div class="card"><div class="stat-n">' + (h.contracts || 0) + '</div><div class="stat-l">Contracts</div></div>' +
-    '<div class="card"><div class="stat-n">' + (h.tests || 0) + '</div><div class="stat-l">Test Files</div></div>';
-
-  // Banner
-  var ban = document.getElementById('ov-banner');
-  if (d.running) {
-    ban.innerHTML = '<div class="banner banner-active"><div><h3>&#9889; Worker Active</h3><p>' + esc(d.next_task) + '</p></div><div class="timer">' + esc(d.elapsed || '—') + '</div></div>';
-  } else {
-    ban.innerHTML = '<div class="banner banner-idle"><div><h3>Next Task</h3><p>' + esc(d.next_task) + '</p></div></div>';
-  }
-
-  // Phases
-  var ph = '';
-  (d.build_plan || []).forEach(function(p, pi) {
-    var pp = p.total ? Math.round(p.done / p.total * 100) : 0;
-    var isCurrent = p.done < p.total;
-    // Check if previous phases are all done
-    if (pi > 0) {
-      for (var k = 0; k < pi; k++) {
-        if (d.build_plan[k].done < d.build_plan[k].total) { isCurrent = false; break }
-      }
+function renderLaneCards(agents){
+  const lanes={CONTRACT:null,FRONTEND:null,INFRA:null};
+  agents.forEach(a=>{const l=a.lane||'?';if(lanes.hasOwnProperty(l))lanes[l]=a;});
+  let h='';
+  const colors={CONTRACT:'lane-c',FRONTEND:'lane-f',INFRA:'lane-i'};
+  Object.entries(lanes).forEach(([name,agent])=>{
+    const active=!!agent;
+    const cls=active?'lane lane-active':'lane lane-idle';
+    const colCls=colors[name]||'';
+    h+='<div class="'+cls+'">';
+    h+='<div class="lane-hdr"><span class="lane-name '+colCls+'">'+name+'</span>';
+    if(active)h+='<span class="badge b-ac">ACTIVE</span>';
+    else h+='<span class="badge" style="background:var(--s3);color:var(--dim)">IDLE</span>';
+    h+='</div>';
+    if(agent){
+      const title=agent.title||agent.task_id||'';
+      const age=agent.age_s||0;
+      h+='<div class="lane-task">'+esc(agent.task_id+': '+(title.length>50?title.slice(0,47)+'...':title))+'</div>';
+      h+='<div class="lane-meta">'+Math.floor(age/60)+'m '+age%60+'s</div>';
+      h+='<div class="lane-bar lane-bar-active"></div>';
+    } else {
+      h+='<div class="lane-task" style="color:var(--dim)">Waiting for task...</div>';
+      h+='<div class="lane-bar"></div>';
     }
-    var tasks = p.tasks.map(function(t) {
-      return '<div class="task"><div class="task-ck' + (t.done ? ' done' : '') + '">' + (t.done ? '\u2713' : '') + '</div><span class="task-tx' + (t.done ? ' done' : '') + '">' + esc(t.task) + '</span></div>';
-    }).join('');
-    ph += '<div class="card" style="' + (isCurrent ? 'border-color:var(--acb)' : '') + '"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font:600 13px Instrument Sans;color:var(--wh)">' + esc(p.name) + (isCurrent ? ' <span class="badge b-ac">CURRENT</span>' : '') + '</span><span class="mono" style="font-size:11px;color:var(--ac)">' + p.done + '/' + p.total + '</span></div><div class="pbar"><div class="pfill" style="width:' + pp + '%"></div></div>' + tasks + '</div>';
+    h+='</div>';
   });
-  document.getElementById('ov-phases').innerHTML = ph;
+  document.getElementById('lane-cards').innerHTML=h;
+}
+
+function updateStatusPill(running,elapsed,count){
+  const p=document.getElementById('status-pill');
+  if(running){p.innerHTML='<div class="dot dot-on"></div><span>'+(count||'')+'× '+(elapsed||'Active')+'</span>';}
+  else{p.innerHTML='<div class="dot dot-off"></div><span>Idle</span>';}
+}
+
+function triggerRun(){if(!confirm('Restart the dispatcher?'))return;fetch('/api/trigger').then(r=>r.json()).then(d=>toast(d.msg)).catch(()=>toast('Failed'))}
+
+// Lazy log loading
+function lazyLoad(path,elemId){
+  if(loadedLogs[elemId])return;const el=document.getElementById(elemId);if(!el)return;
+  el.innerHTML='<span class="c-info"><span class="spin">&#8635;</span> Loading...</span>';
+  fetch('/api/log?path='+encodeURIComponent(path)).then(r=>r.text()).then(t=>{el.innerHTML=colorize(t);loadedLogs[elemId]=true;}).catch(e=>{el.innerHTML='<span class="c-err">'+esc(e.message)+'</span>';});
+}
+function toggleLog(el){
+  const body=el.querySelector('.log-body'),chev=el.querySelector('.log-chev'),path=el.getAttribute('data-path'),tid=el.getAttribute('data-tid');
+  if(body.classList.contains('open')){body.classList.remove('open');if(chev)chev.classList.remove('open');}
+  else{body.classList.add('open');if(chev)chev.classList.add('open');if(path&&tid)lazyLoad(path,tid);}
+}
+function filterItems(cid,q){const el=document.getElementById(cid);if(!el)return;q=q.toLowerCase();el.querySelectorAll('.log-item').forEach(i=>{const n=i.querySelector('.log-name');i.style.display=(!q||(n&&n.textContent.toLowerCase().includes(q)))?'':'none';})}
+
+// Plan view
+function renderPlan(d){
+  const agents=d.agents||[];const completed=d.completed||[];const failed=d.failed||[];
+  const plan=d.execution_plan;
+  let done=0,total=0;
+  (d.build_plan||[]).forEach(p=>{done+=p.done;total+=p.total});
+  const pct=total?Math.round(done/total*100):0;
+  const issues=(d.known_issues||'').match(/-\s*\[\s*\]/g);const openIssues=issues?issues.length:0;
+  const h=d.health||{};
+
+  document.getElementById('plan-stats').innerHTML=
+    '<div class="card"><div class="stat-n">'+pct+'%</div><div class="stat-l">Progress</div><div class="pbar"><div class="pfill" style="width:'+pct+'%"></div></div></div>'+
+    '<div class="card"><div class="stat-n">'+agents.length+'/3</div><div class="stat-l">Active Agents</div></div>'+
+    '<div class="card"><div class="stat-n">'+done+'/'+total+'</div><div class="stat-l">Tasks Done</div></div>'+
+    '<div class="card"><div class="stat-n">'+openIssues+'</div><div class="stat-l">Open Issues</div></div>';
+
+  const ban=document.getElementById('plan-banner');
+  if(d.running){ban.innerHTML='<div class="banner banner-active"><div><h3>&#9889; Parallel Build Active</h3><p>'+esc(d.next_task)+'</p></div><div class="timer">'+esc(d.elapsed||'—')+'</div></div>';}
+  else{ban.innerHTML='<div class="banner banner-idle"><div><h3>Idle</h3><p>'+esc(d.next_task||'All complete')+'</p></div></div>';}
+
+  document.getElementById('plan-mode').textContent=d.dispatcher_active?'Dispatcher':'Legacy Worker';
+
+  // Dep graph
+  const runIds=new Set(agents.map(a=>a.task_id));
+  const doneIds=new Set(completed.map(c=>c.task_id));
+  const failIds=new Set(failed.map(f=>f.task_id));
+  let dg='';
+  if(plan&&plan.tasks){
+    plan.tasks.forEach(t=>{
+      const laneCls=t.lane==='CONTRACT'?'lane-c':t.lane==='FRONTEND'?'lane-f':'lane-i';
+      const badgeCls=t.lane==='CONTRACT'?'b-pp':t.lane==='FRONTEND'?'b-bl':'b-or';
+      let status='';
+      if(doneIds.has(t.id))status='<span class="badge b-ac">DONE</span>';
+      else if(runIds.has(t.id))status='<span class="badge b-yl">RUNNING</span>';
+      else if(failIds.has(t.id))status='<span class="badge b-rd">FAILED</span>';
+      else status='<span class="badge" style="background:var(--s3);color:var(--dim)">QUEUED</span>';
+      const deps=t.depends_on&&t.depends_on.length?'← '+t.depends_on.join(', '):'';
+      dg+='<div class="dep-row"><span class="dep-id">'+esc(t.id)+'</span><span class="dep-lane badge '+badgeCls+'">'+esc(t.lane)+'</span>'+status+'<span class="dep-arrow">'+esc(deps)+'</span></div>';
+    });
+  } else {
+    dg='<div style="padding:8px;color:var(--dim);font-size:12px">No execution plan cached yet. Dispatcher will generate one on next cycle.</div>';
+  }
+  document.getElementById('dep-graph').innerHTML=dg;
+
+  // Phases with task status
+  let ph='';
+  (d.build_plan||[]).forEach(p=>{
+    const pp=p.total?Math.round(p.done/p.total*100):0;
+    const tasks=p.tasks.map(t=>{
+      const tid=(t.id||'').toUpperCase();
+      let ckCls='',txCls='',badge='';
+      if(t.done){ckCls='done';txCls='done';}
+      else if(runIds.has(t.id)){ckCls='running';txCls='running';badge='<span class="badge b-yl task-badge">RUNNING</span>';}
+      else if(failIds.has(t.id)){ckCls='failed';txCls='failed';badge='<span class="badge b-rd task-badge">FAILED</span>';}
+      return '<div class="task"><div class="task-ck '+ckCls+'">'+(t.done?'✓':ckCls==='running'?'⚡':'')+'</div><span class="task-tx '+txCls+'">'+esc(t.task)+'</span>'+badge+'</div>';
+    }).join('');
+    ph+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font:600 13px Instrument Sans;color:var(--wh)">'+esc(p.name)+'</span><span class="mono" style="font-size:11px;color:var(--ac)">'+p.done+'/'+p.total+'</span></div><div class="pbar"><div class="pfill" style="width:'+pp+'%"></div></div>'+tasks+'</div>';
+  });
+  document.getElementById('plan-phases').innerHTML=ph;
 
   // Reports
-  var rh = '';
-  (d.reports || []).forEach(function(r, i) {
-    var cid = 'rpt-' + i;
-    rh += '<div class="log-item" data-tid="' + cid + '" onclick="toggleLog(this)"><div class="log-hdr"><span class="log-name">' + esc(r.name) + '</span><div class="log-meta"><span class="log-time">' + esc(r.time) + '</span><span class="log-chev">&#9654;</span></div></div><div class="log-body"><div class="term"><div class="term-body" id="' + cid + '" style="max-height:350px">' + colorize(r.content) + '</div></div></div></div>';
+  let rh='';
+  (d.reports||[]).forEach((r,i)=>{
+    const cid='rpt-'+i;
+    rh+='<div class="log-item" data-tid="'+cid+'" onclick="toggleLog(this)"><div class="log-hdr"><span class="log-name">'+esc(r.name)+'</span><div class="log-meta"><span class="log-time">'+esc(r.time)+'</span><span class="log-chev">&#9654;</span></div></div><div class="log-body"><div class="term"><div class="term-body" id="'+cid+'" style="max-height:350px">'+colorize(r.content)+'</div></div></div></div>';
   });
-  document.getElementById('ov-reports').innerHTML = rh || '<div class="loading">No reports yet</div>';
-
-  // Timeline
-  var tl = (d.completion_log || []).map(function(l) { return esc(l) }).join('\n');
-  document.getElementById('ov-timeline').innerHTML = tl || '<span style="color:var(--dim)">No entries yet</span>';
+  document.getElementById('plan-reports').innerHTML=rh||'<div style="padding:14px;color:var(--dim);font-size:12px">No reports yet</div>';
 }
 
-// ========== Render: Log Lists ==========
-function renderLogList(containerId, logs, prefix) {
-  var html = '';
-  (logs || []).forEach(function(l, i) {
-    var tid = prefix + '-' + i;
-    html += '<div class="log-item" data-path="' + esc(l.path) + '" data-tid="' + tid + '" onclick="toggleLog(this)">' +
-      '<div class="log-hdr"><div><span class="log-name">' + esc(l.name) + '</span></div>' +
-      '<div class="log-meta">' +
-      (l.duration ? '<span class="log-dur">' + esc(l.duration) + '</span>' : '') +
-      '<span class="log-time">' + esc(l.time) + '</span>' +
-      '<span class="badge b-bl">' + (l.size / 1024).toFixed(1) + 'KB</span>' +
-      '<span class="log-chev">&#9654;</span></div></div>' +
-      '<div class="log-body"><div class="term"><div class="term-body" id="' + tid + '" style="max-height:60vh"><span class="c-info">Click to load...</span></div></div></div></div>';
+// Log lists
+function renderLogList(cid,logs,prefix){
+  let h='';
+  (logs||[]).forEach((l,i)=>{
+    const tid=prefix+'-'+i;
+    h+='<div class="log-item" data-path="'+esc(l.path)+'" data-tid="'+tid+'" onclick="toggleLog(this)"><div class="log-hdr"><div><span class="log-name">'+esc(l.name)+'</span></div><div class="log-meta">'+(l.duration?'<span class="log-dur">'+esc(l.duration)+'</span>':'')+'<span class="log-time">'+esc(l.time)+'</span><span class="badge b-bl">'+(l.size/1024).toFixed(1)+'KB</span><span class="log-chev">&#9654;</span></div></div><div class="log-body"><div class="term"><div class="term-body" id="'+tid+'" style="max-height:60vh"><span class="c-info">Click to load...</span></div></div></div></div>';
   });
-  document.getElementById(containerId).innerHTML = html || '<div class="loading">No logs yet</div>';
+  const el=document.getElementById(cid);
+  if(el)el.innerHTML=h||'<div style="padding:14px;color:var(--dim);font-size:12px">No logs yet</div>';
 }
 
-// ========== Render: Issues ==========
-function renderIssues(d) {
-  var lines = (d.known_issues || '').split('\n');
-  var html = '<div style="padding:14px"><div class="card-head"><span class="card-label">Known Issues</span></div></div>';
-  var sev = '';
-  lines.forEach(function(line) {
-    if (/^## CRITICAL/i.test(line)) sev = 'issue-crit';
-    else if (/^## MEDIUM/i.test(line)) sev = 'issue-med';
-    else if (/^## LOW/i.test(line)) sev = 'issue-low';
-    else if (/^## AUDIT/i.test(line)) sev = '';
-    else if (line.trim().indexOf('- [') === 0) {
-      var isDone = line.indexOf('[x]') >= 0;
-      var text = line.replace(/-\s*\[.\]\s*/, '');
-      html += '<div class="issue ' + sev + (isDone ? ' issue-done' : '') + '">' + (isDone ? '\u2705' : '\u2b1c') + ' ' + esc(text) + '</div>';
-    }
+// Issues
+function renderIssues(d){
+  const lines=(d.known_issues||'').split('\n');let h='<div style="padding:14px"><div class="card-head"><span class="card-label">Known Issues</span></div></div>';let sev='';
+  lines.forEach(line=>{
+    if(/^## CRITICAL/i.test(line))sev='issue-crit';else if(/^## MEDIUM/i.test(line))sev='issue-med';else if(/^## LOW/i.test(line))sev='issue-low';else if(/^## AUDIT/i.test(line))sev='';
+    else if(line.trim().startsWith('- [')){const isDone=line.includes('[x]');const text=line.replace(/-\s*\[.\]\s*/,'');h+='<div class="issue '+sev+(isDone?' issue-done':'')+'">'+( isDone?'✅':'⬜')+' '+esc(text)+'</div>';}
   });
-  document.getElementById('issues-box').innerHTML = html;
+  document.getElementById('issues-box').innerHTML=h;
 }
 
-// ========== Render: Models ==========
-function renderModels(d) {
-  var c = esc(d.model_decisions || 'No model decisions logged yet.');
-  c = c.replace(/opus/gi, '<span class="badge b-pp">opus</span>');
-  c = c.replace(/sonnet/gi, '<span class="badge b-ac">sonnet</span>');
-  document.getElementById('model-log').innerHTML = c;
-}
-
-// ========== Main Render ==========
-function render(d) {
-  DATA = d;
-  renderOverview(d);
-  renderLogList('worker-list', d.worker_logs, 'wl');
-  renderLogList('nightly-list', d.nightly_logs, 'nl');
-
-  // Summaries
-  var sh = '';
-  (d.summaries || []).forEach(function(s, i) {
-    var cid = 'sum-' + i;
-    sh += '<div class="log-item" data-tid="' + cid + '" onclick="toggleLog(this)"><div class="log-hdr"><span class="log-name">' + esc(s.name) + '</span><div class="log-meta"><span class="log-time">' + esc(s.time) + '</span><span class="log-chev">&#9654;</span></div></div><div class="log-body"><div class="term"><div class="term-body" id="' + cid + '" style="max-height:300px">' + colorize(s.content) + '</div></div></div></div>';
-  });
-  document.getElementById('nightly-sums').innerHTML = sh || '<div class="loading">No summaries yet</div>';
-
+// Main render
+function render(d){
+  DATA=d;
+  renderPlan(d);
+  renderLogList('disp-list',d.dispatcher_logs,'dl');
+  renderLogList('work-list',d.worker_logs,'wl');
+  renderLogList('nightly-list',d.nightly_logs,'nl');
   renderIssues(d);
-  document.getElementById('git-log').innerHTML = colorize(d.git_log || '');
-  document.getElementById('git-st').innerHTML = colorize(d.git_status || 'Clean');
-  document.getElementById('git-d1').innerHTML = colorize(d.git_last_diff || 'No data');
-  document.getElementById('git-d2').innerHTML = colorize(d.git_diff || 'Clean');
-  renderModels(d);
-  updateStatusPill(d.running, d.elapsed);
-  lastRefresh = Date.now();
+  document.getElementById('git-log').innerHTML=colorize(d.git_log||'');
+  document.getElementById('git-st').innerHTML=colorize(d.git_status||'Clean');
+  document.getElementById('git-d1').innerHTML=colorize(d.git_last_diff||'No data');
+  lastRefresh=Date.now();
 }
 
-function refresh() {
-  statusBar('Refreshing...', '');
-  // Reset lazy-loaded state so logs can be re-fetched
-  loadedLogs = {};
-  fetch('/api/status')
-    .then(function(r) { return r.json() })
-    .then(function(d) { render(d); statusBar('Refreshed', d.now) })
-    .catch(function(err) { statusBar('Refresh failed', err.message) });
+function refresh(){
+  statusBar('Refreshing...','');
+  Object.keys(loadedLogs).forEach(k=>delete loadedLogs[k]);
+  fetch('/api/status').then(r=>r.json()).then(d=>{render(d);statusBar('Refreshed',d.now)}).catch(e=>statusBar('Failed',e.message));
 }
 
-// Initial load + periodic refresh
 refresh();
-setInterval(function() {
-  fetch('/api/status')
-    .then(function(r) { return r.json() })
-    .then(function(d) {
-      render(d);
-      var ago = Math.round((Date.now() - lastRefresh) / 1000);
-      statusBar(d.running ? 'Worker active' : 'Idle', 'Updated ' + ago + 's ago · ' + d.now);
-    })
-    .catch(function() {});
-}, 30000);
-
-// Update "last refreshed" display every 5s
-setInterval(function() {
-  if (lastRefresh) {
-    var ago = Math.round((Date.now() - lastRefresh) / 1000);
-    var right = document.getElementById('sb-right').textContent;
-    if (right.indexOf('Updated') >= 0) {
-      document.getElementById('sb-right').textContent = right.replace(/Updated \d+s/, 'Updated ' + ago + 's');
-    }
-  }
-}, 5000);
+setInterval(()=>{fetch('/api/status').then(r=>r.json()).then(d=>{render(d);statusBar(d.running?'Building':'Idle',d.now)}).catch(()=>{})},30000);
+setInterval(()=>{if(lastRefresh){const ago=Math.round((Date.now()-lastRefresh)/1000);const r=document.getElementById('sb-right').textContent;if(r.includes('Updated'))document.getElementById('sb-right').textContent=r.replace(/Updated \d+s/,'Updated '+ago+'s');}},5000);
 </script>
 </body>
 </html>'''
 
 
 class Handler(http.server.BaseHTTPRequestHandler):
-    def log_message(self, *a): pass
+    def log_message(self, *a):
+        pass
 
     def do_GET(self):
         try:
@@ -925,13 +862,11 @@ class Handler(http.server.BaseHTTPRequestHandler):
             if p.path == '/api/status':
                 self._json(api_status())
             elif p.path == '/api/live':
-                self._json(api_live(int(q.get('n', [200])[0])))
+                self._json(api_live(int(q.get('n', [250])[0])))
             elif p.path == '/api/log':
                 self._text(api_log(q.get('path', [''])[0]))
             elif p.path == '/api/trigger':
                 self._json(api_trigger())
-            elif p.path == '/api/debug':
-                self._json(api_debug())
             else:
                 self._html(HTML)
         except Exception as e:
@@ -962,6 +897,5 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
 
 if __name__ == '__main__':
-    print(f"Timmy Dashboard v3 — http://0.0.0.0:{PORT}")
-    print(f"All times ICT (UTC+7) | Debug: http://0.0.0.0:{PORT}/api/debug")
+    print(f"Timmy Dashboard v4 — http://0.0.0.0:{PORT}")
     http.server.HTTPServer(('0.0.0.0', PORT), Handler).serve_forever()

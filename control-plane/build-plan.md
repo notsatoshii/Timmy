@@ -30,7 +30,7 @@ RULES:
 **FAIL:** Button still errors, or position doesn't appear on-chain.
 
 ### 5a. Fix Leverage Model Contract Bug [CRITICAL]
-- [ ] 5a. LeverageModel caps leverage at ~1.8x for all markets. For SpaceX (288 days, tau=2073h), R(τ)=1-e^(-2.0×2073/24)≈1.0, maxLeverage should be ~30x. Bug is likely units mismatch in tau calc (seconds vs hours, or k scaled wrong). Read LeverageModel.sol, find maxLeverage function, trace all units. Fix the math. If redeployment is needed: (1) forge script deploy new LeverageModel, (2) update address in deploy-env.sh, (3) re-run role configuration so all contracts that call LeverageModel have the new address, (4) update frontend contract config with new address, (5) rebuild frontend.
+- [x] 5a. LeverageModel caps leverage at ~1.8x for all markets. For SpaceX (288 days, tau=2073h), R(τ)=1-e^(-2.0×2073/24)≈1.0, maxLeverage should be ~30x. Bug is likely units mismatch in tau calc (seconds vs hours, or k scaled wrong). Read LeverageModel.sol, find maxLeverage function, trace all units. Fix the math. If redeployment is needed: (1) forge script deploy new LeverageModel, (2) update address in deploy-env.sh, (3) re-run role configuration so all contracts that call LeverageModel have the new address, (4) update frontend contract config with new address, (5) rebuild frontend.
 **DONE:** `cast call $LEVERAGE_MODEL "getMaxLeverage(bytes32)(uint256)" $SPACEX_MARKET_ID` returns ≥20e18 (20x). All other contracts that reference LeverageModel still function (health-check.sh passes).
 **FAIL:** Result <5e18, or health-check.sh fails after redeployment, or other contracts revert when calling new LeverageModel.
 
@@ -45,7 +45,7 @@ RULES:
 **FAIL:** InsuranceFund still exactly $10K, or keeper service doesn't exist, or keeper dies after one run.
 
 ### 6b. Verify Oracle Keeper [HIGH]
-- [ ] 6b. Oracle keeper may not be running — prices could be stale. Check: `ps aux | grep keeper`. If not running, restart it. Verify prices are fresh: `cast call $ORACLE_ADAPTER "getPrice(bytes32)(uint256,uint256)" $SPACEX_MARKET_ID` — second return value is timestamp, must be within last 10 minutes. If keeper process doesn't exist, find how it was originally started (check systemd services, crontab, or nohup commands in bash history) and restart it as a systemd service.
+- [x] 6b. Oracle keeper may not be running — prices could be stale. Check: `ps aux | grep keeper`. If not running, restart it. Verify prices are fresh: `cast call $ORACLE_ADAPTER "getPrice(bytes32)(uint256,uint256)" $SPACEX_MARKET_ID` — second return value is timestamp, must be within last 10 minutes. If keeper process doesn't exist, find how it was originally started (check systemd services, crontab, or nohup commands in bash history) and restart it as a systemd service.
 **DONE:** Oracle keeper is running. Price timestamps for all 10 markets are within last 10 minutes.
 **FAIL:** Any market has a price older than 30 minutes, or keeper is not running.
 

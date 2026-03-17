@@ -1,41 +1,30 @@
 {
   "tasks": [
     {
-      "id": "4a",
-      "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "Frontend position opening failure requires fixing React components, contract address configuration, and demo mode signing. Root cause is in frontend code."
-    },
-    {
       "id": "5b",
-      "lane": "INFRA",
-      "depends_on": [
-        "4a"
-      ],
-      "reason": "Testing high-leverage positions via cast send commands. Depends on 4a because position opening must work before testing different leverage levels."
+      "lane": "CONTRACT",
+      "depends_on": [],
+      "reason": "Uses cast send to open positions on deployed contracts. No dependencies since 5a is already complete."
     },
     {
       "id": "7a",
       "lane": "FRONTEND",
-      "depends_on": [
-        "4a"
-      ],
-      "reason": "Fixing Positions tab crashes and display issues in React components. Depends on 4a because proper testing requires positions to exist and display correctly."
+      "depends_on": [],
+      "reason": "Fixes React component crashes in Positions tab. Frontend display bug fix."
     },
     {
       "id": "7b",
       "lane": "CONTRACT",
       "depends_on": [],
-      "reason": "Verifying and potentially fixing FundingRateEngine contract behavior. Independent contract verification using cast call commands."
+      "reason": "Uses cast call to verify funding rate engine behavior. Contract verification task."
     },
     {
       "id": "8a",
       "lane": "INFRA",
       "depends_on": [
-        "4a",
         "7a"
       ],
-      "reason": "Creating automated testing script with puppeteer and Claude Vision. Depends on frontend tabs working properly before they can be tested."
+      "reason": "Creates puppeteer testing script. Depends on 7a because it tests the Positions tab that 7a fixes."
     },
     {
       "id": "9a",
@@ -43,20 +32,17 @@
       "depends_on": [
         "8a"
       ],
-      "reason": "Adding validation rules to worker configuration files. Depends on 8a because the rule references the tab-sanity.js script created in 8a."
+      "reason": "Modifies worker rules in control-plane configs. Depends on 8a because it references the tab-sanity.js script that 8a creates."
     },
     {
       "id": "10a",
       "lane": "FRONTEND",
       "depends_on": [
-        "4a",
-        "5b",
         "7a",
-        "7b",
         "8a",
         "9a"
       ],
-      "reason": "Final visual polish of React components. Depends on all other tasks since this is the final review step after all critical and high-priority fixes."
+      "reason": "Final visual polish of React frontend. Depends on 7a (same lane, fix crashes first), 8a (needs validation script), and 9a (needs validation rule)."
     }
   ]
 }
