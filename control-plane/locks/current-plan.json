@@ -1,0 +1,42 @@
+{
+  "tasks": [
+    {
+      "id": "verify_system_status",
+      "lane": "INFRA",
+      "depends_on": [],
+      "reason": "Running health checks and testing flows uses control-plane scripts and testing infrastructure. No dependencies as this is baseline verification."
+    },
+    {
+      "id": "frontend_data_optimization",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "Optimizing React components, RPC calls, and display calculations requires changing frontend code. No dependencies as these are isolated frontend fixes."
+    },
+    {
+      "id": "demo_mode_verification",
+      "lane": "INFRA",
+      "depends_on": [
+        "verify_system_status",
+        "frontend_data_optimization"
+      ],
+      "reason": "End-to-end testing and demo script creation uses testing infrastructure. Depends on system health verification and frontend display fixes to ensure accurate testing."
+    },
+    {
+      "id": "performance_polish",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "frontend_data_optimization"
+      ],
+      "reason": "UI/UX optimization and responsive design requires frontend changes. Depends on data display fixes as further polish builds on resolved display issues."
+    },
+    {
+      "id": "documentation_handoff",
+      "lane": "INFRA",
+      "depends_on": [
+        "demo_mode_verification",
+        "performance_polish"
+      ],
+      "reason": "Creating demo scripts, documentation and taking screenshots uses infra tools. Depends on verified demo flows and completed frontend polish for accurate final documentation."
+    }
+  ]
+}
