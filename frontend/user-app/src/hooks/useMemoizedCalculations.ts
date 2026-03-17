@@ -51,17 +51,25 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
     const tvl = totalAssets ? parseFloat(formatUsdt(totalAssets)) : 0;
 
     // Share price calculation (assets per share) with NaN protection
-    // Both totalAssets and totalSupply are USDT format (6 decimals) - vault uses 6 decimal shares
+    // totalAssets is USDT format (6 decimals), totalSupply is WAD format (18 decimals) for lvUSDT shares
     let sharePrice = 1.0; // Default fallback
     try {
       if (totalSupply && totalSupply > BigInt(0) && totalAssets && totalAssets > BigInt(0)) {
-        const assetsFloat = parseFloat(formatUsdt(totalAssets));
-        const supplyFloat = parseFloat(formatUsdt(totalSupply));
+        const assetsFloat = parseFloat(formatUsdt(totalAssets)); // USDT format (6 decimals)
+        const supplyFloat = parseFloat(formatWad(totalSupply));   // WAD format (18 decimals)
 
         // Additional safety checks to prevent NaN
         if (isFinite(assetsFloat) && isFinite(supplyFloat) && supplyFloat > 0) {
           const calculatedPrice = assetsFloat / supplyFloat;
-          sharePrice = isFinite(calculatedPrice) ? calculatedPrice : 1.0;
+          if (isFinite(calculatedPrice) && calculatedPrice > 0) {
+            sharePrice = calculatedPrice;
+          } else {
+            console.warn('Invalid calculated share price:', calculatedPrice);
+            sharePrice = 1.0;
+          }
+        } else {
+          console.warn('Invalid share price inputs:', { assetsFloat, supplyFloat });
+          sharePrice = 1.0;
         }
       }
     } catch (error) {
@@ -98,12 +106,12 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
     // Daily yield from APY
     const dailyYield = annualizedAPY / 365;
 
-    // User position calculations (userShares is also 6-decimal format)
-    const userSharesFloat = userShares ? parseFloat(formatUsdt(userShares)) : 0;
+    // User position calculations (userShares is WAD format - 18 decimals)
+    const userSharesFloat = userShares ? parseFloat(formatWad(userShares)) : 0;
     const userPosition = {
       shares: userSharesFloat,
       value: userSharesFloat * sharePrice,
-      percentage: totalSupply > BigInt(0) ? (userSharesFloat / parseFloat(formatUsdt(totalSupply))) * 100 : 0,
+      percentage: totalSupply > BigInt(0) ? (userSharesFloat / parseFloat(formatWad(totalSupply))) * 100 : 0,
     };
 
     // User balance calculations (usdtBalance is USDT format from USDT.balanceOf())

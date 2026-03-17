@@ -1,62 +1,34 @@
 {
   "tasks": [
     {
-      "id": "1",
-      "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "Frontend React hooks and components changes. No dependencies as this fixes vault display issues independently."
-    },
-    {
       "id": "2",
       "lane": "FRONTEND",
-      "depends_on": [
-        "1"
-      ],
-      "reason": "Frontend position calculation fixes. Sequential after task 1 to avoid potential file conflicts in shared hooks/utils."
-    },
-    {
-      "id": "3",
-      "lane": "CONTRACT",
       "depends_on": [],
-      "reason": "Solidity contract deployment. Independent contract fix that other tasks depend on."
+      "reason": "Frontend lane: modifying React hooks and utility functions for position value calculations. No dependencies as this is a standalone display bug fix."
     },
     {
       "id": "4",
       "lane": "FRONTEND",
-      "depends_on": [
-        "2"
-      ],
-      "reason": "Frontend volume calculation changes. Sequential after other frontend display fixes to avoid conflicts."
-    },
-    {
-      "id": "5",
-      "lane": "INFRA",
       "depends_on": [],
-      "reason": "Service management and process restart. Independent infrastructure task."
+      "reason": "Frontend lane: modifying hooks and display formatting for volume calculations. No dependencies as this is an independent calculation change."
     },
     {
       "id": "6",
       "lane": "FRONTEND",
-      "depends_on": [
-        "3",
-        "4"
-      ],
-      "reason": "Frontend config updates requiring new ExecutionEngine address from task 3. Sequential after other frontend changes."
+      "depends_on": [],
+      "reason": "Frontend lane: updating config files and regenerating ABIs after contract deployment. No dependencies as ExecutionEngine redeployment already completed."
     },
     {
       "id": "7",
       "lane": "FRONTEND",
-      "depends_on": [
-        "3",
-        "6"
-      ],
-      "reason": "Frontend error handling improvements. Better to fix underlying contract issue first, then update config, then improve error handling."
+      "depends_on": [],
+      "reason": "Frontend lane: enhancing React components for error handling and user feedback. No dependencies as this is UI/UX improvement independent of other fixes."
     },
     {
       "id": "8",
       "lane": "CONTRACT",
       "depends_on": [],
-      "reason": "Contract verification and testing. Independent of ExecutionEngine deployment in task 3."
+      "reason": "Contract lane: using forge console and cast commands to verify contract state and fee distribution. No dependencies as this is investigating existing contract functionality."
     }
   ]
 }

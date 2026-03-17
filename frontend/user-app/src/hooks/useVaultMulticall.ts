@@ -212,7 +212,7 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
     retryAttempts: circuitBreaker.isOpen ? 0 : (circuitBreaker.failureCount > 0 ? 1 : 2),
   });
 
-  // Process and return comprehensive data from batched multicall
+  // Process and return comprehensive data from batched multicalls
   return useMemo(() => {
     // If circuit breaker is open, return fallback values
     if (circuitBreaker.isOpen) {
@@ -237,39 +237,44 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
       };
     }
 
-    // Extract data from batched result
-    const data = multicallResult?.data || [];
+    // Extract data from both batched results
+    const coreData = coreMulticallResult?.data || [];
+    const userData = userMulticallResult?.data || [];
 
-    // Map results to named values with proper indexing
-    const baseCallsCount = 4; // totalAssets, totalSupply, sharePrice, globalOI
-    const hasUserCalls = !!userAddress;
-
+    // Safely extract values with comprehensive fallback handling
     const safeValues = {
-      totalAssets: data[0] || fallbackValues.totalAssets,
-      totalSupply: data[1] || fallbackValues.totalSupply,
-      sharePrice: data[2] || fallbackValues.sharePrice,
-      globalOI: data[3] || fallbackValues.globalOI,
-      userShares: hasUserCalls ? (data[4] || fallbackValues.userShares) : fallbackValues.userShares,
-      usdtBalance: hasUserCalls ? (data[5] || fallbackValues.usdtBalance) : fallbackValues.usdtBalance,
+      // Core vault data from batch 1
+      totalAssets: (coreData[0] && coreData[0] !== null && coreData[0] !== undefined) ? coreData[0] : fallbackValues.totalAssets,
+      totalSupply: (coreData[1] && coreData[1] !== null && coreData[1] !== undefined) ? coreData[1] : fallbackValues.totalSupply,
+      sharePrice: (coreData[2] && coreData[2] !== null && coreData[2] !== undefined) ? coreData[2] : fallbackValues.sharePrice,
+      globalOI: (coreData[3] && coreData[3] !== null && coreData[3] !== undefined) ? coreData[3] : fallbackValues.globalOI,
+      // User data from batch 2 (only if user address provided)
+      userShares: userAddress && userData[0] && userData[0] !== null && userData[0] !== undefined ? userData[0] : fallbackValues.userShares,
+      usdtBalance: userAddress && userData[1] && userData[1] !== null && userData[1] !== undefined ? userData[1] : fallbackValues.usdtBalance,
     };
 
-    // Loading states
-    const isLoadingVaultData = multicallResult?.isLoading && !circuitBreaker.isOpen;
-    const isLoadingUserData = userAddress ? isLoadingVaultData : false;
+    // Loading states - both batches must complete for vault data, user data depends on user batch only
+    const isLoadingVaultData = (coreMulticallResult?.isLoading || false) && !circuitBreaker.isOpen;
+    const isLoadingUserData = userAddress ? ((userMulticallResult?.isLoading || false) && !circuitBreaker.isOpen) : false;
 
-    // Error analysis with circuit breaker awareness
-    const errors = multicallResult?.errors || [];
-    const hasError = errors.length > 0 || circuitBreaker.isOpen;
-    const hasNetworkError = multicallResult?.hasNetworkError || false;
-    const hasRateLimit = multicallResult?.hasRateLimit || circuitBreaker.isOpen;
+    // Comprehensive error analysis from both batches
+    const coreErrors = coreMulticallResult?.errors || [];
+    const userErrors = userMulticallResult?.errors || [];
+    const allErrors = [...coreErrors, ...userErrors];
 
-    // Enhanced error reporting with circuit breaker info
+    const hasError = allErrors.length > 0 || circuitBreaker.isOpen;
+    const hasNetworkError = (coreMulticallResult?.hasNetworkError || userMulticallResult?.hasNetworkError) || false;
+    const hasRateLimit = (coreMulticallResult?.hasRateLimit || userMulticallResult?.hasRateLimit) || circuitBreaker.isOpen;
+
+    // Enhanced error reporting with batch-aware logging
     if (hasError && !circuitBreaker.isOpen) {
-      console.warn('Vault multicall has errors:', {
-        errorCount: errors.length,
+      console.warn('Vault multicall batches have errors:', {
+        coreErrors: coreErrors.length,
+        userErrors: userErrors.length,
+        totalErrors: allErrors.length,
         hasNetworkError,
         hasRateLimit,
-        errors: errors.map(e => ({
+        errors: allErrors.map(e => ({
           message: e.message,
           code: e.code,
           contract: e.contractAddress,
@@ -277,7 +282,24 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
         })),
         fallbacksUsed: true,
         circuitBreakerFailures: circuitBreaker.failureCount,
+        batchingActive: true,
       });
+    }
+
+    // Validation: ensure we got valid data for critical fields
+    const validationErrors = [];
+    if (!safeValues.totalAssets || safeValues.totalAssets === BigInt(0)) {
+      validationErrors.push('totalAssets is missing or zero');
+    }
+    if (!safeValues.totalSupply || safeValues.totalSupply === BigInt(0)) {
+      validationErrors.push('totalSupply is missing or zero');
+    }
+    if (!safeValues.sharePrice || safeValues.sharePrice === BigInt(0)) {
+      validationErrors.push('sharePrice is missing or zero');
+    }
+
+    if (validationErrors.length > 0) {
+      console.warn('Vault data validation issues:', validationErrors, 'Using fallback values');
     }
 
     return {
@@ -287,13 +309,16 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
       hasError,
       hasNetworkError,
       hasRateLimit,
-      errors,
+      errors: allErrors,
       circuitBreakerOpen: circuitBreaker.isOpen,
       nextAttemptTime: circuitBreaker.nextAttemptTime,
       retryAttempts: retriesRef.current,
+      batchingActive: true, // Flag to indicate batching is being used
+      validationErrors,
     };
   }, [
-    multicallResult,
+    coreMulticallResult,
+    userMulticallResult,
     userAddress,
     fallbackValues,
     circuitBreaker,

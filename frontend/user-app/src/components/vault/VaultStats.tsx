@@ -62,52 +62,78 @@ const VaultStatsInner: React.FC<VaultStatsProps> = ({
   isLoading,
   hasError,
 }) => {
-  // Helper function to safely format share price with NaN protection
+  // Helper function to safely format share price with comprehensive NaN protection
   const formatSharePrice = (): string => {
     try {
-      if (isLoading) return 'Calculating...';
-      if (hasError || !isFinite(sharePrice) || sharePrice <= 0 || isNaN(sharePrice)) {
-        return '$1.00'; // Professional fallback
+      if (isLoading) return 'Loading...';
+      if (hasError) return '$1.00'; // Professional fallback during errors
+
+      // Comprehensive validation for NaN, null, undefined, and invalid values
+      if (sharePrice === null || sharePrice === undefined || !isFinite(sharePrice) || sharePrice <= 0 || isNaN(sharePrice)) {
+        console.warn('Invalid share price detected:', { sharePrice, isLoading, hasError });
+        return '$1.00';
       }
+
       return `$${sharePrice.toFixed(4)}`;
     } catch (error) {
-      console.warn('Error formatting share price:', error);
+      console.warn('Error formatting share price:', error, { sharePrice, isLoading, hasError });
       return '$1.00';
     }
   };
 
-  // Helper function to safely format TVL with NaN protection
+  // Helper function to safely format TVL with comprehensive NaN protection
   const formatTVL = (): string => {
     try {
-      if (isLoading) return 'Calculating...';
-      if (hasError || !isFinite(tvl) || isNaN(tvl)) return '$50,000';
+      if (isLoading) return 'Loading...';
+      if (hasError) return '$50,000'; // Professional fallback during errors
+
+      // Comprehensive validation for NaN, null, undefined, and invalid values
+      if (tvl === null || tvl === undefined || !isFinite(tvl) || isNaN(tvl) || tvl < 0) {
+        console.warn('Invalid TVL detected:', { tvl, isLoading, hasError });
+        return '$50,000';
+      }
+
       return `$${tvl.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
     } catch (error) {
-      console.warn('Error formatting TVL:', error);
+      console.warn('Error formatting TVL:', error, { tvl, isLoading, hasError });
       return '$50,000';
     }
   };
 
-  // Helper function to safely format utilization with NaN protection
+  // Helper function to safely format utilization with comprehensive NaN protection
   const formatUtilization = (): string => {
     try {
-      if (isLoading) return 'Calculating...';
-      if (hasError || !isFinite(utilization) || isNaN(utilization)) return '0.0%';
-      return `${Math.max(0, utilization).toFixed(1)}%`;
+      if (isLoading) return 'Loading...';
+      if (hasError) return '0.0%'; // Professional fallback during errors
+
+      // Comprehensive validation for NaN, null, undefined, and invalid values
+      if (utilization === null || utilization === undefined || !isFinite(utilization) || isNaN(utilization)) {
+        console.warn('Invalid utilization detected:', { utilization, isLoading, hasError });
+        return '0.0%';
+      }
+
+      return `${Math.max(0, Math.min(100, utilization)).toFixed(1)}%`; // Clamp between 0-100%
     } catch (error) {
-      console.warn('Error formatting utilization:', error);
+      console.warn('Error formatting utilization:', error, { utilization, isLoading, hasError });
       return '0.0%';
     }
   };
 
-  // Helper function to safely format APY with NaN protection
+  // Helper function to safely format APY with comprehensive NaN protection
   const formatAPY = (): string => {
     try {
-      if (isLoading) return 'Calculating...';
-      if (hasError || !isFinite(annualizedAPY) || isNaN(annualizedAPY)) return '0.0%';
-      return `${Math.max(0, annualizedAPY).toFixed(1)}%`;
+      if (isLoading) return 'Loading...';
+      if (hasError) return '0.0%'; // Professional fallback during errors
+
+      // Comprehensive validation for NaN, null, undefined, and invalid values
+      if (annualizedAPY === null || annualizedAPY === undefined || !isFinite(annualizedAPY) || isNaN(annualizedAPY)) {
+        console.warn('Invalid APY detected:', { annualizedAPY, isLoading, hasError });
+        return '0.0%';
+      }
+
+      return `${Math.max(0, Math.min(999, annualizedAPY)).toFixed(1)}%`; // Clamp between 0-999%
     } catch (error) {
-      console.warn('Error formatting APY:', error);
+      console.warn('Error formatting APY:', error, { annualizedAPY, isLoading, hasError });
       return '0.0%';
     }
   };

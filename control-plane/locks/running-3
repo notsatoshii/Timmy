@@ -1,8 +1,0 @@
-{
-  "task_id": "3",
-  "lane": "CONTRACT",
-  "title": "Deploy New ExecutionEngine to Fix Position Opening [CRITICAL]",
-  "started": "2026-03-17T06:31:31.803302",
-  "pid": 962004,
-  "log": "/home/lever/lever-protocol/control-plane/dispatcher-logs/task-3-063131.log"
-}

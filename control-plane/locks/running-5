@@ -1,8 +1,0 @@
-{
-  "task_id": "5",
-  "lane": "INFRA",
-  "title": "Restart Oracle Keeper to Ensure Live Price Updates [HIGH]",
-  "started": "2026-03-17T06:31:32.476314",
-  "pid": 962027,
-  "log": "/home/lever/lever-protocol/control-plane/dispatcher-logs/task-5-063132.log"
-}

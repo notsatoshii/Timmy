@@ -1,0 +1,8 @@
+{
+  "task_id": "8",
+  "lane": "CONTRACT",
+  "title": "Verify FeeRouter Integration to Fix Insurance Fund Growth [MEDIUM]",
+  "started": "2026-03-17T06:34:08.212115",
+  "pid": 963640,
+  "log": "/home/lever/lever-protocol/control-plane/dispatcher-logs/task-8-063408.log"
+}
