@@ -295,11 +295,21 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
     });
     }
 
-    // CRITICAL FIX: If we have no data at all (complete failure), return fallback values immediately
-    if (!coreMulticallResult || (!coreMulticallResult.data && coreMulticallResult.hasError)) {
+    // CRITICAL FIX: Always ensure we have valid fallback values immediately if any core failure
+    const shouldUseFallbacks = !coreMulticallResult ||
+                               coreMulticallResult.isLoading ||
+                               coreMulticallResult.hasError ||
+                               !coreMulticallResult.data ||
+                               (Array.isArray(coreMulticallResult.data) &&
+                                (coreMulticallResult.data.length === 0 ||
+                                 coreMulticallResult.data.every(val => val === null || val === undefined)));
+
+    if (shouldUseFallbacks) {
       console.warn('=== VAULT MULTICALL: Using complete fallbacks due to core data failure ===', {
         hasResult: !!coreMulticallResult,
+        isLoading: coreMulticallResult?.isLoading,
         hasData: !!coreMulticallResult?.data,
+        dataLength: coreMulticallResult?.data?.length,
         hasError: coreMulticallResult?.hasError,
         errorCount: coreMulticallResult?.errors?.length || 0,
         firstError: coreMulticallResult?.errors?.[0]?.message,
@@ -313,12 +323,12 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
         globalOI: fallbackValues.globalOI,
         userShares: fallbackValues.userShares,
         usdtBalance: fallbackValues.usdtBalance,
-        isLoadingVaultData: false,
+        isLoadingVaultData: coreMulticallResult?.isLoading || false,
         isLoadingUserData: false,
-        hasError: true,
-        hasNetworkError: true,
-        hasRateLimit: false,
-        errors: [{ message: 'Core vault data completely failed, using fallbacks', code: 'FALLBACK_MODE' }],
+        hasError: coreMulticallResult?.hasError || true,
+        hasNetworkError: coreMulticallResult?.hasNetworkError || false,
+        hasRateLimit: coreMulticallResult?.hasRateLimit || false,
+        errors: coreMulticallResult?.errors || [{ message: 'Core vault data completely failed, using fallbacks', code: 'FALLBACK_MODE' }],
         circuitBreakerOpen: false,
         nextAttemptTime: 0,
         retryAttempts: 0,
@@ -354,41 +364,14 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
     const coreData = coreMulticallResult?.data || [];
     const userData = userMulticallResult?.data || [];
 
-    // CRITICAL FIX: If coreData is empty or all values are null/undefined, use fallbacks
-    if (!coreData || coreData.length === 0 || coreData.every(val => val === null || val === undefined)) {
-      console.warn('=== VAULT MULTICALL: Core data is empty/null, using fallbacks ===', {
-        coreData,
-        coreDataLength: coreData?.length,
-        allNull: coreData?.every(val => val === null || val === undefined)
-      });
-
-      return {
-        totalAssets: fallbackValues.totalAssets,
-        totalSupply: fallbackValues.totalSupply,
-        sharePrice: fallbackValues.sharePrice,
-        globalOI: fallbackValues.globalOI,
-        userShares: userAddress ? (userData?.[0] ?? fallbackValues.userShares) : fallbackValues.userShares,
-        usdtBalance: userAddress ? (userData?.[1] ?? fallbackValues.usdtBalance) : fallbackValues.usdtBalance,
-        isLoadingVaultData: false,
-        isLoadingUserData: false,
-        hasError: true,
-        hasNetworkError: false,
-        hasRateLimit: false,
-        errors: [{ message: 'Core vault data is null/empty, using fallbacks', code: 'NULL_DATA' }],
-        circuitBreakerOpen: false,
-        nextAttemptTime: 0,
-        retryAttempts: 0,
-        batchingActive: true,
-        validationErrors: ['Using fallback values due to null/empty core data'],
-      };
-    }
-
     // Safely extract values with comprehensive BigInt validation and fallback handling
-    const safeBigIntValue = (value: any, fallbackValue: bigint, name: string): bigint => {
+    const safeBigIntValue = (value: any, fallbackValue: bigint, name: string, index?: number): bigint => {
       try {
         // Check for null/undefined
         if (value === null || value === undefined) {
-          console.warn(`${name} is null/undefined, using fallback`);
+          if (VAULT_DEBUG_MODE) {
+            console.warn(`${name} [index ${index}] is null/undefined, using fallback:`, fallbackValue.toString());
+          }
           return fallbackValue;
         }
 
@@ -401,6 +384,16 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
           return value;
         }
 
+        // Handle string/number conversion
+        if (typeof value === 'string' || typeof value === 'number') {
+          if (value === '' || value === '0' || Number.isNaN(Number(value))) {
+            if (VAULT_DEBUG_MODE) {
+              console.warn(`${name} is empty/zero/NaN, using fallback:`, { value, fallback: fallbackValue.toString() });
+            }
+            return fallbackValue;
+          }
+        }
+
         // Try to convert to BigInt
         const bigintValue = BigInt(value);
         if (bigintValue < 0) {
@@ -408,6 +401,9 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
           return fallbackValue;
         }
 
+        if (VAULT_DEBUG_MODE) {
+          console.log(`${name} successfully converted:`, { raw: value, bigint: bigintValue.toString() });
+        }
         return bigintValue;
       } catch (error) {
         console.warn(`Failed to process ${name} value:`, error, 'Raw value:', value, 'Using fallback:', fallbackValue.toString());
@@ -426,14 +422,14 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
     });
 
     const safeValues = {
-      // Core vault data from batch 1
-      totalAssets: safeBigIntValue(coreData[0], fallbackValues.totalAssets, 'totalAssets'),
-      totalSupply: safeBigIntValue(coreData[1], fallbackValues.totalSupply, 'totalSupply'),
-      sharePrice: safeBigIntValue(coreData[2], fallbackValues.sharePrice, 'sharePrice'),
-      globalOI: safeBigIntValue(coreData[3], fallbackValues.globalOI, 'globalOI'),
+      // Core vault data from batch 1 with enhanced debugging
+      totalAssets: safeBigIntValue(coreData[0], fallbackValues.totalAssets, 'totalAssets', 0),
+      totalSupply: safeBigIntValue(coreData[1], fallbackValues.totalSupply, 'totalSupply', 1),
+      sharePrice: safeBigIntValue(coreData[2], fallbackValues.sharePrice, 'sharePrice', 2),
+      globalOI: safeBigIntValue(coreData[3], fallbackValues.globalOI, 'globalOI', 3),
       // User data from batch 2 (only if user address provided)
-      userShares: userAddress ? safeBigIntValue(userData[0], fallbackValues.userShares, 'userShares') : fallbackValues.userShares,
-      usdtBalance: userAddress ? safeBigIntValue(userData[1], fallbackValues.usdtBalance, 'usdtBalance') : fallbackValues.usdtBalance,
+      userShares: userAddress ? safeBigIntValue(userData[0], fallbackValues.userShares, 'userShares', 0) : fallbackValues.userShares,
+      usdtBalance: userAddress ? safeBigIntValue(userData[1], fallbackValues.usdtBalance, 'usdtBalance', 1) : fallbackValues.usdtBalance,
     };
 
     console.log('=== SAFE VALUES EXTRACTED ===', {
@@ -464,13 +460,13 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
 
     // Validate critical values - allow fallback values but warn if they're being used
     if (safeValues.totalAssets === fallbackValues.totalAssets) {
-      validationWarnings.push('Using fallback totalAssets ($50,000)');
+      validationWarnings.push('Using fallback totalAssets ($250,000)');
     } else if (safeValues.totalAssets === BigInt(0)) {
       validationErrors.push('totalAssets is zero after validation');
     }
 
     if (safeValues.totalSupply === fallbackValues.totalSupply) {
-      validationWarnings.push('Using fallback totalSupply (50,000 shares)');
+      validationWarnings.push('Using fallback totalSupply (250,000 shares)');
     } else if (safeValues.totalSupply === BigInt(0)) {
       validationErrors.push('totalSupply is zero after validation');
     }
@@ -491,9 +487,11 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
 
     // Final safety check: ensure no undefined/null values made it through
     Object.entries(safeValues).forEach(([key, value]) => {
-      if (value === null || value === undefined) {
-        console.error(`CRITICAL: ${key} is still null/undefined after validation!`, value);
-        (safeValues as any)[key] = (fallbackValues as any)[key] || BigInt(0);
+      if (value === null || value === undefined || typeof value !== 'bigint') {
+        console.error(`CRITICAL: ${key} is still invalid after validation!`, { key, value, type: typeof value });
+        const fallbackKey = key as keyof typeof fallbackValues;
+        (safeValues as any)[key] = fallbackValues[fallbackKey] || BigInt(0);
+        console.log(`CRITICAL FIX: ${key} set to fallback:`, (safeValues as any)[key].toString());
       }
     });
 

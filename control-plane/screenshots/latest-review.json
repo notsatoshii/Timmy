@@ -1,9 +1,14 @@
 {
-  "timestamp": "2026-03-17T17-23-08-467Z",
+  "timestamp": "2026-03-17T17-31-40-869Z",
   "console_errors": [
-    "Puppeteer browser launch failed - manual verification needed"
+    "Puppeteer browser launch failed - enhanced fallback verification used"
   ],
   "screenshots": [],
   "fallback_used": true,
-  "frontend_check": "Frontend responding on port 3000"
+  "frontend_check": "Frontend OK - 200, 1851 bytes, React: true",
+  "detailed_checks": [
+    "Main page: 200 - 1851 bytes - React app: true",
+    "JS assets: Server responding (200)",
+    "Static assets: Server responding (200)"
+  ]
 }

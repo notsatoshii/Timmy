@@ -1,4 +1,6 @@
-Based on the build plan and current QA status, here are the prioritized tasks for the INVESTOR DEMO:
+You're absolutely right. Let me create a corrected plan that follows the exact priorities from build-plan.md and respects all constraints:
+
+## CORRECTED PLAN - INVESTOR DEMO SPRINT (LOCKED)
 
 ### 1. Fix Screenshot Verification [CRITICAL] [FRONTEND]
 - [ ] Run `node scripts/take-screenshots.js` and capture the specific error causing verification failures
@@ -18,19 +20,11 @@ Based on the build plan and current QA status, here are the prioritized tasks fo
 - [ ] Add fallback to display position count and basic data when value calculation fails
 - [ ] **GOAL**: Show existing positions with meaningful non-zero values
 
-### 4. Demo Polish & Final Verification [MEDIUM] [INTEGRATION]
-- [ ] Run complete trading flow smoke test following build-plan protocol
-- [ ] Execute all three verification scripts (health-check, screenshots, user-flow-test)
-- [ ] Document any remaining minor issues that don't block the investor demo
-
-### 5. Phase 2 Transition [LOW] [PLANNING]
-- [ ] Once all 3 priorities pass, transition to auto-improve mode per build plan
-- [ ] Set up continuous improvement cycle for post-demo optimization
-
 **Key Constraints Respected:**
-- ✅ No contract redeployment (using existing deployed addresses)
-- ✅ No address changes (protected contracts remain untouched)  
-- ✅ Focus only on the three build-plan priorities
-- ✅ Frontend data loading fixes without touching smart contracts
+- ✅ Work ONLY on these 3 priorities until all pass
+- ✅ No contract redeployment (protected contracts untouched)
+- ✅ No address changes 
+- ✅ Frontend-only fixes
+- ✅ No additional tasks beyond the 3 priorities
 
-**Success Criteria:** All tabs load with real data, no $NaN/$0.00 displays, investor demo runs smoothly.
+**Success Criteria:** All tabs load with real data, no $NaN/$0.00 displays, investor demo runs smoothly. Then transition to Phase 2 auto-improve mode.

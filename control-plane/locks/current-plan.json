@@ -4,13 +4,13 @@
       "id": "1",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Fixes puppeteer automation script and browser testing infrastructure - core INFRA work on test automation, no dependencies needed"
+      "reason": "Core work is fixing puppeteer automation script in scripts/ directory. The screenshot script itself needs timeout handling and fallback logic - this is automation/testing infrastructure rather than frontend display logic."
     },
     {
       "id": "2",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Fixes React hooks and data display logic for vault tab - pure FRONTEND work on existing deployed contracts, no dependencies needed"
+      "reason": "Fixing React hooks (useVaultMulticall), adding debug logging, and implementing graceful fallbacks for vault data display. Pure frontend component and state management work."
     },
     {
       "id": "3",
@@ -18,25 +18,7 @@
       "depends_on": [
         "2"
       ],
-      "reason": "Fixes React display logic for positions - FRONTEND work that could touch same config files as task 2, so must be sequential per safety rules"
-    },
-    {
-      "id": "4",
-      "lane": "INFRA",
-      "depends_on": [
-        "1",
-        "2",
-        "3"
-      ],
-      "reason": "Runs verification scripts that test the UI state - INFRA testing work that validates all prior fixes are working properly"
-    },
-    {
-      "id": "5",
-      "lane": "INFRA",
-      "depends_on": [
-        "4"
-      ],
-      "reason": "Process workflow transition that happens 'once all 3 priorities pass' - INFRA process management that must wait for verification completion"
+      "reason": "Also fixing frontend display logic and potentially touching config/contracts.ts. Made sequential with task 2 since both may modify the same contracts config file to avoid conflicts."
     }
   ]
 }
