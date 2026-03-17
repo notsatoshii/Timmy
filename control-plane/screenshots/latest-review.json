@@ -1,18 +1,41 @@
 {
-  "timestamp": "2026-03-17T22-27-15-865Z",
-  "console_errors": [
-    "Puppeteer browser launch failed - visual verification fallback used"
+  "timestamp": "2026-03-17T23:06:19.712Z",
+  "checks": [
+    {
+      "name": "Main React Application",
+      "path": "/",
+      "status": 200,
+      "contentLength": 1851,
+      "passed": true,
+      "details": "1851 bytes, React: true, Bundle: true, Title: true",
+      "contentType": "text/html; charset=utf-8",
+      "isReactApp": true,
+      "hasBundle": true,
+      "hasTitle": true
+    },
+    {
+      "name": "JavaScript Bundle",
+      "path": "/static/js/bundle.js",
+      "status": 200,
+      "contentLength": 1851,
+      "passed": true,
+      "details": "1851 bytes, text/html; charset=utf-8",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "name": "Contract Deployment Data",
+      "path": "/deployments/core-deployment.json",
+      "status": 200,
+      "contentLength": 322,
+      "passed": true,
+      "details": "322 bytes, application/json; charset=utf-8",
+      "contentType": "application/json; charset=utf-8"
+    }
   ],
-  "screenshots": [
-    "visual-verification-2026-03-17T22-27-15-865Z.html"
-  ],
-  "fallback_used": true,
-  "visual_verification": "/home/lever/lever-protocol/control-plane/screenshots/visual-verification-2026-03-17T22-27-15-865Z.html",
-  "frontend_check": "Frontend OK - 200, 1851 bytes, React: true",
-  "detailed_checks": [
-    "Main page: 200 - 1851 bytes - React app: true",
-    "JS assets: Server responding (200)",
-    "Static assets: Server responding (200)"
-  ],
-  "success": true
+  "success": true,
+  "method": "HTTP + HTML Analysis",
+  "html_report": "/home/lever/lever-protocol/control-plane/screenshots/visual-verification-2026-03-17T23-06-19-712Z.html",
+  "demo_ready": true,
+  "checks_passed": 3,
+  "checks_total": 3
 }

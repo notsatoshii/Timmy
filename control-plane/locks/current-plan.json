@@ -1,25 +1,43 @@
 {
   "tasks": [
     {
-      "id": "3",
+      "id": "1",
+      "lane": "INFRA",
+      "depends_on": [],
+      "reason": "Installing browser dependencies for screenshot functionality involves control-plane automation scripts and infra setup. No dependencies as this is foundational infrastructure."
+    },
+    {
+      "id": "2",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Frontend React component bug fixing position value display. Independent core data fix."
+      "reason": "Debugging RPC/contract integration and demo fallback values requires fixing React components and contract data hooks. Independent of other tasks as this is the root data integration issue."
+    },
+    {
+      "id": "3",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "2"
+      ],
+      "reason": "Position values display depends on real contract data working first. Task #2 fixes the core RPC integration that this task needs to display real position data instead of $0.00 stubs."
     },
     {
       "id": "4",
       "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "Frontend calculation logic update for volume metrics. Independent from position values."
+      "depends_on": [
+        "3"
+      ],
+      "reason": "Volume calculation changes involve trading/position display components that task #3 is also modifying. Sequential execution prevents conflicts in the same React components."
     },
     {
       "id": "5",
       "lane": "FRONTEND",
       "depends_on": [
+        "1",
+        "2",
         "3",
         "4"
       ],
-      "reason": "Frontend testing/verification task that should validate after core fixes are completed to ensure accurate testing results."
+      "reason": "UI verification needs screenshots (task #1) and all frontend fixes completed (tasks #2-4) before comprehensive testing can validate the complete working system."
     }
   ]
 }

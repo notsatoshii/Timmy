@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useReadContract } from 'wagmi';
-import { getContractAddresses, formatWad, formatUsdt, WAD } from '../config/contracts';
+import { getContractAddresses, loadContractAddresses, formatWad, formatUsdt, WAD } from '../config/contracts';
 import {
   LEVER_VAULT_ABI,
   OI_LIMITS_ABI,
@@ -31,13 +31,24 @@ const DEMO_FALLBACK_VALUES = {
 
 const ProtocolStats: React.FC = () => {
   const [stats, setStats] = useState<ProtocolStatsData | null>(null);
-  const [addresses] = useState(getContractAddresses());
+  const [addresses, setAddresses] = useState(getContractAddresses());
+
+  // Load addresses from deployment files on component mount
+  useEffect(() => {
+    loadContractAddresses().then(loadedAddresses => {
+      setAddresses(loadedAddresses);
+      console.log('ProtocolStats: Contract addresses loaded from deployment files');
+    }).catch(error => {
+      console.warn('ProtocolStats: Failed to load addresses from deployment files, using fallback:', error);
+    });
+  }, []);
 
   // Read TVL from LeverVault.totalAssets() with error handling
   const { data: tvlRaw, isLoading: tvlLoading, error: tvlError } = useReadContract({
     address: addresses.leverVault,
     abi: LEVER_VAULT_ABI,
     functionName: 'totalAssets',
+    query: { enabled: !!addresses.leverVault }
   });
 
   // Read total OI from OILimits.getGlobalOI() with error handling
@@ -45,6 +56,7 @@ const ProtocolStats: React.FC = () => {
     address: addresses.oiLimits,
     abi: OI_LIMITS_ABI,
     functionName: 'getGlobalOI',
+    query: { enabled: !!addresses.oiLimits }
   });
 
   // Read insurance fund balance from InsuranceFund.getBalance() with error handling
@@ -52,6 +64,7 @@ const ProtocolStats: React.FC = () => {
     address: addresses.insuranceFund,
     abi: INSURANCE_FUND_ABI,
     functionName: 'getBalance',
+    query: { enabled: !!addresses.insuranceFund }
   });
 
   // Read current borrow rate for projected APY calculation with error handling
@@ -61,6 +74,7 @@ const ProtocolStats: React.FC = () => {
     abi: BORROW_FEE_ENGINE_ABI,
     functionName: 'getCurrentBorrowRate',
     args: [spacexMarketId, true], // Use long side for representative rate
+    query: { enabled: !!addresses.borrowFeeEngine }
   });
 
   // Calculate real 24h volume from position events
@@ -86,6 +100,13 @@ const ProtocolStats: React.FC = () => {
 
       if (fallbacksUsed.length > 0) {
         console.warn('ProtocolStats using fallback values for:', fallbacksUsed.join(', '));
+        console.warn('Contract addresses being used:', addresses);
+        if (tvlError) console.error('TVL error:', tvlError);
+        if (oiError) console.error('OI error:', oiError);
+        if (insuranceError) console.error('Insurance error:', insuranceError);
+        if (borrowRateError) console.error('Borrow rate error:', borrowRateError);
+      } else {
+        console.log('ProtocolStats: All contract calls successful');
       }
 
       // Calculate projected LP APY: (base_borrow_rate × Total_OI × 8760_hours × 0.50_LP_share) / TVL
@@ -127,7 +148,7 @@ const ProtocolStats: React.FC = () => {
         insuranceFund: `$${formatWad(DEMO_FALLBACK_VALUES.insuranceFund)}`,
       });
     }
-  }, [tvlRaw, totalOIRaw, insuranceRaw, currentBorrowRate, volume24h, tvlError, oiError, insuranceError, borrowRateError]);
+  }, [tvlRaw, totalOIRaw, insuranceRaw, currentBorrowRate, volume24h, tvlError, oiError, insuranceError, borrowRateError, addresses]);
 
   const isLoading = tvlLoading || oiLoading || insuranceLoading || volumeLoading;
 
@@ -142,7 +163,7 @@ const ProtocolStats: React.FC = () => {
               <Skeleton variant="text" className="h-6 w-20 mx-auto" />
             ) : (
               <div className="text-xl md:text-2xl font-bold font-mono text-accent">
-                {stats?.tvl || '$50.00K'}
+                {stats?.tvl || 'Loading...'}
               </div>
             )}
           </div>
@@ -154,7 +175,7 @@ const ProtocolStats: React.FC = () => {
               <Skeleton variant="text" className="h-6 w-20 mx-auto" />
             ) : (
               <div className="text-xl md:text-2xl font-bold font-mono text-gray-100">
-                {stats?.dailyVolume || '$12.80K'}
+                {stats?.dailyVolume || 'Loading...'}
               </div>
             )}
           </div>
@@ -166,7 +187,7 @@ const ProtocolStats: React.FC = () => {
               <Skeleton variant="text" className="h-6 w-20 mx-auto" />
             ) : (
               <div className="text-xl md:text-2xl font-bold font-mono text-gray-100">
-                {stats?.totalOI || '$30.00K'}
+                {stats?.totalOI || 'Loading...'}
               </div>
             )}
           </div>
@@ -178,7 +199,7 @@ const ProtocolStats: React.FC = () => {
               <Skeleton variant="text" className="h-6 w-20 mx-auto" />
             ) : (
               <div className="text-xl md:text-2xl font-bold font-mono text-accent">
-                {stats?.lpApy || '15.43%'}
+                {stats?.lpApy || 'Loading...'}
               </div>
             )}
           </div>
@@ -190,7 +211,7 @@ const ProtocolStats: React.FC = () => {
               <Skeleton variant="text" className="h-6 w-20 mx-auto" />
             ) : (
               <div className="text-xl md:text-2xl font-bold font-mono text-gray-100">
-                {stats?.utilizationRate || '60.00%'}
+                {stats?.utilizationRate || 'Loading...'}
               </div>
             )}
           </div>
@@ -202,7 +223,7 @@ const ProtocolStats: React.FC = () => {
               <Skeleton variant="text" className="h-6 w-20 mx-auto" />
             ) : (
               <div className="text-xl md:text-2xl font-bold font-mono text-accent-secondary">
-                {stats?.insuranceFund || '$10.00K'}
+                {stats?.insuranceFund || 'Loading...'}
               </div>
             )}
           </div>

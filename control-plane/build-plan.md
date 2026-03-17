@@ -1,18 +1,40 @@
-Looking at the QA score (60) and critical issues blocking the investor demo, here are the prioritized tasks:
+Based on the QA report and constraints, here's the corrected plan focusing on **frontend-only fixes** and infrastructure:
 
-### 1. Fix Vault Tab $NaN Display [CRITICAL] [FRONTEND]
-- [ ] 1. Investigate useVaultMulticall returning undefined and 413 RPC errors causing $NaN share price and $0 TVL display in Vault tab
+## Revised Investor Demo Priorities
 
-### 2. Redeploy ExecutionEngine with New LeverageModel [CRITICAL] [CONTRACT]
-- [x] 2. Deploy new ExecutionEngine pointing to updated LeverageModel (0xf649e342...F9EF) to fix 1x leverage limitation blocking position opening
+### 1. Install Browser Dependencies [CRITICAL] [INFRASTRUCTURE]
+- [ ] Install missing browser dependencies to enable screenshot functionality 
+- [ ] Fix "Cannot verify UI rendering - browser dependencies missing for screenshots"
+- [ ] Enable visual verification script to capture UI state for investor demo
+- [ ] Generate screenshots showing working frontend tabs
 
-### 3. Fix Position Values Display [CRITICAL] [FRONTEND]  
-- [ ] 3. Debug and fix $0.00 position values in demo mode - positions tab showing zero values for all metrics despite 215 active positions
+### 2. Fix Frontend RPC/Contract Integration [CRITICAL] [FRONTEND]
+- [ ] Debug why frontend relies on demo fallback values ($50K TVL, $30K OI) when contract calls fail
+- [ ] Investigate any 413 RPC errors in browser console
+- [ ] Ensure frontend displays real contract data (TVL: $60.5K, 215 positions) instead of fallbacks
+- [ ] Fix any multicall failures causing undefined returns
 
-### 4. Fix Volume Calculation [HIGH] [FRONTEND]
-- [ ] 4. Update 24h Volume calculation to show notional value (collateral × leverage) instead of collateral only
+### 3. Fix Position Values Display [CRITICAL] [FRONTEND] 
+- [ ] Debug why positions tab shows $0.00 for all position values in demo mode
+- [ ] Ensure position PnL, collateral, and equity use real PositionManager data
+- [ ] Verify position calculations work with existing contracts (no redeployment needed)
+- [ ] Replace any stub position data with actual contract state
 
-### 5. Verify MarketDetail Tab [MEDIUM] [FRONTEND]
-- [ ] 5. Test and verify MarketDetail tab functionality to ensure no critical issues before investor demo
+### 4. Volume Calculation Fix [MEDIUM] [FRONTEND]
+- [ ] Update 24h Volume to show notional (collateral × leverage) instead of collateral only
+- [ ] Verify volume calculations display proper trading activity scale
+- [ ] Test volume metrics across all trading interfaces
 
-**Target**: Achieve QA score >80 and resolve all CRITICAL blockers for investor demo readiness. Focus on fixing the three core issues: vault display, position opening, and position values.
+### 5. Complete UI Verification [MEDIUM] [FRONTEND]
+- [ ] Test wallet connection flows
+- [ ] Verify markets populate with real prediction market data
+- [ ] Confirm no console errors or broken components
+- [ ] Test complete user flows without contract changes
+
+**Key Constraints Followed:**
+- ✅ No contract redeployment (ExecutionEngine is protected)
+- ✅ No address changes (contract addresses stay fixed)  
+- ✅ Frontend-only fixes using existing working contracts
+- ✅ Focus on display issues not contract functionality
+
+The contracts show healthy metrics (60.5K TVL, 215 positions), so the issues are frontend integration and visual verification, not contract problems.
