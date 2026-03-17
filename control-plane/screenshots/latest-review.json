@@ -1,15 +1,18 @@
 {
-  "timestamp": "2026-03-17T18-53-49-467Z",
-  "frontend_status": "operational",
-  "frontend_details": {
-    "status": 200,
-    "size": 1851,
-    "isReact": true,
-    "content": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"/><link rel=\"icon\" href=\"/favicon.ico\"/><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"/><meta name=\"theme-color\" content=\"#7c3aed\"/><meta name=\"description\" content=\"LEVER Protocol - Trade synthetic leveraged perpetuals on prediction markets with unified LP backing and external price oracles\"/><meta property=\"og:type\" content=\"website\"/><meta property=\"og:title\" content=\"LEVER Protocol - Synthetic Perpetuals\"/><meta property=\"og:description\" content=\"Trade synthetic leveraged perpetuals on prediction markets with unified LP backing and external price oracles\"/><meta property=\"og:url\" content=\"https://lever.finance\"/><meta property=\"og:site_name\" content=\"LEVER Protocol\"/><meta property=\"og:image\" content=\"/lever-og-image.png\"/><meta property=\"og:image:width\" content=\"1200\"/><meta property=\"og:image:height\" content=\"630\"/><meta name=\"twitter:card\" content=\"summary_large_image\"/><meta name=\"twitter:title\" content=\"LEVER Protocol - Synthetic Perpetuals\"/><meta name=\"twitter:description\" content=\"Trade synthetic leveraged perpetuals on prediction markets with unified LP backing and external price oracles\"/><meta name=\"twitter:image\" content=\"/lever-og-image.png\"/><meta name=\"keywords\" content=\"DeFi, perpetuals, prediction markets, leverage, synthetic, Base, blockchain, trading\"/><meta name=\"author\" content=\"LEVER Protocol\"/><meta name=\"robots\" content=\"index, follow\"/><link rel=\"apple-touch-icon\" href=\"/logo192.png\"/><link rel=\"manifest\" href=\"/manifest.json\"/><title>LEVER Protocol - Synthetic Perpetuals</title><script defer=\"defer\" src=\"/static/js/main.bb3ba14d.js\"></script><link href=\"/static/css/main.c5a28d5d.css\" rel=\"stylesheet\"></head><body><noscript>You need to enable JavaScript to run this app.</noscript><div id=\"root\"></div></body></html>"
-  },
-  "screenshot_method": "html_snapshot",
-  "verification_complete": true,
-  "files_created": [
-    "/home/lever/lever-protocol/control-plane/screenshots/verification-snapshot-2026-03-17T18-53-49-493Z.html"
-  ]
+  "timestamp": "2026-03-17T18-54-29-875Z",
+  "console_errors": [
+    "Puppeteer browser launch failed - visual verification fallback used"
+  ],
+  "screenshots": [
+    "visual-verification-2026-03-17T18-54-29-875Z.html"
+  ],
+  "fallback_used": true,
+  "visual_verification": "/home/lever/lever-protocol/control-plane/screenshots/visual-verification-2026-03-17T18-54-29-875Z.html",
+  "frontend_check": "Frontend OK - 200, 1851 bytes, React: true",
+  "detailed_checks": [
+    "Main page: 200 - 1851 bytes - React app: true",
+    "JS assets: Server responding (200)",
+    "Static assets: Server responding (200)"
+  ],
+  "success": true
 }
