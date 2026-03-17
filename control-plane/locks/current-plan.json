@@ -1,18 +1,27 @@
 {
   "tasks": [
     {
-      "id": "2",
+      "id": "fix-frontend-react-deployment",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Frontend task - fixing React hook (useVaultMulticall) and vault data display logic. Root cause is in frontend React components and data fetching, not contracts."
+      "reason": "Root cause is React app build/deployment - must fix fundamental app loading before data display issues can be addressed"
     },
     {
-      "id": "3",
+      "id": "fix-vault-data-display",
       "lane": "FRONTEND",
       "depends_on": [
-        "2"
+        "fix-frontend-react-deployment"
       ],
-      "reason": "Frontend task - fixing position display logic and demo data rendering. Depends on task 2 since both are frontend tasks that may touch shared React components/hooks and should be done sequentially to avoid file conflicts."
+      "reason": "React hook and component fixes for vault data - depends on React app actually loading, same lane so sequential to avoid file conflicts"
+    },
+    {
+      "id": "fix-position-values-display",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "fix-frontend-react-deployment",
+        "fix-vault-data-display"
+      ],
+      "reason": "React component fixes for position display - depends on app loading, sequential after vault fixes to avoid shared data fetching infrastructure conflicts"
     }
   ]
 }

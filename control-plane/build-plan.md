@@ -1,45 +1,27 @@
-Based on your feedback, you're absolutely correct. I violated the locked sprint constraints. Here's the properly revised plan focusing ONLY on the 3 critical frontend issues:
+Based on the build plan and QA report, here are the 3 prioritized tasks for the investor demo:
 
-## REVISED PLAN: Investor Demo Critical Fixes
+### 1. Fix Frontend React App Deployment [CRITICAL] [FRONTEND]
+- [ ] Investigate why frontend service shows "UP" but renders static HTML shell instead of React app
+- [ ] Verify frontend build process and ensure proper index.html/assets generation  
+- [ ] Fix web server configuration to serve React app with JavaScript execution
+- [ ] Confirm React trading interface loads at localhost:3000 (primary blocker for investor demo)
 
-### Current Status (from QA report):
-- **Frontend Service**: UP but serves "Only static HTML shell" 
-- **Vision Score**: 60 (low due to frontend deployment issue)
-- **Contracts**: ALL functional (TVL, Positions, Global OI, Insurance Fund = "ok")
+### 2. Fix Vault Data Display [CRITICAL] [FRONTEND]
+- [ ] Debug useVaultMulticall hook returning undefined values causing $NaN share price
+- [ ] Resolve 413 RPC errors preventing vault data retrieval 
+- [ ] Ensure vault tab displays real TVL and share price instead of $0 TVL
+- [ ] Test vault metrics in both demo and connected wallet modes
 
----
+### 3. Fix Position Values Display [CRITICAL] [FRONTEND]  
+- [ ] Debug position PnL calculation showing $0.00 for all position values in demo mode
+- [ ] Fix stub positions to display realistic demo data instead of zero values
+- [ ] Ensure position equity, collateral, and PnL render correctly 
+- [ ] Verify positions tab shows meaningful data for investor demo
 
-## THE 3 CRITICAL TASKS (Frontend-Only, No Redeployments)
+**Constraints:**
+- ✅ Frontend-only tasks (NO contract redeployments per locked sprint)
+- ✅ ExecutionEngine and all contracts are PROTECTED 
+- ✅ Exactly 3 critical tasks as specified in build plan
+- ✅ Run `bash control-plane/health-check.sh` after each task to verify fixes
 
-### 1. **Fix Frontend React App Deployment** [CRITICAL BLOCKER]
-**Issue**: QA shows service "UP" but renders static HTML shell instead of React app
-- [ ] Investigate why React app isn't loading (build/deployment issue)
-- [ ] Verify frontend build process generates proper index.html and assets
-- [ ] Fix web server configuration to serve React app instead of directory listing
-- [ ] Confirm React app loads properly at localhost:3000 with JavaScript execution
-
-### 2. **Fix Vault Data Display** [CRITICAL] 
-**Issue**: Vault tab shows $NaN share price and $0 TVL in demo mode
-- [ ] Debug useVaultMulticall hook returning undefined values
-- [ ] Fix 413 RPC errors preventing vault data retrieval
-- [ ] Ensure vault metrics display real TVL and share price values
-- [ ] Test vault data display in both demo and connected wallet modes
-
-### 3. **Fix Position Values Display** [CRITICAL]
-**Issue**: Positions tab shows $0.00 for all position values in demo mode
-- [ ] Debug position PnL calculation and display logic
-- [ ] Fix stub positions showing zero values instead of realistic demo data
-- [ ] Ensure position equity, collateral, and PnL display correctly
-- [ ] Verify position data renders properly in demo mode
-
----
-
-## Key Constraints: ✅
-- ✅ **NO contract redeployments** (ExecutionEngine and all contracts are PROTECTED)
-- ✅ **Frontend-only tasks** (all 3 tasks are UI/data display fixes)
-- ✅ **Focused scope** (exactly 3 critical tasks, not 5)
-- ✅ **Investor demo ready** (addresses the core blockers investors will see)
-
-**Primary Emergency**: React app deployment failure is the biggest blocker - investors see static HTML instead of the trading interface.
-
-**Verification**: Run `bash control-plane/health-check.sh` after each task to confirm fixes.
+**Primary Emergency:** React app deployment failure - investors currently see static HTML instead of trading interface.

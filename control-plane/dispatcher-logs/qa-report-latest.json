@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-17T11:42:10.794520+00:00",
+  "timestamp": "2026-03-17T11:55:05.399809+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,12 +11,12 @@
     },
     {
       "name": "Positions",
-      "value": "135",
+      "value": "142",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "5089767554735 [5.089e12]",
+      "value": "5699767554735 [5.699e12]",
       "status": "ok"
     },
     {
@@ -27,31 +27,7 @@
   ],
   "sprint_checks": {},
   "critical_blockers": [],
-  "visual_issues": [
-    "Vision: Only static HTML shell returned - no dynamic content verification possible",
-    "Vision: Cannot verify if React app loads properly without JavaScript execution",
-    "Vision: No way to assess actual functionality, trading interface, or data display",
-    "Vision: Missing verification of key investor-facing features like TVL, positions, markets",
-    "Vision: Cannot validate if frontend connects properly to contracts"
-  ],
+  "visual_issues": [],
   "functional_issues": [],
-  "score": 60,
-  "vision_review": {
-    "professional_score": 7,
-    "trust_score": 6,
-    "issues": [
-      "Only static HTML shell returned - no dynamic content verification possible",
-      "Cannot verify if React app loads properly without JavaScript execution",
-      "No way to assess actual functionality, trading interface, or data display",
-      "Missing verification of key investor-facing features like TVL, positions, markets",
-      "Cannot validate if frontend connects properly to contracts"
-    ],
-    "improvements": [
-      "Implement server-side rendering or static generation for better initial content",
-      "Add healthcheck endpoint that returns app status without JavaScript",
-      "Include basic market data in initial HTML for investors without JS",
-      "Add loading state indicators for better perceived performance",
-      "Implement proper error boundaries and fallback content"
-    ]
-  }
+  "score": 100
 }
