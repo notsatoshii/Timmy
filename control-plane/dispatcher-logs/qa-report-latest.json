@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-17T22:33:41.770965+00:00",
+  "timestamp": "2026-03-17T22:48:59.248054+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -27,7 +27,32 @@
   ],
   "sprint_checks": {},
   "critical_blockers": [],
-  "visual_issues": [],
+  "visual_issues": [
+    "Vision: Single Page Application with no server-side rendering - content invisible without JavaScript execution",
+    "Vision: Cannot evaluate actual trading functionality or data accuracy from static HTML",
+    "Vision: No fallback content for non-JS environments or web crawlers",
+    "Vision: Meta description references external domain (lever.finance) but running on localhost",
+    "Vision: Impossible to assess real vs placeholder data without browser rendering"
+  ],
   "functional_issues": [],
-  "score": 100
+  "score": 60,
+  "vision_review": {
+    "professional_score": 6,
+    "trust_score": 5,
+    "issues": [
+      "Single Page Application with no server-side rendering - content invisible without JavaScript execution",
+      "Cannot evaluate actual trading functionality or data accuracy from static HTML",
+      "No fallback content for non-JS environments or web crawlers",
+      "Meta description references external domain (lever.finance) but running on localhost",
+      "Impossible to assess real vs placeholder data without browser rendering"
+    ],
+    "improvements": [
+      "Implement server-side rendering for better SEO and initial content visibility",
+      "Add static landing content that showcases value proposition without JavaScript",
+      "Include loading states and error boundaries visible in static HTML",
+      "Add basic functionality indicators in meta tags or structured data",
+      "Provide API health check endpoint for automated testing",
+      "Include build version or deployment info for transparency"
+    ]
+  }
 }

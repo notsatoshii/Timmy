@@ -1,0 +1,40 @@
+{
+  "tasks": [
+    {
+      "id": "1",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "Frontend React hook/component fix for vault display. No dependencies as it's isolated to vault-specific code."
+    },
+    {
+      "id": "2",
+      "lane": "CONTRACT",
+      "depends_on": [],
+      "reason": "Contract deployment task using Foundry. Independent of frontend fixes and can run in parallel."
+    },
+    {
+      "id": "3",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "1"
+      ],
+      "reason": "Frontend position display fix. Depends on task 1 to avoid conflicts in shared frontend utilities/state management."
+    },
+    {
+      "id": "4",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "3"
+      ],
+      "reason": "Frontend volume calculation update. Depends on task 3 to maintain sequential frontend work and avoid component conflicts."
+    },
+    {
+      "id": "5",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "4"
+      ],
+      "reason": "Testing/verification task. Depends on task 4 to ensure all frontend fixes are complete before final verification."
+    }
+  ]
+}

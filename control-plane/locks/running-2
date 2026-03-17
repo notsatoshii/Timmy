@@ -1,0 +1,8 @@
+{
+  "task_id": "2",
+  "lane": "CONTRACT",
+  "title": "Redeploy ExecutionEngine with New LeverageModel [CRITICAL]",
+  "started": "2026-03-17T22:51:37.173878",
+  "pid": 1514954,
+  "log": "/home/lever/lever-protocol/control-plane/dispatcher-logs/task-2-225137.log"
+}
