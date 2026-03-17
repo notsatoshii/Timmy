@@ -120,7 +120,13 @@ const Positions: React.FC = () => {
   }, [writeError, showErrorToast]);
 
   const fetchPositionDetails = useCallback(async () => {
+    console.log('[Positions] fetchPositionDetails called', {
+      address,
+      positionIds: positionIds ? Array.from(positionIds as bigint[]).map(id => id.toString()) : null
+    });
+
     if (!positionIds || !Array.isArray(positionIds) || positionIds.length === 0) {
+      console.log('[Positions] No position IDs found, setting empty array');
       setPositions([]);
       return;
     }
@@ -131,6 +137,8 @@ const Positions: React.FC = () => {
 
     for (const id of positionIds as bigint[]) {
       try {
+        console.log(`[Positions] Processing position ID: ${id.toString()}`);
+
         // Create position with safer default values
         const position: PositionData = {
           id,
@@ -150,24 +158,67 @@ const Positions: React.FC = () => {
           isOpen: true,
         };
 
+        console.log(`[Positions] Position ${id} raw values:`, {
+          collateral: position.collateral.toString(),
+          collateralFormatted: formatWad(position.collateral),
+          positionSize: position.positionSize.toString(),
+          positionSizeFormatted: formatWad(position.positionSize),
+          entryPI: position.entryPI.toString(),
+          currentPI: position.currentPI.toString(),
+          borrowFees: position.borrowFees.toString(),
+          borrowFeesFormatted: formatWad(position.borrowFees),
+          fundingAccrued: position.fundingAccrued.toString(),
+          fundingAccruedFormatted: formatWad(position.fundingAccrued),
+          WAD: WAD.toString()
+        });
+
         // Calculate PnL with proper decimal scaling
         const priceDiff = Number(position.currentPI - position.entryPI);
         const direction = position.isLong ? 1 : -1;
         const pnlValue = direction * priceDiff * Number(position.positionSize) / Number(WAD);
         position.pnl = BigInt(Math.round(pnlValue));
 
+        console.log(`[Positions] Position ${id} PnL calculation:`, {
+          entryPI: position.entryPI.toString(),
+          currentPI: position.currentPI.toString(),
+          priceDiff,
+          direction,
+          positionSizeNumber: Number(position.positionSize),
+          WADNumber: Number(WAD),
+          pnlValue,
+          pnlBigInt: position.pnl.toString(),
+          pnlFormatted: formatPnl(position.pnl)
+        });
+
         // Calculate equity: collateral + PnL - borrow fees + funding
         position.equity = position.collateral + position.pnl - position.borrowFees + position.fundingAccrued;
 
+        console.log(`[Positions] Position ${id} equity calculation:`, {
+          collateral: position.collateral.toString(),
+          pnl: position.pnl.toString(),
+          borrowFees: position.borrowFees.toString(),
+          fundingAccrued: position.fundingAccrued.toString(),
+          equity: position.equity.toString(),
+          equityFormatted: formatWad(position.equity)
+        });
+
         posData.push(position);
       } catch (error) {
-        console.error(`Error creating position ${id}:`, error);
+        console.error(`[Positions] Error creating position ${id}:`, error);
         // Skip this position if there's an error
       }
     }
 
+    console.log('[Positions] Final positions array:', posData.length, 'positions:',
+      posData.map(p => ({
+        id: p.id.toString(),
+        equity: formatWad(p.equity),
+        pnl: formatPnl(p.pnl),
+        collateral: formatWad(p.collateral)
+      }))
+    );
     setPositions(posData);
-  }, [positionIds]);
+  }, [positionIds, address]);
 
   useEffect(() => {
     fetchPositionDetails();
@@ -204,33 +255,78 @@ const Positions: React.FC = () => {
   };
 
   const createLivePosition = (basePosition: Omit<PositionData, 'currentPI' | 'pnl' | 'equity'>, demoMarketId: string): PositionData => {
+    console.log(`[createLivePosition] Processing ${demoMarketId}:`, {
+      id: basePosition.id.toString(),
+      marketName: basePosition.marketName,
+      collateral: basePosition.collateral.toString(),
+      collateralFormatted: formatWad(basePosition.collateral),
+      positionSize: basePosition.positionSize.toString(),
+      positionSizeFormatted: formatWad(basePosition.positionSize),
+      entryPI: basePosition.entryPI.toString(),
+      borrowFees: basePosition.borrowFees.toString(),
+      borrowFeesFormatted: formatWad(basePosition.borrowFees),
+      fundingAccrued: basePosition.fundingAccrued.toString(),
+      fundingAccruedFormatted: formatWad(basePosition.fundingAccrued)
+    });
+
     try {
       const livePrice = livePrices?.[demoMarketId];
       let currentPI = basePosition.entryPI;
 
+      console.log(`[createLivePosition] Live price data for ${demoMarketId}:`, livePrice);
+
       if (livePrice && typeof livePrice.pi === 'number' && livePrice.pi > 0 && livePrice.pi <= 1) {
         currentPI = BigInt(Math.round(livePrice.pi * Number(WAD)));
+        console.log(`[createLivePosition] Updated currentPI from live price:`, {
+          livePi: livePrice.pi,
+          currentPI: currentPI.toString()
+        });
+      } else {
+        console.log(`[createLivePosition] Using entry PI as current PI:`, currentPI.toString());
       }
 
       const pnl = calculatePnL(basePosition.isLong, basePosition.entryPI, currentPI, basePosition.positionSize);
+
+      console.log(`[createLivePosition] PnL calculation for ${demoMarketId}:`, {
+        pnl: pnl.toString(),
+        pnlFormatted: formatPnl(pnl)
+      });
 
       // Safely calculate equity with proper error handling
       let equity = BigInt(0);
       try {
         equity = basePosition.collateral + pnl - basePosition.borrowFees + basePosition.fundingAccrued;
+        console.log(`[createLivePosition] Equity calculation for ${demoMarketId}:`, {
+          collateral: basePosition.collateral.toString(),
+          pnl: pnl.toString(),
+          borrowFees: basePosition.borrowFees.toString(),
+          fundingAccrued: basePosition.fundingAccrued.toString(),
+          equity: equity.toString(),
+          equityFormatted: formatWad(equity)
+        });
       } catch (error) {
-        console.warn('Error calculating equity:', error);
+        console.warn(`[createLivePosition] Error calculating equity for ${demoMarketId}:`, error);
         equity = basePosition.collateral; // Fallback to collateral only
       }
 
-      return {
+      const finalPosition = {
         ...basePosition,
         currentPI,
         pnl,
         equity
       };
+
+      console.log(`[createLivePosition] Final position for ${demoMarketId}:`, {
+        id: finalPosition.id.toString(),
+        marketName: finalPosition.marketName,
+        equity: formatWad(finalPosition.equity),
+        pnl: formatPnl(finalPosition.pnl),
+        collateral: formatWad(finalPosition.collateral)
+      });
+
+      return finalPosition;
     } catch (error) {
-      console.error('Error creating live position:', error);
+      console.error(`[createLivePosition] Error creating live position for ${demoMarketId}:`, error);
       // Return a safe fallback position
       return {
         ...basePosition,
@@ -497,8 +593,15 @@ const Positions: React.FC = () => {
   const totalEquity = displayPositions.reduce((sum, pos) => {
     try {
       const equity = Number(pos.equity) / Number(WAD);
+      console.log(`[totalEquity] Position ${pos.id.toString()}:`, {
+        equityBigInt: pos.equity.toString(),
+        equityNumber: equity,
+        isFinite: isFinite(equity),
+        sum: sum
+      });
       return sum + (isFinite(equity) ? equity : 0);
     } catch (error) {
+      console.error(`[totalEquity] Error processing position ${pos.id.toString()}:`, error);
       return sum;
     }
   }, 0);
@@ -506,8 +609,15 @@ const Positions: React.FC = () => {
   const totalNetPnl = displayPositions.reduce((sum, pos) => {
     try {
       const netPnl = Number(computeNetPnl(pos)) / Number(WAD);
+      console.log(`[totalNetPnl] Position ${pos.id.toString()}:`, {
+        netPnlBigInt: computeNetPnl(pos).toString(),
+        netPnlNumber: netPnl,
+        isFinite: isFinite(netPnl),
+        sum: sum
+      });
       return sum + (isFinite(netPnl) ? netPnl : 0);
     } catch (error) {
+      console.error(`[totalNetPnl] Error processing position ${pos.id.toString()}:`, error);
       return sum;
     }
   }, 0);
@@ -515,11 +625,25 @@ const Positions: React.FC = () => {
   const totalCollateral = displayPositions.reduce((sum, pos) => {
     try {
       const collateral = Number(pos.collateral) / Number(WAD);
+      console.log(`[totalCollateral] Position ${pos.id.toString()}:`, {
+        collateralBigInt: pos.collateral.toString(),
+        collateralNumber: collateral,
+        isFinite: isFinite(collateral),
+        sum: sum
+      });
       return sum + (isFinite(collateral) ? collateral : 0);
     } catch (error) {
+      console.error(`[totalCollateral] Error processing position ${pos.id.toString()}:`, error);
       return sum;
     }
   }, 0);
+
+  console.log('[Positions] Portfolio totals:', {
+    displayPositionsCount: displayPositions.length,
+    totalEquity,
+    totalNetPnl,
+    totalCollateral
+  });
 
   // Monitor positions for liquidation warnings
   useEffect(() => {

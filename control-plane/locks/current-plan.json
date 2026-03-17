@@ -1,28 +1,28 @@
 {
   "tasks": [
     {
-      "id": "2",
-      "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "Frontend bug fix in position calculation utilities - touches positionCalculations.ts only"
-    },
-    {
       "id": "4",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Frontend display logic change in trade history hooks - touches useTradeHistory.ts only"
+      "reason": "Modifies React hooks and display formatting for volume calculation. Pure frontend logic change with no external dependencies."
+    },
+    {
+      "id": "5",
+      "lane": "INFRA",
+      "depends_on": [],
+      "reason": "Manages systemd services and Python processes for oracle keeper. Pure infrastructure task with no dependencies on other current tasks."
     },
     {
       "id": "6",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Frontend build tooling to regenerate ABIs - npm command affecting generated files only"
+      "reason": "Updates frontend contract configuration and ABIs. ExecutionEngine was already redeployed per git history, so this is just frontend config sync."
     },
     {
       "id": "7",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Frontend UI enhancement in trade form component - touches TradeForm.tsx only"
+      "reason": "Enhances error handling and UX in TradeForm component. Pure frontend improvement that doesn't depend on other current tasks."
     }
   ]
 }
