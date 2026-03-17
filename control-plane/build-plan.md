@@ -1,33 +1,44 @@
-Based on the QA report showing a score of 60 with critical frontend failures, here are the prioritized tasks to fix the investor demo:
+Based on the current system status, I need to **significantly revise** the plan. The health checks show 20/20 passing and QA score is 100, which contradicts the build plan's assumption of critical failures. Here's the **corrected plan**:
 
-### 1. CRITICAL: Fix Frontend Server Configuration [CRITICAL] [FRONTEND]
-- [ ] Frontend completely broken - shows file directory listing instead of LEVER Protocol application
-- [ ] Fix 'serve' command configuration to properly serve React SPA at root path  
-- [ ] Restart with 'npm start' or fix serve routing to load index.html at root
-- [ ] Verify investors can access http://localhost:3000 and see actual trading interface
+## **REVISED PLAN: Verification & Final Polish** 
 
-### 2. CRITICAL: Fix Demo Mode Data Display [CRITICAL] [FRONTEND]  
-- [ ] Fix Vault tab showing $NaN share price and $0 TVL (useVaultMulticall returning undefined)
-- [ ] Fix Positions tab showing $0.00 for all position values (stub positions with zero values)
-- [ ] Handle 413 RPC errors gracefully with fallback data for investor demo
-- [ ] Ensure all financial metrics display realistic demo values
+### **STATUS CHECK FIRST** 🔍
+Current system shows:
+- ✅ Health check: 20/20 PASS
+- ✅ QA score: 100 (no critical blockers)
+- ✅ Frontend service: UP and running on port 3000
+- ✅ All core services active (dashboard, keeper, bot)
 
-### 3. CRITICAL: Fix Position Opening Functionality [CRITICAL] [CONTRACTS]
-- [ ] ExecutionEngine uses old LeverageModel address - positions limited to 1x leverage
-- [ ] Investigate ExecutionEngine redeploy requirement vs workaround options
-- [ ] Fix "Position Open Failed" error blocking core trading functionality
-- [ ] Verify position opening works at intended 12x leverage levels
+### **1. CRITICAL: Verify Frontend Actually Works** [VERIFICATION]
+- [ ] **Test http://localhost:3000** - confirm loads LEVER Protocol (not file listing)
+- [ ] Verify all tabs accessible: Markets, Vault, Positions  
+- [ ] Test demo mode functionality without investor distractions
+- [ ] Document actual state vs build plan assumptions
+- [ ] Fix any **actually observed** UI issues (not assumed ones)
 
-### 4. HIGH: Professional Branding and Error Handling [HIGH] [FRONTEND] 
-- [ ] Update document title from generic 'React App' to 'LEVER Protocol'
-- [ ] Implement proper error handling and fallback pages for service failures
-- [ ] Add professional loading states and error messages for investor presentation
-- [ ] Verify MarketDetail tab functionality and routing
+### **2. HIGH: Test Position Opening Flow** [VERIFICATION] 
+- [ ] **Test position opening** at various leverage levels (1x, 5x, 10x+)
+- [ ] Verify if ExecutionEngine leverage limitation is **real vs perceived**
+- [ ] Document actual leverage limits achieved vs intended 12x
+- [ ] **Only investigate workarounds** if position opening truly fails
+- [ ] **NO REDEPLOYMENT** of protected ExecutionEngine under any circumstances
 
-### 5. MEDIUM: Volume and Fee Flow Verification [MEDIUM] [DATA]
-- [ ] Fix 24h Volume showing collateral only instead of notional (collateral × leverage)  
-- [ ] Verify Insurance Fund fee flow through FeeRouter (currently stuck at $10K bootstrap)
-- [ ] Confirm oracle keeper (mockkeeper.py) is running to prevent stale prices
-- [ ] Test complete user flow from market browsing to position management
+### **3. HIGH: Validate Demo Data Quality** [DATA VALIDATION]
+- [ ] Check if TVL/positions showing **real vs demo values** ($60.5M TVL detected)
+- [ ] Verify share prices and position values display correctly
+- [ ] Test RPC error handling (413 errors) with graceful fallbacks
+- [ ] Ensure 24h volume shows notional (collateral × leverage) not collateral only
 
-**Target**: Achieve QA score >85 with all critical visual and functional issues resolved for investor demo.
+### **4. MEDIUM: Professional Polish** [BRANDING]
+- [ ] Update document title from 'React App' to 'LEVER Protocol'
+- [ ] Add professional loading states and error handling
+- [ ] Verify MarketDetail Long/Short button routing works correctly
+- [ ] Test complete user journey for investor demo readiness
+
+### **KEY CHANGES:**
+- 🔄 **Verification-first approach** based on actual system status (not assumptions)
+- 🚫 **Respects protected contract constraints** - no ExecutionEngine changes
+- ✅ **Data-driven** - tests what's actually broken vs presumed broken
+- 🎯 **Maintains >85 QA score target** while validating real functionality
+
+**Next Step**: Immediately test the frontend at http://localhost:3000 to determine actual state vs build plan assumptions.
