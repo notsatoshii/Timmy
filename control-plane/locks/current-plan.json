@@ -4,7 +4,7 @@
       "id": "1",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Frontend deployment issue must be fixed first - can't test or fix other UI issues if React app isn't displaying. Root cause is server config/build process."
+      "reason": "Root cause is frontend server configuration and React app build/deployment issues. Must be fixed first before any React components can be debugged."
     },
     {
       "id": "2",
@@ -12,7 +12,7 @@
       "depends_on": [
         "1"
       ],
-      "reason": "Vault data display issue requires React hooks and decimal conversion fixes. Depends on basic frontend deployment working first."
+      "reason": "React component data display debugging requires a working frontend deployment. Cannot debug useVaultMulticall or vault tab issues if React app isn't properly served."
     },
     {
       "id": "3",
@@ -20,21 +20,7 @@
       "depends_on": [
         "1"
       ],
-      "reason": "Positions data display issue requires demo data and calculation logic fixes. Depends on basic frontend deployment working first."
-    },
-    {
-      "id": "4",
-      "lane": "FRONTEND",
-      "depends_on": [
-        "1"
-      ],
-      "reason": "MarketDetail verification requires testing React components and functionality. Depends on basic frontend deployment working first."
-    },
-    {
-      "id": "5",
-      "lane": "CONTRACT",
-      "depends_on": [],
-      "reason": "Contract limitation documentation is independent of frontend fixes. Root cause is contract address mismatch issue."
+      "reason": "React component data display debugging requires a working frontend deployment. Cannot debug positions tab or BigInt handling if React app isn't properly served."
     }
   ]
 }
