@@ -173,7 +173,7 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
         },
         {
           address: contracts.usdt,
-          abi: USDT_ABI,
+          abi: USDT_ABI as any,
           functionName: 'balanceOf',
           args: [userAddress] as any,
           name: 'UsdtBalance'

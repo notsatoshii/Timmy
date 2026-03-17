@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-03-17T06:20:09.730260+00:00",
+  "frontend_status": "UP",
+  "data_checks": [
+    {
+      "name": "TVL",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Positions",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Global OI",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Insurance Fund",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Max Leverage",
+      "value": "",
+      "status": "error"
+    }
+  ],
+  "visual_issues": [
+    "Vision: Homepage shows file directory instead of DeFi interface",
+    "Vision: Critical functions showing $NaN and $0 values",
+    "Vision: Position opening completely broken with 'Position Open Failed' errors"
+  ],
+  "functional_issues": [],
+  "critical_blockers": [],
+  "score": 70,
+  "vision_review": {
+    "professional_score": 2,
+    "trust_score": 1,
+    "deal_breakers": [
+      "Homepage shows file directory instead of DeFi interface",
+      "Critical functions showing $NaN and $0 values",
+      "Position opening completely broken with 'Position Open Failed' errors"
+    ],
+    "improvements": [
+      "Fix React frontend build/deployment so actual interface loads",
+      "Resolve $NaN vault data and $0 TVL display issues",
+      "Fix ExecutionEngine deployment to enable position opening beyond 1x leverage"
+    ]
+  },
+  "recent_commits": "72ca051b auto: cycle tasks complete\n9977a43a fix(6): Verify Oracle Keeper Service Health - confirmed keeper running, price updates flowing, monitoring alerts active\n298f2946 auto: cycle tasks complete\ncdeeef34 fix(7): Verify Oracle Keeper Service Health - confirmed keeper running, price updates flowing, monitoring alerts active\na7fae3a4 auto: cycle tasks complete",
+  "known_issues_count": 27
+}

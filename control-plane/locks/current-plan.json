@@ -4,53 +4,51 @@
       "id": "1",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Frontend build configuration and React app deployment - foundational build system issue"
+      "reason": "FRONTEND: React build system, dist folder, npm commands, frontend service. No dependencies: foundational build fix that other frontend work needs"
     },
     {
       "id": "2",
       "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "Frontend RPC configuration and data fetching - networking issue independent of other systems"
+      "depends_on": [
+        "1"
+      ],
+      "reason": "FRONTEND: React hooks, components, RPC batching, display logic. Depends on 1: needs working build to test vault data fixes"
     },
     {
       "id": "3",
       "lane": "CONTRACT",
       "depends_on": [],
-      "reason": "Solidity contract redeployment and configuration - contract layer issue"
+      "reason": "CONTRACT: Solidity contract updates, forge deployment, contract addresses. No dependencies: independent contract layer work"
     },
     {
       "id": "4",
       "lane": "FRONTEND",
       "depends_on": [
-        "2",
-        "3"
+        "1"
       ],
-      "reason": "Frontend position display - depends on RPC working (task 2) and ExecutionEngine being fixed to have valid position data (task 3)"
+      "reason": "FRONTEND: React hooks, position components, stub data, decimal formatting. Depends on 1: needs working build to test position fixes"
     },
     {
       "id": "5",
       "lane": "FRONTEND",
       "depends_on": [
-        "2"
+        "1"
       ],
-      "reason": "Frontend vault display - depends on RPC working (task 2) for multicall data fetching"
+      "reason": "FRONTEND: React hooks, market data calculations, display formulas. Depends on 1: needs working build to test volume calculation fixes"
     },
     {
       "id": "6",
-      "lane": "INFRA",
-      "depends_on": [],
-      "reason": "Infrastructure service monitoring and management - independent systemd service check"
+      "lane": "FRONTEND",
+      "depends_on": [
+        "1"
+      ],
+      "reason": "FRONTEND: wagmi config, RPC client configuration, retry logic. Depends on 1: needs working build to test RPC resilience changes"
     },
     {
       "id": "7",
-      "lane": "FRONTEND",
-      "depends_on": [
-        "1",
-        "2",
-        "3",
-        "4"
-      ],
-      "reason": "Frontend trading flow integration - depends on build working (1), RPC working (2), ExecutionEngine fixed (3), and position display working (4)"
+      "lane": "CONTRACT",
+      "depends_on": [],
+      "reason": "CONTRACT: Verifying Solidity fee routing, calling contract methods, testing fee distribution. No dependencies: independent contract verification work"
     }
   ]
 }
