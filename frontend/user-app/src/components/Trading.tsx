@@ -31,11 +31,12 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
   const { showSuccessToast, showErrorToast, showTradeConfirmation } = useNotifications();
   const { markets: onChainMarkets } = useMarketProbabilities();
   const { testWalletKey } = useDemo();
+  const [isAutoFunding, setIsAutoFunding] = useState(false);
   const [tradeForm, setTradeForm] = useState<TradeForm>({
     marketId: selectedTrade?.marketId || '',
     direction: selectedTrade?.direction || 'long',
     collateral: '',
-    leverage: '1',
+    leverage: '5',
   });
 
   // Load contract addresses on component mount
@@ -340,6 +341,27 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
       });
 
       if (isDemoMode) {
+        setIsAutoFunding(true);
+        // Auto-approve USDT for AccountManager
+        try {
+          await sendDemoTransaction(
+            CONTRACT_ADDRESSES.usdt,
+            USDT_ABI,
+            'approve',
+            [CONTRACT_ADDRESSES.accountManager, BigInt('115792089237316195423570985008687907853269984665640564039457584007913129639935')]
+          );
+        } catch (e) { console.log('Approve already set:', e); }
+        // Auto-deposit collateral
+        try {
+          await sendDemoTransaction(
+            CONTRACT_ADDRESSES.accountManager,
+            ACCOUNT_MANAGER_ABI,
+            'deposit',
+            [collateralAmount]
+          );
+        } catch (e) { console.log('Deposit skipped:', e); }
+        setIsAutoFunding(false);
+        // Open position
         const hash = await sendDemoTransaction(
           CONTRACT_ADDRESSES.executionEngine,
           EXECUTION_ENGINE_ABI,
@@ -375,7 +397,7 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
         marketId: '',
         direction: 'long',
         collateral: '',
-        leverage: '1',
+        leverage: '5',
       });
     } catch (error: any) {
       console.error('Error opening position - full error:', error);
@@ -573,6 +595,14 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
                     Position value: {calculatePositionSize()} USDT &bull; Leverage: {tradeForm.leverage}x
                   </p>
                 </div>
+              ) : isDemoMode ? (
+                <button
+                  onClick={handleOpenPosition}
+                  disabled={!tradeForm.marketId || !tradeForm.collateral || isAutoFunding}
+                  className="w-full bg-accent text-surface-0 py-3 px-4 rounded-md font-semibold hover:bg-accent-dim disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isAutoFunding ? 'Setting up account...' : 'Open Position'}
+                </button>
               ) : !accountBalance || accountBalance < parseUsdt(tradeForm.collateral || '0') ? (
                 <div className="space-y-2">
                   <button
