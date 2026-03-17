@@ -1,0 +1,40 @@
+{
+  "tasks": [
+    {
+      "id": "1",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "3"
+      ],
+      "reason": "Frontend React hook and display fixes. Depends on volume calculation fixes since vault tab might display volume metrics."
+    },
+    {
+      "id": "2",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "3"
+      ],
+      "reason": "Frontend position display fixes. Depends on volume calculation since positions tab likely shows position-level volume data."
+    },
+    {
+      "id": "3",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "Frontend volume calculation logic changes. No dependencies - this fixes the core volume calculation that other components use."
+    },
+    {
+      "id": "4",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "3"
+      ],
+      "reason": "Frontend market detail testing. Depends on volume calculation since market detail displays volume data that needs to be accurate for testing."
+    },
+    {
+      "id": "5",
+      "lane": "INFRA",
+      "depends_on": [],
+      "reason": "Infrastructure service investigation (mockkeeper.py systemd service). No dependencies - runs independently of frontend fixes."
+    }
+  ]
+}
