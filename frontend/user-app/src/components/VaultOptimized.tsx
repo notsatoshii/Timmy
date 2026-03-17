@@ -20,6 +20,18 @@ const VaultOptimized: React.FC = () => {
   // Vault multicall hook with fallback values for failed RPC calls
   const vaultData = useVaultMulticall(address);
 
+  // Debug vault data received in component
+  console.log('=== VAULT OPTIMIZED COMPONENT DATA ===', {
+    vaultData,
+    totalAssets: vaultData?.totalAssets?.toString(),
+    totalSupply: vaultData?.totalSupply?.toString(),
+    sharePrice: vaultData?.sharePrice?.toString(),
+    globalOI: vaultData?.globalOI?.toString(),
+    isLoading: vaultData?.isLoadingVaultData,
+    hasError: vaultData?.hasError,
+    errors: vaultData?.errors?.map(e => e.message),
+  });
+
   // Memoized calculations - expensive computations only run when data changes
   const metrics = useMemoizedVaultCalculations({
     totalAssets: vaultData.totalAssets,
@@ -36,31 +48,62 @@ const VaultOptimized: React.FC = () => {
   // Calculate correct share price from useVaultMulticall (convertToAssets result)
   const sharePrice = useMemo(() => {
     try {
+      // Enhanced debugging and validation
+      console.log('=== SHARE PRICE CALCULATION DEBUG ===', {
+        hasVaultData: !!vaultData,
+        rawSharePrice: vaultData.sharePrice?.toString(),
+        sharePriceType: typeof vaultData.sharePrice,
+        isLoading: vaultData.isLoadingVaultData,
+        hasError: vaultData.hasError,
+        errors: vaultData.errors?.map(e => e.message),
+      });
+
+      if (!vaultData || vaultData.isLoadingVaultData) {
+        console.log('Vault data is loading, using fallback share price');
+        return 1.0;
+      }
+
       if (!vaultData.sharePrice || vaultData.sharePrice === BigInt(0)) {
-        console.warn('No share price from vaultData, using fallback $1.00');
+        console.warn('No share price from vaultData, using fallback $1.00', {
+          sharePrice: vaultData.sharePrice,
+          hasError: vaultData.hasError,
+        });
         return 1.0; // Fallback to $1.00
       }
 
-      // vaultData.sharePrice comes from convertToAssets(1 WAD) and is in WAD format (18 decimals)
+      // CRITICAL FIX: vaultData.sharePrice comes from convertToAssets(1 WAD)
+      // Based on testing, it appears to be returning WAD format instead of USDT format
+      // So we need to convert from WAD (18 decimals) to USD
       const sharePriceFloat = Number(vaultData.sharePrice) / 1e18;
 
       console.log('=== SHARE PRICE CALCULATION ===', {
         rawSharePrice: vaultData.sharePrice.toString(),
         sharePriceFloat,
-        isValid: isFinite(sharePriceFloat) && sharePriceFloat > 0
+        isValid: isFinite(sharePriceFloat) && sharePriceFloat > 0,
+        vaultDataError: vaultData.hasError,
+        errorCount: vaultData.errors?.length || 0,
       });
 
-      if (!isFinite(sharePriceFloat) || sharePriceFloat <= 0) {
-        console.warn('Invalid share price from convertToAssets:', vaultData.sharePrice.toString());
+      if (!isFinite(sharePriceFloat) || sharePriceFloat <= 0 || isNaN(sharePriceFloat)) {
+        console.warn('Invalid share price from convertToAssets, using fallback:', {
+          rawValue: vaultData.sharePrice.toString(),
+          calculatedFloat: sharePriceFloat,
+          isFinite: isFinite(sharePriceFloat),
+          isPositive: sharePriceFloat > 0,
+          isNaN: isNaN(sharePriceFloat),
+        });
         return 1.0;
       }
 
       return sharePriceFloat;
     } catch (error) {
-      console.warn('Error converting share price:', error);
+      console.error('Error converting share price, using fallback:', error, {
+        vaultDataSharePrice: vaultData?.sharePrice,
+        hasVaultData: !!vaultData,
+      });
       return 1.0;
     }
-  }, [vaultData.sharePrice]);
+  }, [vaultData, vaultData?.sharePrice, vaultData?.isLoadingVaultData, vaultData?.hasError]);
 
   // Memoized form calculations using correct share price
   const formCalculations = useMemo(() => {

@@ -226,6 +226,15 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
   // TEMPORARY FIX: Disable circuit breaker to debug vault data issues
   const isCircuitBreakerDisabled = true;
 
+  // Force reload contract addresses on mount to ensure we have latest
+  useEffect(() => {
+    loadContractAddresses().then(addresses => {
+      console.log('Vault multicall loaded addresses:', addresses);
+    }).catch(err => {
+      console.error('Failed to load addresses for vault multicall:', err);
+    });
+  }, []);
+
   // Batch 1: Core vault multicall with enhanced retry logic
   const coreMulticallResult = useContractData({
     contracts: contractBatches.coreVaultCalls,
@@ -257,6 +266,7 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
     // Enhanced debugging for vault data issues
     console.log('=== VAULT MULTICALL DEBUG ===', {
       circuitBreakerOpen: circuitBreaker.isOpen,
+      circuitBreakerDisabled: isCircuitBreakerDisabled,
       coreMulticallResult: {
         data: coreMulticallResult?.data,
         isLoading: coreMulticallResult?.isLoading,
@@ -272,6 +282,30 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
       contractAddresses: contracts,
       fallbackValues,
     });
+
+    // CRITICAL FIX: If we have no data at all (complete failure), return fallback values immediately
+    if (!coreMulticallResult || (!coreMulticallResult.data && coreMulticallResult.hasError)) {
+      console.warn('=== VAULT MULTICALL: Using complete fallbacks due to core data failure ===');
+      return {
+        totalAssets: fallbackValues.totalAssets,
+        totalSupply: fallbackValues.totalSupply,
+        sharePrice: fallbackValues.sharePrice,
+        globalOI: fallbackValues.globalOI,
+        userShares: fallbackValues.userShares,
+        usdtBalance: fallbackValues.usdtBalance,
+        isLoadingVaultData: false,
+        isLoadingUserData: false,
+        hasError: true,
+        hasNetworkError: true,
+        hasRateLimit: false,
+        errors: [{ message: 'Core vault data completely failed, using fallbacks', code: 'FALLBACK_MODE' }],
+        circuitBreakerOpen: false,
+        nextAttemptTime: 0,
+        retryAttempts: 0,
+        batchingActive: true,
+        validationErrors: ['Using complete fallback values'],
+      };
+    }
 
     // If circuit breaker is open, return fallback values (DISABLED FOR DEBUGGING)
     if (!isCircuitBreakerDisabled && circuitBreaker.isOpen) {
@@ -296,9 +330,38 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
       };
     }
 
-    // Extract data from both batched results
+    // Extract data from both batched results with enhanced null/undefined protection
     const coreData = coreMulticallResult?.data || [];
     const userData = userMulticallResult?.data || [];
+
+    // CRITICAL FIX: If coreData is empty or all values are null/undefined, use fallbacks
+    if (!coreData || coreData.length === 0 || coreData.every(val => val === null || val === undefined)) {
+      console.warn('=== VAULT MULTICALL: Core data is empty/null, using fallbacks ===', {
+        coreData,
+        coreDataLength: coreData?.length,
+        allNull: coreData?.every(val => val === null || val === undefined)
+      });
+
+      return {
+        totalAssets: fallbackValues.totalAssets,
+        totalSupply: fallbackValues.totalSupply,
+        sharePrice: fallbackValues.sharePrice,
+        globalOI: fallbackValues.globalOI,
+        userShares: userAddress ? (userData?.[0] ?? fallbackValues.userShares) : fallbackValues.userShares,
+        usdtBalance: userAddress ? (userData?.[1] ?? fallbackValues.usdtBalance) : fallbackValues.usdtBalance,
+        isLoadingVaultData: false,
+        isLoadingUserData: false,
+        hasError: true,
+        hasNetworkError: false,
+        hasRateLimit: false,
+        errors: [{ message: 'Core vault data is null/empty, using fallbacks', code: 'NULL_DATA' }],
+        circuitBreakerOpen: false,
+        nextAttemptTime: 0,
+        retryAttempts: 0,
+        batchingActive: true,
+        validationErrors: ['Using fallback values due to null/empty core data'],
+      };
+    }
 
     // Safely extract values with comprehensive BigInt validation and fallback handling
     const safeBigIntValue = (value: any, fallbackValue: bigint, name: string): bigint => {
@@ -361,6 +424,35 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
       userShares: safeValues.userShares.toString(),
       usdtBalance: safeValues.usdtBalance.toString(),
     });
+
+    // FINAL RETURN VALUES LOGGING
+    const finalReturn = {
+      ...safeValues,
+      isLoadingVaultData,
+      isLoadingUserData,
+      hasError,
+      hasNetworkError,
+      hasRateLimit,
+      errors: allErrors,
+      circuitBreakerOpen: circuitBreaker.isOpen,
+      nextAttemptTime: circuitBreaker.nextAttemptTime,
+      retryAttempts: retriesRef.current,
+      batchingActive: true,
+      validationErrors,
+    };
+
+    console.log('=== FINAL VAULT MULTICALL RETURN ===', {
+      totalAssets: finalReturn.totalAssets.toString(),
+      totalSupply: finalReturn.totalSupply.toString(),
+      sharePrice: finalReturn.sharePrice.toString(),
+      globalOI: finalReturn.globalOI.toString(),
+      isLoadingVaultData: finalReturn.isLoadingVaultData,
+      hasError: finalReturn.hasError,
+      errorCount: finalReturn.errors.length,
+      errors: finalReturn.errors.map(e => e.message),
+    });
+
+    return finalReturn;
 
     // Loading states - both batches must complete for vault data, user data depends on user batch only
     const isLoadingVaultData = (coreMulticallResult?.isLoading || false) && (isCircuitBreakerDisabled || !circuitBreaker.isOpen);
@@ -434,20 +526,6 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
       }
     });
 
-    return {
-      ...safeValues,
-      isLoadingVaultData,
-      isLoadingUserData,
-      hasError,
-      hasNetworkError,
-      hasRateLimit,
-      errors: allErrors,
-      circuitBreakerOpen: circuitBreaker.isOpen,
-      nextAttemptTime: circuitBreaker.nextAttemptTime,
-      retryAttempts: retriesRef.current,
-      batchingActive: true, // Flag to indicate batching is being used
-      validationErrors,
-    };
   }, [
     coreMulticallResult,
     userMulticallResult,

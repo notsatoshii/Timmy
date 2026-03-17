@@ -1,29 +1,18 @@
-Based on the QA report (score: 60/100) and critical blockers for the investor demo, here are the **LOCKED PRIORITIES**:
+Looking at the QA report (score: 60) and critical issues blocking the investor demo, I'll prioritize the most urgent frontend fixes:
 
-## **🔥 INVESTOR DEMO PRIORITIES (LOCKED)**
+### 1. Fix Vault Tab Data Issues [CRITICAL] [FRONTEND]
+- [ ] 1. Resolve $NaN share price and $0 TVL in vault tab - investigate useVaultMulticall returning undefined and 413 RPC errors. This completely breaks the LP experience for demo.
 
-### **1. Fix Vault Tab Data Issues [CRITICAL] [FRONTEND]**
-- [ ] 1. Debug useVaultMulticall returning undefined causing $NaN share price and $0 TVL in demo mode
-- [ ] 2. Fix 413 RPC errors breaking vault data queries  
-- [ ] 3. Verify vault tab shows real TVL ($60.5T detected by health check) and proper share price
+### 2. Fix Position Values Display [CRITICAL] [FRONTEND] 
+- [ ] 2. Resolve positions showing $0.00 for all values in demo mode - debug stub positions data formatting and ensure position equity/PnL calculations display correctly.
 
-### **2. Fix Position Values Display [CRITICAL] [FRONTEND]** 
-- [ ] 1. Debug why Positions tab shows $0.00 for all position values in demo mode
-- [ ] 2. Fix stub positions data to show actual position equity and PnL
-- [ ] 3. Ensure position values update from real contract data, not hardcoded zeros
+### 3. Fix Volume Calculation [HIGH] [FRONTEND]
+- [ ] 3. Update 24h volume to show notional (collateral × leverage) instead of just collateral amount - affects market statistics and trading metrics accuracy.
 
-### **3. Verify MarketDetail Tab Functionality [CRITICAL] [FRONTEND]**
-- [ ] 1. Test MarketDetail tab renders without crashes 
-- [ ] 2. Verify market-specific data (probability charts, OI breakdown, rates) loads properly
-- [ ] 3. Ensure navigation from Markets → MarketDetail → back to Markets works smoothly
+### 4. Verify MarketDetail Tab [HIGH] [FRONTEND]
+- [ ] 4. Test and verify MarketDetail tab functionality works correctly for the demo - ensure market information, charts, and trading interface render properly.
 
-### **4. Fix 24h Volume Calculation [MEDIUM] [DATA]**
-- [ ] 1. Update volume calculation to show notional (collateral × leverage) instead of collateral only
-- [ ] 2. Verify volume aggregation across all markets matches expected trading activity
+### 5. Investigate Position Opening Limitation [MEDIUM] [SYSTEM]
+- [x] 5. Document ExecutionEngine/LeverageModel mismatch causing 1x leverage limit and "Position Open Failed" errors - prepare workaround or escalation plan since contract redeployment is restricted.
 
-### **5. ExecutionEngine Leverage Investigation [CRITICAL] [CONTRACTS]**
-- [ ] 1. **INVESTIGATE ONLY** - Analyze why ExecutionEngine still uses old LeverageModel address (immutable)
-- [ ] 2. Document impact on position opening failures and 1x leverage limitation
-- [ ] 3. **DO NOT REDEPLOY** - Report findings for future deployment decision
-
-**STATUS:** All tasks target the QA score improvement from 60 → 90+ for investor readiness. Focus on **data display** and **user experience** fixes only. No contract redeployments allowed per sprint lock.
+**Note:** Focusing on frontend fixes first since contract redeployment is restricted per build plan. The ExecutionEngine limitation (#5) may require architectural discussion before proceeding.

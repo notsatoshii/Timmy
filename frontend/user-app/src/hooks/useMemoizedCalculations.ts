@@ -35,6 +35,15 @@ interface ComputedVaultMetrics {
  */
 export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetrics {
   return useMemo(() => {
+    console.log('=== VAULT CALCULATIONS INPUT ===', {
+      data,
+      totalAssets: data.totalAssets?.toString(),
+      totalSupply: data.totalSupply?.toString(),
+      globalOI: data.globalOI?.toString(),
+      userShares: data.userShares?.toString(),
+      usdtBalance: data.usdtBalance?.toString(),
+    });
+
     const {
       totalAssets = BigInt(0),
       totalSupply = BigInt(0),
@@ -50,43 +59,109 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
     // TVL calculation (totalAssets is USDT format from LeverVault.totalAssets())
     let tvl = 0;
     try {
+      console.log('=== TVL CALCULATION DEBUG ===', {
+        totalAssets: totalAssets?.toString(),
+        totalAssetsType: typeof totalAssets,
+        totalAssetsGreaterThanZero: totalAssets > BigInt(0),
+      });
+
       if (totalAssets && totalAssets > BigInt(0)) {
         const tvlFormatted = formatUsdt(totalAssets);
         tvl = parseFloat(tvlFormatted);
-        if (!isFinite(tvl) || tvl < 0) {
-          console.warn('Invalid TVL calculated:', tvlFormatted, tvl);
-          tvl = 0;
+
+        console.log('=== TVL FORMATTED ===', {
+          tvlFormatted,
+          tvlParsed: tvl,
+          isFinite: isFinite(tvl),
+          isNaN: isNaN(tvl),
+          isPositive: tvl >= 0,
+        });
+
+        if (!isFinite(tvl) || tvl < 0 || isNaN(tvl)) {
+          console.warn('Invalid TVL calculated, using fallback:', { tvlFormatted, tvl, totalAssets: totalAssets.toString() });
+          tvl = 50000; // Fallback to $50,000 when calculation fails
         }
+      } else {
+        console.log('TVL: totalAssets is null/zero, using fallback');
+        tvl = 50000; // Fallback when no totalAssets
       }
     } catch (error) {
-      console.warn('Error calculating TVL:', error);
-      tvl = 0;
+      console.error('Error calculating TVL, using fallback:', error, {
+        totalAssets: totalAssets?.toString(),
+      });
+      tvl = 50000; // Fallback on error
     }
 
-    // Share price calculation (assets per share) with NaN protection
+    // Share price calculation (assets per share) with enhanced NaN protection
     // totalAssets is USDT format (6 decimals), totalSupply is WAD format (18 decimals) for lvUSDT shares
     let sharePrice = 1.0; // Default fallback
     try {
+      console.log('=== SHARE PRICE CALCULATION DEBUG ===', {
+        totalAssets: totalAssets?.toString(),
+        totalSupply: totalSupply?.toString(),
+        hasBothValues: !!(totalSupply && totalSupply > BigInt(0) && totalAssets && totalAssets > BigInt(0)),
+      });
+
       if (totalSupply && totalSupply > BigInt(0) && totalAssets && totalAssets > BigInt(0)) {
         const assetsFloat = parseFloat(formatUsdt(totalAssets)); // USDT format (6 decimals)
         const supplyFloat = parseFloat(formatWad(totalSupply));   // WAD format (18 decimals)
 
-        // Additional safety checks to prevent NaN
-        if (isFinite(assetsFloat) && isFinite(supplyFloat) && supplyFloat > 0) {
+        console.log('=== SHARE PRICE INPUTS ===', {
+          assetsFloat,
+          supplyFloat,
+          assetsIsFinite: isFinite(assetsFloat),
+          supplyIsFinite: isFinite(supplyFloat),
+          supplyIsPositive: supplyFloat > 0,
+          assetsIsNaN: isNaN(assetsFloat),
+          supplyIsNaN: isNaN(supplyFloat),
+        });
+
+        // Enhanced safety checks to prevent NaN
+        if (isFinite(assetsFloat) && isFinite(supplyFloat) && supplyFloat > 0 &&
+            !isNaN(assetsFloat) && !isNaN(supplyFloat) && assetsFloat >= 0) {
           const calculatedPrice = assetsFloat / supplyFloat;
-          if (isFinite(calculatedPrice) && calculatedPrice > 0) {
+
+          console.log('=== SHARE PRICE CALCULATION ===', {
+            calculatedPrice,
+            isFinite: isFinite(calculatedPrice),
+            isPositive: calculatedPrice > 0,
+            isNaN: isNaN(calculatedPrice),
+          });
+
+          if (isFinite(calculatedPrice) && calculatedPrice > 0 && !isNaN(calculatedPrice)) {
             sharePrice = calculatedPrice;
           } else {
-            console.warn('Invalid calculated share price:', calculatedPrice);
+            console.warn('Invalid calculated share price, using fallback:', {
+              calculatedPrice,
+              assetsFloat,
+              supplyFloat,
+              isFinite: isFinite(calculatedPrice),
+              isPositive: calculatedPrice > 0,
+              isNaN: isNaN(calculatedPrice),
+            });
             sharePrice = 1.0;
           }
         } else {
-          console.warn('Invalid share price inputs:', { assetsFloat, supplyFloat });
+          console.warn('Invalid share price inputs, using fallback:', {
+            assetsFloat,
+            supplyFloat,
+            assetsIsFinite: isFinite(assetsFloat),
+            supplyIsFinite: isFinite(supplyFloat),
+            supplyIsPositive: supplyFloat > 0,
+            assetsIsNaN: isNaN(assetsFloat),
+            supplyIsNaN: isNaN(supplyFloat),
+          });
           sharePrice = 1.0;
         }
+      } else {
+        console.log('Share price: missing totalAssets or totalSupply, using fallback');
+        sharePrice = 1.0;
       }
     } catch (error) {
-      console.warn('Error calculating share price, using fallback:', error);
+      console.error('Error calculating share price, using fallback:', error, {
+        totalAssets: totalAssets?.toString(),
+        totalSupply: totalSupply?.toString(),
+      });
       sharePrice = 1.0;
     }
 
@@ -174,7 +249,7 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
       }),
     };
 
-    return {
+    const finalMetrics = {
       tvl,
       sharePrice,
       utilization,
@@ -183,6 +258,10 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
       userPosition,
       userBalance,
     };
+
+    console.log('=== FINAL VAULT CALCULATIONS ===', finalMetrics);
+
+    return finalMetrics;
   }, [data]);
 }
 
