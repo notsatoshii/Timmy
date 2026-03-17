@@ -6,7 +6,7 @@ import ProtocolStats from './ProtocolStats';
 import Markets from './Markets';
 import MarketDetail from './MarketDetail';
 import Trading from './Trading';
-import Vault from './Vault';
+import VaultOptimized from './VaultOptimized';
 import Positions from './Positions';
 import ErrorBoundary from './ErrorBoundary';
 
@@ -76,7 +76,7 @@ const Dashboard: React.FC = () => {
       case 'vault':
         return (
           <ErrorBoundary panelName="Vault">
-            <Vault />
+            <VaultOptimized />
           </ErrorBoundary>
         );
       case 'positions':

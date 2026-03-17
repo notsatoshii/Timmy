@@ -1,41 +1,18 @@
 {
   "tasks": [
     {
-      "id": "1",
-      "lane": "INFRA",
-      "depends_on": [],
-      "reason": "Frontend server down blocks all other frontend work - systemd service and server configuration issues are INFRA domain"
-    },
-    {
       "id": "2",
       "lane": "FRONTEND",
-      "depends_on": [
-        "1"
-      ],
-      "reason": "Vault display issues in React components and RPC calls - need frontend running first to test and fix"
+      "depends_on": [],
+      "reason": "Root cause is React hook (useVaultMulticall) and RPC call issues from frontend. Requires fixing React components and data formatting."
     },
     {
       "id": "3",
       "lane": "FRONTEND",
       "depends_on": [
-        "1",
         "2"
       ],
-      "reason": "Position display in React components - depends on frontend running and RPC fixes from task 2 since 413 RPC errors might affect all data loading"
-    },
-    {
-      "id": "4",
-      "lane": "CONTRACTS",
-      "depends_on": [],
-      "reason": "ExecutionEngine contract configuration update - independent Solidity/contract work that doesn't require frontend fixes"
-    },
-    {
-      "id": "5",
-      "lane": "FRONTEND",
-      "depends_on": [
-        "1"
-      ],
-      "reason": "Volume calculation formula in React - only needs frontend running, independent of other display fixes"
+      "reason": "React component display issue for positions tab. Same lane as task 2 and could touch shared hooks/components, so sequential for safety."
     }
   ]
 }
