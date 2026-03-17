@@ -87,6 +87,7 @@ ALL applicable verification scripts pass. "Script stdout said SUCCESS" is NEVER 
 - After deployment: update addresses -> copy deployment JSONs to build/deployments/ and public/deployments/ -> rebuild -> `systemctl restart lever-frontend`
 - App must load with ZERO critical console errors in read-only mode
 - If frontend is broken, it is P0 priority — fix before anything else
+- **MANDATORY TAB VALIDATION:** After ANY frontend task, you MUST run `node scripts/tab-sanity.js`. If any tab FAILs either the data check or the visual check, the task is NOT done — fix the failing values or layout issues and re-run until all tabs PASS both layers. Include the screenshot filenames and the vision review output in your completion message. A frontend task is not complete if any tab fails either validation layer, regardless of whether the code compiles and renders without crashing.
 
 ---
 

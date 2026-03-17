@@ -23,6 +23,7 @@ ALL applicable verification scripts pass. "Script stdout said SUCCESS" is NEVER 
 - Run visual-verify.js — check screenshots in control-plane/screenshots/
 - A black screen means React crashed. Check App.tsx provider wrappers.
 - $0.00 in stats means wrong contract addresses. Check config/contracts.ts.
+- **MANDATORY TAB VALIDATION:** After ANY frontend task, you MUST run `node scripts/tab-sanity.js`. If any tab FAILs either the data check or the visual check, the task is NOT done — fix the failing values or layout issues and re-run until all tabs PASS both layers. Include the screenshot filenames and the vision review output in your completion message. A frontend task is not complete if any tab fails either validation layer, regardless of whether the code compiles and renders without crashing.
 
 ## CONTRACT TASKS
 - Source deploy-env.sh before running ANY forge script

@@ -177,7 +177,7 @@ RULES:
 **FAIL:** Funding rate is exactly 0 despite 98/2 imbalance, or is negative (shorts paying longs), or exceeds 1% per hour.
 
 ### 8a. Build Tab Sanity Check — Data + Visual [HIGH]
-- [ ] 8a. Current sanity-check-frontend.sh only tests the landing page stats banner. Build a NEW script at scripts/tab-sanity.js using puppeteer (visual-verify.js already exists as reference). The script has TWO validation layers:
+- [x] 8a. Current sanity-check-frontend.sh only tests the landing page stats banner. Build a NEW script at scripts/tab-sanity.js using puppeteer (visual-verify.js already exists as reference). The script has TWO validation layers:
 
 **LAYER 1 — Data Validation (automated):**
 (1) Launch headless Chrome at http://localhost:3000.
