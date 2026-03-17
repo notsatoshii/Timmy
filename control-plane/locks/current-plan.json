@@ -4,7 +4,7 @@
       "id": "2.2",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Building and restarting frontend service after auto-fund demo wallet changes. First frontend task."
+      "reason": "Frontend build and service restart - no data dependencies, first in sequence"
     },
     {
       "id": "3.2",
@@ -12,7 +12,7 @@
       "depends_on": [
         "2.2"
       ],
-      "reason": "Building and restarting frontend service after positions real data changes. Must be sequential with 2.2 since both run npm build and restart same service."
+      "reason": "Frontend build and service restart - same lane as 2.2, both build same frontend and restart same service so must be sequential to avoid conflicts"
     }
   ]
 }
