@@ -61,38 +61,51 @@ export function useContractData(config: ContractDataConfig) {
           isRateLimit: enhanced.isRateLimit,
           contracts: contracts.map(c => ({ address: c.address, function: c.functionName })),
           failureCount: failureCount + 1,
+          timestamp: new Date().toISOString(),
         });
 
-        // More conservative retry logic for rate limiting
+        // Enhanced retry logic with exponential backoff consideration
         if (failureCount < retryAttempts) {
           if (enhanced.isRateLimit) {
-            // Only retry rate limits once to avoid hammering
-            return failureCount === 0;
+            // Allow up to 2 retries for rate limits with exponential backoff
+            return failureCount < 2;
           }
           if (enhanced.isNetworkError) {
+            // Allow all retries for network errors
             return true;
           }
+          // Allow retries for other errors but be more conservative
+          return failureCount < Math.min(2, retryAttempts);
         }
         return false;
       },
       retryDelay: (attemptIndex, error) => {
         const enhanced = enhanceError(error);
 
-        // Much longer delays for rate limiting
+        // Enhanced exponential backoff for rate limiting
         if (enhanced.isRateLimit) {
-          const rateLimitDelay = Math.min(10000 * Math.pow(2, attemptIndex), 60000); // 10s, 20s, 40s, 60s max
-          const jitter = Math.random() * 2000; // More jitter for rate limits
-          console.log(`Rate limit retry delay: ${rateLimitDelay + jitter}ms`);
+          // More aggressive backoff for 413 errors: 5s, 20s, 80s
+          const rateLimitDelay = Math.min(5000 * Math.pow(4, attemptIndex), 120000);
+          const jitter = Math.random() * 3000; // 0-3s jitter
+          console.log(`Rate limit retry delay (attempt ${attemptIndex + 1}): ${Math.ceil((rateLimitDelay + jitter) / 1000)}s`);
           return rateLimitDelay + jitter;
         }
 
-        // Normal exponential backoff with jitter for other errors
-        const baseDelay = Math.min(1000 * Math.pow(2, attemptIndex), 15000);
+        // Enhanced exponential backoff for network errors: 2s, 8s, 32s
+        if (enhanced.isNetworkError) {
+          const networkDelay = Math.min(2000 * Math.pow(4, attemptIndex), 60000);
+          const jitter = Math.random() * 1000;
+          console.log(`Network error retry delay (attempt ${attemptIndex + 1}): ${Math.ceil((networkDelay + jitter) / 1000)}s`);
+          return networkDelay + jitter;
+        }
+
+        // Standard exponential backoff for other errors: 1s, 4s, 16s
+        const baseDelay = Math.min(1000 * Math.pow(4, attemptIndex), 30000);
         const jitter = Math.random() * 500;
         return baseDelay + jitter;
       },
-      staleTime: 15000, // 15s
-      refetchInterval: 30000, // 30s
+      staleTime: 20000, // 20s - slightly longer to reduce pressure
+      refetchInterval: 45000, // 45s - longer interval to reduce rate limiting
     },
   });
 
@@ -227,32 +240,44 @@ export function useContractReadEnhanced({
           code: enhanced.code,
           isNetworkError: enhanced.isNetworkError,
           isRateLimit: enhanced.isRateLimit,
+          timestamp: new Date().toISOString(),
         });
 
+        // Enhanced retry logic with better exponential backoff
         if (failureCount < 3) {
           if (enhanced.isRateLimit) {
-            // Only retry rate limits once
-            return failureCount === 0;
+            // Allow 2 retries for rate limits with long delays
+            return failureCount < 2;
           }
           if (enhanced.isNetworkError) {
             return true;
           }
+          // Allow retries for other contract errors
+          return failureCount < 2;
         }
         return false;
       },
       retryDelay: (attemptIndex, error) => {
         const enhanced = enhanceError(error, { address, functionName, name });
 
-        // Much longer delays for rate limiting
+        // Enhanced exponential backoff for rate limiting
         if (enhanced.isRateLimit) {
-          const rateLimitDelay = Math.min(8000 * Math.pow(2, attemptIndex), 45000);
-          const jitter = Math.random() * 2000;
+          const rateLimitDelay = Math.min(6000 * Math.pow(4, attemptIndex), 90000); // 6s, 24s, 96s
+          const jitter = Math.random() * 2500; // 0-2.5s jitter
+          console.log(`Single contract rate limit retry delay (attempt ${attemptIndex + 1}): ${Math.ceil((rateLimitDelay + jitter) / 1000)}s`);
           return rateLimitDelay + jitter;
         }
 
-        // Normal exponential backoff
-        const baseDelay = Math.min(1000 * Math.pow(2, attemptIndex), 15000);
-        const jitter = Math.random() * 500;
+        // Enhanced exponential backoff for network errors
+        if (enhanced.isNetworkError) {
+          const networkDelay = Math.min(2500 * Math.pow(3, attemptIndex), 45000); // 2.5s, 7.5s, 22.5s
+          const jitter = Math.random() * 1000;
+          return networkDelay + jitter;
+        }
+
+        // Standard exponential backoff for other errors
+        const baseDelay = Math.min(1500 * Math.pow(3, attemptIndex), 25000);
+        const jitter = Math.random() * 750;
         return baseDelay + jitter;
       },
     },
