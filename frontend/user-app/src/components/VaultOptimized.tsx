@@ -20,9 +20,9 @@ const VaultOptimized: React.FC = () => {
   // Vault multicall hook with fallback values for failed RPC calls
   const vaultData = useVaultMulticall(address);
 
-  // CRITICAL FIX: Ensure safeVaultData is never undefined by providing robust fallback
+  // CRITICAL FIX: Ensure vaultData is never undefined by providing robust fallback
   const safeVaultData = useMemo(() => {
-    if (!safeVaultData) {
+    if (!vaultData) {
       console.warn('=== VAULT DATA IS UNDEFINED - Creating safe fallback ===');
       return {
         totalAssets: BigInt("250000000000"), // $250k TVL
@@ -38,8 +38,8 @@ const VaultOptimized: React.FC = () => {
         circuitBreakerOpen: false,
       };
     }
-    return safeVaultData;
-  }, [safeVaultData]);
+    return vaultData;
+  }, [vaultData]);
 
   // Debug vault data received in component
   if (safeVaultData?.hasError || !safeVaultData?.totalAssets || safeVaultData?.totalAssets === BigInt(0)) {
