@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-17T20:37:01.531357+00:00",
+  "timestamp": "2026-03-17T20:52:55.768954+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -28,32 +28,35 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Very low utilization rate (0.25%) signals weak user adoption",
-    "Vision: Low trading volume ($12.8K) relative to TVL ($69.5M) raises liquidity concerns",
-    "Vision: Many markets show similar resolution times (22h) suggesting test data rather than real markets",
-    "Vision: Some market prices appear confusingly low (19.4\u20b5) without clear explanation",
-    "Vision: No clear onboarding or explanation of how synthetic perpetuals work"
+    "Vision: Read-only mode warning reduces confidence in functionality",
+    "Vision: Base Sepolia testnet status indicates pre-production stage",
+    "Vision: TVL of $69.5M shows limited institutional adoption",
+    "Vision: Market selection focuses on niche/speculative events",
+    "Vision: Short resolution timeframes (22h-43d) suggest early-stage markets",
+    "Vision: Limited market categories compared to established prediction platforms"
   ],
   "functional_issues": [],
-  "score": 60,
+  "score": 52,
   "vision_review": {
     "professional_score": 8,
-    "trust_score": 7,
+    "trust_score": 6,
     "issues": [
-      "Very low utilization rate (0.25%) signals weak user adoption",
-      "Low trading volume ($12.8K) relative to TVL ($69.5M) raises liquidity concerns",
-      "Many markets show similar resolution times (22h) suggesting test data rather than real markets",
-      "Some market prices appear confusingly low (19.4\u20b5) without clear explanation",
-      "No clear onboarding or explanation of how synthetic perpetuals work"
+      "Read-only mode warning reduces confidence in functionality",
+      "Base Sepolia testnet status indicates pre-production stage",
+      "TVL of $69.5M shows limited institutional adoption",
+      "Market selection focuses on niche/speculative events",
+      "Short resolution timeframes (22h-43d) suggest early-stage markets",
+      "Limited market categories compared to established prediction platforms"
     ],
     "improvements": [
-      "Add tooltips explaining what price represents (probability in cents)",
-      "Display more diverse resolution timeframes to show market variety",
-      "Include trading activity indicators or volume per market",
-      "Add educational content about synthetic perpetuals for new investors",
-      "Show historical performance data or market trends",
-      "Improve ratio of volume to TVL to demonstrate platform usage",
-      "Add market maker activity indicators to show liquidity health"
+      "Migrate to mainnet Base for institutional credibility",
+      "Add more traditional prediction markets (elections, major sports)",
+      "Implement live trading functionality beyond read-only mode",
+      "Increase TVL through institutional partnerships",
+      "Add longer-term markets for conservative investors",
+      "Include more detailed risk disclosures and protocol documentation",
+      "Add historical performance metrics and backtest data",
+      "Implement better mobile responsiveness testing"
     ]
   }
 }
