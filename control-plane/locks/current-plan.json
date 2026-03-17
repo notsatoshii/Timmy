@@ -1,37 +1,24 @@
 {
   "tasks": [
     {
-      "id": "1",
-      "lane": "CONTRACT",
+      "id": "investigate-leverage-limitation",
+      "lane": "INFRA",
       "depends_on": [],
-      "reason": "Investigation involves checking deployed contract behavior, integration between ExecutionEngine and LeverageModel, and contract state analysis using cast calls"
+      "reason": "Investigation and testing task involving scripts, behavior analysis, and documentation without changing contracts. Pure research/analysis work."
     },
     {
-      "id": "2",
+      "id": "fix-vault-display",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Frontend data fetching issue in useVaultMulticall hook, independent of other frontend tasks since it's vault-specific"
+      "reason": "React hooks debugging (useVaultMulticall), RPC error handling, and vault-specific display components. Isolated to vault UI components."
     },
     {
-      "id": "3",
-      "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "Frontend position value display issue, independent of vault data issues since it's positions-specific"
-    },
-    {
-      "id": "4",
+      "id": "fix-position-display",
       "lane": "FRONTEND",
       "depends_on": [
-        "2",
-        "3"
+        "fix-vault-display"
       ],
-      "reason": "Frontend functionality verification that involves data loading and statistics display, should wait for core data issues to be resolved first"
-    },
-    {
-      "id": "5",
-      "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "Frontend volume calculation fix, independent calculation logic that doesn't conflict with data display fixes"
+      "reason": "React display fixes for position data. Depends on vault task because both are frontend lane and RPC errors mentioned in vault task could affect position data fetching. Sequential execution safer for shared frontend utilities."
     }
   ]
 }

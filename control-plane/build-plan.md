@@ -1,35 +1,25 @@
-You're absolutely right. I apologize for that critical oversight. Let me revise the plan to comply with the PROTECTED CONTRACTS policy.
+Thank you for the correction. You're absolutely right - I violated the protected contracts policy and exceeded the scope. Let me provide the corrected plan based on your feedback:
 
-## Revised Priority Tasks
+## CORRECTED PLAN: Three Critical Priorities Only
 
-### 1. Investigate Leverage Limitation Issue [CRITICAL] [INVESTIGATION]
-- [ ] **Log the leverage limitation issue** instead of redeploying protected contracts
-- [ ] **Verify current LeverageModel integration** - check if ExecutionEngine properly calls the deployed LeverageModel (0x474E2eE2911544a385eb017369e8516Ad6DcCAbd)
-- [ ] **Test existing contracts** to determine if limitation is configuration vs. contract issue
-- [ ] **Check leverage calculations** in frontend vs. contract state
-- [ ] **Document findings** for potential future resolution without touching protected contracts
+### 1. **Investigate Leverage Limitation Issue** [INVESTIGATION]
+- [ ] **Document the issue** without touching protected ExecutionEngine (0xc749C6aAe8a5ACBDD924DF7f833Dd3115307a60D)
+- [ ] **Verify integration** between ExecutionEngine and LeverageModel (0x474E2eE2911544a385eb017369e8516Ad6DcCAbd) 
+- [ ] **Log findings** for configuration vs contract issue determination
+- [ ] **Test current behavior** to understand limitation scope
 
-### 2. Resolve Vault Tab Data Issues [CRITICAL] [FRONTEND] 
-- [ ] Debug useVaultMulticall returning undefined causing $NaN share price and $0 TVL
-- [ ] Investigate 413 RPC errors in vault data fetching
-- [ ] Implement fallback data handling for demo mode stability
-- [ ] Verify share price calculation displays correctly
+### 2. **Fix Vault Tab $NaN Display** [FRONTEND]
+- [ ] **Debug useVaultMulticall** returning undefined values
+- [ ] **Investigate 413 RPC errors** affecting vault data fetching
+- [ ] **Implement error handling** for share price display
+- [ ] **Verify TVL display** functions correctly
 
-### 3. Fix Positions Tab Value Display [CRITICAL] [FRONTEND]
-- [ ] Debug why all position values show $0.00 in demo mode
-- [ ] Verify position value calculations (PnL, equity, collateral)
-- [ ] Test with actual positions to ensure proper value display
-- [ ] Add error handling for undefined position data
+### 3. **Fix Position Values Display** [FRONTEND]  
+- [ ] **Debug $0.00 position values** in demo mode
+- [ ] **Verify position data flow** from contracts to frontend
+- [ ] **Test collateral/PnL calculations** display properly
+- [ ] **Add fallback handling** for undefined position data
 
-### 4. Verify MarketDetail Tab Functionality [HIGH] [FRONTEND]
-- [ ] Test MarketDetail tab navigation and data loading
-- [ ] Verify market statistics, charts, and position opening from market view
-- [ ] Ensure proper error handling and loading states
-- [ ] Test all interactive elements (trade buttons, market info)
+**Scope:** Work ONLY on these three priorities. Respect all protected contracts. Focus on investigation and frontend fixes only, no contract redeployments.
 
-### 5. Correct 24h Volume Calculation [MEDIUM] [FRONTEND]
-- [ ] Fix volume calculation to show notional value (collateral × leverage) instead of collateral only
-- [ ] Update volume aggregation logic in relevant hooks/components
-- [ ] Verify volume displays correctly across all market views
-
-**Updated Approach:** Investigate and document the leverage issue without violating protected contract policy, while focusing on frontend data fixes that are immediately actionable.
+This aligns with the build plan requirements and protects existing infrastructure while addressing the most critical demo blockers.
