@@ -4,7 +4,7 @@
       "id": "2.2",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Frontend build and service restart - no data dependencies, first in sequence"
+      "reason": "Frontend build and service restart after Trading.tsx auto-fund changes. FRONTEND lane because it's npm build and systemctl restart lever-frontend."
     },
     {
       "id": "3.2",
@@ -12,7 +12,7 @@
       "depends_on": [
         "2.2"
       ],
-      "reason": "Frontend build and service restart - same lane as 2.2, both build same frontend and restart same service so must be sequential to avoid conflicts"
+      "reason": "Frontend build and service restart after Positions.tsx data fixes. FRONTEND lane because it's npm build and systemctl restart lever-frontend. Depends on 2.2 because both tasks use same npm build and systemctl operations that cannot run in parallel."
     }
   ]
 }
