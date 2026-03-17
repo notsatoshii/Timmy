@@ -15,7 +15,7 @@ RULES:
 **FAIL:** Any value is $0, $NaN, or negative.
 
 ### 2a. Fix MarketDetail OI Display [CRITICAL]
-- [ ] 2a. MarketDetail page shows OI as ~$39B instead of ~$150K. Root cause: OILimits returns USDT (6 decimals) but frontend divides by 1e18 (WAD). Change to divide by 1e6 everywhere OI is displayed — MarketDetail page AND market cards on the Trade tab.
+- [x] 2a. MarketDetail page shows OI as ~$39B instead of ~$150K. Root cause: OILimits returns USDT (6 decimals) but frontend divides by 1e18 (WAD). Change to divide by 1e6 everywhere OI is displayed — MarketDetail page AND market cards on the Trade tab.
 **DONE:** MarketDetail OI for any market is between $1K and $10M. Market cards also show correct OI.
 **FAIL:** Any OI value exceeds $100M or shows $0 on any page.
 
@@ -40,7 +40,7 @@ RULES:
 **FAIL:** No positions above 5x exist.
 
 ### 6a. Fix Fee Routing [CRITICAL]
-- [ ] 6a. FeeRouter.distributeFees() is never called. Fees accumulate but never split to LP (50%) / Protocol (30%) / Insurance (20%). Fix with a persistent keeper: create scripts/fee-keeper.sh that calls `cast send $FEE_ROUTER "distributeFees()"` every 5 minutes, then create a systemd service (lever-fee-keeper) with auto-restart so it survives SSH disconnects. Source deploy-env.sh for addresses and keys.
+- [x] 6a. FeeRouter.distributeFees() is never called. Fees accumulate but never split to LP (50%) / Protocol (30%) / Insurance (20%). Fix with a persistent keeper: create scripts/fee-keeper.sh that calls `cast send $FEE_ROUTER "distributeFees()"` every 5 minutes, then create a systemd service (lever-fee-keeper) with auto-restart so it survives SSH disconnects. Source deploy-env.sh for addresses and keys.
 **DONE:** (1) lever-fee-keeper service is running: `systemctl status lever-fee-keeper`. (2) InsuranceFund balance > $10,000: `cast call $INSURANCE_FUND "getBalance()(uint256)"` returns more than 10000000000000000000000 (1e22). (3) Keeper calls distributeFees at least once every 5 minutes.
 **FAIL:** InsuranceFund still exactly $10K, or keeper service doesn't exist, or keeper dies after one run.
 

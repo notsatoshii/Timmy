@@ -2,59 +2,53 @@
 pragma solidity 0.8.24;
 
 import "forge-std/Script.sol";
-import "forge-std/console.sol";
-import { LeverageModel } from "../contracts/LeverageModel.sol";
+import "forge-std/console2.sol";
+import "../contracts/LeverageModel.sol";
 
-/// @title FixLeverageModel — Quick fix deployment for critical TVL decimal bug
-/// @notice Redeploys LeverageModel with proper USDT-to-WAD conversion
+/// @title Fix LeverageModel Risk Parameters
+/// @notice Fix unrealistic depth thresholds that are causing extreme M_market penalties
 contract FixLeverageModel is Script {
+
     function run() external {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-        address deployer = vm.addr(deployerPrivateKey);
+        vm.startBroadcast();
 
-        console.log("=== LEVER LeverageModel Fix Deployment ===");
-        console.log("Deployer:", deployer);
-        console.log("Fixing critical TVL decimal conversion bug");
+        LeverageModel leverageModel = LeverageModel(0xf649e342673C3e86c18Bf30C4163ec9d7090F9EF);
 
-        // Load existing contract addresses
-        string memory coreJson = vm.readFile("core-deployment.json");
-        string memory poolJson = vm.readFile("pool-deployment.json");
-        string memory enginesJson = vm.readFile("engines-deployment.json");
+        // SpaceX market ID
+        bytes32 spacexMarketId = 0x2841ef32b61fb3472aadbfc70d787a1bfaf5d0218c9601b87963af7bcca1bcf1;
 
-        address marketRegistry = vm.parseJsonAddress(coreJson, ".marketRegistry");
-        address oracleAdapter = vm.parseJsonAddress(coreJson, ".oracleAdapter");
-        address leverVault = vm.parseJsonAddress(poolJson, ".leverVault");
-        address insuranceFund = vm.parseJsonAddress(poolJson, ".insuranceFund");
-        address oiLimits = vm.parseJsonAddress(enginesJson, ".oiLimits");
+        console2.log("=== Fixing LeverageModel Risk Parameters ===");
 
-        console.log("Using existing addresses:");
-        console.log("  LeverVault:", leverVault);
-        console.log("  InsuranceFund:", insuranceFund);
-        console.log("  OILimits:", oiLimits);
-        console.log("  MarketRegistry:", marketRegistry);
-        console.log("  OracleAdapter:", oracleAdapter);
+        // Check current parameters
+        console2.log("Checking current max leverage for SpaceX...");
+        uint256 currentMax = leverageModel.getEffectiveMaxLeverage(spacexMarketId);
+        console2.log("Current max leverage WAD:", currentMax);
 
-        vm.startBroadcast(deployerPrivateKey);
+        // The problem: depth threshold of 500 USDT is unrealistic when oracle returns ~5 USDT depth
+        // Fix: Set depth threshold to 5 USDT (realistic for prediction market depth)
+        uint256 sigmaBaseline = 0.25e18;  // Keep 25% baseline volatility
+        uint256 depthThreshold = 5e18;    // Change from 500 to 5 USDT
 
-        // Deploy new LeverageModel with fixed decimal conversion
-        address newLeverageModel = address(new LeverageModel(
-            leverVault,
-            insuranceFund,
-            oiLimits,
-            marketRegistry,
-            oracleAdapter,
-            deployer
-        ));
+        console2.log("Setting new risk parameters...");
+        console2.log("Sigma baseline WAD:", sigmaBaseline);
+        console2.log("Depth threshold WAD:", depthThreshold);
 
-        vm.stopBroadcast();
+        leverageModel.setMarketRiskParams(
+            spacexMarketId,
+            sigmaBaseline,
+            depthThreshold
+        );
 
-        console.log("=== LeverageModel Fix Complete ===");
-        console.log("New LeverageModel:", newLeverageModel);
-        console.log("");
-        console.log("NEXT STEPS:");
-        console.log("1. Update deploy-env.sh with new LEVERAGE_MODEL address");
-        console.log("2. Update engines-deployment.json");
-        console.log("3. Verify TVL multiplier returns 1.0 instead of 0.1");
-        console.log("4. Update ExecutionEngine to use new LeverageModel");
+        console2.log("Risk parameters updated!");
+
+        // Check new max leverage
+        uint256 newMax = leverageModel.getEffectiveMaxLeverage(spacexMarketId);
+        console2.log("New max leverage WAD:", newMax);
+
+        if (newMax >= 20e18) {
+            console2.log("SUCCESS: Max leverage >= 20x");
+        } else {
+            console2.log("Need more fixes - leverage still low");
+        }
     }
 }

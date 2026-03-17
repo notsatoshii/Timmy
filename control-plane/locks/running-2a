@@ -1,8 +1,0 @@
-{
-  "task_id": "2a",
-  "lane": "FRONTEND",
-  "title": "Fix MarketDetail OI Display",
-  "started": "2026-03-17T03:46:39.589339",
-  "pid": 833076,
-  "log": "/home/lever/lever-protocol/control-plane/dispatcher-logs/task-2a-034639.log"
-}

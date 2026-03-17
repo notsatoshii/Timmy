@@ -42,22 +42,22 @@ export const useVolumeCalculation = (enabled: boolean = true) => {
               { name: 'leverage', type: 'uint256', indexed: false },
               { name: 'entryPI', type: 'uint256', indexed: false },
               { name: 'entryPrice', type: 'uint256', indexed: false },
+              { name: 'positionSize', type: 'uint256', indexed: false },
+              { name: 'impact', type: 'uint256', indexed: false },
+              { name: 'timestamp', type: 'uint256', indexed: false },
             ]
           },
           fromBlock,
           toBlock: currentBlock,
         });
 
-        // Calculate notional volume: sum of (collateral × leverage) for all trades
+        // Calculate notional volume: sum of positionSize (which IS the notional) for all trades
         let totalNotionalVolume = BigInt(0);
 
         for (const event of positionOpenedEvents) {
-          if (event.args && event.args.collateral && event.args.leverage) {
-            const collateral = BigInt(event.args.collateral);
-            const leverage = BigInt(event.args.leverage);
-
-            // Calculate notional value = collateral × leverage
-            const notionalValue = (collateral * leverage) / BigInt('1000000000000000000'); // Divide by WAD since leverage is in WAD
+          if (event.args && event.args.positionSize) {
+            // Use the actual positionSize from the event (which is the notional value)
+            const notionalValue = BigInt(event.args.positionSize);
             totalNotionalVolume += notionalValue;
           }
         }
@@ -70,7 +70,7 @@ export const useVolumeCalculation = (enabled: boolean = true) => {
         // Fallback to mock calculation if event fetching fails
         // For now, we'll use the existing mock data from trade history
         // This provides realistic demo data while event infrastructure is being established
-        const mockVolume24h = BigInt('12800000000'); // Sum of mock trade notionals: 8000 + 4800 = 12800 USDT
+        const mockVolume24h = BigInt('12800000000'); // Sum of mock trade notionals: 8000 + 4800 = 12800 USDT (already notional, not just collateral)
         setVolume24h(mockVolume24h);
 
         setError('Using demo volume data - live event tracking pending');

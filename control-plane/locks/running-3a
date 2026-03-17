@@ -1,0 +1,8 @@
+{
+  "task_id": "3a",
+  "lane": "FRONTEND",
+  "title": "Fix 24h Volume Display",
+  "started": "2026-03-17T03:50:49.217820",
+  "pid": 836217,
+  "log": "/home/lever/lever-protocol/control-plane/dispatcher-logs/task-3a-035049.log"
+}
