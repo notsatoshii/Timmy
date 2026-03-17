@@ -5,7 +5,7 @@ Supports: parallel dispatcher lanes, old worker logs, execution plan, live progr
 All timestamps ICT (UTC+7). Run: python3 dashboard.py — Access: http://SERVER_IP:8080
 """
 
-import http.server, json, os, subprocess, glob, urllib.parse, re, time, traceback
+import http.server, json, os, subprocess, glob, urllib.parse, re, time, traceback, logging
 from datetime import datetime, timezone, timedelta
 
 PORT = 8080
@@ -321,6 +321,250 @@ def contract_health():
     tests = glob.glob(f"{PROJECT}/test/*.t.sol") + glob.glob(f"{PROJECT}/test/**/*.t.sol", recursive=True)
     return {"contracts": len(contracts), "tests": len(tests)}
 
+# ── Contract Data Fetching with Error Handling ─────────────────────────────
+
+# Setup logging for contract calls
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(message)s',
+    handlers=[
+        logging.FileHandler(f"{CONTROL}/dashboard-contract-calls.log"),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
+
+def retry_with_backoff(func, max_retries=3, base_delay=1.0, max_delay=8.0):
+    """Execute function with exponential backoff retry logic."""
+    for attempt in range(max_retries):
+        try:
+            result = func()
+            if attempt > 0:
+                logger.info(f"Retry successful on attempt {attempt + 1}")
+            return result
+        except Exception as e:
+            wait_time = min(base_delay * (2 ** attempt), max_delay)
+            logger.warning(f"Attempt {attempt + 1}/{max_retries} failed: {str(e)}")
+            if attempt == max_retries - 1:
+                logger.error(f"All {max_retries} attempts failed. Final error: {str(e)}")
+                raise e
+            logger.info(f"Retrying in {wait_time:.1f}s...")
+            time.sleep(wait_time)
+
+def load_deployment_config():
+    """Load contract addresses and RPC config from deploy-env.sh."""
+    config = {}
+    try:
+        env_path = f"{CONTROL}/deploy-env.sh"
+        if not os.path.exists(env_path):
+            logger.error(f"deploy-env.sh not found at {env_path}")
+            return config
+
+        # Read the deploy-env.sh file and extract environment variables
+        with open(env_path, 'r') as f:
+            content = f.read()
+
+        # Extract RPC_URL
+        rpc_match = re.search(r'export RPC_URL="([^"]+)"', content)
+        config['RPC_URL'] = rpc_match.group(1) if rpc_match else "https://sepolia.base.org"
+
+        # Extract contract addresses
+        address_patterns = [
+            'USDT_ADDRESS', 'MARKET_REGISTRY', 'ORACLE_ADAPTER', 'ACCOUNT_MANAGER',
+            'POSITION_MANAGER', 'LEVER_VAULT', 'REWARDS_DISTRIBUTOR', 'INSURANCE_FUND',
+            'FEE_ROUTER', 'LEVERAGE_MODEL', 'OI_LIMITS', 'BORROW_FEE_ENGINE',
+            'FUNDING_RATE_ENGINE', 'MARGIN_ENGINE', 'EXECUTION_ENGINE',
+            'LIQUIDATION_ENGINE', 'SETTLEMENT_ENGINE', 'DEPLOYER'
+        ]
+
+        for pattern in address_patterns:
+            match = re.search(rf'export {pattern}=([0-9xa-fA-F]+)', content)
+            if match:
+                config[pattern] = match.group(1)
+
+        logger.info(f"Loaded {len(config)} config values from deploy-env.sh")
+        return config
+
+    except Exception as e:
+        logger.error(f"Failed to load deployment config: {str(e)}")
+        return config
+
+def call_contract(contract_address, function_signature, rpc_url, additional_args=""):
+    """Make a contract call using cast with comprehensive error logging."""
+    if not contract_address or not function_signature or not rpc_url:
+        raise ValueError(f"Missing required parameters: contract={contract_address}, func={function_signature}, rpc={rpc_url}")
+
+    cast_path = "/home/lever/.foundry/bin/cast"
+    if not os.path.exists(cast_path):
+        raise FileNotFoundError(f"Cast binary not found at {cast_path}")
+
+    cmd = [cast_path, "call", contract_address, function_signature, "--rpc-url", rpc_url]
+    if additional_args:
+        cmd.extend(additional_args.split())
+
+    logger.debug(f"Executing cast call: {' '.join(cmd)}")
+
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+
+    if result.returncode != 0:
+        error_msg = result.stderr.strip() if result.stderr else "Unknown error"
+        logger.error(f"Cast call failed - Contract: {contract_address}, Function: {function_signature}, Error: {error_msg}")
+        raise RuntimeError(f"Cast call failed: {error_msg}")
+
+    output = result.stdout.strip()
+    logger.debug(f"Cast call successful - Contract: {contract_address}, Function: {function_signature}, Result: {output}")
+    return output
+
+def get_contract_data():
+    """Fetch all contract data with fallback values and comprehensive error logging."""
+    config = load_deployment_config()
+    rpc_url = config.get('RPC_URL', 'https://sepolia.base.org')
+
+    # Fallback values for when calls fail
+    fallback_data = {
+        "tvl": {"value": "0", "display": "N/A", "error": None},
+        "global_oi": {"value": "0", "display": "N/A", "error": None},
+        "insurance_balance": {"value": "0", "display": "N/A", "error": None},
+        "platform_ceiling": {"value": "0", "display": "N/A", "error": None},
+        "global_utilization": {"value": "0", "display": "N/A", "error": None},
+        "usdt_decimals": {"value": "6", "display": "6", "error": None},
+        "deployer_balance": {"value": "0", "display": "N/A", "error": None},
+        "market_count": {"value": "0", "display": "0", "error": None},
+        "rpc_status": {"status": "unknown", "url": rpc_url}
+    }
+
+    def safe_format_wei(wei_str, decimals=18):
+        """Safely format wei to readable format with error handling."""
+        try:
+            if not wei_str or wei_str == "0":
+                return "0"
+            # Convert wei string to float and format
+            wei_val = int(wei_str)
+            formatted = wei_val / (10 ** decimals)
+            if formatted >= 1e6:
+                return f"{formatted/1e6:.2f}M"
+            elif formatted >= 1e3:
+                return f"{formatted/1e3:.2f}K"
+            else:
+                return f"{formatted:.4f}"
+        except Exception as e:
+            logger.warning(f"Failed to format wei value '{wei_str}': {str(e)}")
+            return "N/A"
+
+    # Test RPC connectivity
+    try:
+        def test_rpc():
+            return call_contract(config.get('USDT_ADDRESS', ''), 'decimals()(uint8)', rpc_url)
+        retry_with_backoff(test_rpc, max_retries=2)
+        fallback_data["rpc_status"]["status"] = "connected"
+        logger.info("RPC connection test successful")
+    except Exception as e:
+        fallback_data["rpc_status"]["status"] = "failed"
+        logger.error(f"RPC connection test failed: {str(e)}")
+        # Return fallback data early if RPC is not working
+        return fallback_data
+
+    # Fetch TVL from LeverVault
+    try:
+        def get_tvl():
+            return call_contract(config.get('LEVER_VAULT', ''), 'totalAssets()(uint256)', rpc_url)
+        tvl_wei = retry_with_backoff(get_tvl)
+        fallback_data["tvl"]["value"] = tvl_wei
+        fallback_data["tvl"]["display"] = safe_format_wei(tvl_wei, 6)  # USDT has 6 decimals
+        logger.info(f"TVL fetched successfully: {tvl_wei} wei = {fallback_data['tvl']['display']}")
+    except Exception as e:
+        fallback_data["tvl"]["error"] = str(e)
+        logger.error(f"Failed to fetch TVL: {str(e)}")
+
+    # Fetch Global OI
+    try:
+        def get_global_oi():
+            return call_contract(config.get('OI_LIMITS', ''), 'getGlobalOI()(uint256)', rpc_url)
+        oi_wei = retry_with_backoff(get_global_oi)
+        fallback_data["global_oi"]["value"] = oi_wei
+        fallback_data["global_oi"]["display"] = safe_format_wei(oi_wei, 6)
+        logger.info(f"Global OI fetched successfully: {oi_wei} wei = {fallback_data['global_oi']['display']}")
+    except Exception as e:
+        fallback_data["global_oi"]["error"] = str(e)
+        logger.error(f"Failed to fetch Global OI: {str(e)}")
+
+    # Fetch Insurance Fund Balance
+    try:
+        def get_insurance_balance():
+            return call_contract(config.get('INSURANCE_FUND', ''), 'getBalance()(uint256)', rpc_url)
+        ins_wei = retry_with_backoff(get_insurance_balance)
+        fallback_data["insurance_balance"]["value"] = ins_wei
+        fallback_data["insurance_balance"]["display"] = safe_format_wei(ins_wei, 6)
+        logger.info(f"Insurance balance fetched successfully: {ins_wei} wei = {fallback_data['insurance_balance']['display']}")
+    except Exception as e:
+        fallback_data["insurance_balance"]["error"] = str(e)
+        logger.error(f"Failed to fetch Insurance Fund balance: {str(e)}")
+
+    # Fetch Platform Ceiling
+    try:
+        def get_platform_ceiling():
+            return call_contract(config.get('LEVERAGE_MODEL', ''), 'getPlatformCeiling()(uint256)', rpc_url)
+        ceiling_wei = retry_with_backoff(get_platform_ceiling)
+        fallback_data["platform_ceiling"]["value"] = ceiling_wei
+        fallback_data["platform_ceiling"]["display"] = safe_format_wei(ceiling_wei, 18)
+        logger.info(f"Platform ceiling fetched successfully: {ceiling_wei} wei = {fallback_data['platform_ceiling']['display']}")
+    except Exception as e:
+        fallback_data["platform_ceiling"]["error"] = str(e)
+        logger.error(f"Failed to fetch Platform Ceiling: {str(e)}")
+
+    # Fetch Global Utilization
+    try:
+        def get_global_utilization():
+            return call_contract(config.get('OI_LIMITS', ''), 'getGlobalUtilization()(uint256)', rpc_url)
+        util_wei = retry_with_backoff(get_global_utilization)
+        fallback_data["global_utilization"]["value"] = util_wei
+        # Utilization is in basis points (10000 = 100%)
+        try:
+            util_percent = int(util_wei) / 10000 * 100
+            fallback_data["global_utilization"]["display"] = f"{util_percent:.2f}%"
+        except:
+            fallback_data["global_utilization"]["display"] = "N/A"
+        logger.info(f"Global utilization fetched successfully: {util_wei} bps = {fallback_data['global_utilization']['display']}")
+    except Exception as e:
+        fallback_data["global_utilization"]["error"] = str(e)
+        logger.error(f"Failed to fetch Global Utilization: {str(e)}")
+
+    # Fetch Deployer Balance
+    try:
+        def get_deployer_balance():
+            cast_path = "/home/lever/.foundry/bin/cast"
+            cmd = [cast_path, "balance", config.get('DEPLOYER', ''), "--rpc-url", rpc_url, "--raw"]
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+            if result.returncode != 0:
+                raise RuntimeError(f"Balance check failed: {result.stderr}")
+            return result.stdout.strip()
+
+        balance_wei = retry_with_backoff(get_deployer_balance)
+        fallback_data["deployer_balance"]["value"] = balance_wei
+        fallback_data["deployer_balance"]["display"] = safe_format_wei(balance_wei, 18)
+        logger.info(f"Deployer balance fetched successfully: {balance_wei} wei = {fallback_data['deployer_balance']['display']} ETH")
+    except Exception as e:
+        fallback_data["deployer_balance"]["error"] = str(e)
+        logger.error(f"Failed to fetch Deployer balance: {str(e)}")
+
+    # Count markets (if MarketRegistry available)
+    try:
+        def get_market_count():
+            # This is a placeholder - actual implementation depends on MarketRegistry interface
+            # For now, we'll use a basic check that the contract exists
+            call_contract(config.get('MARKET_REGISTRY', ''), 'hasRole(bytes32,address)(bool)', rpc_url, "0x0000000000000000000000000000000000000000000000000000000000000000 " + config.get('DEPLOYER', ''))
+            return "1"  # If call succeeds, assume at least 1 market exists
+
+        market_count = retry_with_backoff(get_market_count)
+        fallback_data["market_count"]["value"] = "1"
+        fallback_data["market_count"]["display"] = "≥1"
+        logger.info(f"Market registry check successful - markets available")
+    except Exception as e:
+        fallback_data["market_count"]["error"] = str(e)
+        logger.error(f"Failed to check market count: {str(e)}")
+
+    return fallback_data
+
 
 
 def get_loop_data():
@@ -495,6 +739,7 @@ def api_status():
         "summaries": list_summaries(),
         "model_decisions": read_file(f"{CONTROL}/worker-logs/model-decisions.log", tail=40),
         "health": contract_health(),
+        "contract_data": get_contract_data(),
         "timeline": build_timeline(),
         "qa_log": read_file(f"{CONTROL}/dispatcher-logs/qa-agent.log", tail=30),
         "watchdog_log": read_file(f"{CONTROL}/dispatcher-logs/watchdog.log", tail=15),
@@ -747,6 +992,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Instrument Sans',sans-ser
 <button class="tab on" data-v="v-loop">&#x1F504; Loop</button>
 <button class="tab" data-v="v-live">&#9889; Live</button>
 <button class="tab" data-v="v-plan">&#9632; Plan</button>
+<button class="tab" data-v="v-contracts">&#128202; Contracts</button>
 <button class="tab" data-v="v-work">&#128295; Work</button>
 <button class="tab" data-v="v-issues">&#9888; Issues</button>
 <button class="tab" data-v="v-git">&#128200; Git</button>
@@ -789,6 +1035,37 @@ body{background:var(--bg);color:var(--tx);font-family:'Instrument Sans',sans-ser
 <div class="card" style="margin-top:10px"><div class="card-head"><span class="card-label">Shift Reports</span></div><div id="plan-reports"></div></div>
 </div>
 
+<!-- CONTRACTS -->
+<div id="v-contracts" class="view">
+<div class="card">
+<div class="card-head">
+<span class="card-label">Protocol Health</span>
+<span class="badge" id="contract-rpc-status">RPC</span>
+</div>
+<div class="g4" id="contract-stats"></div>
+</div>
+<div class="g2" style="margin-top:10px">
+<div class="card">
+<div class="card-head"><span class="card-label">Pool Metrics</span></div>
+<div id="contract-pool-stats"></div>
+</div>
+<div class="card">
+<div class="card-head"><span class="card-label">Risk Metrics</span></div>
+<div id="contract-risk-stats"></div>
+</div>
+</div>
+<div class="card" style="margin-top:10px">
+<div class="card-head"><span class="card-label">Contract Status</span></div>
+<div id="contract-health-details"></div>
+</div>
+<div class="card" style="margin-top:10px">
+<div class="card-head"><span class="card-label">Error Log</span></div>
+<div class="term">
+<div class="term-body" id="contract-errors" style="max-height:200px">No contract call errors...</div>
+</div>
+</div>
+</div>
+
 <!-- WORK (logs) -->
 <div id="v-work" class="view">
 <input class="search" placeholder="Filter logs..." oninput="filterItems('work-list',this.value)">
@@ -813,6 +1090,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Instrument Sans',sans-ser
 <button class="on" data-v="v-loop"><em>&#x1F504;</em>Loop</button>
 <button data-v="v-live"><em>&#9889;</em>Live</button>
 <button data-v="v-plan"><em>&#9632;</em>Plan</button>
+<button data-v="v-contracts"><em>&#128202;</em>Contracts</button>
 <button data-v="v-work"><em>&#128295;</em>Work</button>
 <button data-v="v-issues"><em>&#9888;</em>Issues</button>
 <button data-v="v-git"><em>&#128200;</em>Git</button>
@@ -1095,11 +1373,119 @@ function renderLoop(d){
   document.getElementById('loop-log').innerHTML=colorize(loop.loop_log||'Loop not started yet');
 }
 
+function renderContracts(d){
+  const cd = d.contract_data || {};
+
+  // Update RPC status badge
+  const rpcBadge = document.getElementById('contract-rpc-status');
+  if (rpcBadge) {
+    const status = cd.rpc_status?.status || 'unknown';
+    rpcBadge.textContent = status.toUpperCase();
+    rpcBadge.className = status === 'connected' ? 'badge b-ac' : 'badge b-rd';
+  }
+
+  // Main contract stats cards
+  const statsHtml = `
+    <div class="card">
+      <div class="stat-n">${cd.tvl?.display || 'N/A'}</div>
+      <div class="stat-l">Total Value Locked</div>
+      ${cd.tvl?.error ? '<div style="font-size:9px;color:var(--rd);margin-top:4px">Error: ' + cd.tvl.error.substring(0,40) + '...</div>' : ''}
+    </div>
+    <div class="card">
+      <div class="stat-n">${cd.global_oi?.display || 'N/A'}</div>
+      <div class="stat-l">Global Open Interest</div>
+      ${cd.global_oi?.error ? '<div style="font-size:9px;color:var(--rd);margin-top:4px">Error: ' + cd.global_oi.error.substring(0,40) + '...</div>' : ''}
+    </div>
+    <div class="card">
+      <div class="stat-n">${cd.insurance_balance?.display || 'N/A'}</div>
+      <div class="stat-l">Insurance Fund</div>
+      ${cd.insurance_balance?.error ? '<div style="font-size:9px;color:var(--rd);margin-top:4px">Error: ' + cd.insurance_balance.error.substring(0,40) + '...</div>' : ''}
+    </div>
+    <div class="card">
+      <div class="stat-n">${cd.deployer_balance?.display || 'N/A'} ETH</div>
+      <div class="stat-l">Deployer Balance</div>
+      ${cd.deployer_balance?.error ? '<div style="font-size:9px;color:var(--rd);margin-top:4px">Error: ' + cd.deployer_balance.error.substring(0,40) + '...</div>' : ''}
+    </div>
+  `;
+  document.getElementById('contract-stats').innerHTML = statsHtml;
+
+  // Pool metrics
+  const poolHtml = `
+    <div style="padding:8px 0">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:var(--dim)">TVL</span>
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:var(--wh)">${cd.tvl?.display || 'N/A'}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:var(--dim)">Global Utilization</span>
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:var(--wh)">${cd.global_utilization?.display || 'N/A'}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:var(--dim)">Markets</span>
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:var(--wh)">${cd.market_count?.display || '0'}</span>
+      </div>
+    </div>
+  `;
+  document.getElementById('contract-pool-stats').innerHTML = poolHtml;
+
+  // Risk metrics
+  const riskHtml = `
+    <div style="padding:8px 0">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:var(--dim)">Platform Ceiling</span>
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:var(--wh)">${cd.platform_ceiling?.display || 'N/A'}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:var(--dim)">Insurance Balance</span>
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:var(--wh)">${cd.insurance_balance?.display || 'N/A'}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:var(--dim)">RPC Status</span>
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:${cd.rpc_status?.status === 'connected' ? 'var(--ac)' : 'var(--rd)'}">
+          ${cd.rpc_status?.status || 'unknown'}
+        </span>
+      </div>
+    </div>
+  `;
+  document.getElementById('contract-risk-stats').innerHTML = riskHtml;
+
+  // Contract health details
+  const healthData = d.health || {};
+  const healthHtml = `
+    <div style="padding:8px 0">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:var(--dim)">Smart Contracts</span>
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:var(--wh)">${healthData.contracts || 0}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;">
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:var(--dim)">Test Files</span>
+        <span style="font:500 11px 'JetBrains Mono',monospace;color:var(--wh)">${healthData.tests || 0}</span>
+      </div>
+    </div>
+  `;
+  document.getElementById('contract-health-details').innerHTML = healthHtml;
+
+  // Error log - collect all errors from contract data
+  let errors = [];
+  Object.keys(cd).forEach(key => {
+    if (cd[key] && cd[key].error) {
+      errors.push(`[${key}] ${cd[key].error}`);
+    }
+  });
+
+  const errorHtml = errors.length > 0
+    ? errors.map(err => `<div style="margin-bottom:4px;font:400 10px 'JetBrains Mono',monospace;color:var(--rd)">${err}</div>`).join('')
+    : '<div style="font:400 10px \'JetBrains Mono\',monospace;color:var(--dim)">No contract call errors...</div>';
+
+  document.getElementById('contract-errors').innerHTML = errorHtml;
+}
+
 // Main render
 function render(d){
   DATA=d;
   renderLoop(d);
   renderPlan(d);
+  renderContracts(d);
   renderLogList('disp-list',d.dispatcher_logs,'dl');
   renderLogList('work-list',d.worker_logs,'wl');
   renderLogList('nightly-list',d.nightly_logs,'nl');

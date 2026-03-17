@@ -1,8 +1,0 @@
-{
-  "task_id": "2",
-  "lane": "FRONTEND",
-  "title": "Fix Contract Address Configuration Mismatch [CRITICAL]",
-  "started": "2026-03-17T05:12:11.350112",
-  "pid": 892153,
-  "log": "/home/lever/lever-protocol/control-plane/dispatcher-logs/task-2-051211.log"
-}

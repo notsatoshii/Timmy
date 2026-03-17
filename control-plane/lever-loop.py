@@ -416,7 +416,14 @@ def run_cycle(cycle_num):
     tg(f"Cycle {cycle_num} starting")
 
     qa = run_qa()
+    # Save QA report for dashboard
+    qa_file = LOGS / f"qa-report-{cycle_num}.json"
+    qa_file.write_text(json.dumps(qa, indent=2, default=str))
     plan = run_planner(qa)
+
+    # Save plan for dashboard
+    plan_file = LOGS / f"plan-{cycle_num}-v1.md"
+    plan_file.write_text(plan or "")
 
     if not plan or len(plan) < 50:
         log("Empty plan, skipping", "WARN")
@@ -431,6 +438,10 @@ def run_cycle(cycle_num):
             approved_plan = current_plan
             break
         critique = run_critic(current_plan, qa)
+        # Save critique for dashboard
+        crit_file = LOGS / f"critique-{cycle_num}-v{rnd+1}.md"
+        crit_file.write_text(critique.get("feedback", str(critique)))
+
         if critique["approved"]:
             log(f"Plan APPROVED (round {rnd+1})")
             approved_plan = current_plan
@@ -438,6 +449,9 @@ def run_cycle(cycle_num):
         else:
             log(f"Plan REJECTED (round {rnd+1})")
             current_plan = run_planner_revision(current_plan, critique["feedback"], qa)
+            # Save revised plan for dashboard
+            rev_file = LOGS / f"plan-{cycle_num}-v{rnd+2}.md"
+            rev_file.write_text(current_plan or "")
 
     if not approved_plan:
         log("No approved plan", "ERROR")
@@ -457,6 +471,15 @@ def run_cycle(cycle_num):
     history = LOGS / "cycle-history.jsonl"
     with open(history, "a") as f:
         f.write(json.dumps(summary) + "\n")
+
+    # Save loop state for dashboard
+    state_file = LOGS / "loop-state.json"
+    state_file.write_text(json.dumps({
+        "next_cycle": cycle_num + 1,
+        "last_completed": cycle_num,
+        "last_qa_score": qa["score"],
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }, indent=2))
 
     log(f"CYCLE {cycle_num} DONE: QA={qa['score']} Done={summary['done']} Failed={summary['failed']} Time={summary['duration_min']}m")
     return summary

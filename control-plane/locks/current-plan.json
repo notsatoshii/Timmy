@@ -1,70 +1,53 @@
 {
   "tasks": [
     {
-      "id": "2",
-      "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "Updates frontend/user-app/src/config/contracts.ts configuration file. Independent task fixing address mismatches."
-    },
-    {
       "id": "3",
       "lane": "CONTRACT",
       "depends_on": [],
-      "reason": "Fixes Solidity LeverageModel and ExecutionEngine contracts. Root cause fix that other tasks depend on."
+      "reason": "Root cause requires fixing Solidity contracts (LeverageModel, ExecutionEngine), verifying constructor parameters, and potentially redeploying contracts. This is the foundational fix that other tasks depend on."
     },
     {
       "id": "4",
-      "lane": "INFRA",
+      "lane": "CONTRACT",
       "depends_on": [
         "3"
       ],
-      "reason": "Testing scripts using cast commands to validate contract functionality. Depends on Task 3 fixing the leverage model first."
-    },
-    {
-      "id": "5",
-      "lane": "INFRA",
-      "depends_on": [],
-      "reason": "Modifies control-plane/dashboard.py Python script for error handling. Independent of other fixes."
+      "reason": "Testing contract functionality using cast commands to validate leverage works. Depends on task 3 because the leverage model must be fixed before testing if 10x+ leverage actually works."
     },
     {
       "id": "6",
       "lane": "FRONTEND",
-      "depends_on": [
-        "2"
-      ],
-      "reason": "Fixes frontend vault hooks and components. Depends on Task 2 fixing contract addresses that could cause RPC errors."
+      "depends_on": [],
+      "reason": "Fixing React hooks (useVaultMulticall.ts) and components (VaultTab.tsx) for RPC errors and demo values. This is frontend-specific formatting and demo data, not dependent on contract fixes."
     },
     {
       "id": "7",
       "lane": "FRONTEND",
-      "depends_on": [
-        "2",
-        "6"
-      ],
-      "reason": "Fixes frontend position hooks and display. Depends on Task 2 for contract addresses and Task 6 to avoid frontend file conflicts."
+      "depends_on": [],
+      "reason": "Fixing React hooks (usePositions.ts) for WAD value formatting and generating demo position data. This is frontend decimal formatting and demo data generation, not dependent on contract functionality."
     },
     {
       "id": "8",
       "lane": "INFRA",
       "depends_on": [
-        "2",
         "3",
+        "4",
         "6",
         "7"
       ],
-      "reason": "End-to-end testing scripts validating complete user flow. Depends on contract fixes (3), frontend config (2), and display fixes (6,7)."
+      "reason": "Comprehensive end-to-end testing and validation scripts that verify all fixes work together. Depends on contract fixes (3,4) and frontend fixes (6,7) because it validates the complete integrated system."
     },
     {
       "id": "9",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Updates frontend/user-app/src/hooks/useTradeHistory.ts calculation logic. Independent calculation fix."
+      "reason": "Updating frontend calculation logic in useTradeHistory.ts to show notional values instead of collateral. This is pure frontend calculation change with no dependencies on other fixes."
     },
     {
       "id": "10",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Updates frontend/user-app/index.html and meta tags. Independent polish task."
+      "reason": "Updating HTML metadata, title tags, and favicon in index.html. This is pure frontend polish work with no functional dependencies."
     }
   ]
 }
