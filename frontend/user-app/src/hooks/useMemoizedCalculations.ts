@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { formatWad, WAD } from '../config/contracts';
+import { formatWad, formatUsdt, WAD } from '../config/contracts';
 
 interface VaultData {
   totalAssets?: bigint;
@@ -47,39 +47,54 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
       usdtBalance = BigInt(0),
     } = data;
 
-    // TVL calculation
-    const tvl = totalAssets ? parseFloat(formatWad(totalAssets)) : 0;
+    // TVL calculation (totalAssets is USDT format from LeverVault.totalAssets())
+    const tvl = totalAssets ? parseFloat(formatUsdt(totalAssets)) : 0;
 
     // Share price calculation (assets per share)
+    // Both totalAssets and totalSupply are USDT format (6 decimals) - vault uses 6 decimal shares
     const sharePrice = totalSupply > BigInt(0) && totalAssets > BigInt(0)
-      ? parseFloat(formatWad(totalAssets)) / parseFloat(formatWad(totalSupply))
+      ? parseFloat(formatUsdt(totalAssets)) / parseFloat(formatUsdt(totalSupply))
       : 1.0;
 
     // Utilization calculation (OI / TVL)
+    // globalOI is USDT format from OILimits.getGlobalOI()
     const utilization = tvl > 0 && globalOI > BigInt(0)
-      ? (parseFloat(formatWad(globalOI)) / tvl) * 100
+      ? (parseFloat(formatUsdt(globalOI)) / tvl) * 100
       : 0;
 
-    // APY calculation from total fees (LP gets 50%)
-    const totalFees = borrowFees + transactionFees + liquidationFees + settlementFees;
-    const lpFeeShare = totalFees * BigInt(50) / BigInt(100); // LP gets 50% of all fees
-    const annualizedAPY = tvl > 0 && totalFees > BigInt(0)
-      ? (parseFloat(formatWad(lpFeeShare)) * 365 / tvl) * 100
+    // APY calculation using projected approach like ProtocolStats
+    // Use BASE_BORROW_RATE × Total_OI × 8760_hours × 0.50_LP_share / TVL
+    const BASE_BORROW_RATE = BigInt("200000000000000"); // 0.02% per hour in WAD
+    const hoursPerYear = BigInt(8760);
+    const lpShare = BigInt(50); // 50% LP share
+    const hundredPercent = BigInt(100);
+
+    // Convert globalOI from USDT to WAD for calculation
+    const globalOIInWad = globalOI * BigInt(1e12); // Convert USDT (6 decimals) to WAD (18 decimals)
+    const tvlInWad = totalAssets * BigInt(1e12); // Convert USDT to WAD
+
+    // projected_annual_revenue = (borrow_rate × total_OI / WAD) × hours_per_year × LP_share / 100
+    const revenuePerHour = globalOIInWad > BigInt(0) ? BASE_BORROW_RATE * globalOIInWad / WAD : BigInt(0);
+    const projectedAnnualRevenue = revenuePerHour * hoursPerYear * lpShare / hundredPercent;
+
+    // APY = projected_annual_revenue / TVL (multiply by 10000 for basis point precision)
+    const annualizedAPY = tvlInWad > BigInt(0)
+      ? Number(projectedAnnualRevenue * BigInt(10000) / tvlInWad) / 100
       : 0;
 
     // Daily yield from APY
     const dailyYield = annualizedAPY / 365;
 
-    // User position calculations
-    const userSharesFloat = userShares ? parseFloat(formatWad(userShares)) : 0;
+    // User position calculations (userShares is also 6-decimal format)
+    const userSharesFloat = userShares ? parseFloat(formatUsdt(userShares)) : 0;
     const userPosition = {
       shares: userSharesFloat,
       value: userSharesFloat * sharePrice,
-      percentage: totalSupply > BigInt(0) ? (userSharesFloat / parseFloat(formatWad(totalSupply))) * 100 : 0,
+      percentage: totalSupply > BigInt(0) ? (userSharesFloat / parseFloat(formatUsdt(totalSupply))) * 100 : 0,
     };
 
-    // User balance calculations
-    const usdtFloat = usdtBalance ? parseFloat(formatWad(usdtBalance)) : 0;
+    // User balance calculations (usdtBalance is USDT format from USDT.balanceOf())
+    const usdtFloat = usdtBalance ? parseFloat(formatUsdt(usdtBalance)) : 0;
     const userBalance = {
       usdt: usdtFloat,
       formatted: usdtFloat.toLocaleString('en-US', {
