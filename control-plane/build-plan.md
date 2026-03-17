@@ -1,6 +1,8 @@
-Based on the build plan and current verification status, here are the prioritized tasks for the **INVESTOR DEMO SPRINT**:
+Based on the build plan requirements, here's the **CORRECTED** plan that follows the locked sprint scope:
 
-### 1. Fix Screenshot Verification System [CRITICAL] [INFRASTRUCTURE] 
+## **REVISED PLAN - INVESTOR DEMO SPRINT**
+
+### 1. Fix Screenshot Verification System [CRITICAL] [INFRASTRUCTURE]
 - [ ] Resolve Puppeteer dependency issue: install missing `libatk-1.0.so.0` and Chrome dependencies
 - [ ] Fix automated browser testing pipeline to prevent hanging processes  
 - [ ] **SUCCESS CRITERIA**: `node scripts/take-screenshots.js` completes successfully with actual screenshots
@@ -17,10 +19,12 @@ Based on the build plan and current verification status, here are the prioritize
 - [ ] Verify frontend contract addresses match deployed PositionManager (0x25ba54a7b2fBac753B601Da05e3661F2E959510b)
 - [ ] **SUCCESS CRITERIA**: Positions tab shows meaningful non-zero values for 212 existing positions
 
-**Sprint Constraints:**
+## **Sprint Constraints (ENFORCED):**
 - ✅ Work ONLY on these 3 priorities until ALL pass completely
 - ✅ NO contract redeployment (all protected contracts must remain untouched)
 - ✅ NO fake/fabricated data - fix actual data pipeline issues
 - ✅ Focus on frontend integration and RPC connectivity issues
 
 **Completion Gate:** Only when all 3 priorities pass → transition to Phase 2 auto-improve mode
+
+This revised plan removes the forbidden ExecutionEngine deployment, prioritizes screenshot verification first as required, eliminates scope creep, and focuses solely on frontend data pipeline fixes.

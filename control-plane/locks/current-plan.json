@@ -1,24 +1,24 @@
 {
   "tasks": [
     {
-      "id": "fix_screenshot_verification",
+      "id": "fix-screenshot-verification",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Infrastructure task requiring system dependency installation (libatk-1.0.so.0, Chrome) and fixing browser automation pipeline script. No dependencies as it's standalone infrastructure work."
+      "reason": "Infrastructure task fixing Puppeteer dependencies, system libraries, and browser testing pipeline scripts. No data dependencies with frontend display fixes."
     },
     {
-      "id": "fix_vault_tab_display",
+      "id": "fix-vault-tab-display",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Frontend task fixing React hooks (useVaultMulticall), RPC connectivity, and LeverVault integration. Root cause is frontend data fetching and display logic."
+      "reason": "Frontend task fixing React hooks (useVaultMulticall), component display logic for vault tab, and frontend contract integration. Can work in parallel with screenshot infrastructure."
     },
     {
-      "id": "fix_position_values_display",
+      "id": "fix-position-values-display",
       "lane": "FRONTEND",
       "depends_on": [
-        "fix_vault_tab_display"
+        "fix-vault-tab-display"
       ],
-      "reason": "Frontend task fixing PositionManager integration and position display components. Depends on vault fix to avoid potential conflicts in frontend codebase since both modify React components/hooks."
+      "reason": "Frontend task fixing position display components and PositionManager integration. Depends on vault task to avoid conflicts in shared frontend contract integration files."
     }
   ]
 }
