@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-03-17T05:16:55.598510+00:00",
+  "frontend_status": "UP",
+  "data_checks": [
+    {
+      "name": "TVL",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Positions",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Global OI",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Insurance Fund",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Max Leverage",
+      "value": "",
+      "status": "error"
+    }
+  ],
+  "visual_issues": [
+    "Vision: Vault tab shows $NaN share price making platform look broken",
+    "Vision: All position values display as $0.00 indicating non-functional core features",
+    "Vision: Position opening fails with error messages"
+  ],
+  "functional_issues": [],
+  "critical_blockers": [],
+  "score": 70,
+  "vision_review": {
+    "professional_score": 6,
+    "trust_score": 2,
+    "deal_breakers": [
+      "Vault tab shows $NaN share price making platform look broken",
+      "All position values display as $0.00 indicating non-functional core features",
+      "Position opening fails with error messages"
+    ],
+    "improvements": [
+      "Fix $NaN and $0.00 displays throughout the platform",
+      "Implement working position opening with proper leverage",
+      "Replace demo mode with realistic functional data that shows platform capabilities"
+    ]
+  },
+  "recent_commits": "5cee559c fix(2): Update contract address configuration - Fixed leverageModel and executionEngine addresses to match deployed contracts\n1c0b7a5d fix(1): Resolve contract data fetching root cause - foundry PATH issue\nc5a3d1b7 fix(10): Update Page Title and Professional Polish\n98a6dd82 fix: Redeploy ExecutionEngine + LeverageModelFixed (7x leverage, all roles granted)\nb89190ee fix(5b): Task blocked - leverage model caps at 1x, cannot open required 10x-30x positions",
+  "known_issues_count": 27
+}

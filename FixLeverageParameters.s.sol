@@ -3,7 +3,7 @@ pragma solidity 0.8.24;
 
 import "forge-std/Script.sol";
 import "forge-std/console2.sol";
-import "./contracts/LeverageModel.sol";
+import "./contracts/LeverageModelFixed.sol";
 
 /// @title Fix Leverage Parameters on Current Model
 /// @notice Fix risk parameters on the actual LeverageModel that ExecutionEngine is using
@@ -13,7 +13,7 @@ contract FixLeverageParameters is Script {
         vm.startBroadcast();
 
         // This is the LeverageModel address that ExecutionEngine is actually pointing to
-        LeverageModel leverageModel = LeverageModel(0x63B98Ec1e559E3b24199eb2115F0a57222e9818c);
+        LeverageModelFixed leverageModel = LeverageModelFixed(0x5A4467780d31cDe18310d524879Aa255064aF0E8);
 
         // Market IDs we need to fix
         bytes32 spacexMarketId = 0x2841ef32b61fb3472aadbfc70d787a1bfaf5d0218c9601b87963af7bcca1bcf1;

@@ -438,9 +438,15 @@ def get_contract_data():
         try:
             if not wei_str or wei_str == "0":
                 return "0"
-            # Convert wei string to float and format
+
+            # Handle scientific notation in cast output (e.g., "60505028315742 [6.05e13]")
+            if '[' in wei_str:
+                wei_str = wei_str.split('[')[0].strip()
+
+            # Convert wei string to int and format
             wei_val = int(wei_str)
             formatted = wei_val / (10 ** decimals)
+
             if formatted >= 1e6:
                 return f"{formatted/1e6:.2f}M"
             elif formatted >= 1e3:
@@ -520,9 +526,14 @@ def get_contract_data():
         fallback_data["global_utilization"]["value"] = util_wei
         # Utilization is in basis points (10000 = 100%)
         try:
-            util_percent = int(util_wei) / 10000 * 100
+            # Handle scientific notation in cast output
+            util_str = util_wei
+            if '[' in util_str:
+                util_str = util_str.split('[')[0].strip()
+            util_percent = int(util_str) / 10000 * 100
             fallback_data["global_utilization"]["display"] = f"{util_percent:.2f}%"
-        except:
+        except Exception as e:
+            logger.warning(f"Failed to parse utilization '{util_wei}': {str(e)}")
             fallback_data["global_utilization"]["display"] = "N/A"
         logger.info(f"Global utilization fetched successfully: {util_wei} bps = {fallback_data['global_utilization']['display']}")
     except Exception as e:
@@ -533,7 +544,7 @@ def get_contract_data():
     try:
         def get_deployer_balance():
             cast_path = "/home/lever/.foundry/bin/cast"
-            cmd = [cast_path, "balance", config.get('DEPLOYER', ''), "--rpc-url", rpc_url, "--raw"]
+            cmd = [cast_path, "balance", config.get('DEPLOYER', ''), "--rpc-url", rpc_url]
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
             if result.returncode != 0:
                 raise RuntimeError(f"Balance check failed: {result.stderr}")
