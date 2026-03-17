@@ -278,7 +278,7 @@ Be strict but fair. Only reject if priorities are wrong, tasks are too vague, or
     critique = claude_call(prompt, timeout=60)
     log(f"Critic: {critique[:80]}...")
 
-    if critique.strip().startswith("APPROVED"):
+    if "APPROVED" in critique.strip().replace("*", "")[:200].upper():
         return {"approved": True, "feedback": ""}
     feedback = critique.replace("REJECTED", "").strip()
     if "<feedback>" in feedback:
