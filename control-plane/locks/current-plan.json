@@ -1,40 +1,25 @@
 {
   "tasks": [
     {
-      "id": "7a",
-      "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "React component crash fixes - must modify frontend JSX/TS files for Positions tab display logic"
-    },
-    {
       "id": "7b",
       "lane": "CONTRACT",
       "depends_on": [],
-      "reason": "Solidity contract verification using cast calls - debugging FundingRateEngine contract behavior"
-    },
-    {
-      "id": "8a",
-      "lane": "INFRA",
-      "depends_on": [],
-      "reason": "Building new puppeteer test script - creates automation infrastructure, not dependent on frontend fixes since script is designed to catch and report issues"
+      "reason": "Uses cast call to verify deployed contract functionality. No dependencies - pure verification task."
     },
     {
       "id": "9a",
       "lane": "INFRA",
-      "depends_on": [
-        "8a"
-      ],
-      "reason": "Updates control-plane config files - depends on 8a since it references the tab-sanity.js script which must exist first"
+      "depends_on": [],
+      "reason": "Updates control-plane configuration files (worker-rule.md, agent-persona.md). No dependencies - adding process rules."
     },
     {
       "id": "10a",
       "lane": "FRONTEND",
       "depends_on": [
-        "7a",
-        "8a",
+        "7b",
         "9a"
       ],
-      "reason": "Final frontend polish using validation script - depends on 7a for Positions fix, 8a for the validation script, 9a for validation rules to be in place"
+      "reason": "Fixes React component display issues and formatting. Depends on 7b because broken funding rate could cause frontend display problems. Depends on 9a because it implements the tab-sanity validation rule that 9a creates."
     }
   ]
 }

@@ -30,23 +30,23 @@ contract OpenTask5bPositions is Script {
 
         AccountManager am = AccountManager(accountManager);
 
-        // High leverage positions (starting with 1x due to leverage model limitations)
+        // High leverage positions (using maximum available leverage after parameter fix)
         OpenParams[] memory positions = new OpenParams[](5);
 
-        // Position 1: Long SpaceX at 1x (max available)
-        positions[0] = OpenParams(SPACEX_IPO, true, 1000_000000, 1 * 1e18);
+        // Position 1: Long SpaceX at 1.7x (close to max available ~1.8x)
+        positions[0] = OpenParams(SPACEX_IPO, true, 1000_000000, 17 * 1e17);
 
-        // Position 2: Long US-Iran at 1x
-        positions[1] = OpenParams(US_IRAN, true, 700_000000, 1 * 1e18);
+        // Position 2: Long US-Iran at 2.9x (close to max available ~3x)
+        positions[1] = OpenParams(US_IRAN, true, 700_000000, 29 * 1e17);
 
-        // Position 3: Long FIFA Spain at 1x
-        positions[2] = OpenParams(FIFA_SPAIN, true, 500_000000, 1 * 1e18);
+        // Position 3: Long FIFA Spain at 2.9x (close to max available 3x)
+        positions[2] = OpenParams(FIFA_SPAIN, true, 500_000000, 29 * 1e17);
 
-        // Position 4: Long Argentina at 1x
-        positions[3] = OpenParams(ARGENTINA, true, 400_000000, 1 * 1e18);
+        // Position 4: Long Argentina at 2.9x (close to max available ~3x)
+        positions[3] = OpenParams(ARGENTINA, true, 400_000000, 29 * 1e17);
 
-        // Position 5: Long Fed Rate at 1x
-        positions[4] = OpenParams(FED_RATE, true, 300_000000, 1 * 1e18);
+        // Position 5: Long Fed Rate at 2.9x (close to max available ~3x)
+        positions[4] = OpenParams(FED_RATE, true, 300_000000, 29 * 1e17);
 
         vm.startBroadcast(testWalletKey);
 

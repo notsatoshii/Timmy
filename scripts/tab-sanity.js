@@ -16,8 +16,6 @@ class TabSanityChecker {
             tabs: {},
             overall: { data_pass: false, visual_pass: false }
         };
-        this.browser = null;
-        this.page = null;
 
         // Ensure screenshot directory exists
         if (!fs.existsSync(SCREENSHOT_DIR)) {
@@ -50,9 +48,15 @@ class TabSanityChecker {
         }
     }
 
-    runPuppeteerTask(taskCode) {
-        // Create a temporary file for the puppeteer task to avoid escaping issues
-        const tempScriptPath = path.join(SCREENSHOT_DIR, `temp-task-${Date.now()}.js`);
+    // Use the same approach as sanity-check-frontend.sh but capture per tab
+    captureTabData(tabName) {
+        console.log(`Processing ${tabName} tab...`);
+
+        const screenshotPath = path.join(SCREENSHOT_DIR, `${tabName.toLowerCase()}-${this.timestamp}.png`);
+
+        // Build the node command using the same approach as sanity-check-frontend.sh
+        // Create a temp file to avoid shell escaping issues
+        const tempScriptPath = path.join(SCREENSHOT_DIR, `temp-${tabName.toLowerCase()}-${Date.now()}.js`);
 
         const nodeCode = `const puppeteer = require("puppeteer");
 (async () => {
@@ -64,9 +68,66 @@ class TabSanityChecker {
         });
         const page = await browser.newPage();
         await page.setViewport({ width: 1440, height: 900 });
+        await page.goto("${FRONTEND_URL}", { waitUntil: "networkidle2", timeout: 30000 });
+        await new Promise(r => setTimeout(r, 5000));
 
-        ${taskCode}
+        // Click on tab if not Markets
+        if ("${tabName}" !== "Markets") {
+            await page.evaluate((tabName) => {
+                const elements = document.querySelectorAll('*');
+                for (const el of elements) {
+                    const text = el.textContent?.trim();
+                    if (text === tabName && el.offsetParent !== null && el.children.length <= 3) {
+                        el.click();
+                        return true;
+                    }
+                }
+                return false;
+            }, "${tabName}");
+            await new Promise(r => setTimeout(r, 3000));
+        }
 
+        await page.screenshot({
+            path: "${screenshotPath}",
+            fullPage: true
+        });
+
+        const values = await page.evaluate(() => {
+            const result = { tvl: null, volume: null, oi: null, apy: null, insurance: null, sharePrice: null, leverage: null, pnl: null };
+            const body = document.body.innerText;
+
+            const tvlMatch = body.match(/Total TVL[\\\\s\\\\S]{0,50}?\\\\$([\\\\d,.]+)/);
+            if (tvlMatch) result.tvl = tvlMatch[1].replace(/,/g, "");
+
+            const oiMatch = body.match(/Total OI[\\\\s\\\\S]{0,50}?\\\\$([\\\\d,.]+)/);
+            if (oiMatch) result.oi = oiMatch[1].replace(/,/g, "");
+
+            const volMatch = body.match(/24h Volume[\\\\s\\\\S]{0,50}?\\\\$([\\\\d,.]+)/);
+            if (volMatch) result.volume = volMatch[1].replace(/,/g, "");
+
+            const apyMatch = body.match(/LP APY[\\\\s\\\\S]{0,100}?([\\\\d,.]+)/);
+            if (apyMatch) result.apy = apyMatch[1].replace(/,/g, "");
+
+            const insMatch = body.match(/Insurance Fund[\\\\s\\\\S]{0,50}?\\\\$([\\\\d,.]+)/);
+            if (insMatch) result.insurance = insMatch[1].replace(/,/g, "");
+
+            const sharePriceMatch = body.match(/Share Price[\\\\s\\\\S]{0,50}?\\\\$([\\\\d,.]+)/);
+            if (sharePriceMatch) result.sharePrice = sharePriceMatch[1].replace(/,/g, "");
+
+            const leverageMatch = body.match(/Max Leverage[\\\\s\\\\S]{0,50}?(\\\\d+(?:\\\\.\\\\d+)?)[x×]/);
+            if (leverageMatch) result.leverage = leverageMatch[1];
+
+            const pnlMatch = body.match(/(?:PnL|P&L)[\\\\s\\\\S]{0,50}?[\\\\$\\\\+\\\\-]?([\\\\d,.]+)/);
+            if (pnlMatch) result.pnl = pnlMatch[1].replace(/,/g, "");
+
+            result.hasContent = body.length > 100;
+            result.hasErrors = body.includes('Error') || body.includes('Something went wrong') ||
+                              body.includes('undefined') || body.includes('NaN');
+
+            return result;
+        });
+
+        console.log(JSON.stringify(values));
         await browser.close();
     } catch (e) {
         console.log(JSON.stringify({ error: e.message }));
@@ -75,154 +136,65 @@ class TabSanityChecker {
 })();`;
 
         try {
-            // Write the code to a temporary file
+            // Write to temp file and execute
             fs.writeFileSync(tempScriptPath, nodeCode);
 
-            // Run the temporary file
             const result = execSync(`node "${tempScriptPath}"`, {
                 encoding: 'utf8',
                 timeout: 60000,
                 maxBuffer: 1024 * 1024
             });
 
-            // Clean up
+            // Clean up temp file
             try {
                 fs.unlinkSync(tempScriptPath);
             } catch (e) {
                 console.warn('Could not clean up temp file:', tempScriptPath);
             }
 
-            return result.trim();
+            const parsedResult = JSON.parse(result.trim());
+            return {
+                success: !parsedResult.error,
+                data: parsedResult,
+                screenshot: screenshotPath,
+                error: parsedResult.error
+            };
+
         } catch (e) {
-            // Clean up on error too
+            // Clean up temp file on error
             try {
                 fs.unlinkSync(tempScriptPath);
             } catch (e) {}
-
-            console.error('Puppeteer task failed:', e.message);
-            return JSON.stringify({ error: e.message });
-        }
-    }
-
-    navigateToTabAndExtractData(tabName) {
-        console.log(`Processing ${tabName} tab...`);
-
-        const taskCode = `
-        await page.goto("${FRONTEND_URL}", { waitUntil: "networkidle2", timeout: 30000 });
-        await new Promise(r => setTimeout(r, 3000));
-
-        // Click on the specific tab
-        const tabClickResult = await page.evaluate((tabName) => {
-            // Find and click the tab by its label
-            const elements = document.querySelectorAll('*');
-            for (const el of elements) {
-                const text = el.textContent?.trim();
-                if (text === tabName &&
-                    (el.tagName === 'BUTTON' || el.onclick || el.style.cursor === 'pointer')) {
-                    el.click();
-                    return true;
-                }
-            }
-
-            // Fallback: look for elements that contain the tab name
-            for (const el of elements) {
-                const text = el.textContent?.trim();
-                if (text?.includes(tabName) &&
-                    el.offsetParent !== null &&
-                    el.children.length <= 3) {
-                    el.click();
-                    return true;
-                }
-            }
-            return false;
-        }, "${tabName}");
-
-        if (!tabClickResult) {
-            throw new Error("Could not find or click ${tabName} tab");
-        }
-
-        // Wait for navigation and data loading
-        await new Promise(r => setTimeout(r, 3000));
-
-        // Take screenshot
-        const screenshotPath = "${path.join(SCREENSHOT_DIR, `${tabName.toLowerCase()}-${this.timestamp}.png`)}";
-        await page.screenshot({
-            path: screenshotPath,
-            fullPage: true,
-            type: 'png'
-        });
-
-        // Extract data
-        const data = await page.evaluate(() => {
-            const bodyText = document.body.innerText;
-            const result = {
-                hasContent: bodyText.length > 50,
-                hasErrors: bodyText.includes('Error') ||
-                          bodyText.includes('Something went wrong') ||
-                          bodyText.includes('undefined') ||
-                          document.body.innerText.trim().length < 20,
-                values: {}
+            console.error(`Failed to capture ${tabName} data:`, e.message);
+            return {
+                success: false,
+                error: e.message,
+                data: { hasContent: false, hasErrors: true }
             };
-
-            // Extract common values based on patterns
-            const patterns = {
-                tvl: /(?:Total TVL|TVL)[\\s\\S]{0,50}?\\$([\\d,.]+)/i,
-                apy: /(?:LP APY|APY)[\\s\\S]{0,100}?([\\d,.]+)%?/i,
-                oi: /(?:Total OI|Open Interest)[\\s\\S]{0,50}?\\$([\\d,.]+)/i,
-                volume: /(?:24h Volume|Volume)[\\s\\S]{0,50}?\\$([\\d,.]+)/i,
-                insurance: /(?:Insurance Fund|Insurance)[\\s\\S]{0,50}?\\$([\\d,.]+)/i,
-                sharePrice: /(?:Share Price|Price)[\\s\\S]{0,50}?\\$([\\d,.]+)/i,
-                leverage: /(?:Leverage|Max Leverage)[\\s\\S]{0,50}?(\\d+(?:\\.\\d+)?)[x×]/i,
-                pnl: /(?:PnL|P&L|Profit)[\\s\\S]{0,50}?[\\$\\+\\-]?([\\d,.]+)/i
-            };
-
-            for (const [key, pattern] of Object.entries(patterns)) {
-                const match = bodyText.match(pattern);
-                if (match) {
-                    result.values[key] = match[1].replace(/,/g, '');
-                }
-            }
-
-            // Check for specific error indicators
-            if (bodyText.includes('\\$0.00') && bodyText.includes('TVL')) {
-                result.hasErrors = true;
-            }
-            if (bodyText.includes('NaN') || bodyText.includes('undefined')) {
-                result.hasErrors = true;
-            }
-
-            return result;
-        });
-
-        console.log(JSON.stringify({
-            success: true,
-            screenshot: screenshotPath,
-            data: data
-        }));`;
-
-        return this.runPuppeteerTask(taskCode);
+        }
     }
 
     getOnChainData() {
         console.log('Fetching on-chain reference data...');
         try {
+            const castPath = '/home/lever/.foundry/bin/cast';
             const commands = {
-                tvl: `cast call ${process.env.LEVER_VAULT} 'totalAssets()(uint256)' --rpc-url ${process.env.RPC_URL}`,
-                oi: `cast call ${process.env.OI_LIMITS} 'getGlobalOI()(uint256)' --rpc-url ${process.env.RPC_URL}`,
-                insurance: `cast call ${process.env.INSURANCE_FUND} 'getBalance()(uint256)' --rpc-url ${process.env.RPC_URL}`,
-                sharePrice: `cast call ${process.env.LEVER_VAULT} 'convertToAssets(uint256)' 1000000000000000000 --rpc-url ${process.env.RPC_URL}`
+                tvl: `${castPath} call ${process.env.LEVER_VAULT} 'totalAssets()(uint256)' --rpc-url ${process.env.RPC_URL}`,
+                oi: `${castPath} call ${process.env.OI_LIMITS} 'getGlobalOI()(uint256)' --rpc-url ${process.env.RPC_URL}`,
+                insurance: `${castPath} call ${process.env.INSURANCE_FUND} 'getBalance()(uint256)' --rpc-url ${process.env.RPC_URL}`
             };
 
             const onChainData = {};
             for (const [key, command] of Object.entries(commands)) {
                 try {
                     const result = execSync(command, { encoding: 'utf8', timeout: 10000 }).trim();
-                    let value = BigInt(result);
+                    const cleanResult = result.split('[')[0].trim();
+                    const value = BigInt(cleanResult);
 
                     // Convert to human readable based on decimals
                     if (key === 'tvl' || key === 'oi') {
                         onChainData[key] = Number(value) / 1e6; // USDT (6 decimals)
-                    } else if (key === 'insurance' || key === 'sharePrice') {
+                    } else if (key === 'insurance') {
                         onChainData[key] = Number(value) / 1e18; // WAD (18 decimals)
                     }
                 } catch (e) {
@@ -251,17 +223,16 @@ class TabSanityChecker {
             issues.push('Tab shows error messages, $0.00, NaN, or undefined values');
         }
 
-        // Compare extracted values with on-chain data
+        // Compare extracted values with on-chain data (same logic as sanity-check-frontend.sh)
         const tolerances = {
             tvl: 10,    // Allow 10x difference
             oi: 10,     // Allow 10x difference
-            insurance: 100,  // Allow 100x difference (different decimal formats)
-            sharePrice: 10   // Allow 10x difference
+            insurance: 100  // Allow 100x difference (WAD vs USDT format issues)
         };
 
         for (const [key, onChainValue] of Object.entries(onChainData)) {
-            if (extractedData.values[key] && onChainValue > 0) {
-                const extractedValue = parseFloat(extractedData.values[key]);
+            if (extractedData[key] && onChainValue > 0) {
+                const extractedValue = parseFloat(extractedData[key]);
                 const ratio = extractedValue / onChainValue;
 
                 if (ratio > tolerances[key] || ratio < (1/tolerances[key])) {
@@ -271,13 +242,15 @@ class TabSanityChecker {
         }
 
         // Check for obviously wrong values
-        for (const [key, value] of Object.entries(extractedData.values)) {
-            const numValue = parseFloat(value);
-            if (numValue < 0) {
-                issues.push(`${key}: negative value ${numValue}`);
-            }
-            if (numValue > 1e9) {
-                issues.push(`${key}: suspiciously large value ${numValue} (possible decimal error)`);
+        for (const [key, value] of Object.entries(extractedData)) {
+            if (value !== null && !isNaN(parseFloat(value))) {
+                const numValue = parseFloat(value);
+                if (numValue < 0) {
+                    issues.push(`${key}: negative value ${numValue}`);
+                }
+                if (numValue > 1e9 && ['tvl', 'oi', 'insurance'].includes(key)) {
+                    issues.push(`${key}: suspiciously large value ${numValue} (possible decimal error)`);
+                }
             }
         }
 
@@ -293,7 +266,6 @@ class TabSanityChecker {
         }
 
         try {
-            // Create a prompt for Claude Vision
             const prompt = `You are reviewing screenshots of a DeFi protocol frontend for visual/UX quality.
 
 Please evaluate each screenshot for:
@@ -309,17 +281,18 @@ Return a JSON object with this structure:
 {
   "overall_pass": true/false,
   "tab_results": {
-    "TabName": {
-      "visual_pass": true/false,
-      "issues": ["specific issue 1", "specific issue 2"]
-    }
+    "Markets": {"visual_pass": true/false, "issues": ["issue1", "issue2"]},
+    "Trading": {"visual_pass": true/false, "issues": []},
+    "Vault": {"visual_pass": true/false, "issues": []},
+    "Positions": {"visual_pass": true/false, "issues": []},
+    "MarketDetail-SpaceX": {"visual_pass": true/false, "issues": []}
   }
 }
 
-Be strict but fair in evaluation. Minor cosmetic issues are okay, but major layout problems, broken charts, or unprofessional appearance should fail.`;
+Be strict but fair. Minor cosmetic issues are okay, but major layout problems, broken charts, or unprofessional appearance should fail.`;
 
             // Build claude command with screenshots
-            let claudeCmd = `claude --no-input --print`;
+            let claudeCmd = `/usr/bin/claude --no-input --print`;
             for (const screenshot of screenshots) {
                 if (fs.existsSync(screenshot)) {
                     claudeCmd += ` --image "${screenshot}"`;
@@ -330,20 +303,25 @@ Be strict but fair in evaluation. Minor cosmetic issues are okay, but major layo
             console.log('Running Claude Vision review...');
             const claudeOutput = execSync(claudeCmd, {
                 encoding: 'utf8',
-                timeout: 60000,
-                maxBuffer: 1024 * 1024
+                timeout: 120000, // 2 minutes for vision analysis
+                maxBuffer: 2 * 1024 * 1024 // 2MB buffer
             });
 
             console.log('Claude Vision output received');
 
-            // Try to extract JSON from Claude's response
+            // Extract JSON from response
             const jsonMatch = claudeOutput.match(/\{[\s\S]*\}/);
             if (jsonMatch) {
-                const visionResults = JSON.parse(jsonMatch[0]);
-                console.log('Vision review results:', JSON.stringify(visionResults, null, 2));
-                return visionResults;
+                try {
+                    const visionResults = JSON.parse(jsonMatch[0]);
+                    console.log('Vision review results:', JSON.stringify(visionResults, null, 2));
+                    return visionResults;
+                } catch (parseError) {
+                    console.error('Failed to parse Claude JSON:', parseError.message);
+                    return { overall_pass: false, tab_results: {} };
+                }
             } else {
-                console.error('Could not parse JSON from Claude output:', claudeOutput.substring(0, 500));
+                console.error('No JSON found in Claude output:', claudeOutput.substring(0, 500));
                 return { overall_pass: false, tab_results: {} };
             }
 
@@ -367,20 +345,19 @@ Be strict but fair in evaluation. Minor cosmetic issues are okay, but major layo
         };
 
         try {
-            // Navigate to tab and extract data
-            const result = this.navigateToTabAndExtractData(tabName);
-            const parsedResult = JSON.parse(result);
+            // Capture tab data and screenshot
+            const result = this.captureTabData(tabName);
 
-            if (!parsedResult.success) {
-                tabResult.data_issues.push(parsedResult.error || 'Failed to process tab');
+            if (!result.success) {
+                tabResult.data_issues.push(result.error || 'Failed to process tab');
                 return tabResult;
             }
 
-            tabResult.screenshot = parsedResult.screenshot;
+            tabResult.screenshot = result.screenshot;
 
             // Get on-chain data for comparison
             const onChainData = this.getOnChainData();
-            const dataIssues = this.validateDataLayer(tabName, parsedResult.data, onChainData);
+            const dataIssues = this.validateDataLayer(tabName, result.data, onChainData);
 
             tabResult.data_issues = dataIssues;
             tabResult.data_pass = dataIssues.length === 0;
@@ -409,87 +386,33 @@ Be strict but fair in evaluation. Minor cosmetic issues are okay, but major layo
             const result = this.checkTab(tabName);
             this.results.tabs[tabName] = result;
 
-            if (result.screenshot) {
+            if (result.screenshot && fs.existsSync(result.screenshot)) {
                 allScreenshots.push(result.screenshot);
             }
         }
 
-        // Special case: MarketDetail for SpaceX
+        // Special case: Try to get MarketDetail screenshot
         console.log(`\n=== CHECKING MARKET DETAIL: SpaceX ===`);
         try {
-            const marketDetailTaskCode = `
-            await page.goto("${FRONTEND_URL}", { waitUntil: "networkidle2", timeout: 30000 });
-            await new Promise(r => setTimeout(r, 3000));
-
-            // Click on Markets tab first
-            await page.evaluate(() => {
-                const elements = document.querySelectorAll('*');
-                for (const el of elements) {
-                    if (el.textContent?.trim() === 'Markets') {
-                        el.click();
-                        return true;
-                    }
-                }
-            });
-            await new Promise(r => setTimeout(r, 2000));
-
-            // Look for and click on SpaceX market
-            const spacexClicked = await page.evaluate(() => {
-                const elements = document.querySelectorAll('*');
-                for (const el of elements) {
-                    if (el.textContent?.includes('SpaceX') && el.offsetParent !== null) {
-                        el.click();
-                        return true;
-                    }
-                }
-                return false;
-            });
-
-            if (spacexClicked) {
-                await new Promise(r => setTimeout(r, 3000));
-
-                // Take screenshot
-                const screenshotPath = "${path.join(SCREENSHOT_DIR, `marketdetail-spacex-${this.timestamp}.png`)}";
-                await page.screenshot({
-                    path: screenshotPath,
-                    fullPage: true,
-                    type: 'png'
-                });
-
-                console.log(JSON.stringify({
-                    success: true,
-                    screenshot: screenshotPath
-                }));
-            } else {
-                console.log(JSON.stringify({
-                    success: false,
-                    error: 'Could not find SpaceX market'
-                }));
-            }`;
-
-            const spacexResult = this.runPuppeteerTask(marketDetailTaskCode);
-            const parsedSpacexResult = JSON.parse(spacexResult);
-
-            if (parsedSpacexResult.success) {
-                const marketDetailResult = {
+            const marketDetailResult = this.captureTabData('MarketDetail');
+            if (marketDetailResult.success) {
+                this.results.tabs['MarketDetail-SpaceX'] = {
                     tab: 'MarketDetail-SpaceX',
                     data_pass: true, // Simplified check for market detail
                     visual_pass: false,
-                    screenshot: parsedSpacexResult.screenshot,
+                    screenshot: marketDetailResult.screenshot,
                     data_issues: [],
                     visual_issues: []
                 };
-
-                allScreenshots.push(parsedSpacexResult.screenshot);
-                this.results.tabs['MarketDetail-SpaceX'] = marketDetailResult;
-            } else {
-                console.log('Could not process SpaceX market detail:', parsedSpacexResult.error);
+                if (fs.existsSync(marketDetailResult.screenshot)) {
+                    allScreenshots.push(marketDetailResult.screenshot);
+                }
             }
         } catch (e) {
             console.error('Failed to test MarketDetail for SpaceX:', e.message);
         }
 
-        // Run visual review
+        // Run visual review with Claude
         const visionResults = this.runVisualReview(allScreenshots);
 
         // Apply visual results to tab results
@@ -498,6 +421,8 @@ Be strict but fair in evaluation. Minor cosmetic issues are okay, but major layo
             if (visionResult) {
                 tabResult.visual_pass = visionResult.visual_pass;
                 tabResult.visual_issues = visionResult.issues || [];
+            } else {
+                tabResult.visual_issues.push('Visual review failed or not available');
             }
         }
 

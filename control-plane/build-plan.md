@@ -167,7 +167,7 @@ RULES:
 **FAIL:** Any market has a price older than 30 minutes, or keeper is not running.
 
 ### 7a. Fix Positions Tab [HIGH]
-- [ ] 7a. Positions tab may crash with error boundary. Check for: undefined position data, division by zero in PnL calc, missing market metadata for a position's marketId. Also verify PnL calculation uses correct decimal scaling (collateral is 6 decimals USDT, PnL may be WAD).
+- [x] 7a. Positions tab may crash with error boundary. Check for: undefined position data, division by zero in PnL calc, missing market metadata for a position's marketId. Also verify PnL calculation uses correct decimal scaling (collateral is 6 decimals USDT, PnL may be WAD).
 **DONE:** Positions tab loads and shows at least 10 positions with valid PnL numbers (not $NaN, not $0 for all).
 **FAIL:** Error boundary appears or any position shows $NaN or all PnLs show exactly $0.
 
