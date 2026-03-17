@@ -10,7 +10,7 @@ Based on the QA report showing frontend DOWN (HTTP 000) and multiple critical da
 - [ ] 3. Positions tab shows $0.00 for all position values in demo mode. Stub positions have zero values - need proper PnL calculation and formatting to show realistic position data to investors.
 
 ### 4. Fix Position Opening Limitations [HIGH] [CONTRACTS]
-- [ ] 4. ExecutionEngine uses old LeverageModel address - positions limited to 1x leverage only. Update ExecutionEngine to use new LeverageModel (0xf649e342...F9EF) to enable proper leveraged trading demo.
+- [x] 4. ExecutionEngine uses old LeverageModel address - positions limited to 1x leverage only. Update ExecutionEngine to use new LeverageModel (0xf649e342...F9EF) to enable proper leveraged trading demo.
 
 ### 5. Fix Volume Calculation [MEDIUM] [FRONTEND]
 - [ ] 5. 24h Volume shows collateral only instead of notional (collateral × leverage). Update volume calculation to display proper trading volumes for investor metrics.
