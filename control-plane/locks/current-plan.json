@@ -4,7 +4,7 @@
       "id": "2",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Root cause is React hook (useVaultMulticall) and RPC call issues from frontend. Requires fixing React components and data formatting."
+      "reason": "React data fetching and display issue. No dependencies since this is addressing vault-specific RPC and display problems."
     },
     {
       "id": "3",
@@ -12,7 +12,7 @@
       "depends_on": [
         "2"
       ],
-      "reason": "React component display issue for positions tab. Same lane as task 2 and could touch shared hooks/components, so sequential for safety."
+      "reason": "React position display and formatting. Depends on task 2 since both are FRONTEND lane working on data display components that could share utilities or hooks."
     }
   ]
 }

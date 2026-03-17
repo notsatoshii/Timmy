@@ -48,7 +48,20 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
     } = data;
 
     // TVL calculation (totalAssets is USDT format from LeverVault.totalAssets())
-    const tvl = totalAssets ? parseFloat(formatUsdt(totalAssets)) : 0;
+    let tvl = 0;
+    try {
+      if (totalAssets && totalAssets > BigInt(0)) {
+        const tvlFormatted = formatUsdt(totalAssets);
+        tvl = parseFloat(tvlFormatted);
+        if (!isFinite(tvl) || tvl < 0) {
+          console.warn('Invalid TVL calculated:', tvlFormatted, tvl);
+          tvl = 0;
+        }
+      }
+    } catch (error) {
+      console.warn('Error calculating TVL:', error);
+      tvl = 0;
+    }
 
     // Share price calculation (assets per share) with NaN protection
     // totalAssets is USDT format (6 decimals), totalSupply is WAD format (18 decimals) for lvUSDT shares
@@ -79,9 +92,25 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
 
     // Utilization calculation (OI / TVL)
     // globalOI is USDT format from OILimits.getGlobalOI()
-    const utilization = tvl > 0 && globalOI > BigInt(0)
-      ? (parseFloat(formatUsdt(globalOI)) / tvl) * 100
-      : 0;
+    let utilization = 0;
+    try {
+      if (tvl > 0 && globalOI > BigInt(0)) {
+        const oiFormatted = formatUsdt(globalOI);
+        const oiFloat = parseFloat(oiFormatted);
+        if (isFinite(oiFloat) && oiFloat >= 0) {
+          utilization = (oiFloat / tvl) * 100;
+          if (!isFinite(utilization) || utilization < 0) {
+            console.warn('Invalid utilization calculated:', { oiFloat, tvl, utilization });
+            utilization = 0;
+          }
+        } else {
+          console.warn('Invalid OI float:', oiFormatted, oiFloat);
+        }
+      }
+    } catch (error) {
+      console.warn('Error calculating utilization:', error);
+      utilization = 0;
+    }
 
     // APY calculation using projected approach like ProtocolStats
     // Use BASE_BORROW_RATE × Total_OI × 8760_hours × 0.50_LP_share / TVL
@@ -99,12 +128,33 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
     const projectedAnnualRevenue = revenuePerHour * hoursPerYear * lpShare / hundredPercent;
 
     // APY = projected_annual_revenue / TVL (multiply by 10000 for basis point precision)
-    const annualizedAPY = tvlInWad > BigInt(0)
-      ? Number(projectedAnnualRevenue * BigInt(10000) / tvlInWad) / 100
-      : 0;
+    let annualizedAPY = 0;
+    try {
+      if (tvlInWad > BigInt(0)) {
+        const apyBasisPoints = Number(projectedAnnualRevenue * BigInt(10000) / tvlInWad);
+        annualizedAPY = apyBasisPoints / 100;
+        if (!isFinite(annualizedAPY) || annualizedAPY < 0) {
+          console.warn('Invalid APY calculated:', { projectedAnnualRevenue: projectedAnnualRevenue.toString(), tvlInWad: tvlInWad.toString(), apyBasisPoints, annualizedAPY });
+          annualizedAPY = 0;
+        }
+      }
+    } catch (error) {
+      console.warn('Error calculating APY:', error);
+      annualizedAPY = 0;
+    }
 
     // Daily yield from APY
-    const dailyYield = annualizedAPY / 365;
+    let dailyYield = 0;
+    try {
+      dailyYield = annualizedAPY / 365;
+      if (!isFinite(dailyYield) || dailyYield < 0) {
+        console.warn('Invalid daily yield calculated:', { annualizedAPY, dailyYield });
+        dailyYield = 0;
+      }
+    } catch (error) {
+      console.warn('Error calculating daily yield:', error);
+      dailyYield = 0;
+    }
 
     // User position calculations (userShares is WAD format - 18 decimals)
     const userSharesFloat = userShares ? parseFloat(formatWad(userShares)) : 0;

@@ -38,13 +38,53 @@ const addCommas = (numStr: string): string => {
 
 // Helper functions
 export const formatWad = (value: bigint): string => {
-  const num = Number(value) / Number(WAD);
-  return addCommas(num.toFixed(2));
+  // Use BigInt division to avoid precision loss, then convert to number
+  try {
+    const wholePart = value / WAD;
+    const remainder = value % WAD;
+
+    // Convert to number safely for display
+    const wholeNumber = Number(wholePart);
+    const fractionalNumber = Number(remainder) / Number(WAD);
+
+    const num = wholeNumber + fractionalNumber;
+
+    // Check for overflow/underflow
+    if (!isFinite(num)) {
+      console.warn('formatWad: number overflow for value:', value.toString());
+      return addCommas((Number(wholePart)).toFixed(2));
+    }
+
+    return addCommas(num.toFixed(2));
+  } catch (error) {
+    console.error('formatWad error for value:', value.toString(), error);
+    return '0.00';
+  }
 };
 
 export const formatUsdt = (value: bigint): string => {
-  const num = Number(value) / Number(USDT_SCALE);
-  return addCommas(num.toFixed(2));
+  // Use BigInt division to avoid precision loss, then convert to number
+  try {
+    const wholePart = value / USDT_SCALE;
+    const remainder = value % USDT_SCALE;
+
+    // Convert to number safely for display
+    const wholeNumber = Number(wholePart);
+    const fractionalNumber = Number(remainder) / Number(USDT_SCALE);
+
+    const num = wholeNumber + fractionalNumber;
+
+    // Check for overflow/underflow
+    if (!isFinite(num)) {
+      console.warn('formatUsdt: number overflow for value:', value.toString());
+      return addCommas((Number(wholePart)).toFixed(2));
+    }
+
+    return addCommas(num.toFixed(2));
+  } catch (error) {
+    console.error('formatUsdt error for value:', value.toString(), error);
+    return '0.00';
+  }
 };
 
 export const parseUsdt = (value: string): bigint => {
