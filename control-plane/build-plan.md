@@ -1,33 +1,31 @@
-You're absolutely correct. I apologize for the critical violations in my original plan. After reading the actual `build-plan.md`, I now understand the correct scope and constraints.
+You're absolutely right. I apologize for the critical violations in my original plan. After reading the actual `build-plan.md`, I now understand the correct scope and constraints.
 
 ## **CORRECTED PLAN - Follows Exact Build-Plan.md Priorities**
 
-### **Priority 1: Data Display Consistency [CRITICAL]**
-**Issue**: Frontend shows $NaN/$0.00 despite contracts having real data (TVL: 60.5k USDT, 214 positions)
+### **Priority 1: Fix MarketDetail Error Boundary [CRITICAL]**
+**Issue**: MarketDetail crashes when clicking markets, blocking investor walkthrough  
+**Task**: Fix MarketDetail error boundary, take screenshots to verify
+- [ ] Debug MarketDetail component crashes when clicking markets
+- [ ] Fix any BigInt conversion errors (similar to previous tab fixes)
+- [ ] Test error boundary rendering
+- [ ] Screenshot verification after fix
 
-**Frontend-Only Fixes**:
-- [ ] Debug `useVaultMulticall.ts` RPC 413 errors causing undefined returns
-- [ ] Add fallback logic when multicall fails → direct contract reads  
-- [ ] Verify contract addresses in `frontend/user-app/src/config/contracts.ts` match `control-plane/deploy-env.sh`
-- [ ] Implement bypass logic if multicall completely fails
+### **Priority 2: Fix QA Agent Data Extraction [CRITICAL]**  
+**Issue**: `data_checks: []` empty despite working contracts - QA can't extract displayed values
+**Task**: Rewrite sanity-check-frontend.sh per build plan
+- [ ] Create comprehensive tab testing script that clicks ALL 4 tabs
+- [ ] Screenshot each tab automatically 
+- [ ] FAIL if any shows error boundary text or crashes
+- [ ] Save screenshots to `control-plane/screenshots/` with tab names
+- [ ] Ensure QA agent can read the generated screenshots
 
-### **Priority 2: Remove ALL Fake Data [CRITICAL]**
-**Issue**: Fabricated volume values violate CLAUDE.md constraints
-
-**Exact Removals**:
-- [ ] `useVolumeCalculation.ts` - remove `BigInt('12800000000')` fake volume
-- [ ] `ProtocolStats.tsx` - remove any `DEMO_FALLBACK_VALUES`
-- [ ] Show honest "$0.00" when no real trading events exist
-- [ ] Fix volume calculation = notional (collateral × leverage), not just collateral
-
-### **Priority 3: QA Integration Success [CRITICAL]**  
-**Issue**: `data_checks: []` empty despite working contracts
-
-**Frontend Debug**:
-- [ ] Debug why QA agent can't extract displayed values from DOM
-- [ ] Add logging to identify exact break point in data extraction
-- [ ] Ensure demo mode provides readable fallback values
-- [ ] Test QA agent can read displayed TVL/position values
+### **Priority 3: Fix Frontend Position Opening [CRITICAL]**
+**Issue**: Trading component shows errors in demo mode, but CLI works
+**Task**: Debug Trading component transaction encoding  
+- [ ] Debug why frontend position opening fails in demo mode
+- [ ] Fix transaction encoding issues 
+- [ ] Test position opening through UI
+- [ ] Verify positions appear in Positions tab
 
 ---
 
@@ -37,4 +35,4 @@ You're absolutely correct. I apologize for the critical violations in my origina
 - ✅ Exactly 3 priorities from approved build-plan.md
 - ✅ Respects current sprint constraints
 
-**Should I proceed with Priority 1: Debugging the RPC 413 errors in `useVaultMulticall.ts`?**
+**Should I proceed with Priority 1: Debugging the MarketDetail error boundary?**

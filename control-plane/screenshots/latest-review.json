@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-03-17T20-23-19-058Z",
+  "timestamp": "2026-03-17T20-37-47-069Z",
   "console_errors": [
     "Puppeteer browser launch failed - visual verification fallback used"
   ],
   "screenshots": [
-    "visual-verification-2026-03-17T20-23-19-058Z.html"
+    "visual-verification-2026-03-17T20-37-47-069Z.html"
   ],
   "fallback_used": true,
-  "visual_verification": "/home/lever/lever-protocol/control-plane/screenshots/visual-verification-2026-03-17T20-23-19-058Z.html",
+  "visual_verification": "/home/lever/lever-protocol/control-plane/screenshots/visual-verification-2026-03-17T20-37-47-069Z.html",
   "frontend_check": "Frontend OK - 200, 1851 bytes, React: true",
   "detailed_checks": [
     "Main page: 200 - 1851 bytes - React app: true",

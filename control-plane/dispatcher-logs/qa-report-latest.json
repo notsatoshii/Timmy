@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-17T20:22:29.515282+00:00",
+  "timestamp": "2026-03-17T20:37:01.531357+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,12 +11,12 @@
     },
     {
       "name": "Positions",
-      "value": "214",
+      "value": "215",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "11199767554735 [1.119e13]",
+      "value": "11229767554735 [1.122e13]",
       "status": "ok"
     },
     {
@@ -28,33 +28,32 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Cannot verify actual UI rendering due to browser dependencies",
-    "Vision: No discoverable API health endpoints for system status",
-    "Vision: Unknown if core trading functionality (markets, positions, vault) loads properly",
-    "Vision: Cannot verify error handling or loading states",
-    "Vision: No verification of real market data connectivity",
-    "Vision: Manual verification required for investor-critical features"
+    "Vision: Very low utilization rate (0.25%) signals weak user adoption",
+    "Vision: Low trading volume ($12.8K) relative to TVL ($69.5M) raises liquidity concerns",
+    "Vision: Many markets show similar resolution times (22h) suggesting test data rather than real markets",
+    "Vision: Some market prices appear confusingly low (19.4\u20b5) without clear explanation",
+    "Vision: No clear onboarding or explanation of how synthetic perpetuals work"
   ],
   "functional_issues": [],
-  "score": 52,
+  "score": 60,
   "vision_review": {
-    "professional_score": 7,
-    "trust_score": 6,
+    "professional_score": 8,
+    "trust_score": 7,
     "issues": [
-      "Cannot verify actual UI rendering due to browser dependencies",
-      "No discoverable API health endpoints for system status",
-      "Unknown if core trading functionality (markets, positions, vault) loads properly",
-      "Cannot verify error handling or loading states",
-      "No verification of real market data connectivity",
-      "Manual verification required for investor-critical features"
+      "Very low utilization rate (0.25%) signals weak user adoption",
+      "Low trading volume ($12.8K) relative to TVL ($69.5M) raises liquidity concerns",
+      "Many markets show similar resolution times (22h) suggesting test data rather than real markets",
+      "Some market prices appear confusingly low (19.4\u20b5) without clear explanation",
+      "No clear onboarding or explanation of how synthetic perpetuals work"
     ],
     "improvements": [
-      "Fix Puppeteer browser dependencies for automated visual testing",
-      "Add API health endpoints (/health, /api/status) for monitoring",
-      "Implement graceful error handling with clear investor-facing messages",
-      "Add loading states and empty state designs for better UX",
-      "Include system status dashboard showing contract connectivity",
-      "Add demo mode with sample data for investor presentations"
+      "Add tooltips explaining what price represents (probability in cents)",
+      "Display more diverse resolution timeframes to show market variety",
+      "Include trading activity indicators or volume per market",
+      "Add educational content about synthetic perpetuals for new investors",
+      "Show historical performance data or market trends",
+      "Improve ratio of volume to TVL to demonstrate platform usage",
+      "Add market maker activity indicators to show liquidity health"
     ]
   }
 }
