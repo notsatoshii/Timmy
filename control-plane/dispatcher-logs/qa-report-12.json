@@ -1,0 +1,93 @@
+{
+  "timestamp": "2026-03-17T07:24:15.356911+00:00",
+  "frontend_status": "UP",
+  "tabs": {
+    "markets": "broken",
+    "trading": "broken",
+    "positions": "broken",
+    "vault": "broken"
+  },
+  "data_checks": [],
+  "contract_checks": [
+    {
+      "name": "TVL",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Positions",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Global OI",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Insurance Fund",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Max Leverage (SpaceX)",
+      "value": "",
+      "status": "error"
+    }
+  ],
+  "sprint_checks": {
+    "volume_no_fake_data": false,
+    "stats_no_fake_volume": false,
+    "trading_has_flow": true,
+    "positions_real_data": false,
+    "positions_hook_real_data": false,
+    "all_passed": false
+  },
+  "critical_blockers": [
+    "SPRINT P1: useVolumeCalculation.ts still has hardcoded fake volume fallback",
+    "SPRINT P3: Positions.tsx still uses hardcoded fake position data instead of reading from contract"
+  ],
+  "visual_issues": [
+    "SPRINT P1: ProtocolStats still references fake volume fallback",
+    "SPRINT P3: usePositions.ts still uses hardcoded fake data",
+    "Vision: Frontend not loading - shows directory listing instead of React app",
+    "Vision: React build missing critical files (index.html, static assets)",
+    "Vision: ProtocolStats component has hardcoded demo fallback values",
+    "Vision: Heavy reliance on demo mode throughout codebase",
+    "Vision: Service running but misconfigured to serve file directory"
+  ],
+  "functional_issues": [
+    "Contract check failed: TVL",
+    "Contract check failed: Positions",
+    "Contract check failed: Global OI",
+    "Contract check failed: Insurance Fund",
+    "Contract check failed: Max Leverage (SpaceX)",
+    "markets tab is broken",
+    "trading tab is broken",
+    "positions tab is broken",
+    "vault tab is broken"
+  ],
+  "score": 0,
+  "vision_review": {
+    "markets_tab": "broken",
+    "trading_tab": "broken",
+    "positions_tab": "broken",
+    "vault_tab": "broken",
+    "professional_score": 1,
+    "trust_score": 1,
+    "issues": [
+      "Frontend not loading - shows directory listing instead of React app",
+      "React build missing critical files (index.html, static assets)",
+      "ProtocolStats component has hardcoded demo fallback values",
+      "Heavy reliance on demo mode throughout codebase",
+      "Service running but misconfigured to serve file directory"
+    ],
+    "improvements": [
+      "Complete React build process to generate proper build artifacts",
+      "Remove or hide demo fallback values from investor demo",
+      "Configure frontend service to serve index.html instead of directory listing",
+      "Ensure all components load real data from contracts",
+      "Add proper error handling when contract calls fail"
+    ]
+  }
+}

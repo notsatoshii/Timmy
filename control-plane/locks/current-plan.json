@@ -4,54 +4,19 @@
       "id": "1",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Frontend hook and component fixes for RPC handling. Self-contained vault display issue."
+      "reason": "Modifies React hooks and components (useVolumeCalculation.ts, ProtocolStats.tsx) to fix volume display. Independent frontend task with no data dependencies."
     },
     {
       "id": "2",
       "lane": "FRONTEND",
-      "depends_on": [
-        "4"
-      ],
-      "reason": "Frontend error handling for position opening, but depends on contract version investigation since ExecutionEngine mismatch could be root cause of position failures."
+      "depends_on": [],
+      "reason": "Modifies React component (Trading.tsx) to add auto-funding logic for demo mode. Independent frontend task touching different files than other tasks."
     },
     {
       "id": "3",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Frontend multicall hook fixes for dashboard data. Self-contained RPC error handling issue."
-    },
-    {
-      "id": "4",
-      "lane": "CONTRACT",
-      "depends_on": [],
-      "reason": "Contract investigation task to read and analyze deployed contract versions. Independent analysis needed early."
-    },
-    {
-      "id": "5",
-      "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "Frontend calculation logic fix for volume display. Self-contained component and hook changes."
-    },
-    {
-      "id": "6",
-      "lane": "CONTRACT",
-      "depends_on": [],
-      "reason": "Contract integration verification and potential fixes for fee routing. Independent contract-level issue."
-    },
-    {
-      "id": "7",
-      "lane": "INFRA",
-      "depends_on": [],
-      "reason": "Systemd service verification and price update infrastructure. Independent service management task."
-    },
-    {
-      "id": "8",
-      "lane": "FRONTEND",
-      "depends_on": [
-        "1",
-        "3"
-      ],
-      "reason": "Frontend error boundary implementation touches same hook files as vault and multicall fixes. Should come after major RPC issues are resolved."
+      "reason": "Modifies React components and hooks (Positions.tsx, usePositions.ts) to read real contract data instead of fake data. Independent frontend task with no dependencies on other tasks."
     }
   ]
 }

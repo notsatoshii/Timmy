@@ -300,3 +300,14 @@ These contracts are correctly deployed and configured. Do NOT redeploy, replace,
 - LeverVault: 0x84a1Eb3b1eFD60b193b271DCfaB2711cE1c41921
 - PositionManager: 0x25ba54a7b2fBac753B601Da05e3661F2E959510b
 If you think a contract needs redeployment, STOP and log the issue instead of deploying.
+
+## ========================================
+## CURRENT SPRINT — INVESTOR DEMO (LOCKED)
+## ========================================
+## Read /home/lever/lever-protocol/control-plane/build-plan.md
+## Work ONLY on the three priorities listed there.
+## Do NOT work on anything else until all three pass.
+## Do NOT redeploy any contracts.
+## Do NOT change contract addresses.
+## Do NOT add fake/fabricated data.
+## When all three priorities pass, transition to Phase 2 (auto-improve mode) as described in the build plan.

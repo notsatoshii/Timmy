@@ -4,7 +4,7 @@ import { useWallet } from '../hooks/useWallet';
 import { parseUnits, createWalletClient, createPublicClient, http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'wagmi/chains';
-import { CONTRACT_ADDRESSES, formatUsdt, parseUsdt } from '../config/contracts';
+import { CONTRACT_ADDRESSES, formatUsdt, parseUsdt, loadContractAddresses, clearAddressCache } from '../config/contracts';
 import { EXECUTION_ENGINE_ABI, ACCOUNT_MANAGER_ABI, USDT_ABI, LEVERAGE_MODEL_ABI } from '../config/abis';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useMarketProbabilities } from '../hooks/useMarketProbabilities';
@@ -37,6 +37,22 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
     collateral: '',
     leverage: '1',
   });
+
+  // Load contract addresses on component mount
+  React.useEffect(() => {
+    const initializeAddresses = async () => {
+      try {
+        // Clear cache to ensure we load fresh addresses
+        clearAddressCache();
+        await loadContractAddresses();
+        console.log('Contract addresses reloaded successfully');
+      } catch (error) {
+        console.error('Error reloading contract addresses:', error);
+      }
+    };
+
+    initializeAddresses();
+  }, []);
 
   // Update form when selectedTrade changes
   React.useEffect(() => {
@@ -84,8 +100,11 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
       const hash = await walletClient.writeContract(request);
       console.log('Demo transaction sent:', hash);
       return hash;
-    } catch (error) {
-      console.error('Demo transaction failed:', error);
+    } catch (error: any) {
+      console.error('Demo transaction failed - full error:', error);
+      console.error('Demo transaction error message:', error?.message);
+      console.error('Demo transaction error cause:', error?.cause);
+      console.error('Demo transaction error shortMessage:', error?.shortMessage);
       throw error;
     }
   };
@@ -115,18 +134,49 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
     if (openError) {
       let errorMessage = 'There was an error opening your position. Please try again.';
 
-      // Try to extract meaningful error from the revert
-      if (openError.message) {
-        if (openError.message.includes('LeverageExceedsMax')) {
-          errorMessage = 'The requested leverage exceeds the maximum allowed for this market. Try reducing leverage.';
-        } else if (openError.message.includes('InsufficientBalance')) {
-          errorMessage = 'Insufficient balance. Please deposit more USDT to your account.';
-        } else if (openError.message.includes('ZeroDepthThreshold')) {
-          errorMessage = 'Market depth is too low for this trade size. Try a smaller position.';
-        } else if (openError.message.includes('MarketNotFound')) {
-          errorMessage = 'Market not found. Please select a valid market.';
-        } else if (openError.message.includes('AccessControlUnauthorized')) {
-          errorMessage = 'Access denied. Please try reconnecting your wallet.';
+      console.error('Position opening error - full details:', openError);
+      console.error('Error name:', openError.name);
+      console.error('Error message:', openError.message);
+      console.error('Error shortMessage:', (openError as any).shortMessage);
+      console.error('Error details:', (openError as any).details);
+      console.error('Error metaMessages:', (openError as any).metaMessages);
+      console.error('Error cause:', openError.cause);
+
+      // Try to extract meaningful error from multiple possible locations
+      const fullErrorText = [
+        openError.message,
+        (openError as any).shortMessage,
+        (openError as any).details,
+        (openError as any).reason,
+        (openError as any).data?.message,
+        (openError as any).cause?.reason,
+        JSON.stringify((openError as any).metaMessages || [])
+      ].filter(Boolean).join(' | ');
+
+      console.log('Combined error text for parsing:', fullErrorText);
+
+      // Check for specific error patterns
+      if (fullErrorText.includes('LeverageExceedsMax') || fullErrorText.includes('ExceedsMaxLeverage')) {
+        errorMessage = `The requested leverage (${tradeForm.leverage}x) exceeds the maximum allowed (${maxLeverage.toFixed(1)}x) for this market. Please reduce leverage.`;
+      } else if (fullErrorText.includes('InsufficientCollateral') || fullErrorText.includes('InsufficientBalance')) {
+        errorMessage = 'Insufficient collateral. Please deposit more USDT to your account or reduce position size.';
+      } else if (fullErrorText.includes('MarketNotActive') || fullErrorText.includes('MarketNotLive')) {
+        errorMessage = 'This market is not currently active for trading. Please select a different market.';
+      } else if (fullErrorText.includes('ZeroDepthThreshold') || fullErrorText.includes('InsufficientDepth')) {
+        errorMessage = 'Market depth is too low for this trade size. Try a smaller position.';
+      } else if (fullErrorText.includes('MarketNotFound') || fullErrorText.includes('InvalidMarket')) {
+        errorMessage = 'Market not found. Please select a valid market.';
+      } else if (fullErrorText.includes('AccessControlUnauthorized') || fullErrorText.includes('Unauthorized')) {
+        errorMessage = 'Access denied. Please try reconnecting your wallet.';
+      } else if (fullErrorText.includes('OICapExceeded') || fullErrorText.includes('ExceedsOICap')) {
+        errorMessage = 'This position would exceed the open interest cap for this market. Try a smaller position.';
+      } else if (fullErrorText.includes('PriceTooStale') || fullErrorText.includes('StalePrice')) {
+        errorMessage = 'Price data is too stale. Please wait a moment and try again.';
+      } else if (fullErrorText.includes('execution reverted')) {
+        // Extract custom error from execution reverted message
+        const match = fullErrorText.match(/execution reverted: ([^,)]+)/);
+        if (match) {
+          errorMessage = `Transaction failed: ${match[1]}. Please check your parameters and try again.`;
         }
       }
 
@@ -134,9 +184,8 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
         'Position Open Failed',
         errorMessage
       );
-      console.error('Position opening error details:', openError);
     }
-  }, [openError, showErrorToast]);
+  }, [openError, showErrorToast, tradeForm.leverage]);
 
   React.useEffect(() => {
     if (depositSuccess && depositTxHash) {
@@ -236,7 +285,7 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
           args: [CONTRACT_ADDRESSES.accountManager, amount],
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error approving USDT:', error);
       showErrorToast('Approval Failed', 'There was an error approving your USDT spending. Please try again.');
     }
@@ -265,7 +314,7 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
           args: [amount],
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error depositing collateral:', error);
       showErrorToast('Deposit Failed', 'There was an error depositing your collateral. Please try again.');
     }
@@ -277,6 +326,18 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
     try {
       const collateralAmount = parseUsdt(tradeForm.collateral);
       const leverage = parseUnits(tradeForm.leverage, 18);
+
+      // Debug logging
+      console.log('Opening position with params:', {
+        marketId: tradeForm.marketId,
+        isLong: tradeForm.direction === 'long',
+        collateral: collateralAmount.toString(),
+        leverage: leverage.toString(),
+        leverageDecimal: tradeForm.leverage,
+        maxLeverage: maxLeverage.toFixed(1),
+        executionEngineAddress: CONTRACT_ADDRESSES.executionEngine,
+        leverageModelAddress: CONTRACT_ADDRESSES.leverageModel,
+      });
 
       if (isDemoMode) {
         const hash = await sendDemoTransaction(
@@ -316,11 +377,29 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
         collateral: '',
         leverage: '1',
       });
-    } catch (error) {
-      console.error('Error opening position:', error);
+    } catch (error: any) {
+      console.error('Error opening position - full error:', error);
+      console.error('Error message:', error?.message);
+      console.error('Error cause:', error?.cause);
+      console.error('Error stack:', error?.stack);
+
+      // Try to extract revert reason from different error structures
+      let revertReason = '';
+      if (error?.shortMessage) {
+        revertReason = error.shortMessage;
+      } else if (error?.message) {
+        revertReason = error.message;
+      } else if (error?.reason) {
+        revertReason = error.reason;
+      } else if (error?.data?.message) {
+        revertReason = error.data.message;
+      }
+
+      console.log('Extracted revert reason:', revertReason);
+
       showErrorToast(
         'Position Open Failed',
-        'There was an error opening your position. Please try again.'
+        'There was an error opening your position. Please check console for details.'
       );
     }
   };
@@ -571,7 +650,8 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
                     if (hash) {
                       showSuccessToast('USDT Faucet', 'You received 10,000 test USDT.', hash);
                     }
-                  } catch (error) {
+                  } catch (error: any) {
+                    console.error('Faucet error:', error);
                     showErrorToast('Faucet Failed', 'There was an error getting test USDT.');
                   }
                 } else {

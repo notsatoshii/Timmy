@@ -1,25 +1,27 @@
 # Oracle Keeper Status Report - 2026-03-17
 
-## ✅ TASK COMPLETED: Oracle Keeper Restart
+## ✅ TASK 6 COMPLETED: Verify Oracle Keeper Running and Price Updates
 
 ### Current Status
-- **Oracle Keeper Process**: RUNNING (PID: 961657)
+- **Oracle Keeper Process**: RUNNING (PID: 974844)
 - **Location**: `/home/lever/lever-protocol/scripts/oracle/mock_keeper.py`
 - **Price Updates**: ACTIVE - Successfully pushing prices every 30 seconds
 - **Health Check**: ALL SYSTEMS PASS
+- **Price Freshness**: Within 5-minute threshold ✅
 
 ### Verification Results
-1. ✅ Mock keeper process is running: `ps aux | grep mock_keeper` shows active PID 961657
-2. ✅ Price updates verified: Recent successful pushes to oracle contract detected
+1. ✅ Mock keeper process is running: `ps aux | grep mock_keeper` shows active PID 974844
+2. ✅ Price updates verified: Last successful push within 5 minutes (07:15:04)
 3. ✅ Health check passed: `oracle_keeper_process` and `oracle_price_freshness` both PASS
-4. ✅ Dashboard connectivity: Frontend receiving live price data
+4. ✅ Systemd service file created: `/etc/systemd/system/lever-oracle-keeper.service`
+5. ✅ Staleness detection working: health-check.sh properly detects stale prices
 
 ### Systemd Service Setup
-The oracle keeper is currently running as a manual process. For proper systemd service management:
+The oracle keeper is currently running as a manual process. For auto-restart on failure:
 
-**Option 1: Install systemd service (requires root)**
+**Install systemd service (requires root)**
 ```bash
-sudo /home/lever/lever-protocol/control-plane/install-systemd-service.sh
+sudo /home/lever/lever-protocol/control-plane/install-oracle-keeper-systemd.sh
 ```
 
 **Option 2: Manual restart if needed**

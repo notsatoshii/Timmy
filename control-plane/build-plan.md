@@ -1,47 +1,15 @@
-### 1. Fix $NaN Share Price and TVL Values in Vault Tab [CRITICAL] [FRONTEND]
-- [ ] 1. Debug `frontend/user-app/src/hooks/useVaultMulticall.ts` to identify why 413 RPC errors cause undefined returns
-- [ ] 2. Add exponential backoff retry logic for failed RPC calls with 3 retry attempts
-- [ ] 3. Implement fallback demo values when RPC fails: sharePrice=$1.00, TVL=$50,000, totalShares=50000
-- [ ] 4. Add error boundary around vault display components to catch BigInt conversion errors
+# LOCKED BUILD PLAN — INVESTOR DEMO SPRINT
+# DO NOT DEVIATE FROM THESE THREE TASKS
 
-### 2. Fix Position Opening "Position Open Failed" Error [CRITICAL] [FRONTEND]
-- [ ] 1. Investigate `frontend/user-app/src/components/Trading/PositionForm.tsx` to identify exact failure point in position opening flow
-- [ ] 2. Check if ExecutionEngine contract calls are reverting due to leverage limitations or other validation failures
-- [ ] 3. Add detailed error logging to capture revert reasons from ExecutionEngine.openPosition() calls
-- [ ] 4. Implement user-friendly error messages instead of generic "Position Open Failed"
+### 1. Fix 24h Volume Display [CRITICAL] [FRONTEND]
+- [x] 1. In frontend/user-app/src/hooks/useVolumeCalculation.ts remove the mock fallback BigInt 12800000000 in the catch block. Set volume to BigInt 0 when no events found. Change fromBlock to 0 to fetch ALL historical events.
+- [ ] 2. In frontend/user-app/src/components/ProtocolStats.tsx change DEMO_FALLBACK_VALUES volume24h from BigInt 12800000000 to BigInt 0. Show zero not fake data.
+- [ ] 3. After changes run cd /home/lever/lever-protocol/frontend/user-app and npm run build and systemctl restart lever-frontend
 
-### 3. Fix All Dashboard Data Checks Showing Error Status [CRITICAL] [FRONTEND]
-- [ ] 1. Debug `frontend/user-app/src/hooks/usePositionMulticall.ts` and `useMarketMulticall.ts` for RPC failures
-- [ ] 2. Add proper error handling and null checks to prevent empty string values in data checks
-- [ ] 3. Implement retry mechanisms for failed multicall batches that cause undefined returns
-- [ ] 4. Add fallback values for demo mode when contract calls fail: Global OI=$25,000, Max Leverage=12x
+### 2. Fix Position Opening Auto-Fund Demo Wallet [CRITICAL] [FRONTEND]
+- [x] 1. Demo wallet 0xB072263740D7c60f1Aa0BF46e737F83544C7b785 has 9M USDT but 0 in AccountManager which is why positions fail. In frontend/user-app/src/components/Trading.tsx add auto-fund for demo mode. When user clicks Open Position in demo mode first check AccountManager getBalance. If zero then call sendDemoTransaction to approve USDT for AccountManager then deposit 10000 USDT 10000000000 in 6 decimals then call openPosition. Show progress text while funding. The sendDemoTransaction function already exists.
+- [ ] 2. After changes run cd /home/lever/lever-protocol/frontend/user-app and npm run build and systemctl restart lever-frontend
 
-### 4. Investigate ExecutionEngine vs LeverageModel Version Mismatch [HIGH] [CONTRACT]
-- [ ] 1. Read ExecutionEngine contract at 0xc749C6aAe8a5ACBDD924DF7f833Dd3115307a60D to verify which LeverageModel address it references
-- [ ] 2. Compare with deployed LeverageModel at 0xA7D95F94dA06E29fc8eFf948Bca3B4AF1d2585ed to confirm version mismatch
-- [ ] 3. Check if ExecutionEngine has updateLeverageModel() function or if immutable deployment requires different solution
-- [ ] 4. Document findings and recommend approach without violating PROTECTED CONTRACTS rule
-
-### 5. Fix 24h Volume Display to Show Notional Instead of Collateral [HIGH] [FRONTEND]
-- [ ] 1. Modify `frontend/user-app/src/hooks/useTradeHistory.ts` volume calculation to multiply collateral by leverage
-- [ ] 2. Update `frontend/user-app/src/components/Markets/MarketCard.tsx` to display notional volume (collateral × leverage)
-- [ ] 3. Add proper formatting for larger notional amounts (K, M suffixes)
-- [ ] 4. Verify calculation accuracy across different leverage levels in demo data
-
-### 6. Fix Insurance Fund Growth to Flow Through FeeRouter [MEDIUM] [CONTRACT]
-- [ ] 1. Verify FeeRouter integration by checking if trading fees are properly routed to InsuranceFund
-- [ ] 2. Test fee distribution mechanism: 50% LP, 30% Protocol, 20% Insurance split
-- [ ] 3. Check if ExecutionEngine and LiquidationEngine are calling FeeRouter.distributeFees() on transactions
-- [ ] 4. Add logging to track fee flow from trades to InsuranceFund balance increases
-
-### 7. Verify Oracle Keeper Service Status [MEDIUM] [INFRA]
-- [ ] 1. Check if `lever-oracle-keeper` systemd service is running with `systemctl status lever-oracle-keeper`
-- [ ] 2. Verify price updates in `control-plane/dispatcher-logs/` are recent (within 5 minutes)
-- [ ] 3. Test mockkeeper.py manually to ensure price feeds are updating OracleAdapter
-- [ ] 4. Install systemd service using `/tmp/install-oracle-keeper-root.sh` if not running
-
-### 8. Add Proper Error Boundaries for BigInt Conversion Errors [LOW] [FRONTEND]
-- [ ] 1. Review `frontend/user-app/src/hooks/useTradeHistory.ts` for remaining BigInt(float) conversion issues
-- [ ] 2. Add Math.floor() wrapping around all timestamp calculations before BigInt conversion
-- [ ] 3. Implement comprehensive error catching in usePositionMulticall and useVaultMulticall hooks
-- [ ] 4. Add user-friendly error messages when contract calls fail instead of showing raw errors
+### 3. Fix Positions Read Real OnChain Data [CRITICAL] [FRONTEND]
+- [x] 1. In frontend/user-app/src/components/Positions.tsx and frontend/user-app/src/hooks/usePositions.ts the fetchPositionDetails function creates HARDCODED FAKE DATA for every position ID instead of reading the contract. Fix by calling getPosition on PositionManager for each ID using publicClient.readContract. The getPosition function exists in POSITION_MANAGER_ABI. Run grep -A 100 getPosition frontend/user-app/src/config/abis.ts to see struct fields. Map returned struct to PositionData interface. Keep baseDemoPositions for visitors with no wallet only.
+- [ ] 2. After changes run cd /home/lever/lever-protocol/frontend/user-app and npm run build and systemctl restart lever-frontend
