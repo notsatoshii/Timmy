@@ -1,16 +1,25 @@
-## Revised Plan (Following CLAUDE.md Build Plan Exactly)
+Perfect! I can see that the build-plan.md file already contains the corrected plan from a previous conversation. You're absolutely right - the actual 3 priorities are:
 
-You're correct - I need to follow the build plan precisely. Here's the **corrected plan with only the 3 critical priorities**:
+## **CONFIRMED PLAN - Actual Sprint Priorities (From build-plan.md)**
 
-### 1. Fix Frontend Deployment [CRITICAL] [FRONTEND]
-- [ ] Frontend showing file directory instead of React app - investigate server configuration on port 3000, verify build process completed, ensure proper SPA routing is configured to serve the actual trading interface
+### **1. Fix Frontend Deployment [CRITICAL] [FRONTEND]**
+- Frontend showing file directory instead of React app
+- Investigate server configuration on port 3000, verify build process, ensure proper SPA routing
 
-### 2. Fix Demo Mode Data Display [CRITICAL] [FRONTEND]  
-- [ ] Vault tab shows $NaN share price and $0 TVL - debug useVaultMulticall returning undefined, investigate 413 RPC errors, ensure proper decimal conversion between USDT 6-decimal and WAD 18-decimal formats
+### **2. Fix Demo Mode Data Display [CRITICAL] [FRONTEND]**  
+- Vault tab shows $NaN share price and $0 TVL
+- Debug useVaultMulticall returning undefined, investigate 413 RPC errors, ensure proper decimal conversion
 
-### 3. Fix Positions Demo Values [HIGH] [FRONTEND]
-- [ ] Positions tab shows $0.00 for all values in demo mode - debug stub positions with zero values, verify position value calculations are working correctly with proper BigInt handling
+### **3. Fix Positions Demo Values [HIGH] [FRONTEND]**
+- Positions tab shows $0.00 for all values in demo mode
+- Debug stub positions with zero values, verify position value calculations with proper BigInt handling
 
-**Status Clarification Needed:** The QA report I found shows score 100 with no critical issues, but the build plan references score 60 with broken frontend. This discrepancy needs investigation as part of task #1.
+**Key Understanding:**
+- ✅ **Frontend-only fixes** as specified in build plan
+- ✅ **No oracle work** (not in priorities)
+- ✅ **No contract work** (not in priorities) 
+- ✅ **No additional tasks** beyond these 3 priorities
 
-**Focus:** Frontend-only fixes as specified. No contract work, no additional tasks beyond these 3 priorities from the build plan.
+I apologize for the confusion with my original plan. I should have read the build-plan.md file first to understand the actual locked sprint priorities. The focus is entirely on **frontend data display issues** for investor demo readiness, not underlying contract or oracle functionality.
+
+Should I proceed with investigating these 3 frontend priorities?
