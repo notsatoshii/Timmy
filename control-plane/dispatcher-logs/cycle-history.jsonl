@@ -9,3 +9,4 @@
 {"cycle": 9, "qa_score": 100, "done": 1, "failed": 0, "duration_min": 4.3, "ts": "2026-03-17T06:53:06.755581+00:00"}
 {"cycle": 10, "qa_score": 80, "done": 1, "failed": 0, "duration_min": 5.3, "ts": "2026-03-17T07:02:24.649221+00:00"}
 {"cycle": 11, "qa_score": 80, "done": 1, "failed": 0, "duration_min": 4.3, "ts": "2026-03-17T07:09:34.208885+00:00"}
+{"cycle": 12, "qa_score": 0, "done": 1, "failed": 0, "duration_min": 4.4, "mode": "LOCKED SPRINT", "sprint_checks": {"volume_no_fake_data": false, "stats_no_fake_volume": false, "trading_has_flow": true, "positions_real_data": false, "positions_hook_real_data": true, "all_passed": false}, "ts": "2026-03-17T07:47:53.945725+00:00"}

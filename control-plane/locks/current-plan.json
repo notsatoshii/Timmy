@@ -1,22 +1,18 @@
 {
   "tasks": [
     {
-      "id": "1",
+      "id": "2.2",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Modifies React hooks and components (useVolumeCalculation.ts, ProtocolStats.tsx) to fix volume display. Independent frontend task with no data dependencies."
+      "reason": "Building and restarting frontend service after auto-fund demo wallet changes. First frontend task."
     },
     {
-      "id": "2",
+      "id": "3.2",
       "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "Modifies React component (Trading.tsx) to add auto-funding logic for demo mode. Independent frontend task touching different files than other tasks."
-    },
-    {
-      "id": "3",
-      "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "Modifies React components and hooks (Positions.tsx, usePositions.ts) to read real contract data instead of fake data. Independent frontend task with no dependencies on other tasks."
+      "depends_on": [
+        "2.2"
+      ],
+      "reason": "Building and restarting frontend service after positions real data changes. Must be sequential with 2.2 since both run npm build and restart same service."
     }
   ]
 }
