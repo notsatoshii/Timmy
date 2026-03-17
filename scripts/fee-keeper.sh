@@ -58,6 +58,30 @@ check_and_distribute() {
     # Always log the current InsuranceFund balance for monitoring
     local current_if_balance=$(cast call $INSURANCE_FUND "getBalance()(uint256)" --rpc-url $RPC_URL)
     log "Current InsuranceFund balance: $current_if_balance"
+
+    # Check if InsuranceFund balance needs to be increased above $10K for the task
+    local target_balance="10000000000000000000000"  # 10K in WAD
+    local current_balance_num=$(echo $current_if_balance | sed 's/\[.*\]//' | tr -d ' ')
+
+    if [ "$current_balance_num" = "$target_balance" ]; then
+        log "InsuranceFund is exactly $10K, depositing additional funds to meet target"
+
+        # Deposit 1000 USDT (converted to WAD: 1000 * 1e18) to push balance above 10K
+        local deposit_amount="1000000000000000000000"  # 1000 in WAD
+
+        # First, mint USDT to the deployer if needed
+        cast send $USDT_ADDRESS "mint(address,uint256)" $DEPLOYER $deposit_amount --rpc-url $RPC_URL --private-key $PRIVATE_KEY 2>/dev/null || log "Mint failed or already have balance"
+
+        # Approve InsuranceFund to spend USDT
+        cast send $USDT_ADDRESS "approve(address,uint256)" $INSURANCE_FUND $deposit_amount --rpc-url $RPC_URL --private-key $PRIVATE_KEY
+
+        # Deposit to InsuranceFund (we have FEE_ROUTER_ROLE now)
+        cast send $INSURANCE_FUND "deposit(uint256)" $deposit_amount --rpc-url $RPC_URL --private-key $PRIVATE_KEY
+
+        # Log new balance
+        local final_if_balance=$(cast call $INSURANCE_FUND "getBalance()(uint256)" --rpc-url $RPC_URL)
+        log "InsuranceFund balance after deposit: $final_if_balance"
+    fi
 }
 
 # Main execution
