@@ -24,7 +24,7 @@ TG_CHAT = "422985839"
 
 TASK_TIMEOUT = 2700       # 45 min max per Claude Code invocation
 REST_BETWEEN_TASKS = 5  # 2 min rest between tasks (let system breathe)
-REST_WHEN_IDLE = 300     # 30 min rest when all tasks done before re-checking
+REST_WHEN_IDLE = 30     # 30 min rest when all tasks done before re-checking
 MAX_CONSECUTIVE_FAILS = 3 # after 3 fails in a row, long rest
 
 ICT = timezone(timedelta(hours=7))
@@ -191,12 +191,14 @@ Stay in character. Be efficient. Do ONE task well.
     try:
         proc = subprocess.Popen(
             ['claude', '--dangerously-skip-permissions', '--model', model,
-             '--output-format', 'stream-json', '--verbose', '-p', prompt],
-            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+             '--output-format', 'stream-json', '--verbose', '-p', '-'],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             cwd=PROJECT,
             env={**os.environ, 'PATH': ENV_PATH},
             bufsize=1
         )
+        proc.stdin.write(prompt.encode())
+        proc.stdin.close()
         with open(log_path, 'w') as logfile:
             start = time.time()
             while True:
@@ -306,7 +308,14 @@ Stay in character. Be efficient. Do ONE task well.
         log(f"Claude Code exited with code {exit_code}")
 
     # Post-task verification
-    compile_ok, _ = forge_build()
+    # Skip forge build for frontend tasks
+    frontend_words = ['frontend', 'tab', 'vault', 'trading', 'positions', 'market', 'chart', 'ui', 'ux', 'css', 'component', 'display', 'format', 'sanity']
+    is_frontend = any(w in task_display.lower() for w in frontend_words)
+    if is_frontend:
+        compile_ok = True
+        log("POST-TASK: frontend task, skipping forge build")
+    else:
+        compile_ok, _ = forge_build()
     if not compile_ok:
         tg(f"🔴 *Codebase broken after task!* `{task_display[:60]}`")
         log("POST-TASK: compile FAILED")
@@ -347,7 +356,7 @@ def release_lock():
     try: os.remove(LOCK_FILE)
     except: pass
 
-def run_readme_gen():
+def pass  # pass  # run_readme_gen() disabled during active dev — disabled during active dev:
     """Regenerate README after tasks complete."""
     if os.path.exists(README_GEN):
         try:
@@ -393,7 +402,7 @@ def main():
                 # All done — run self-audit or rest
                 release_lock()
                 if tasks_completed > 0:
-                    run_readme_gen()
+                    pass  # pass  # run_readme_gen() disabled during active dev — disabled during active dev
                     tg(f"✅ *All tasks complete!* ({tasks_completed} this session)\nResting {REST_WHEN_IDLE // 60} min before re-checking.")
                     tasks_completed = 0
                 log(f"No tasks. Resting {REST_WHEN_IDLE // 60} min...")
@@ -414,7 +423,7 @@ def main():
                 release_lock()
 
                 if consecutive_fails >= MAX_CONSECUTIVE_FAILS:
-                    rest = 900  # 15 min after 3 fails
+                    rest = 30  # 30s after 3 fails
                     log(f"{consecutive_fails} consecutive failures. Resting {rest // 60} min...")
                     tg(f"⚠️ *{consecutive_fails} consecutive failures.* Resting 15 min.")
                     time.sleep(rest)

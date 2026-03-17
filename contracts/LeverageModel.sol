@@ -30,6 +30,7 @@ contract LeverageModel is ILeverageModel, AccessControl, Pausable {
     // ──────────────────────────────────────────────
 
     uint256 internal constant WAD = 1e18;
+    uint256 internal constant USDT_DECIMALS_SCALE = 1e12;      // Scale 6-decimal USDT → 18-decimal WAD
     uint256 public constant BASE_MAX = 30e18;                  // 30×
     uint256 public constant TVL_MATURITY = 50_000_000e18;      // $50M
     uint256 public constant TVL_MULT_FLOOR = 1e17;             // 0.10
@@ -154,12 +155,12 @@ contract LeverageModel is ILeverageModel, AccessControl, Pausable {
 
     /// @inheritdoc ILeverageModel
     function getTVLMultiplier() public view override returns (uint256) {
-        return _computeTVLMultiplier(vault.totalAssets());
+        return _computeTVLMultiplier(_getTVLInWad());
     }
 
     /// @inheritdoc ILeverageModel
     function getIFRMultiplier() public view override returns (uint256) {
-        uint256 tvl = vault.totalAssets();
+        uint256 tvl = _getTVLInWad();
         if (tvl == 0) return IFR_MULT_FLOOR;
 
         uint256 insuranceBalance = insuranceFund.getBalance();
@@ -227,7 +228,7 @@ contract LeverageModel is ILeverageModel, AccessControl, Pausable {
 
     /// @dev Compute the full platform ceiling (Step 1)
     function _computePlatformCeiling() internal view returns (uint256) {
-        uint256 tvl = vault.totalAssets();
+        uint256 tvl = _getTVLInWad();
         uint256 tvlMult = _computeTVLMultiplier(tvl);
 
         uint256 ifr;
@@ -298,6 +299,11 @@ contract LeverageModel is ILeverageModel, AccessControl, Pausable {
 
         // R_adjusted = R × M_market (first application)
         rAdj = RiskCurves.computeRAdjusted(r, mMarket);
+    }
+
+    /// @dev Convert vault's USDT 6-decimal totalAssets to WAD 18-decimal for internal math
+    function _getTVLInWad() internal view returns (uint256) {
+        return vault.totalAssets() * USDT_DECIMALS_SCALE;
     }
 
     /// @dev Compute M_market = min(1.0, Vol_Factor × Depth_Factor × Concentration_Factor)
