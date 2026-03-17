@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-17T16:48:00.934197+00:00",
+  "timestamp": "2026-03-17T17:03:09.871231+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,12 +11,12 @@
     },
     {
       "name": "Positions",
-      "value": "211",
+      "value": "212",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "11019767554735 [1.101e13]",
+      "value": "11119767554735 [1.111e13]",
       "status": "ok"
     },
     {
@@ -28,30 +28,30 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Cannot verify visual interface rendering - potential blank/error state",
-    "Vision: No functional testing possible without visual confirmation",
-    "Vision: Security scanning attempts detected in logs indicate exposure to attacks",
-    "Vision: Unable to confirm core trading functionality is working",
-    "Vision: No clear indication that markets, positions, or LP features are operational"
+    "Vision: Only HTML shell visible via curl - cannot verify if React app actually loads and renders",
+    "Vision: No way to assess actual functionality, UI quality, or data accuracy from static HTML",
+    "Vision: JavaScript dependency means investors need a full browser experience to evaluate",
+    "Vision: Cannot verify if trading interface, position management, or market data work properly",
+    "Vision: Potential accessibility issues for users without JavaScript enabled"
   ],
   "functional_issues": [],
   "score": 60,
   "vision_review": {
-    "professional_score": 7,
-    "trust_score": 6,
+    "professional_score": 6,
+    "trust_score": 5,
     "issues": [
-      "Cannot verify visual interface rendering - potential blank/error state",
-      "No functional testing possible without visual confirmation",
-      "Security scanning attempts detected in logs indicate exposure to attacks",
-      "Unable to confirm core trading functionality is working",
-      "No clear indication that markets, positions, or LP features are operational"
+      "Only HTML shell visible via curl - cannot verify if React app actually loads and renders",
+      "No way to assess actual functionality, UI quality, or data accuracy from static HTML",
+      "JavaScript dependency means investors need a full browser experience to evaluate",
+      "Cannot verify if trading interface, position management, or market data work properly",
+      "Potential accessibility issues for users without JavaScript enabled"
     ],
     "improvements": [
-      "Fix screenshot testing capability for proper UI verification",
-      "Add API health endpoints for functional testing",
-      "Implement rate limiting to prevent security scanning",
-      "Add monitoring dashboard to verify all features are working",
-      "Ensure React app renders properly without JavaScript errors"
+      "Add basic server-side rendering or static fallback content for non-JS evaluation",
+      "Implement health check endpoint that returns app status in plain text/JSON",
+      "Add loading indicators and error states that are visible in the HTML structure",
+      "Consider progressive enhancement so core information is visible without JavaScript",
+      "Add comprehensive error handling for failed JavaScript loads"
     ]
   }
 }
