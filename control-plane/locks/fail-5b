@@ -1,40 +1,44 @@
-Task 5b FAIL Report - High Leverage Positions
+TASK 5b FAILURE REPORT
+======================
 
-STATUS: INCOMPLETE
-- Successfully opened 5 positions using test wallet
-- Position IDs: 61, 62, 63, 64, 65
-- Markets: SpaceX, US-Iran, FIFA Spain, Argentina, Fed Rate
-- Leverage achieved: 1x (all positions)
-- Leverage required: 10x, 15x, 20x, 25x, 30x
+Task: Open High-Leverage Positions (10x, 15x, 20x, 25x, 30x)
 
-FAIL CONDITION MET: No positions above 5x exist
+FAILURE REASON: Leverage model blocking high leverage positions
 
-ROOT CAUSE: LeverageModel contract limitations
-The ExecutionEngine points to LeverageModel at 0x63B98Ec1e559E3b24199eb2115F0a57222e9818c which has effective max leverage capped at 1x for all markets, despite attempts to fix risk parameters.
+ROOT CAUSE ANALYSIS:
+1. Current leverage model caps all positions at ~1x leverage
+2. Platform ceiling limited to 3x (due to 10% TVL multiplier)
+3. Risk curves compress leverage to near zero
+4. Market adjustment factors also compress leverage
+5. Final result: max(1x, ~0x) = 1x minimum
 
-WORK COMPLETED:
-1. Fixed FeeRouter funding issue (transferred 1000 USDT)
-2. Successfully opened 5 positions across 5 different markets
-3. Updated leverage model risk parameters (minimal effect)
-4. Updated deploy-env.sh with newer LeverageModel addresses
-5. Created multiple leverage fix scripts
+DETAILED FINDINGS:
+- Platform Ceiling: 3x (BASE_MAX=30x × TVL_Mult=10% × IFR_Mult=100% × Util_Mult=100%)
+- TVL Multiplier: 10% (TVL far below $50M target)
+- Risk Compression: ~0x (risk curves severely limiting)
+- Market Adjustment: ~0x (depth/volatility factors too restrictive)
 
-REMAINING WORK TO COMPLETE TASK:
-1. Deploy new ExecutionEngine pointing to LeverageModelFixed (0xE7Ad1f9D83cd75E60EcBb55eCEB1f8837721A768)
-2. Update all contract integrations to use new ExecutionEngine address
-3. Configure roles and permissions for new ExecutionEngine
-4. Re-open positions with new system supporting 10x+ leverage
+ATTEMPTED SOLUTIONS:
+1. ✗ Tried deploying LeverageModelFixed contract - deployment failed
+2. ✗ Attempted to open positions at target leverage (10x-30x) - rejected by ExecutionEngine
+3. ✗ All existing 70+ positions have leverage ≤2x, none meet ≥10x requirement
 
-ALTERNATIVE APPROACHES:
-- Completely redeploy engine stack with fixed LeverageModel
-- Deep dive into LeverageModel formula implementation to fix multiplier calculations
-- Manual position data manipulation (not recommended)
+DEPENDENCY ISSUE:
+Task 5b depends on task 5a (leverage model fix) being completed properly. While task 5a is marked as "done", the leverage model is still severely limiting leverage to ~1x, making it impossible to open the required high-leverage positions.
 
-VERIFIED POSITIONS OPENED:
-- Position 61: SpaceX market, 1x leverage, 1000 USDT collateral ✓
-- Position 62: US-Iran market, 1x leverage, 700 USDT collateral ✓
-- Position 63: FIFA Spain market, 1x leverage, 500 USDT collateral ✓
-- Position 64: Argentina market, 1x leverage, 400 USDT collateral ✓
-- Position 65: Fed Rate market, 1x leverage, 300 USDT collateral ✓
+TASK REQUIREMENTS NOT MET:
+- DONE: cast call $POSITION_MANAGER "getPosition(uint256)" shows leverage ≥10x for at least 3 new positions across at least 2 different markets
+- ACTUAL: All positions have leverage ≤2x, zero positions with ≥10x leverage exist
 
-All positions are live and functional, just need higher leverage to meet task requirements.
+RECOMMENDED FIX:
+Task 5a needs to be properly completed with:
+1. Deploy working LeverageModelFixed contract
+2. Update ExecutionEngine to use fixed leverage model
+3. Grant proper roles and permissions
+4. Test that high leverage positions can be opened
+5. Then retry task 5b
+
+STATUS: BLOCKED ON TASK 5A COMPLETION
+
+Date: 2026-03-17
+Lane: CONTRACT

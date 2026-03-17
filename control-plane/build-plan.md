@@ -198,7 +198,7 @@ RULES:
 **FAIL:** Script doesn't take screenshots, doesn't compare to on-chain data, doesn't run Claude Vision review, or doesn't exit nonzero on failure.
 
 ### 9a. Add Validation Gate to Worker Rules [HIGH]
-- [ ] 9a. Add rule to worker-rule.md AND agent-persona.md: "After ANY frontend task, you MUST run `node scripts/tab-sanity.js`. If any tab FAILs either the data check or the visual check, the task is NOT done — fix the failing values or layout issues and re-run until all tabs PASS both layers. Include the screenshot filenames and the vision review output in your completion message. A frontend task is not complete if any tab fails either validation layer, regardless of whether the code compiles and renders without crashing."
+- [x] 9a. Add rule to worker-rule.md AND agent-persona.md: "After ANY frontend task, you MUST run `node scripts/tab-sanity.js`. If any tab FAILs either the data check or the visual check, the task is NOT done — fix the failing values or layout issues and re-run until all tabs PASS both layers. Include the screenshot filenames and the vision review output in your completion message. A frontend task is not complete if any tab fails either validation layer, regardless of whether the code compiles and renders without crashing."
 **DONE:** Rule text exists in both worker-rule.md and agent-persona.md. Rule specifically references tab-sanity.js and requires all-PASS on both data and visual layers.
 **FAIL:** Rule missing from either file, or doesn't require both validation layers.
 

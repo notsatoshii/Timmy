@@ -1,25 +1,25 @@
 {
   "tasks": [
     {
+      "id": "5b",
+      "lane": "CONTRACT",
+      "depends_on": [],
+      "reason": "Uses cast send to open positions on deployed contracts. No dependencies on other incomplete tasks."
+    },
+    {
       "id": "7b",
       "lane": "CONTRACT",
       "depends_on": [],
-      "reason": "Verifying contract behavior using cast call and potentially fixing funding rate engine if broken. Contract lane because root cause is Solidity contract verification/fixes."
-    },
-    {
-      "id": "9a",
-      "lane": "INFRA",
-      "depends_on": [],
-      "reason": "Modifying worker-rule.md and agent-persona.md files in control-plane. INFRA lane because these are worker rule configs and control-plane documentation."
+      "reason": "Uses cast call to verify contract behavior. Independent verification task with no dependencies on other incomplete tasks."
     },
     {
       "id": "10a",
       "lane": "FRONTEND",
       "depends_on": [
-        "7b",
-        "9a"
+        "5b",
+        "7b"
       ],
-      "reason": "Final visual polish involves fixing React component display issues, formatting, and layout. FRONTEND lane because root cause is React UI fixes. Depends on 7b and 9a since task description says 'after all critical and high-priority fixes are done'."
+      "reason": "Fixes React UI display issues. Task explicitly states 'Final visual review after all critical and high-priority fixes are done' - 5b is CRITICAL, 7b is HIGH priority."
     }
   ]
 }

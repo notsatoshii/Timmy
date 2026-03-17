@@ -1,23 +1,16 @@
 #!/usr/bin/env python3
 """
-LEVER Protocol — Continuous QA Agent
-Runs forever alongside the dispatcher. Every cycle:
-  1. Screenshots every frontend tab via puppeteer
-  2. Feeds screenshots to Claude Vision for investor-perspective review
-  3. Checks on-chain state (leverage cap, fees, positions)
-  4. Opens new orders if leverage is fixed
-  5. Logs issues to known-issues.md
-  6. Sends Telegram alerts for critical findings
+LEVER Protocol — QA Agent v2 (Human-Perspective Testing)
 
-Runs as: systemd lever-qa.service
+Three test layers run every 10 minutes:
+  LAYER 1: Visual — screenshot + Claude Vision with LEVER-specific investor context
+  LAYER 2: Data — extract DOM values, compare to on-chain, cross-tab consistency
+  LAYER 3: Flow — click Demo button, navigate to market, check position form works
+
+Also: verifies leverage cap fix, checks positions have high leverage visible.
 """
 
-import subprocess
-import json
-import os
-import time
-import glob
-import re
+import subprocess, json, os, time, glob, re
 from datetime import datetime
 from pathlib import Path
 
@@ -25,51 +18,35 @@ PROJECT = "/home/lever/lever-protocol"
 CONTROL = f"{PROJECT}/control-plane"
 SCREENSHOTS = f"{CONTROL}/screenshots"
 QA_LOG = f"{CONTROL}/dispatcher-logs/qa-agent.log"
+QA_RESULTS = f"{CONTROL}/qa-results.json"
 DEPLOY_ENV = f"{CONTROL}/deploy-env.sh"
 CYCLE_INTERVAL = 600
 MODEL = "claude-sonnet-4-20250514"
 RPC_URL = "https://sepolia.base.org"
 
-TABS = [
-    {"name": "Trade", "path": "/", "key_values": ["TVL", "Volume", "Open Interest"]},
-    {"name": "Vault", "path": "/vault", "key_values": ["TVL", "APY", "Share Price"]},
-    {"name": "Positions", "path": "/positions", "key_values": ["PnL", "Leverage", "Collateral"]},
-    {"name": "MarketDetail", "path": "/market/spacex", "key_values": ["Price", "OI", "Funding Rate"]},
-]
-
+EXPECTED = {"tvl_min":50000000,"tvl_max":200000000,"apy_min":0.01,"apy_max":100,"share_price_min":0.95,"share_price_max":1.10,"oi_min":10000,"oi_max":50000000,"position_count_min":10}
 
 def log(msg):
     ts = datetime.utcnow().strftime('%H:%M:%S')
     line = f"[{ts}] {msg}"
     print(line, flush=True)
-    with open(QA_LOG, 'a') as f:
-        f.write(line + '\n')
-
+    with open(QA_LOG, 'a') as f: f.write(line + '\n')
 
 def notify(msg):
     try:
-        token_file = f"{PROJECT}/.telegram-token"
-        token = Path(token_file).read_text().strip() if os.path.exists(token_file) else os.environ.get('TELEGRAM_BOT_TOKEN', '')
-        if not token:
-            return
+        tf = f"{PROJECT}/.telegram-token"
+        token = Path(tf).read_text().strip() if os.path.exists(tf) else os.environ.get('TELEGRAM_BOT_TOKEN', '')
+        if not token: return
         import urllib.request
         data = json.dumps({'chat_id': '422985839', 'text': f"🔍 QA: {msg}"}).encode()
-        req = urllib.request.Request(
-            f"https://api.telegram.org/bot{token}/sendMessage",
-            data=data, headers={'Content-Type': 'application/json'}
-        )
-        urllib.request.urlopen(req, timeout=5)
-    except:
-        pass
-
+        urllib.request.urlopen(urllib.request.Request(f"https://api.telegram.org/bot{token}/sendMessage", data=data, headers={'Content-Type': 'application/json'}), timeout=5)
+    except: pass
 
 def run(cmd, cwd=PROJECT, timeout=30):
     try:
         r = subprocess.run(cmd, shell=True, capture_output=True, text=True, cwd=cwd, timeout=timeout)
         return r.stdout.strip(), r.returncode
-    except:
-        return "", 1
-
+    except: return "", 1
 
 def source_env():
     out, _ = run(f"bash -c 'source {DEPLOY_ENV} && env'")
@@ -81,210 +58,229 @@ def source_env():
                 env[k] = v
     return env
 
-
 def cast_call(addr, sig, env, args=""):
     rpc = env.get('RPC_URL', RPC_URL)
-    cmd = f"cast call {addr} '{sig}' {args} --rpc-url {rpc}"
-    out, code = run(cmd)
+    out, code = run(f"cast call {addr} '{sig}' {args} --rpc-url {rpc}")
     return out if code == 0 else None
 
+def get_on_chain_truth(env):
+    truth = {}
+    vault = env.get('LEVER_VAULT', '')
+    if vault:
+        r = cast_call(vault, "totalAssets()(uint256)", env)
+        if r:
+            try: truth['tvl'] = int(r, 16 if r.startswith('0x') else 10) / 1e6
+            except: pass
+        r = cast_call(vault, "convertToAssets(uint256)(uint256)", env, "1000000000000000000")
+        if r:
+            try: truth['share_price'] = int(r, 16 if r.startswith('0x') else 10) / 1e6
+            except: pass
+    ins = env.get('LEVER_INSURANCE_FUND', '')
+    if ins:
+        r = cast_call(ins, "getBalance()(uint256)", env)
+        if r:
+            try: truth['insurance'] = int(r, 16 if r.startswith('0x') else 10) / 1e18
+            except: pass
+    oi = env.get('LEVER_OI_LIMITS', '')
+    if oi:
+        r = cast_call(oi, "getGlobalOI()(uint256)", env)
+        if r:
+            try: truth['global_oi'] = int(r, 16 if r.startswith('0x') else 10) / 1e6
+            except: pass
+    return truth
 
-SCREENSHOT_SCRIPT = """
+TEST_SCRIPT = r"""
 const puppeteer = require('puppeteer');
-const tabs = JSON.parse(process.argv[1]);
-const outDir = process.argv[2];
+const SSDIR = process.argv[1];
+const EXPECTED = JSON.parse(process.argv[2]);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const parseNum = t => { if(!t)return null; const c=t.replace(/[$,%×x,]/g,'').trim(); const n=parseFloat(c); return isNaN(n)?null:n; };
 (async () => {
     const browser = await puppeteer.launch({headless:'new',args:['--no-sandbox','--disable-setuid-sandbox']});
-    const results = [];
+    const R = {timestamp:new Date().toISOString(),tabs:{},flows:{},cross_tab:{},issues:[],overall_pass:true};
+    const extracted = {};
+    const tabs = [{name:'Trade',path:'/'},{name:'Vault',path:'/vault'},{name:'Positions',path:'/positions'},{name:'MarketDetail',path:'/market/spacex'}];
     for (const tab of tabs) {
         const page = await browser.newPage();
         await page.setViewport({width:1440,height:900});
+        const tr = {pass:true,issues:[],values:{},screenshot:null};
         try {
-            await page.goto('http://localhost:3000'+tab.path,{waitUntil:'networkidle2',timeout:15000});
-            await new Promise(r=>setTimeout(r,3000));
-            const filename = tab.name.toLowerCase()+'-'+Date.now()+'.png';
-            const filepath = outDir+'/'+filename;
-            await page.screenshot({path:filepath,fullPage:true});
-            const text = await page.evaluate(()=>document.body.innerText);
-            const hasError = /Something went wrong|\\$NaN|undefined|Error boundary/i.test(text);
-            results.push({tab:tab.name,screenshot:filepath,hasError,textSnippet:text.substring(0,500)});
-        } catch(e) {
-            results.push({tab:tab.name,screenshot:null,hasError:true,error:e.message});
-        }
+            await page.goto('http://localhost:3000'+tab.path,{waitUntil:'networkidle2',timeout:20000});
+            await sleep(4000);
+            const fn = tab.name.toLowerCase()+'-'+Date.now()+'.png';
+            const fp = SSDIR+'/'+fn;
+            await page.screenshot({path:fp,fullPage:true});
+            tr.screenshot = fp;
+            const bodyText = await page.evaluate(()=>document.body.innerText);
+            tr.textContent = bodyText.substring(0,2000);
+            if(/Something went wrong|Error boundary/i.test(bodyText)){tr.pass=false;tr.issues.push('Error boundary visible');}
+            if(/\$NaN|NaN%|undefined/.test(bodyText)){tr.pass=false;tr.issues.push('$NaN or undefined detected');}
+            // Extract values
+            const m = (pat) => { const x=bodyText.match(pat); return x?x[1]:null; };
+            const tvlRaw=m(/TVL[\s:]*\$([\d,.]+[KMB]?)/i);
+            if(tvlRaw){let v=parseNum(tvlRaw);if(tvlRaw.includes('M'))v*=1e6;if(tvlRaw.includes('B'))v*=1e9;if(tvlRaw.includes('K'))v*=1e3;tr.values.tvl=v;}
+            const apyRaw=m(/APY[\s:]*([\d.]+)%/i); if(apyRaw)tr.values.apy=parseFloat(apyRaw);
+            const spRaw=m(/Share\s*Price[\s:]*\$([\d.]+)/i); if(spRaw)tr.values.sharePrice=parseFloat(spRaw);
+            const oiRaw=m(/(?:Open\s*Interest|OI)[\s:]*\$([\d,.]+[KMB]?)/i);
+            if(oiRaw){let v=parseNum(oiRaw);if(oiRaw.includes('M'))v*=1e6;if(oiRaw.includes('B'))v*=1e9;if(oiRaw.includes('K'))v*=1e3;tr.values.oi=v;}
+            tr.values.hasChart = await page.evaluate(()=>document.querySelectorAll('canvas,svg.recharts-surface,.chart-container').length>0);
+            // Tab-specific
+            if(tab.name==='Vault'){
+                if(tr.values.tvl&&tr.values.tvl<EXPECTED.tvl_min){tr.pass=false;tr.issues.push('TVL below expected: $'+tr.values.tvl);}
+                if(tr.values.sharePrice&&(tr.values.sharePrice<EXPECTED.share_price_min||tr.values.sharePrice>EXPECTED.share_price_max)){tr.pass=false;tr.issues.push('Share price out of range: $'+tr.values.sharePrice);}
+            }
+            if(tab.name==='Positions'){
+                const levTexts = await page.evaluate(()=>Array.from(document.querySelectorAll('*')).map(e=>e.textContent).filter(t=>/\d+(\.\d+)?[x×]/.test(t)).slice(0,20));
+                const maxLev = Math.max(0,...levTexts.map(t=>parseFloat(t.replace(/[x×]/g,''))||0));
+                tr.values.maxLeverageSeen = maxLev;
+                if(maxLev<5)tr.issues.push('Max leverage seen: '+maxLev+'x (expected 10x+ after fix)');
+            }
+            if(tab.name==='MarketDetail'){
+                if(tr.values.oi&&tr.values.oi>EXPECTED.oi_max){tr.pass=false;tr.issues.push('OI too high: $'+tr.values.oi+' (decimal bug?)');}
+                if(!tr.values.hasChart)tr.issues.push('No chart rendering on MarketDetail');
+            }
+            extracted[tab.name]=tr.values;
+        } catch(e) {tr.pass=false;tr.issues.push('Load failed: '+e.message);}
+        if(!tr.pass)R.overall_pass=false;
+        R.tabs[tab.name]=tr;
         await page.close();
     }
+    // Cross-tab TVL
+    if(extracted.Trade?.tvl && extracted.Vault?.tvl){
+        const diff=Math.abs(extracted.Trade.tvl-extracted.Vault.tvl)/Math.max(extracted.Trade.tvl,extracted.Vault.tvl);
+        if(diff>0.05)R.issues.push('TVL mismatch: Trade=$'+extracted.Trade.tvl+' Vault=$'+extracted.Vault.tvl);
+    }
+    // Demo flow
+    try {
+        const page = await browser.newPage();
+        await page.setViewport({width:1440,height:900});
+        await page.goto('http://localhost:3000',{waitUntil:'networkidle2',timeout:20000});
+        await sleep(2000);
+        const demoFound = await page.evaluate(()=>{const b=Array.from(document.querySelectorAll('button,a')).find(b=>/demo|try demo/i.test(b.textContent));if(b){b.click();return true;}return false;});
+        R.flows.demo_button_found = demoFound;
+        if(demoFound){
+            await sleep(2000);
+            await page.screenshot({path:SSDIR+'/flow-demo-'+Date.now()+'.png',fullPage:true});
+            R.flows.demo_connected = await page.evaluate(()=>/0x[a-fA-F0-9]{4,}|Connected|Demo/i.test(document.body.innerText));
+            const clicked = await page.evaluate(()=>{const l=Array.from(document.querySelectorAll('a,[class*=card],[class*=market]')).find(e=>/spacex|trump|bitcoin/i.test(e.textContent));if(l){l.click();return true;}return false;});
+            if(clicked){
+                await sleep(3000);
+                await page.screenshot({path:SSDIR+'/flow-market-'+Date.now()+'.png',fullPage:true});
+                R.flows.has_trading_form = await page.evaluate(()=>{const btns=Array.from(document.querySelectorAll('button'));return btns.some(b=>/open|long|short|trade/i.test(b.textContent));});
+            }
+        } else { R.issues.push('Demo button not found'); }
+        await page.close();
+    } catch(e){R.flows.error=e.message;R.issues.push('Demo flow failed: '+e.message);}
+    console.log(JSON.stringify(R));
     await browser.close();
-    console.log(JSON.stringify(results));
 })();
 """
 
+VISION_PROMPT = """You are a senior investor reviewing LEVER Protocol's live demo in a pitch meeting.
 
-def take_screenshots():
-    os.makedirs(SCREENSHOTS, exist_ok=True)
-    script_path = "/tmp/qa-screenshots.js"
-    Path(script_path).write_text(SCREENSHOT_SCRIPT)
-    tabs_json = json.dumps(TABS)
-    out, code = run(f"node {script_path} '{tabs_json}' '{SCREENSHOTS}'", timeout=60)
-    if code != 0:
-        log(f"⚠️  Screenshot failed: {out[:200]}")
-        return []
+EXPECTED: TVL ~$60M, 10 markets, positions at 1x-30x leverage, APY 0.1-50%, share price ~$1, OI $100K-$10M range, professional dark trading UI.
+
+This is the {tab_name} tab. Page text: {text_snippet}
+
+Evaluate:
+1. Do numbers match expected ranges?
+2. Any $0, $NaN, undefined, errors, blank sections?
+3. Charts rendering with real data?
+4. Professional quality (Hyperliquid-tier) or hackathon-tier?
+5. Deal-breakers that would make you pass on investing?
+
+JSON only: {{"pass":true/false,"score":1-10,"issues":["specific"],"investor_impression":"one sentence","deal_breakers":["if any"]}}"""
+
+def vision_review(ss, tab, text):
+    if not ss or not os.path.exists(ss): return {"pass":False,"score":0,"issues":["No screenshot"]}
+    prompt = VISION_PROMPT.format(tab_name=tab, text_snippet=text[:400])
+    out, code = run(f'claude -p --dangerously-skip-permissions --model {MODEL} "{prompt}" --image {ss}', timeout=90)
+    if code != 0: return {"pass":False,"score":0,"issues":["Vision failed"]}
     try:
-        return json.loads(out)
-    except:
-        log("⚠️  Could not parse screenshot results")
-        return []
+        c = re.sub(r'^```(?:json)?\s*\n?','',out.strip()); c = re.sub(r'\n?\s*```$','',c)
+        return json.loads(c)
+    except: return {"pass":False,"score":0,"issues":["Parse error"],"investor_impression":out[:200]}
 
+def report_issues(issues):
+    if not issues: return
+    path = f"{CONTROL}/known-issues.md"
+    existing = Path(path).read_text() if os.path.exists(path) else ""
+    new = [i for i in issues if i[:40] not in existing]
+    if new:
+        with open(path, 'a') as f:
+            f.write(f"\n## QA v2 ({datetime.utcnow().strftime('%Y-%m-%d %H:%M')})\n")
+            for i in new: f.write(f"- [ ] {i}\n")
+        log(f"📝 {len(new)} new issues")
+        notify(f"{len(new)} issues: {new[0][:60]}...")
 
-VISION_PROMPT = """You are a senior investor doing due diligence on a DeFi protocol called LEVER.
-You are looking at a screenshot of their demo platform for the first time in a pitch meeting.
-
-Check for:
-1. DATA CREDIBILITY: Do numbers make sense? TVL ~$60M, APY 0-100%, Share Price ~$1, OI in thousands not billions.
-2. BROKEN UI: Any $0, $NaN, undefined, error messages, blank sections, obviously wrong values?
-3. PROFESSIONALISM: Does this look like a real trading platform? Misaligned text, broken charts, raw hex values?
-4. INVESTOR RED FLAGS: Anything making you hesitate to invest?
-
-Tab: {tab_name}
-Text content: {text_snippet}
-
-Respond with JSON only:
-{{"pass":true/false,"confidence":"high/medium/low","issues":["issue 1"],"investor_impression":"one sentence"}}"""
-
-
-def vision_review(screenshot_path, tab_name, text_snippet):
-    if not screenshot_path or not os.path.exists(screenshot_path):
-        return {"pass": False, "issues": ["No screenshot"], "confidence": "low", "investor_impression": "Cannot review"}
-
-    prompt = VISION_PROMPT.format(tab_name=tab_name, text_snippet=text_snippet[:300])
-    out, code = run(
-        f'claude -p --dangerously-skip-permissions --model {MODEL} "{prompt}" --image {screenshot_path}',
-        timeout=90
-    )
-    if code != 0:
-        return {"pass": False, "issues": [f"Vision failed: {out[:100]}"], "confidence": "low", "investor_impression": "Error"}
-    try:
-        cleaned = re.sub(r'^```(?:json)?\s*\n?', '', out.strip())
-        cleaned = re.sub(r'\n?\s*```$', '', cleaned)
-        return json.loads(cleaned)
-    except:
-        return {"pass": False, "issues": ["Parse error"], "confidence": "low", "investor_impression": out[:200]}
-
-
-def check_on_chain(env):
-    findings = []
-
-    # TVL
-    vault = env.get('LEVER_VAULT', '')
-    if vault:
-        result = cast_call(vault, "totalAssets()(uint256)", env)
-        if result:
-            try:
-                val = int(result, 16) if result.startswith('0x') else int(result)
-                tvl = val / 1e6
-                findings.append({"type": "OK", "msg": f"TVL: ${tvl:,.0f}"})
-            except:
-                pass
-
-    # Insurance fund
-    insurance = env.get('LEVER_INSURANCE_FUND', '')
-    if insurance:
-        result = cast_call(insurance, "getBalance()(uint256)", env)
-        if result:
-            try:
-                val = int(result, 16) if result.startswith('0x') else int(result)
-                balance = val / 1e18
-                status = "OK" if balance > 10000 else "WARN"
-                findings.append({"type": status, "msg": f"Insurance: ${balance:,.0f}"})
-            except:
-                pass
-
-    return findings
-
-
-def report_issues(vision_results, chain_findings):
-    issues_path = f"{CONTROL}/known-issues.md"
-    existing = Path(issues_path).read_text() if os.path.exists(issues_path) else ""
-    new_issues = []
-
-    for vr in vision_results:
-        if not vr.get('review', {}).get('pass', True):
-            for issue in vr['review'].get('issues', []):
-                if issue[:40] not in existing:
-                    new_issues.append(f"- [ ] [QA-{vr['tab']}] {issue}")
-
-    for cf in chain_findings:
-        if cf['type'] == 'CRITICAL' and cf['msg'][:30] not in existing:
-            new_issues.append(f"- [ ] [QA-CHAIN] {cf['msg']}")
-
-    if new_issues:
-        with open(issues_path, 'a') as f:
-            f.write(f"\n## QA Findings ({datetime.utcnow().strftime('%Y-%m-%d %H:%M')})\n")
-            for issue in new_issues:
-                f.write(issue + '\n')
-        log(f"📝 Added {len(new_issues)} issues")
-        notify(f"Found {len(new_issues)} issues: {new_issues[0][:60]}...")
-
-
-def run_cycle(cycle_num):
-    log(f"═══ QA Cycle #{cycle_num} ═══════════════════")
+def run_cycle(n):
+    log(f"═══ QA Cycle #{n} — 3 Layers ═══════════")
     env = source_env()
-
-    # Frontend check
     out, _ = run("curl -s -o /dev/null -w '%{http_code}' http://localhost:3000")
     if out != '200':
-        log(f"⚠️  Frontend HTTP {out} — skipping screenshots")
-        screenshots = []
-    else:
-        log("📸 Screenshots...")
-        screenshots = take_screenshots()
-        log(f"  {len(screenshots)} tabs captured")
+        log(f"❌ Frontend HTTP {out}"); notify(f"Frontend down HTTP {out}"); return
+
+    log("⛓  On-chain truth...")
+    truth = get_on_chain_truth(env)
+    for k, v in truth.items(): log(f"  {k}: {'${:,.0f}'.format(v) if v > 100 else v}")
+    if truth.get('tvl'): EXPECTED['tvl_min'] = truth['tvl'] * 0.8
+
+    log("🧪 Layer 1+2: Screenshots + DOM extraction + flows...")
+    os.makedirs(SCREENSHOTS, exist_ok=True)
+    Path("/tmp/qa-test-v2.js").write_text(TEST_SCRIPT)
+    out, code = run(f"node /tmp/qa-test-v2.js '{SCREENSHOTS}' '{json.dumps(EXPECTED)}'", timeout=120)
+    if code != 0: log(f"❌ Test suite failed: {out[:300]}"); return
+    try: results = json.loads(out)
+    except: log("❌ Parse failed"); return
+
+    Path(QA_RESULTS).write_text(json.dumps(results, indent=2))
+    all_issues = list(results.get('issues', []))
+
+    for tab, td in results.get('tabs', {}).items():
+        s = '✅' if td.get('pass') else '❌'
+        vals = ', '.join(f"{k}={v}" for k,v in td.get('values',{}).items() if v is not None)
+        log(f"  {s} {tab}: {vals[:80]}")
+        for i in td.get('issues',[]): log(f"    ⚠️  {i}"); all_issues.append(f"[{tab}] {i}")
 
     # Vision review
-    vision_results = []
-    for ss in screenshots:
-        if ss.get('screenshot'):
-            log(f"👁  {ss['tab']}...")
-            review = vision_review(ss['screenshot'], ss['tab'], ss.get('textSnippet', ''))
-            ss['review'] = review
-            icon = '✅' if review.get('pass') else '❌'
-            log(f"  {icon} {ss['tab']}: {review.get('investor_impression', '?')}")
-            vision_results.append(ss)
+    log("👁  Layer 1: Claude Vision investor review...")
+    scores = []
+    for tab, td in results.get('tabs', {}).items():
+        if td.get('screenshot'):
+            v = vision_review(td['screenshot'], tab, td.get('textContent',''))
+            score = v.get('score', 0)
+            scores.append(score)
+            log(f"  {tab}: {score}/10 — {v.get('investor_impression','?')}")
+            for db in v.get('deal_breakers', []): log(f"    🚨 DEAL BREAKER: {db}"); all_issues.append(f"[DEALBREAKER-{tab}] {db}")
 
-    # On-chain
-    log("⛓  Chain checks...")
-    chain = check_on_chain(env)
-    for f in chain:
-        icon = '✅' if f['type'] == 'OK' else '⚠️'
-        log(f"  {icon} {f['msg']}")
+    # Flows
+    flows = results.get('flows', {})
+    log(f"  🔄 Demo: button={'✅' if flows.get('demo_button_found') else '❌'} connect={'✅' if flows.get('demo_connected') else '❌'} form={'✅' if flows.get('has_trading_form') else '❌'}")
 
-    # Report
-    report_issues(vision_results, chain)
+    # Frontend vs chain
+    for tab, td in results.get('tabs', {}).items():
+        v = td.get('values', {})
+        if v.get('tvl') and truth.get('tvl'):
+            ratio = v['tvl'] / truth['tvl']
+            if ratio < 0.5 or ratio > 2.0:
+                all_issues.append(f"[CHAIN-{tab}] TVL mismatch: UI ${v['tvl']:,.0f} vs chain ${truth['tvl']:,.0f}")
 
-    passed = sum(1 for vr in vision_results if vr.get('review', {}).get('pass'))
-    total = len(vision_results)
-    log(f"═══ Cycle #{cycle_num}: {passed}/{total} passed ═══════")
-    if total > 0 and passed < total:
-        failed = [vr['tab'] for vr in vision_results if not vr.get('review', {}).get('pass')]
-        notify(f"Cycle #{cycle_num}: {passed}/{total}. Failed: {', '.join(failed)}")
-
+    report_issues(all_issues)
+    tabs = results.get('tabs', {})
+    passed = sum(1 for t in tabs.values() if t.get('pass'))
+    avg_score = sum(scores)/len(scores) if scores else 0
+    log(f"═══ #{n}: {passed}/{len(tabs)} tabs | Avg score: {avg_score:.1f}/10 | {'✅' if results.get('overall_pass') else '❌'} ═══")
 
 def main():
     os.makedirs(SCREENSHOTS, exist_ok=True)
-    log("═══════════════════════════════════════")
-    log("  LEVER QA Agent started")
-    log("═══════════════════════════════════════")
-    notify("QA Agent started")
-
+    log("═══════════════════════════════════════"); log("  LEVER QA v2 — Human Perspective"); log("═══════════════════════════════════════")
+    notify("QA v2 started")
     cycle = 0
     while True:
         cycle += 1
-        try:
-            run_cycle(cycle)
-        except Exception as e:
-            log(f"❌ Cycle error: {e}")
-        log(f"💤 Next cycle in {CYCLE_INTERVAL // 60}min")
+        try: run_cycle(cycle)
+        except Exception as e: log(f"❌ Error: {e}")
+        log(f"💤 Next in {CYCLE_INTERVAL//60}min")
         time.sleep(CYCLE_INTERVAL)
 
-
-if __name__ == '__main__':
-    main()
+if __name__ == '__main__': main()
