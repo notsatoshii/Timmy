@@ -58,7 +58,7 @@ const Dashboard: React.FC = () => {
         if (selectedMarket) {
           return (
             <ErrorBoundary panelName="MarketDetail">
-              <MarketDetail market={selectedMarket} onBack={handleBackToMarkets} />
+              <MarketDetail market={selectedMarket} onBack={handleBackToMarkets} onTradeSelect={handleTradeSelection} />
             </ErrorBoundary>
           );
         }

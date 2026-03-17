@@ -29,6 +29,7 @@ interface Market {
 
 interface MarketDetailProps {
   market: Market;
+  onTradeSelect?: (marketId: string, marketName: string, direction: 'long' | 'short') => void;
   onBack: () => void;
 }
 
@@ -54,7 +55,7 @@ interface CandlestickData {
 
 type TimeFrame = '1m' | '5m' | '15m' | '1h' | '4h' | '1D';
 
-const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack }) => {
+const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSelect }) => {
   const [candlestickData, setCandlestickData] = useState<CandlestickData[]>([]);
   const [selectedTimeframe, setSelectedTimeframe] = useState<TimeFrame>('1h');
   const [recentPositions, setRecentPositions] = useState<PositionData[]>([]);
@@ -472,10 +473,10 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack }) => {
 
           <div className="flex-shrink-0 lg:ml-6">
             <div className="flex space-x-3">
-              <button className="bg-accent/10 text-accent border border-accent/30 px-6 py-3 rounded-md font-semibold hover:bg-accent/20 hover:border-accent/50 transition-all">
+              <button onClick={() => { if (onTradeSelect) onTradeSelect(market.id, market.name, "long"); if (onBack) onBack(); }} className="bg-accent/10 text-accent border border-accent/30 px-6 py-3 rounded-md font-semibold hover:bg-accent/20 hover:border-accent/50 transition-all">
                 Long
               </button>
-              <button className="bg-danger/10 text-danger border border-danger/30 px-6 py-3 rounded-md font-semibold hover:bg-danger/20 hover:border-danger/50 transition-all">
+              <button onClick={() => { if (onTradeSelect) onTradeSelect(market.id, market.name, "short"); if (onBack) onBack(); }} className="bg-danger/10 text-danger border border-danger/30 px-6 py-3 rounded-md font-semibold hover:bg-danger/20 hover:border-danger/50 transition-all">
                 Short
               </button>
             </div>
