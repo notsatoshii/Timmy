@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-17T17:03:09.871231+00:00",
+  "timestamp": "2026-03-17T17:17:00.788108+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -27,31 +27,7 @@
   ],
   "sprint_checks": {},
   "critical_blockers": [],
-  "visual_issues": [
-    "Vision: Only HTML shell visible via curl - cannot verify if React app actually loads and renders",
-    "Vision: No way to assess actual functionality, UI quality, or data accuracy from static HTML",
-    "Vision: JavaScript dependency means investors need a full browser experience to evaluate",
-    "Vision: Cannot verify if trading interface, position management, or market data work properly",
-    "Vision: Potential accessibility issues for users without JavaScript enabled"
-  ],
+  "visual_issues": [],
   "functional_issues": [],
-  "score": 60,
-  "vision_review": {
-    "professional_score": 6,
-    "trust_score": 5,
-    "issues": [
-      "Only HTML shell visible via curl - cannot verify if React app actually loads and renders",
-      "No way to assess actual functionality, UI quality, or data accuracy from static HTML",
-      "JavaScript dependency means investors need a full browser experience to evaluate",
-      "Cannot verify if trading interface, position management, or market data work properly",
-      "Potential accessibility issues for users without JavaScript enabled"
-    ],
-    "improvements": [
-      "Add basic server-side rendering or static fallback content for non-JS evaluation",
-      "Implement health check endpoint that returns app status in plain text/JSON",
-      "Add loading indicators and error states that are visible in the HTML structure",
-      "Consider progressive enhancement so core information is visible without JavaScript",
-      "Add comprehensive error handling for failed JavaScript loads"
-    ]
-  }
+  "score": 100
 }

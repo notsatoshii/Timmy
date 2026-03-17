@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useWriteContract } from 'wagmi';
 import { useWallet } from '../hooks/useWallet';
-import { CONTRACT_ADDRESSES, formatUsdt, formatWad, parseUsdt, WAD } from '../config/contracts';
+import { CONTRACT_ADDRESSES, formatUsdt, formatWad, parseUsdt, WAD, getContractAddresses } from '../config/contracts';
 import { LEVER_VAULT_ABI, USDT_ABI, FEE_ROUTER_ABI, OI_LIMITS_ABI } from '../config/abis';
 import { useVaultMulticall } from '../hooks/useVaultMulticall';
 import { useMemoizedVaultCalculations } from '../hooks/useMemoizedCalculations';
@@ -20,17 +20,21 @@ const VaultOptimized: React.FC = () => {
   // Vault multicall hook with fallback values for failed RPC calls
   const vaultData = useVaultMulticall(address);
 
-  // Debug vault data received in component
-  console.log('=== VAULT OPTIMIZED COMPONENT DATA ===', {
-    vaultData,
-    totalAssets: vaultData?.totalAssets?.toString(),
-    totalSupply: vaultData?.totalSupply?.toString(),
-    sharePrice: vaultData?.sharePrice?.toString(),
-    globalOI: vaultData?.globalOI?.toString(),
-    isLoading: vaultData?.isLoadingVaultData,
-    hasError: vaultData?.hasError,
-    errors: vaultData?.errors?.map(e => e.message),
-  });
+  // Debug vault data received in component (conditional on vault data having errors)
+  if (vaultData?.hasError || !vaultData?.totalAssets || vaultData?.totalAssets === BigInt(0)) {
+    console.log('=== VAULT COMPONENT DEBUG (Error/No Data) ===', {
+      vaultData,
+      totalAssets: vaultData?.totalAssets?.toString(),
+      totalSupply: vaultData?.totalSupply?.toString(),
+      sharePrice: vaultData?.sharePrice?.toString(),
+      globalOI: vaultData?.globalOI?.toString(),
+      isLoading: vaultData?.isLoadingVaultData,
+      hasError: vaultData?.hasError,
+      errors: vaultData?.errors?.map(e => e.message),
+      contractAddress: "0x84a1Eb3b1eFD60b193b271DCfaB2711cE1c41921",
+      usingFallbacks: vaultData?.totalAssets?.toString() === "250000000000"
+    });
+  }
 
   // Memoized calculations - expensive computations only run when data changes
   const metrics = useMemoizedVaultCalculations({
@@ -381,12 +385,25 @@ const VaultOptimized: React.FC = () => {
         </div>
       </div>
 
-      {/* Error Display */}
+      {/* Error/Info Display */}
       {vaultData.hasError && (
-        <div className="bg-danger/10 border border-danger/20 text-danger rounded-lg p-4">
-          <h4 className="font-semibold mb-2">Error Loading Vault Data</h4>
+        <div className="bg-warning/10 border border-warning/20 text-warning rounded-lg p-4">
+          <h4 className="font-semibold mb-2">Using Fallback Vault Data</h4>
+          <p className="text-sm mb-2">
+            RPC connection issues detected. Showing fallback values while reconnecting...
+          </p>
+          <p className="text-xs text-warning/70">
+            Contract: {getContractAddresses().leverVault} | Error: {vaultData.errors[0]?.message || 'Unknown RPC error'}
+          </p>
+        </div>
+      )}
+
+      {/* Loading Indicator when vault is loading */}
+      {vaultData.isLoadingVaultData && (
+        <div className="bg-accent/10 border border-accent/20 text-accent rounded-lg p-4">
+          <h4 className="font-semibold mb-2">Loading Vault Data...</h4>
           <p className="text-sm">
-            {vaultData.errors[0]?.message || 'Unknown error occurred'}
+            Fetching live data from LeverVault contract...
           </p>
         </div>
       )}

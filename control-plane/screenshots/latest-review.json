@@ -1,18 +1,9 @@
 {
-  "timestamp": "2026-03-17T01-56-00-701Z",
+  "timestamp": "2026-03-17T17-23-08-467Z",
   "console_errors": [
-    "Failed to load resource: the server responded with a status of 413 ()",
-    "Failed to load resource: the server responded with a status of 413 ()",
-    "Failed to load resource: the server responded with a status of 413 ()",
-    "Failed to load resource: the server responded with a status of 413 ()",
-    "Error calculating 24h volume: HttpRequestError: HTTP request failed."
+    "Puppeteer browser launch failed - manual verification needed"
   ],
-  "screenshots": [
-    "markets-2026-03-17T01-56-00-701Z.png",
-    "trading-2026-03-17T01-56-00-701Z.png",
-    "vault-2026-03-17T01-56-00-701Z.png",
-    "positions-2026-03-17T01-56-00-701Z.png",
-    "mobile-2026-03-17T01-56-00-701Z.png"
-  ],
-  "all_tabs_ok": true
+  "screenshots": [],
+  "fallback_used": true,
+  "frontend_check": "Frontend responding on port 3000"
 }

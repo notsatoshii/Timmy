@@ -1,36 +1,36 @@
-Perfect! Now I can see the actual three priorities. Let me revise my plan to align with the existing build-plan.md:
+Based on the build plan and current QA status, here are the prioritized tasks for the INVESTOR DEMO:
 
-## REVISED PLAN - INVESTOR DEMO (Following build-plan.md)
+### 1. Fix Screenshot Verification [CRITICAL] [FRONTEND]
+- [ ] Run `node scripts/take-screenshots.js` and capture the specific error causing verification failures
+- [ ] Diagnose if browser/puppeteer process is hanging (implement 30-second timeout)
+- [ ] Add fallback: manual screenshot capture + basic UI load test if automation fails
+- [ ] **GOAL**: Confirm all UI tabs load without blank screens for investor demo
 
-### PHASE 1: Critical Blockers (Following the 3 Priorities)
+### 2. Fix Vault Tab Data Display [CRITICAL] [FRONTEND] 
+- [ ] Verify LeverVault address in `config/contracts.ts` matches deployed contract (0x84a1Eb3b1eFD60b193b271DCfaB2711cE1c41921)
+- [ ] Add debug logging to `useVaultMulticall` to identify why it returns undefined (RPC 413 errors)
+- [ ] Implement graceful fallback for vault data when RPC calls fail
+- [ ] **GOAL**: Show meaningful TVL and share price numbers instead of $NaN and $0
 
-**Priority 1: Fix Screenshot Verification [60 min]**
-- [ ] Run `node scripts/take-screenshots.js` and capture specific error
-- [ ] Check if browser/puppeteer process is hanging (timeout after 30 sec)  
-- [ ] Add fallback: manual screenshot + basic UI load test if automation fails
-- [ ] **GOAL**: Confirm UI loads without blank screens
+### 3. Fix Position Values Display [CRITICAL] [FRONTEND]
+- [ ] Verify PositionManager address in frontend config (should be 0x25ba54a7b2fBac753B601Da05e3661F2E959510b)
+- [ ] Debug why demo mode shows $0.00 for all position values
+- [ ] Add fallback to display position count and basic data when value calculation fails
+- [ ] **GOAL**: Show existing positions with meaningful non-zero values
 
-**Priority 2: Fix Vault Display [45 min]**
-- [ ] Check `config/contracts.ts` - verify LeverVault address matches deployed contract (0x84a1Eb3b1eFD60b193b271DCfaB2711cE1c41921)
-- [ ] Add console.log to useVaultMulticall to see exact undefined response
-- [ ] If RPC issues persist, add mock vault data for demo mode only
-- [ ] **GOAL**: Show meaningful TVL/share price numbers
+### 4. Demo Polish & Final Verification [MEDIUM] [INTEGRATION]
+- [ ] Run complete trading flow smoke test following build-plan protocol
+- [ ] Execute all three verification scripts (health-check, screenshots, user-flow-test)
+- [ ] Document any remaining minor issues that don't block the investor demo
 
-**Priority 3: Fix Position Values [45 min]**  
-- [ ] Verify PositionManager contract address in frontend config (should be 0x25ba54a7b2fBac753B601Da05e3661F2E959510b)
-- [ ] Check if demo mode is calling wrong contract methods
-- [ ] Add fallback to display position count + basic data if values fail
-- [ ] **GOAL**: Show positions exist with non-zero values
+### 5. Phase 2 Transition [LOW] [PLANNING]
+- [ ] Once all 3 priorities pass, transition to auto-improve mode per build plan
+- [ ] Set up continuous improvement cycle for post-demo optimization
 
-### PHASE 2: Demo Polish (1 hour max)
-- Trading flow smoke test + final verification as outlined in build-plan.md
+**Key Constraints Respected:**
+- ✅ No contract redeployment (using existing deployed addresses)
+- ✅ No address changes (protected contracts remain untouched)  
+- ✅ Focus only on the three build-plan priorities
+- ✅ Frontend data loading fixes without touching smart contracts
 
-### Key Constraints Respected:
-- ✅ **NO CONTRACT REDEPLOYMENT** - Working only with existing deployed contracts
-- ✅ **NO ADDRESS CHANGES** - Using protected contract addresses as-is  
-- ✅ **THREE PRIORITIES ONLY** - Following build-plan.md structure exactly
-- ✅ **FRONTEND FOCUS** - Addressing data loading issues without touching contracts
-
-**Success Criteria**: All 3 tabs load and display data, no blank screens during investor demo, total time budget 4 hours maximum.
-
-This plan now correctly follows the build-plan.md priorities and respects the deployment constraints from CLAUDE.md.
+**Success Criteria:** All tabs load with real data, no $NaN/$0.00 displays, investor demo runs smoothly.

@@ -1,0 +1,47 @@
+{
+  "timestamp": "2026-03-17T17:23:08.489Z",
+  "tests": [
+    {
+      "name": "Frontend Response",
+      "status": "PASS",
+      "details": "Status: 200"
+    },
+    {
+      "name": "HTML Content - React Root",
+      "status": "PASS",
+      "details": "Pattern found in HTML"
+    },
+    {
+      "name": "HTML Content - Title Tag",
+      "status": "PASS",
+      "details": "Pattern found in HTML"
+    },
+    {
+      "name": "HTML Content - JavaScript Bundle",
+      "status": "PASS",
+      "details": "Pattern found in HTML"
+    },
+    {
+      "name": "HTML Content - CSS Styles",
+      "status": "PASS",
+      "details": "Pattern found in HTML"
+    },
+    {
+      "name": "HTML Content - Meta Viewport",
+      "status": "PASS",
+      "details": "Pattern found in HTML"
+    },
+    {
+      "name": "Error Indicators",
+      "status": "PASS",
+      "details": "No error patterns detected"
+    },
+    {
+      "name": "React App Indicators",
+      "status": "WARN",
+      "details": "Only found 0 React-related patterns"
+    }
+  ],
+  "overall_status": "PASS",
+  "summary": "7 passed, 0 failed, 1 warnings"
+}

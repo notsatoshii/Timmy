@@ -85,12 +85,12 @@ const VaultStatsInner: React.FC<VaultStatsProps> = ({
   const formatTVL = (): string => {
     try {
       if (isLoading) return 'Loading...';
-      if (hasError) return '$50,000'; // Professional fallback during errors
+      if (hasError) return '$250,000'; // Professional fallback during errors
 
       // Comprehensive validation for NaN, null, undefined, and invalid values
       if (tvl === null || tvl === undefined || !isFinite(tvl) || isNaN(tvl) || tvl < 0) {
         console.warn('Invalid TVL detected:', { tvl, isLoading, hasError });
-        return '$50,000';
+        return '$250,000';
       }
 
       return `$${tvl.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;

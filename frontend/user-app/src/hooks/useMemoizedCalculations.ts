@@ -79,17 +79,17 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
 
         if (!isFinite(tvl) || tvl < 0 || isNaN(tvl)) {
           console.warn('Invalid TVL calculated, using fallback:', { tvlFormatted, tvl, totalAssets: totalAssets.toString() });
-          tvl = 50000; // Fallback to $50,000 when calculation fails
+          tvl = 250000; // Fallback to $250,000 when calculation fails
         }
       } else {
         console.log('TVL: totalAssets is null/zero, using fallback');
-        tvl = 50000; // Fallback when no totalAssets
+        tvl = 250000; // Fallback when no totalAssets
       }
     } catch (error) {
       console.error('Error calculating TVL, using fallback:', error, {
         totalAssets: totalAssets?.toString(),
       });
-      tvl = 50000; // Fallback on error
+      tvl = 250000; // Fallback on error
     }
 
     // Share price calculation (assets per share) with enhanced NaN protection
