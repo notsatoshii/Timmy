@@ -363,8 +363,8 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
     });
 
     // Loading states - both batches must complete for vault data, user data depends on user batch only
-    const isLoadingVaultData = (coreMulticallResult?.isLoading || false) && !circuitBreaker.isOpen;
-    const isLoadingUserData = userAddress ? ((userMulticallResult?.isLoading || false) && !circuitBreaker.isOpen) : false;
+    const isLoadingVaultData = (coreMulticallResult?.isLoading || false) && (isCircuitBreakerDisabled || !circuitBreaker.isOpen);
+    const isLoadingUserData = userAddress ? ((userMulticallResult?.isLoading || false) && (isCircuitBreakerDisabled || !circuitBreaker.isOpen)) : false;
 
     // Comprehensive error analysis from both batches
     const coreErrors = coreMulticallResult?.errors || [];
