@@ -1,0 +1,8 @@
+{
+  "task_id": "7a",
+  "lane": "FRONTEND",
+  "title": "Fix Positions Tab",
+  "started": "2026-03-17T04:04:31.926992",
+  "pid": 847123,
+  "log": "/home/lever/lever-protocol/control-plane/dispatcher-logs/task-7a-040431.log"
+}

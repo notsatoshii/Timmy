@@ -248,22 +248,53 @@ def git_last_diff():
     return run_cmd(['git', 'diff', 'HEAD~1', '--stat'])
 
 def parse_plan(content):
-    """Parse new build-plan.md format: ### id. Title [PRIORITY]"""
-    phases = [{"name": "Phase 0-FINAL: Ship Investor Demo", "tasks": [], "done": 0, "total": 0}]
-    cur = phases[0]
+    """Parse build-plan.md — handles both old and new format.
+    Old: ## Phase X header + - [x] **P0** description
+    New: ### id. Title [PRIORITY] + - [x] id. description
+    """
+    phases = []
+    cur = None
     for line in content.split('\n'):
+        # Phase headers: ## Phase ... or ## Completed Phases
+        if line.startswith('## '):
+            if cur:
+                phases.append(cur)
+            name = line.replace('## ', '').strip()
+            if name.endswith('\u2705'):
+                name = name[:-1].strip()
+            cur = {"name": name, "tasks": [], "done": 0, "total": 0}
+            continue
+        # New format task: - [x] 1a. description
         m = re.match(r'\s*-\s*\[([ x])\]\s*(\w+)\.\s*(.*)', line)
         if m:
+            if not cur:
+                cur = {"name": "Phase 0-FINAL: Ship Investor Demo", "tasks": [], "done": 0, "total": 0}
             done = m.group(1) == 'x'
             tid = m.group(2)
             desc = m.group(3).strip()
-            # Truncate long descriptions for display
             if len(desc) > 120:
                 desc = desc[:117] + '...'
             cur["tasks"].append({"task": f"{tid}. {desc}", "done": done, "id": tid})
             cur["total"] += 1
             if done:
                 cur["done"] += 1
+            continue
+        # Old format task: - [x] **P0** description  OR  - [x] description
+        m2 = re.match(r'\s*-\s*\[([ x])\]\s*(.*)', line)
+        if m2 and cur is not None:
+            done = m2.group(1) == 'x'
+            desc = m2.group(2).strip()
+            if not desc:
+                continue
+            if len(desc) > 120:
+                desc = desc[:117] + '...'
+            cur["tasks"].append({"task": desc, "done": done, "id": ""})
+            cur["total"] += 1
+            if done:
+                cur["done"] += 1
+            continue
+    if cur:
+        phases.append(cur)
     return phases
 
 def next_task_label():

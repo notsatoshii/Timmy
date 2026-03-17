@@ -1,0 +1,8 @@
+{
+  "task_id": "8a",
+  "lane": "INFRA",
+  "title": "Build Tab Sanity Check \u2014 Data + Visual",
+  "started": "2026-03-17T04:04:31.927661",
+  "pid": 847124,
+  "log": "/home/lever/lever-protocol/control-plane/dispatcher-logs/task-8a-040431.log"
+}

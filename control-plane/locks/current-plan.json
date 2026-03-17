@@ -1,30 +1,22 @@
 {
   "tasks": [
     {
-      "id": "5b",
-      "lane": "CONTRACT",
-      "depends_on": [],
-      "reason": "Uses cast send to open positions on deployed contracts. No dependencies since 5a is already complete."
-    },
-    {
       "id": "7a",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Fixes React component crashes in Positions tab. Frontend display bug fix."
+      "reason": "React component crash fixes - must modify frontend JSX/TS files for Positions tab display logic"
     },
     {
       "id": "7b",
       "lane": "CONTRACT",
       "depends_on": [],
-      "reason": "Uses cast call to verify funding rate engine behavior. Contract verification task."
+      "reason": "Solidity contract verification using cast calls - debugging FundingRateEngine contract behavior"
     },
     {
       "id": "8a",
       "lane": "INFRA",
-      "depends_on": [
-        "7a"
-      ],
-      "reason": "Creates puppeteer testing script. Depends on 7a because it tests the Positions tab that 7a fixes."
+      "depends_on": [],
+      "reason": "Building new puppeteer test script - creates automation infrastructure, not dependent on frontend fixes since script is designed to catch and report issues"
     },
     {
       "id": "9a",
@@ -32,7 +24,7 @@
       "depends_on": [
         "8a"
       ],
-      "reason": "Modifies worker rules in control-plane configs. Depends on 8a because it references the tab-sanity.js script that 8a creates."
+      "reason": "Updates control-plane config files - depends on 8a since it references the tab-sanity.js script which must exist first"
     },
     {
       "id": "10a",
@@ -42,7 +34,7 @@
         "8a",
         "9a"
       ],
-      "reason": "Final visual polish of React frontend. Depends on 7a (same lane, fix crashes first), 8a (needs validation script), and 9a (needs validation rule)."
+      "reason": "Final frontend polish using validation script - depends on 7a for Positions fix, 8a for the validation script, 9a for validation rules to be in place"
     }
   ]
 }
