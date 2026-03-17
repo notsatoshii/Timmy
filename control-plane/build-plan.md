@@ -1,4 +1,4 @@
-Based on the current QA report (score: 60/100, professional score: 6/10) and the locked sprint priorities, here are the **3 CRITICAL TASKS**:
+Based on the current build plan and QA report showing a score of 60/100, here are the **3 CRITICAL TASKS** for the locked investor demo sprint:
 
 ### 1. Fix Screenshot Verification System [CRITICAL] [INFRASTRUCTURE]
 - [ ] Install missing browser dependencies (`libatk-1.0.so.0`) causing Puppeteer crashes

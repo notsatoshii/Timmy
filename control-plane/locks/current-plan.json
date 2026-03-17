@@ -1,24 +1,25 @@
 {
   "tasks": [
     {
-      "id": "task_1",
+      "id": "fix_screenshot_verification",
       "lane": "INFRA",
-      "depends_on": [],
-      "reason": "Installing system dependencies and fixing puppeteer script automation - pure infrastructure work that doesn't conflict with frontend data fixes"
-    },
-    {
-      "id": "task_2",
-      "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "Fixing React hook useVaultMulticall and vault tab display issues - frontend data pipeline work"
-    },
-    {
-      "id": "task_3",
-      "lane": "FRONTEND",
       "depends_on": [
-        "task_2"
+        "fix_vault_display",
+        "fix_position_values"
       ],
-      "reason": "Fixing position values display in React - frontend work that could touch similar contract integration files as vault fixes, so sequenced for safety"
+      "reason": "INFRA lane because fixing Puppeteer scripts and system dependencies. Depends on frontend fixes because screenshots should verify working displays, not broken ones."
+    },
+    {
+      "id": "fix_vault_display",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "FRONTEND lane because fixing React hooks (useVaultMulticall) and component display issues in Vault tab. Independent of position fixes."
+    },
+    {
+      "id": "fix_position_values",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "FRONTEND lane because fixing Positions tab display and frontend integration with PositionManager contract. Independent of vault fixes."
     }
   ]
 }
