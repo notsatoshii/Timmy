@@ -8,8 +8,8 @@ const { exec } = require('child_process');
 
 // Load current addresses from deploy-env.sh
 const CONTRACTS = {
-    EXECUTION_ENGINE: '0xc749C6aAe8a5ACBDD924DF7f833Dd3115307a60D',
-    LEVERAGE_MODEL: '0x474E2eE2911544a385eb017369e8516Ad6DcCAbd',
+    EXECUTION_ENGINE: '0x15a05b36D68e88f3264157dDa034f6C1e666065b',
+    LEVERAGE_MODEL: '0xf649e342673C3e86c18Bf30C4163ec9d7090F9EF',
 };
 
 const RPC_URL = 'https://sepolia.base.org';
