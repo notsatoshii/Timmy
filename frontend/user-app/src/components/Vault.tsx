@@ -27,6 +27,14 @@ const Vault: React.FC = () => {
     functionName: 'totalSupply',
   });
 
+  // Read share price using ERC-4626 standard convertToAssets
+  const { data: sharePrice, isLoading: loadingSharePrice } = useReadContract({
+    address: CONTRACT_ADDRESSES.leverVault,
+    abi: LEVER_VAULT_ABI,
+    functionName: 'convertToAssets',
+    args: [WAD], // 1e18 = 1 share in WAD format
+  });
+
   const { data: userShares, isLoading: loadingUserShares } = useReadContract({
     address: CONTRACT_ADDRESSES.leverVault,
     abi: LEVER_VAULT_ABI,
@@ -59,6 +67,7 @@ const Vault: React.FC = () => {
   const isLoadingVaultData =
     loadingTotalAssets ||
     loadingTotalShares ||
+    loadingSharePrice ||
     loadingBorrowRate ||
     loadingGlobalOI;
 
@@ -115,8 +124,9 @@ const Vault: React.FC = () => {
   };
 
   const calculateShareValue = (): string => {
-    if (!totalAssets || !totalShares || totalShares === BigInt(0)) return '1.00';
-    return (Number(totalAssets) / Number(totalShares) / 1e12).toFixed(4);
+    if (!sharePrice) return '1.00';
+    // sharePrice is already in WAD format (1e18), convert to USDT format (1e6)
+    return (Number(sharePrice) / 1e12).toFixed(4);
   };
 
   const calculateUserAssets = (): string => {
@@ -133,7 +143,7 @@ const Vault: React.FC = () => {
   };
 
   const calculateAPY = (): number => {
-    // Calculate projected APY: (base_borrow_rate × Total_OI × 8760_hours × 0.50_LP_share) / TVL
+    // Calculate projected APY using same logic as ProtocolStats: (base_borrow_rate × Total_OI × 8760_hours × 0.50_LP_share) / TVL
     if (!totalAssets || !globalOI || totalAssets === BigInt(0)) return 0;
 
     // Use base borrow rate if currentBorrowRate is unavailable (0.02% per hour = 2e14 WAD)
@@ -146,8 +156,8 @@ const Vault: React.FC = () => {
 
     // projected_annual_revenue = (borrow_rate × total_OI / WAD) × hours_per_year × LP_share / 100
     // Must divide by WAD after multiplying two WAD-scale numbers to normalize
-    const globalOIInWad = globalOI * BigInt(1e12);
-    const revenuePerHour = borrowRateToUse * globalOIInWad / WAD; // WAD × WAD / WAD = WAD
+    const totalOIInWad = globalOI * BigInt(1e12);
+    const revenuePerHour = borrowRateToUse * totalOIInWad / WAD; // WAD × WAD / WAD = WAD
     const projectedAnnualRevenue = revenuePerHour * hoursPerYear * lpShare / hundredPercent;
 
     // APY = projected_annual_revenue / TVL (multiply by 10000 for basis point precision in BigInt)
