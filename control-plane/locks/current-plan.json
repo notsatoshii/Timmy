@@ -2,42 +2,43 @@
   "tasks": [
     {
       "id": "1",
-      "lane": "INFRA",
+      "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Installing browser dependencies for screenshot functionality involves control-plane automation scripts and infra setup. No dependencies as this is foundational infrastructure."
+      "reason": "React app loading verification must happen first before any other frontend work can proceed. No dependencies since this is the foundation."
     },
     {
       "id": "2",
       "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "Debugging RPC/contract integration and demo fallback values requires fixing React components and contract data hooks. Independent of other tasks as this is the root data integration issue."
+      "depends_on": [
+        "1"
+      ],
+      "reason": "RPC data fixes are FRONTEND lane. Depends on Task 1 since we need React app to load before fixing data display issues. Same lane dependency."
     },
     {
       "id": "3",
-      "lane": "FRONTEND",
-      "depends_on": [
-        "2"
-      ],
-      "reason": "Position values display depends on real contract data working first. Task #2 fixes the core RPC integration that this task needs to display real position data instead of $0.00 stubs."
+      "lane": "CONTRACT",
+      "depends_on": [],
+      "reason": "Contract redeployment and position opening logic is CONTRACT lane. Independent of frontend issues, can run in parallel."
     },
     {
       "id": "4",
       "lane": "FRONTEND",
       "depends_on": [
+        "2",
         "3"
       ],
-      "reason": "Volume calculation changes involve trading/position display components that task #3 is also modifying. Sequential execution prevents conflicts in the same React components."
+      "reason": "Data display polish is FRONTEND lane. Depends on Task 2 (same lane, need basic data working first) and Task 3 (need real position data for notional volume calculations)."
     },
     {
       "id": "5",
-      "lane": "FRONTEND",
+      "lane": "INFRA",
       "depends_on": [
         "1",
         "2",
         "3",
         "4"
       ],
-      "reason": "UI verification needs screenshots (task #1) and all frontend fixes completed (tasks #2-4) before comprehensive testing can validate the complete working system."
+      "reason": "System health verification is INFRA lane (testing services, end-to-end flows). Depends on all other tasks since it validates the complete system is working."
     }
   ]
 }
