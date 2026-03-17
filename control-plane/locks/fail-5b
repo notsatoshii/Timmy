@@ -1,0 +1,40 @@
+Task 5b FAIL Report - High Leverage Positions
+
+STATUS: INCOMPLETE
+- Successfully opened 5 positions using test wallet
+- Position IDs: 61, 62, 63, 64, 65
+- Markets: SpaceX, US-Iran, FIFA Spain, Argentina, Fed Rate
+- Leverage achieved: 1x (all positions)
+- Leverage required: 10x, 15x, 20x, 25x, 30x
+
+FAIL CONDITION MET: No positions above 5x exist
+
+ROOT CAUSE: LeverageModel contract limitations
+The ExecutionEngine points to LeverageModel at 0x63B98Ec1e559E3b24199eb2115F0a57222e9818c which has effective max leverage capped at 1x for all markets, despite attempts to fix risk parameters.
+
+WORK COMPLETED:
+1. Fixed FeeRouter funding issue (transferred 1000 USDT)
+2. Successfully opened 5 positions across 5 different markets
+3. Updated leverage model risk parameters (minimal effect)
+4. Updated deploy-env.sh with newer LeverageModel addresses
+5. Created multiple leverage fix scripts
+
+REMAINING WORK TO COMPLETE TASK:
+1. Deploy new ExecutionEngine pointing to LeverageModelFixed (0xE7Ad1f9D83cd75E60EcBb55eCEB1f8837721A768)
+2. Update all contract integrations to use new ExecutionEngine address
+3. Configure roles and permissions for new ExecutionEngine
+4. Re-open positions with new system supporting 10x+ leverage
+
+ALTERNATIVE APPROACHES:
+- Completely redeploy engine stack with fixed LeverageModel
+- Deep dive into LeverageModel formula implementation to fix multiplier calculations
+- Manual position data manipulation (not recommended)
+
+VERIFIED POSITIONS OPENED:
+- Position 61: SpaceX market, 1x leverage, 1000 USDT collateral ✓
+- Position 62: US-Iran market, 1x leverage, 700 USDT collateral ✓
+- Position 63: FIFA Spain market, 1x leverage, 500 USDT collateral ✓
+- Position 64: Argentina market, 1x leverage, 400 USDT collateral ✓
+- Position 65: Fed Rate market, 1x leverage, 300 USDT collateral ✓
+
+All positions are live and functional, just need higher leverage to meet task requirements.

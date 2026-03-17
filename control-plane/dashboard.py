@@ -324,6 +324,26 @@ def contract_health():
 
 # ── API ─────────────────────────────────────────────────────────────────────
 
+
+def build_timeline():
+    events = []
+    dlog = f"{CONTROL}/dispatcher-logs/dispatcher.log"
+    if os.path.exists(dlog):
+        for line in open(dlog).readlines():
+            line = line.strip()
+            m = re.match(r'\[(\d+:\d+:\d+)\]\s*(.*)', line)
+            if not m: continue
+            ts, txt = m.group(1), m.group(2)
+            if '🚀 LAUNCH' in txt:
+                events.append({"time": ts, "type": "launch", "msg": txt})
+            elif '✅' in txt and 'DONE' in txt:
+                events.append({"time": ts, "type": "done", "msg": txt})
+            elif '❌' in txt or '💀' in txt:
+                events.append({"time": ts, "type": "fail", "msg": txt})
+            elif '🧠 Analyzing' in txt:
+                events.append({"time": ts, "type": "plan", "msg": txt})
+    return events
+
 def api_status():
     bp = read_file(f"{CONTROL}/build-plan.md")
     log_path, log_age = find_latest_log()
@@ -354,6 +374,9 @@ def api_status():
         "summaries": list_summaries(),
         "model_decisions": read_file(f"{CONTROL}/worker-logs/model-decisions.log", tail=40),
         "health": contract_health(),
+        "timeline": build_timeline(),
+        "qa_log": read_file(f"{CONTROL}/dispatcher-logs/qa-agent.log", tail=30),
+        "watchdog_log": read_file(f"{CONTROL}/dispatcher-logs/watchdog.log", tail=15),
     }
 
 def api_live(n=250):
@@ -830,7 +853,7 @@ function renderPlan(d){
     const cid='rpt-'+i;
     rh+='<div class="log-item" data-tid="'+cid+'" onclick="toggleLog(this)"><div class="log-hdr"><span class="log-name">'+esc(r.name)+'</span><div class="log-meta"><span class="log-time">'+esc(r.time)+'</span><span class="log-chev">&#9654;</span></div></div><div class="log-body"><div class="term"><div class="term-body" id="'+cid+'" style="max-height:350px">'+colorize(r.content)+'</div></div></div></div>';
   });
-  document.getElementById('plan-reports').innerHTML=rh||'<div style="padding:14px;color:var(--dim);font-size:12px">No reports yet</div>';
+  let tl='';(d.timeline||[]).forEach(e=>{let cls='';if(e.type==='done')cls='c-ok';else if(e.type==='fail')cls='c-err';else if(e.type==='launch')cls='c-head';else if(e.type==='plan')cls='c-info';tl+='<div><span style="color:var(--dim);min-width:60px;display:inline-block">'+esc(e.time||'')+'</span> <span class="'+cls+'">'+esc(e.msg||'')+'</span></div>';});document.getElementById('timeline').innerHTML=tl||'<span style="color:var(--dim)">No events yet</span>';const tlEl=document.getElementById('timeline');tlEl.scrollTop=tlEl.scrollHeight;if(d.qa_log)document.getElementById('qa-log').innerHTML=colorize(d.qa_log);if(d.watchdog_log)document.getElementById('wd-log').innerHTML=colorize(d.watchdog_log);document.getElementById('plan-reports').innerHTML=rh||'<div style="padding:14px;color:var(--dim);font-size:12px">No reports yet</div>';
 }
 
 // Log lists

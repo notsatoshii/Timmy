@@ -1,25 +1,32 @@
 {
   "tasks": [
     {
+      "id": "5b",
+      "lane": "CONTRACT",
+      "depends_on": [],
+      "reason": "Uses cast send to open positions via Solidity contracts. No dependencies since 5a is assumed complete."
+    },
+    {
       "id": "7b",
       "lane": "CONTRACT",
       "depends_on": [],
-      "reason": "Uses cast call to verify deployed contract functionality. No dependencies - pure verification task."
+      "reason": "Uses cast call to query funding rate from contract state. Independent contract verification task."
     },
     {
       "id": "9a",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Updates control-plane configuration files (worker-rule.md, agent-persona.md). No dependencies - adding process rules."
+      "reason": "Modifies control-plane configuration files (worker-rule.md, agent-persona.md). Infrastructure/tooling changes."
     },
     {
       "id": "10a",
       "lane": "FRONTEND",
       "depends_on": [
+        "5b",
         "7b",
         "9a"
       ],
-      "reason": "Fixes React component display issues and formatting. Depends on 7b because broken funding rate could cause frontend display problems. Depends on 9a because it implements the tab-sanity validation rule that 9a creates."
+      "reason": "Fixes React components and visual issues. Explicitly states 'after all critical and high-priority fixes are done' - depends on all other remaining tasks."
     }
   ]
 }
