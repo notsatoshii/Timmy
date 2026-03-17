@@ -1,37 +1,22 @@
-Based on the QA report showing a perfect 100/100 score and the **PROTECTED CONTRACTS** constraint in CLAUDE.md, I need to revise the plan to remove any contract redeployment tasks.
+Based on the current health check (19/20 passed) and actual QA score (68/100), I need to align with the existing build plan structure. Let me focus on the actual three priorities from the build plan:
 
-## REVISED PLAN - Investor Demo Completion
+## REVISED PLAN - Aligned with Existing Build Plan Structure
 
-**CONSTRAINT**: ExecutionEngine (0xc749C6aAe8a5ACBDD924DF7f833Dd3115307a60D) is a **PROTECTED CONTRACT** - DO NOT REDEPLOY per CLAUDE.md
+### Priority 1: Verify Current System Status [IMMEDIATE] ✅
+- **Status**: Health check shows 19/20 passed (oracle price freshness failing)
+- **Action**: Address oracle freshness issue for live data display
+- **Constraint**: ExecutionEngine protected - investigate leverage through configuration only
 
-### 1. Verify Current System Status [IMMEDIATE]
-- [x] QA Score: 100/100 with no critical blockers
-- [ ] Run health check to confirm all systems operational
-- [ ] Test position opening at various leverage levels (2x, 5x, 10x)
-- [ ] Document any issues without contract changes
+### Priority 2: Frontend Data Display Optimization [HIGH] 
+- **Issue**: QA score 68/100 due to React SPA not properly evaluated
+- **Focus**: Vault tab data display, position values, volume calculations
+- **Target**: Resolve visual issues preventing proper assessment
 
-### 2. Frontend Data Display Optimization [HIGH] 
-- [ ] Investigate vault tab data fetching performance 
-- [ ] Optimize RPC calls to prevent 413 errors
-- [ ] Verify position value calculations display correctly
-- [ ] Ensure volume displays reflect notional (not just collateral)
+### Priority 3: Demo Mode Verification [HIGH]
+- **Goal**: End-to-end testing of all trading flows
+- **Scope**: MarketDetail functionality, position management, investor demo readiness
+- **Deliverable**: Verified system ready for investor presentation
 
-### 3. Demo Mode Verification [HIGH]
-- [ ] End-to-end testing of all trading flows
-- [ ] Verify MarketDetail page functionality
-- [ ] Test position opening, management, and liquidation scenarios
-- [ ] Document demo script and edge cases
+**Key Insight**: The build plan shows aspirational 100/100 but actual current state is 68/100. The one failing health check (oracle price freshness) may be impacting live data display, which aligns with the QA visual issues.
 
-### 4. Performance & Polish [MEDIUM]
-- [ ] Optimize frontend loading times
-- [ ] Verify all charts and statistics display correctly
-- [ ] Test responsive design across devices
-- [ ] Final UI/UX polish for investor presentation
-
-### 5. Documentation & Handoff [MEDIUM]
-- [ ] Create investor demo script
-- [ ] Document known limitations (if any)
-- [ ] Prepare system monitoring for live demo
-- [ ] Final verification screenshots
-
-**Key Change**: Removed ExecutionEngine redeployment task since it's explicitly protected. Focus on frontend optimization and verification instead.
+**Next Action**: Should I proceed with Priority 1 (investigating the oracle freshness issue) or do you want me to focus on a different specific priority first?
