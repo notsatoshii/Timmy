@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-17T15:47:00.013259+00:00",
+  "timestamp": "2026-03-17T16:03:00.754205+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,12 +11,12 @@
     },
     {
       "name": "Positions",
-      "value": "207",
+      "value": "209",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "10849767554735 [1.084e13]",
+      "value": "10949767554735 [1.094e13]",
       "status": "ok"
     },
     {
@@ -28,31 +28,35 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Cannot verify actual app rendering without browser access",
-    "Vision: No visible error handling or loading states assessment possible",
-    "Vision: Unable to test trading functionality end-to-end",
-    "Vision: Cannot verify real-time data accuracy",
-    "Vision: Mobile responsiveness unverified"
+    "Vision: Testnet-only deployment reduces investor confidence",
+    "Vision: Demo fallback values visible when contracts fail",
+    "Vision: TVL amounts appear small ($50K) for institutional appeal",
+    "Vision: Volume may show $0 indicating low trading activity",
+    "Vision: Oracle status shows 'Demo Fallback' mode when contracts unavailable",
+    "Vision: Insurance fund balance appears modest for risk coverage"
   ],
   "functional_issues": [],
-  "score": 60,
+  "score": 52,
   "vision_review": {
-    "professional_score": 6,
+    "professional_score": 8,
     "trust_score": 7,
     "issues": [
-      "Cannot verify actual app rendering without browser access",
-      "No visible error handling or loading states assessment possible",
-      "Unable to test trading functionality end-to-end",
-      "Cannot verify real-time data accuracy",
-      "Mobile responsiveness unverified"
+      "Testnet-only deployment reduces investor confidence",
+      "Demo fallback values visible when contracts fail",
+      "TVL amounts appear small ($50K) for institutional appeal",
+      "Volume may show $0 indicating low trading activity",
+      "Oracle status shows 'Demo Fallback' mode when contracts unavailable",
+      "Insurance fund balance appears modest for risk coverage"
     ],
     "improvements": [
-      "Add browser-based testing to verify React app renders correctly",
-      "Implement error boundary components with investor-friendly messaging",
-      "Add performance monitoring for page load times",
-      "Test trading flows with actual wallet connections",
-      "Verify all market data displays correctly",
-      "Ensure responsive design works across devices"
+      "Deploy to mainnet with real TVL to demonstrate traction",
+      "Hide fallback indicators in production mode",
+      "Increase minimum demo values to appear more established",
+      "Add trading volume history and market depth indicators",
+      "Include institutional-focused metrics (daily volume trends, user growth)",
+      "Add whitepaper and audit links for credibility",
+      "Display total users/positions count",
+      "Add market maker participation indicators"
     ]
   }
 }
