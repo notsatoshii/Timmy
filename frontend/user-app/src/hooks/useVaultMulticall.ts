@@ -425,35 +425,6 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
       usdtBalance: safeValues.usdtBalance.toString(),
     });
 
-    // FINAL RETURN VALUES LOGGING
-    const finalReturn = {
-      ...safeValues,
-      isLoadingVaultData,
-      isLoadingUserData,
-      hasError,
-      hasNetworkError,
-      hasRateLimit,
-      errors: allErrors,
-      circuitBreakerOpen: circuitBreaker.isOpen,
-      nextAttemptTime: circuitBreaker.nextAttemptTime,
-      retryAttempts: retriesRef.current,
-      batchingActive: true,
-      validationErrors,
-    };
-
-    console.log('=== FINAL VAULT MULTICALL RETURN ===', {
-      totalAssets: finalReturn.totalAssets.toString(),
-      totalSupply: finalReturn.totalSupply.toString(),
-      sharePrice: finalReturn.sharePrice.toString(),
-      globalOI: finalReturn.globalOI.toString(),
-      isLoadingVaultData: finalReturn.isLoadingVaultData,
-      hasError: finalReturn.hasError,
-      errorCount: finalReturn.errors.length,
-      errors: finalReturn.errors.map(e => e.message),
-    });
-
-    return finalReturn;
-
     // Loading states - both batches must complete for vault data, user data depends on user batch only
     const isLoadingVaultData = (coreMulticallResult?.isLoading || false) && (isCircuitBreakerDisabled || !circuitBreaker.isOpen);
     const isLoadingUserData = userAddress ? ((userMulticallResult?.isLoading || false) && (isCircuitBreakerDisabled || !circuitBreaker.isOpen)) : false;
@@ -466,26 +437,6 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
     const hasError = allErrors.length > 0 || circuitBreaker.isOpen;
     const hasNetworkError = (coreMulticallResult?.hasNetworkError || userMulticallResult?.hasNetworkError) || false;
     const hasRateLimit = (coreMulticallResult?.hasRateLimit || userMulticallResult?.hasRateLimit) || circuitBreaker.isOpen;
-
-    // Enhanced error reporting with batch-aware logging
-    if (hasError && !circuitBreaker.isOpen) {
-      console.warn('Vault multicall batches have errors:', {
-        coreErrors: coreErrors.length,
-        userErrors: userErrors.length,
-        totalErrors: allErrors.length,
-        hasNetworkError,
-        hasRateLimit,
-        errors: allErrors.map(e => ({
-          message: e.message,
-          code: e.code,
-          contract: e.contractAddress,
-          isRateLimit: e.isRateLimit,
-        })),
-        fallbacksUsed: true,
-        circuitBreakerFailures: circuitBreaker.failureCount,
-        batchingActive: true,
-      });
-    }
 
     // Enhanced validation: ensure we got valid data for critical fields
     const validationErrors = [];
@@ -525,6 +476,55 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
         (safeValues as any)[key] = (fallbackValues as any)[key] || BigInt(0);
       }
     });
+
+    // Enhanced error reporting with batch-aware logging
+    if (hasError && !circuitBreaker.isOpen) {
+      console.warn('Vault multicall batches have errors:', {
+        coreErrors: coreErrors.length,
+        userErrors: userErrors.length,
+        totalErrors: allErrors.length,
+        hasNetworkError,
+        hasRateLimit,
+        errors: allErrors.map(e => ({
+          message: e.message,
+          code: e.code,
+          contract: e.contractAddress,
+          isRateLimit: e.isRateLimit,
+        })),
+        fallbacksUsed: true,
+        circuitBreakerFailures: circuitBreaker.failureCount,
+        batchingActive: true,
+      });
+    }
+
+    // FINAL RETURN VALUES LOGGING
+    const finalReturn = {
+      ...safeValues,
+      isLoadingVaultData,
+      isLoadingUserData,
+      hasError,
+      hasNetworkError,
+      hasRateLimit,
+      errors: allErrors,
+      circuitBreakerOpen: circuitBreaker.isOpen,
+      nextAttemptTime: circuitBreaker.nextAttemptTime,
+      retryAttempts: retriesRef.current,
+      batchingActive: true,
+      validationErrors,
+    };
+
+    console.log('=== FINAL VAULT MULTICALL RETURN ===', {
+      totalAssets: finalReturn.totalAssets.toString(),
+      totalSupply: finalReturn.totalSupply.toString(),
+      sharePrice: finalReturn.sharePrice.toString(),
+      globalOI: finalReturn.globalOI.toString(),
+      isLoadingVaultData: finalReturn.isLoadingVaultData,
+      hasError: finalReturn.hasError,
+      errorCount: finalReturn.errors.length,
+      errors: finalReturn.errors.map(e => e.message),
+    });
+
+    return finalReturn;
 
   }, [
     coreMulticallResult,

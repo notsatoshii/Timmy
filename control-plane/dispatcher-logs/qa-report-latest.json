@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-17T15:13:25.626557+00:00",
+  "timestamp": "2026-03-17T15:29:29.480693+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,12 +11,12 @@
     },
     {
       "name": "Positions",
-      "value": "204",
+      "value": "205",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "10694767554735 [1.069e13]",
+      "value": "10769767554735 [1.076e13]",
       "status": "ok"
     },
     {
@@ -27,7 +27,31 @@
   ],
   "sprint_checks": {},
   "critical_blockers": [],
-  "visual_issues": [],
+  "visual_issues": [
+    "Vision: Frontend not loading - displaying file directory instead of trading interface",
+    "Vision: React app appears not deployed or server misconfigured",
+    "Vision: Showing backend file structure (build/, deployments/, etc.) to users",
+    "Vision: No actual LEVER Protocol UI visible",
+    "Vision: Completely broken user experience"
+  ],
   "functional_issues": [],
-  "score": 100
+  "score": 60,
+  "vision_review": {
+    "professional_score": 1,
+    "trust_score": 1,
+    "issues": [
+      "Frontend not loading - displaying file directory instead of trading interface",
+      "React app appears not deployed or server misconfigured",
+      "Showing backend file structure (build/, deployments/, etc.) to users",
+      "No actual LEVER Protocol UI visible",
+      "Completely broken user experience"
+    ],
+    "improvements": [
+      "Fix React app deployment and ensure it serves properly on port 3000",
+      "Verify build process completed successfully",
+      "Check server configuration to serve React app instead of static files",
+      "Test that actual trading interface loads",
+      "Ensure proper routing and SPA configuration"
+    ]
+  }
 }

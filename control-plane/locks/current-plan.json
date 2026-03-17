@@ -1,0 +1,40 @@
+{
+  "tasks": [
+    {
+      "id": "1",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "Frontend deployment issue must be fixed first - can't test or fix other UI issues if React app isn't displaying. Root cause is server config/build process."
+    },
+    {
+      "id": "2",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "1"
+      ],
+      "reason": "Vault data display issue requires React hooks and decimal conversion fixes. Depends on basic frontend deployment working first."
+    },
+    {
+      "id": "3",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "1"
+      ],
+      "reason": "Positions data display issue requires demo data and calculation logic fixes. Depends on basic frontend deployment working first."
+    },
+    {
+      "id": "4",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "1"
+      ],
+      "reason": "MarketDetail verification requires testing React components and functionality. Depends on basic frontend deployment working first."
+    },
+    {
+      "id": "5",
+      "lane": "CONTRACT",
+      "depends_on": [],
+      "reason": "Contract limitation documentation is independent of frontend fixes. Root cause is contract address mismatch issue."
+    }
+  ]
+}
