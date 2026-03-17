@@ -1,47 +1,47 @@
-### 1. Fix Vault $NaN Display and RPC 413 Errors [CRITICAL] [FRONTEND]
-- [ ] 1. Debug `frontend/user-app/src/hooks/useVaultMulticall.tsx` - add error logging to identify which specific multicall is failing
-- [ ] 2. Replace multicall with individual contract calls for LeverVault.totalAssets(), LeverVault.totalSupply(), and RewardsDistributor.currentYield() 
-- [ ] 3. Add fallback handling for undefined values to display "Loading..." instead of $NaN
-- [ ] 4. Test RPC connection limits - implement retry logic with exponential backoff for 413 rate limit errors
+### 1. Fix Vault Data Display ($NaN TVL and Share Price) [CRITICAL] [FRONTEND]
+- [ ] 1. Debug `frontend/user-app/src/hooks/useVaultMulticall.ts` - add error logging for 413 RPC errors and undefined returns
+- [ ] 2. Check `frontend/user-app/src/components/Vault/VaultStats.tsx` for proper error handling when vault data is undefined
+- [ ] 3. Verify LeverVault contract address in `frontend/user-app/src/config/contracts.ts` matches `control-plane/deploy-env.sh`
+- [ ] 4. Add fallback values for TVL and share price when RPC calls fail to prevent $NaN display
 
-### 2. Fix Data Fetching Errors for All Dashboard Metrics [CRITICAL] [INFRA]
-- [ ] 1. Debug `control-plane/dashboard.py` data collection functions for TVL, Global OI, Insurance Fund, Max Leverage
-- [ ] 2. Add detailed error logging and exception handling to identify which contract calls are failing
-- [ ] 3. Test direct contract calls using cast commands to verify contract state and accessibility
-- [ ] 4. Implement data caching and retry mechanisms to handle intermittent RPC failures
-
-### 3. Fix Position Opening Failures [CRITICAL] [FRONTEND]
-- [ ] 1. Debug `frontend/user-app/src/components/trading/Trading.tsx` position opening flow
-- [ ] 2. Check `ExecutionEngine.openPosition()` call parameters and ensure collateral/leverage calculations are correct
-- [ ] 3. Add detailed error handling to display specific failure reasons instead of generic "Position Open Failed"
-- [ ] 4. Test with minimum viable position (1x leverage) to verify basic functionality works
-
-### 4. Redeploy ExecutionEngine with Correct LeverageModel Address [HIGH] [CONTRACT]
-- [ ] 1. Update `contracts/ExecutionEngine.sol` constructor to use the new LeverageModel address (0xf649e342...F9EF)
-- [ ] 2. Redeploy ExecutionEngine contract with proper role grants for ADMIN, KEEPER roles
+### 2. Redeploy ExecutionEngine with Updated LeverageModel Address [CRITICAL] [CONTRACT]
+- [ ] 1. Update `contracts/ExecutionEngine.sol` constructor to use new LeverageModel address from `control-plane/deploy-env.sh`
+- [ ] 2. Run `forge script script/DeployExecutionEngine.s.sol --rpc-url base-sepolia --broadcast` to redeploy
 - [ ] 3. Update `control-plane/deploy-env.sh` with new ExecutionEngine address
-- [ ] 4. Grant necessary roles to ExecutionEngine in all dependent contracts (PositionManager, MarginEngine, OILimits)
+- [ ] 4. Grant all required roles (KEEPER, ADMIN) to new ExecutionEngine contract using cast commands
 
-### 5. Fix Position Values Showing $0.00 [HIGH] [FRONTEND]
-- [ ] 1. Debug `frontend/user-app/src/hooks/usePositions.tsx` to ensure position data fetching returns valid values
-- [ ] 2. Check decimal scaling in position value calculations - ensure WAD (1e18) to USDT (1e6) conversion is correct
-- [ ] 3. Replace stub demo positions with realistic test data that shows proper PnL calculations
-- [ ] 4. Add loading states and error handling for undefined position data
+### 3. Fix Position Values Showing $0.00 [CRITICAL] [FRONTEND]
+- [ ] 1. Check `frontend/user-app/src/hooks/usePositions.ts` for proper decimal scaling when fetching position data
+- [ ] 2. Update `frontend/user-app/src/components/Positions/PositionRow.tsx` to handle undefined/zero position values with proper error states
+- [ ] 3. Verify PositionManager contract connectivity in `frontend/user-app/src/config/contracts.ts`
+- [ ] 4. Add demo position data with realistic PnL values if contract calls fail
 
-### 6. Implement Working Demo Mode with Realistic Data [HIGH] [FRONTEND]
-- [ ] 1. Create `frontend/user-app/src/data/demoData.ts` with realistic TVL ($2M), positions with actual PnL, and market data
-- [ ] 2. Update `useIsDemoMode.tsx` to serve realistic demo data instead of empty/zero values
-- [ ] 3. Ensure demo mode displays functional-looking leverage (7x-12x), proper market prices, and positive/negative PnL
-- [ ] 4. Add demo mode indicator but make the platform look fully functional for investor demos
+### 4. Fix Contract Data Fetching (TVL, OI, Insurance Fund) [CRITICAL] [FRONTEND]
+- [ ] 1. Debug `control-plane/dashboard.py` data collection functions with detailed RPC error logging
+- [ ] 2. Test direct contract calls using `cast call` commands for LeverVault.totalAssets(), OILimits.globalOI(), InsuranceFund.balance()
+- [ ] 3. Check if contracts are properly initialized by verifying required roles are granted using `cast call [CONTRACT] hasRole(ADMIN_ROLE, [DEPLOYER])`
+- [ ] 4. Update frontend hooks to handle contract read failures gracefully with error boundaries
 
-### 7. Fix Insurance Fund and Fee Flow [MEDIUM] [CONTRACT]
-- [ ] 1. Debug `contracts/FeeRouter.sol` to ensure borrow fees and transaction fees are properly routing to InsuranceFund
-- [ ] 2. Check if PositionManager and ExecutionEngine are calling FeeRouter.distributeFees() on position opens/closes
-- [ ] 3. Verify InsuranceFund contract has proper access control to receive fee distributions
-- [ ] 4. Test end-to-end fee flow with a position open/close cycle
+### 5. Fix Volume Calculation to Show Notional Instead of Collateral [HIGH] [FRONTEND]
+- [ ] 1. Update volume calculation in `frontend/user-app/src/hooks/useMarketStats.ts` to multiply collateral × leverage for proper notional volume
+- [ ] 2. Modify `frontend/user-app/src/components/Markets/MarketCard.tsx` to display "24h Volume (Notional)" instead of collateral amounts
+- [ ] 3. Ensure position size calculations use notional values throughout the trading interface
+- [ ] 4. Add tooltips explaining the difference between collateral and notional volume
 
-### 8. Fix 24h Volume Calculation [MEDIUM] [FRONTEND]
-- [ ] 1. Update volume calculation in `frontend/user-app/src/hooks/useMarketData.tsx` to multiply collateral by leverage for notional volume
-- [ ] 2. Ensure volume aggregation includes both position opens and closes
-- [ ] 3. Add proper time windowing for 24h calculation using block timestamps
-- [ ] 4. Display both collateral volume and notional volume metrics for clarity
+### 6. Enable Position Opening Functionality [HIGH] [CONTRACT]
+- [ ] 1. Verify new ExecutionEngine has proper access to updated LeverageModel by testing `cast call [EXECUTION_ENGINE] leverageModel()` returns correct address
+- [ ] 2. Test position opening with `cast send ExecutionEngine openPosition()` using proper parameters for 5x-10x leverage
+- [ ] 3. Check MarginEngine parameters are properly set by calling `cast call MarginEngine getInitialMarginRate()` 
+- [ ] 4. Grant KEEPER role to deployer wallet for ExecutionEngine if position opening still fails
+
+### 7. Fix Insurance Fund Display and Fee Flow [MEDIUM] [CONTRACT]
+- [ ] 1. Check FeeRouter configuration to ensure fees are properly flowing to InsuranceFund using `cast call FeeRouter insuranceFundShare()`
+- [ ] 2. Verify InsuranceFund has RECEIVER role from FeeRouter by calling `cast call FeeRouter hasRole()`
+- [ ] 3. Test fee flow by opening a position and checking if InsuranceFund balance increases beyond $10K bootstrap
+- [ ] 4. Update dashboard display to show proper InsuranceFund balance in USDT format not WAD
+
+### 8. Improve Oracle Price Stability [MEDIUM] [INFRA]
+- [ ] 1. Check if `control-plane/mockkeeper.py` is running with `ps aux | grep mockkeeper`
+- [ ] 2. Restart oracle keeper if stopped: `python3 control-plane/mockkeeper.py` in background
+- [ ] 3. Verify oracle prices are updating by checking latest price timestamps in OracleAdapter contract
+- [ ] 4. Add oracle health monitoring to `control-plane/health-check.sh` script

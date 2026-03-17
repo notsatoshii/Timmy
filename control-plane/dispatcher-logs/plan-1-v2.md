@@ -1,47 +1,47 @@
-### 1. Eliminate $NaN and $0.00 Displays (Investor Trust Killers) [CRITICAL] [FRONTEND]
-- [ ] 1. Fix vault $NaN share price in `frontend/user-app/src/hooks/useVaultMulticall.tsx` by replacing multicall with individual contract calls and adding proper error handling
-- [ ] 2. Fix position values showing $0.00 in `frontend/user-app/src/hooks/usePositions.tsx` with correct WAD (1e18) to USDT (1e6) decimal scaling
-- [ ] 3. Add loading states and fallback values ("Loading..." instead of $NaN, "---" instead of $0.00) for all undefined financial displays
-- [ ] 4. Implement RPC retry logic with exponential backoff to handle 413 rate limit errors that cause data fetching failures
+### 1. Diagnose Root Cause of Failed Contract Deployments [CRITICAL] [CONTRACT]
+- [ ] 1. Audit all 5 recent failed fix commits to identify systematic deployment issues using `git log --oneline -5` and `git show [commit]` for each
+- [ ] 2. Verify current contract addresses in `control-plane/deploy-env.sh` match actual deployed contracts using `cast code [address]` for each contract
+- [ ] 3. Check if ADMIN_ROLE, KEEPER_ROLE grants were actually applied using `cast call [contract] hasRole(0x[ADMIN_ROLE_HASH], [deployer_address])` for ExecutionEngine, LeverageModel, PositionManager
+- [ ] 4. Document exact deployment failure pattern and create rollback plan before attempting new fixes
 
-### 2. Restore Position Opening Functionality (Core Platform Capability) [CRITICAL] [CONTRACT]
-- [ ] 1. Redeploy ExecutionEngine with correct LeverageModel address (0xf649e342...F9EF) to fix root cause of position opening failures
-- [ ] 2. Grant all necessary roles (ADMIN, KEEPER) to new ExecutionEngine in dependent contracts (PositionManager, MarginEngine, OILimits)
-- [ ] 3. Update `control-plane/deploy-env.sh` with new ExecutionEngine address and verify role grants with cast commands
-- [ ] 4. Test position opening with 1x leverage first, then verify 7x-12x leverage works for demo scenarios
+### 2. Fix ExecutionEngine and Contract Configuration [CRITICAL] [CONTRACT]
+- [ ] 1. Verify LeverageModel address in ExecutionEngine constructor matches deployed LeverageModelFixed using `cast call ExecutionEngine leverageModel()` vs `$LEVERAGE_MODEL` from deploy-env.sh
+- [ ] 2. If addresses don't match, redeploy ExecutionEngine with correct constructor params: `forge script script/DeployExecutionEngine.s.sol --rpc-url base-sepolia --broadcast --verify`
+- [ ] 3. Grant specific roles to new ExecutionEngine: ADMIN_ROLE to deployer, KEEPER_ROLE to deployer, POSITION_MANAGER_ROLE to PositionManager using exact cast commands with role hashes
+- [ ] 4. Update `control-plane/deploy-env.sh` with new ExecutionEngine address and source it in all subsequent commands
 
-### 3. Implement Investor-Ready Demo Mode with Realistic Data [CRITICAL] [FRONTEND]
-- [ ] 1. Create `frontend/user-app/src/data/demoData.ts` with professional metrics: TVL ($2.5M), realistic positions with actual PnL (+/- $500-5000)
-- [ ] 2. Replace stub data in `useIsDemoMode.tsx` with functional-looking leverage (7x-12x), live-looking market prices, and believable trading activity
-- [ ] 3. Add realistic 24h volume ($50K-200K notional) and active position counts (15-30 positions) to show platform traction
-- [ ] 4. Ensure demo mode feels fully functional for investor presentations while maintaining demo mode indicator
+### 3. Enable Position Opening Functionality [CRITICAL] [CONTRACT]
+- [ ] 1. Test position opening immediately after ExecutionEngine fix using `cast send ExecutionEngine openPosition(marketId, direction, collateralAmount, leverage)` with realistic params (marketId=1, direction=1, collateral=1000e6, leverage=5)
+- [ ] 2. If position opening fails, debug specific error using `cast call ExecutionEngine openPosition()` (view version) and check revert reasons
+- [ ] 3. Verify MarginEngine, OILimits, PositionManager all have proper roles granted to ExecutionEngine using `cast call [contract] hasRole([ROLE_HASH], [EXECUTION_ENGINE_ADDRESS])`
+- [ ] 4. Test complete position lifecycle: open → check position data → close → verify balances using sequential cast commands
 
-### 4. Fix All Dashboard Data Fetching (System Health Visibility) [HIGH] [INFRA]
-- [ ] 1. Debug and fix dashboard.py data collection for TVL, Global OI, Insurance Fund, Max Leverage (all currently showing empty values)
-- [ ] 2. Add comprehensive error logging to identify which specific contract calls are failing in the data pipeline
-- [ ] 3. Implement direct contract verification using cast commands to validate contract state accessibility
-- [ ] 4. Add data caching and retry mechanisms to handle intermittent RPC connection issues
+### 4. Fix Data Display Issues (TVL, Positions) [CRITICAL] [FRONTEND]
+- [ ] 1. After contracts are verified working, debug RPC 413 errors in `frontend/user-app/src/hooks/useVaultMulticall.ts` by adding try-catch logging and testing direct contract calls using `cast call LeverVault totalAssets()`
+- [ ] 2. Fix $NaN TVL display in `frontend/user-app/src/components/Vault/VaultStats.tsx` by adding null checks and fallback to "Loading..." instead of showing NaN calculations
+- [ ] 3. Fix $0.00 position values in `frontend/user-app/src/components/Positions/PositionRow.tsx` by verifying decimal conversion from WAD (1e18) to display values and adding error states for failed contract reads
+- [ ] 4. Test complete data flow: contract call → hook → component → display using browser dev tools and verify numbers match cast command outputs
 
-### 5. Enhance Position Management for Professional Appearance [HIGH] [FRONTEND]
-- [ ] 1. Debug position data fetching in `Trading.tsx` to display specific failure reasons instead of generic "Position Open Failed" messages
-- [ ] 2. Add proper collateral and leverage calculation validation before ExecutionEngine calls
-- [ ] 3. Implement smooth loading states and progress indicators for position operations
-- [ ] 4. Add position history and PnL tracking to demonstrate platform sophistication
+### 5. Verify All Contract Interconnections [HIGH] [CONTRACT]
+- [ ] 1. Create comprehensive role verification script that checks all 16 contracts have proper roles granted to each other using matrix of `cast call [contract] hasRole([role], [other_contract])`
+- [ ] 2. Test cross-contract data flow: OracleAdapter → MarketRegistry → ExecutionEngine → PositionManager using sequence of cast calls to verify each step
+- [ ] 3. Verify fee routing from ExecutionEngine through FeeRouter to InsuranceFund by opening test position and checking InsuranceFund balance increase
+- [ ] 4. Run complete user flow test: deposit to vault → check TVL increase → open position → check position data → close position → withdraw from vault
 
-### 6. Verify Fee Flow and Insurance Fund Operations [MEDIUM] [CONTRACT]
-- [ ] 1. Test FeeRouter.distributeFees() calls from PositionManager and ExecutionEngine on position opens/closes
-- [ ] 2. Verify InsuranceFund is receiving proper fee distributions (20% of transaction and borrow fees)
-- [ ] 3. Add fee flow monitoring to dashboard to show platform revenue generation
-- [ ] 4. Document fee flow for investor transparency (50% LP / 30% Protocol / 20% Insurance split)
+### 6. Fix Volume Calculation to Show Notional Instead of Collateral [MEDIUM] [FRONTEND]
+- [ ] 1. Update `frontend/user-app/src/hooks/useMarketStats.ts` volume calculation from `sum(collateral)` to `sum(collateral × leverage)` for proper notional volume
+- [ ] 2. Change display label in `frontend/user-app/src/components/Markets/MarketCard.tsx` from "24h Volume" to "24h Volume (Notional)" with tooltip explaining difference
+- [ ] 3. Ensure position size calculations use notional values in trading interface components
+- [ ] 4. Test volume calculation by opening test positions with different leverage and verifying displayed volume = sum of (collateral × leverage)
 
-### 7. Polish Financial Metrics Display [MEDIUM] [FRONTEND]
-- [ ] 1. Fix 24h volume calculation to multiply collateral by leverage for accurate notional volume reporting
-- [ ] 2. Add both collateral volume and notional volume metrics for comprehensive platform activity view
-- [ ] 3. Implement proper time windowing for 24h calculations using block timestamps
-- [ ] 4. Add volume trending indicators to show platform growth trajectory
+### 7. Implement Comprehensive Testing and Rollback Strategy [MEDIUM] [INFRA]
+- [ ] 1. Create `scripts/verify-deployment.sh` that runs all cast commands from steps 1-5 and outputs pass/fail for each contract interaction
+- [ ] 2. Modify `control-plane/health-check.sh` to include contract role verification and cross-contract call tests, fail if any contract interaction errors
+- [ ] 3. Create rollback procedure in case new ExecutionEngine deployment fails: document previous working addresses and restoration commands
+- [ ] 4. Add Oracle health check by verifying `control-plane/mockkeeper.py` is running and prices are updating within last 10 minutes using cast timestamp checks
 
-### 8. System Resilience and Monitoring [LOW] [INFRA]
-- [ ] 1. Implement health monitoring for all critical contract interactions
-- [ ] 2. Add automated alerts for RPC connection issues and contract call failures
-- [ ] 3. Create automated recovery procedures for common failure modes
-- [ ] 4. Document troubleshooting procedures for rapid issue resolution
+### 8. Stabilize Demo Environment for Investor Presentation [LOW] [INFRA]
+- [ ] 1. After all fixes verified working, create demo data script that opens 3-5 sample positions with realistic PnL values using different leverage levels
+- [ ] 2. Fund test wallet with sufficient USDT and ETH for smooth demo flow without transaction failures
+- [ ] 3. Verify dashboard displays professional numbers: TVL >$10K, positions with varied PnL, insurance fund growing from fees
+- [ ] 4. Create demo script checklist: check all numbers display correctly → test position opening → test position closing → verify fee flows

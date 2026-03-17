@@ -1,16 +1,7 @@
-Looking at this plan from an investor and demo perspective...
-
-**APPROVED**
-
-This plan correctly prioritizes the "investor deal-breakers" that would kill confidence:
-
-✅ **Task 1-3** nail the trust killers: $NaN displays, broken data, and non-functional position opening
-✅ **Realistic demo mode** (Task 6) - critical for investor presentations where the platform needs to feel real
-✅ **Specific, actionable tasks** - not vague "fix the frontend" but concrete debugging steps
-✅ **Right priority order** - visual/functional issues before infrastructure optimization
-
-The plan addresses the vision review's 2/10 trust score by tackling exactly what makes the platform look broken to outside eyes. An investor seeing $NaN share prices would immediately question the team's competence.
-
-Smart that Task 4 (ExecutionEngine redeploy) is HIGH priority - the recent commit history shows ongoing address configuration issues, and this could be the root cause of position opening failures.
-
-The progression from "stop looking broken" → "actually work" → "look professional" matches how investors evaluate demos.
+- **Wrong Priority Order**: Position opening (#6) should be #2-3, not #6. If users can't open positions, the platform is unusable - that's worse than volume display cosmetics (#5)
+- **Root Cause Blindness**: Multiple issues (TVL, position values, position opening) likely stem from the same ExecutionEngine deployment problem. Plan treats symptoms separately instead of fixing root cause first
+- **Investor Impact Ignored**: Recent commits show 5 consecutive "fixes" that failed. Plan doesn't address why previous fixes failed or include verification that these fixes actually work before moving on
+- **Too Vague on Critical Steps**: "Grant all required roles" - which specific roles to which contracts? "Add error logging" - what specific errors and where?
+- **Missing Demo Flow Logic**: For investor demo, priority should be: make numbers look real → make core functionality work → polish details. Volume calculation formatting is less important than position opening actually working
+- **No Testing Strategy**: Plan doesn't include testing complete user flows after each fix or rollback plans if ExecutionEngine redeployment fails
+- **Pattern Recognition Miss**: 5 recent failed fixes suggest systematic issue with deployment/configuration that plan doesn't address holistically
