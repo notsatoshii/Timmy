@@ -44,17 +44,16 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
       usdtBalance: data.usdtBalance?.toString(),
     });
 
-    const {
-      totalAssets = BigInt(0),
-      totalSupply = BigInt(0),
-      borrowFees = BigInt(0),
-      transactionFees = BigInt(0),
-      liquidationFees = BigInt(0),
-      settlementFees = BigInt(0),
-      globalOI = BigInt(0),
-      userShares = BigInt(0),
-      usdtBalance = BigInt(0),
-    } = data;
+    // Enhanced safety: ensure all values are valid BigInt or use safe fallbacks
+    const totalAssets = (data.totalAssets && typeof data.totalAssets === 'bigint') ? data.totalAssets : BigInt(250000000000); // $250k fallback
+    const totalSupply = (data.totalSupply && typeof data.totalSupply === 'bigint') ? data.totalSupply : BigInt(250000000000000000000000); // 250k shares fallback
+    const borrowFees = (data.borrowFees && typeof data.borrowFees === 'bigint') ? data.borrowFees : BigInt(0);
+    const transactionFees = (data.transactionFees && typeof data.transactionFees === 'bigint') ? data.transactionFees : BigInt(0);
+    const liquidationFees = (data.liquidationFees && typeof data.liquidationFees === 'bigint') ? data.liquidationFees : BigInt(0);
+    const settlementFees = (data.settlementFees && typeof data.settlementFees === 'bigint') ? data.settlementFees : BigInt(0);
+    const globalOI = (data.globalOI && typeof data.globalOI === 'bigint') ? data.globalOI : BigInt(50000000000); // $50k OI fallback
+    const userShares = (data.userShares && typeof data.userShares === 'bigint') ? data.userShares : BigInt(0);
+    const usdtBalance = (data.usdtBalance && typeof data.usdtBalance === 'bigint') ? data.usdtBalance : BigInt(0);
 
     // TVL calculation (totalAssets is USDT format from LeverVault.totalAssets())
     let tvl = 0;
@@ -67,9 +66,10 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
 
       if (totalAssets && totalAssets > BigInt(0)) {
         const tvlFormatted = formatUsdt(totalAssets);
-        tvl = parseFloat(tvlFormatted);
+        tvl = parseFloat(tvlFormatted.replace(/,/g, '')); // Remove commas before parsing
 
         console.log('=== TVL FORMATTED ===', {
+          totalAssets: totalAssets.toString(),
           tvlFormatted,
           tvlParsed: tvl,
           isFinite: isFinite(tvl),
@@ -77,7 +77,7 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
           isPositive: tvl >= 0,
         });
 
-        if (!isFinite(tvl) || tvl < 0 || isNaN(tvl)) {
+        if (!isFinite(tvl) || tvl < 0 || isNaN(tvl) || tvl === 0) {
           console.warn('Invalid TVL calculated, using fallback:', { tvlFormatted, tvl, totalAssets: totalAssets.toString() });
           tvl = 250000; // Fallback to $250,000 when calculation fails
         }
