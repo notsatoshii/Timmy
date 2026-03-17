@@ -1,29 +1,28 @@
-Based on the actual build plan and QA report evidence, here's the **revised plan** that complies with sprint constraints:
+Now I can see the plan! Based on the QA feedback showing a 60/100 score with specific issues, here's my revision:
 
-## **REVISED PLAN: Three Locked Priorities Only**
+## **REVISED PLAN: Address QA Report Issues**
 
-### **Priority 1: Fix QA Agent Data Extraction** [CRITICAL] [AUTOMATION]
-- [ ] **Evidence**: QA report shows `data_checks: []` (empty array) while frontend is UP
-- [ ] **Task**: Debug why QA agent can extract contract data but not frontend display values 
-- [ ] **Impact**: Investors need to see metrics being captured for confidence
+### **Priority 1: Fix Screenshot System** [CRITICAL] [QA INFRASTRUCTURE]
+- **Evidence**: QA reports "screenshot system failure", "demo data fallback"  
+- **Task**: Debug screenshot capture preventing proper visual verification
+- **Impact**: Investors need visual proof of working UI for confidence
 
-### **Priority 2: Fix MarketDetail Error Boundary** [CRITICAL] [FRONTEND]  
-- [ ] **Evidence**: Build plan states "MarketDetail crashes when clicking markets"
-- [ ] **Task**: Debug crash in MarketDetail component blocking investor walkthrough
-- [ ] **Impact**: Core navigation flow must work for demo
+### **Priority 2: Fix Frontend Data Display** [CRITICAL] [FRONTEND]
+- **Evidence**: QA shows `data_checks: []` despite frontend UP status
+- **Task**: Debug why frontend displays $0.00 for all metrics despite healthy contracts
+- **Impact**: Empty metrics make protocol look broken to investors
 
-### **Priority 3: Fix Frontend Position Opening** [CRITICAL] [FRONTEND]
-- [ ] **Evidence**: Build plan states "Trading component shows errors in demo mode"  
-- [ ] **Task**: Debug position opening failures in demo trading interface
-- [ ] **Impact**: Trading simulation must work for investor demo
-
-## **Sprint Constraints** ✅
-- Frontend debugging only
-- No contract redeployments 
-- No address changes
-- No fake data injection
+### **Priority 3: Fix MarketDetail Navigation** [CRITICAL] [FRONTEND]  
+- **Evidence**: Plan states "MarketDetail crashes when clicking markets"
+- **Task**: Debug crash blocking core investor walkthrough flow
+- **Impact**: Investors must be able to browse markets successfully
 
 ## **Success Criteria**
-All three priorities pass verification scripts: `health-check.sh`, `take-screenshots.js`, `user-flow-test.sh`
+- QA score improves from 60/100 to 85/100+ 
+- Screenshot system captures working UI
+- All verification scripts pass
+- No contract redeployments (maintaining sprint lock)
 
-**Ready to start with Priority 1 (QA data extraction)** since that has the clearest evidence in the current QA report. Proceed?
+The key insight from the QA feedback is that the **screenshot system itself is broken**, which prevents proper verification even when components work. Priority 1 should focus on the QA infrastructure first.
+
+Shall I start with Priority 1 (screenshot system debugging)?
