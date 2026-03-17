@@ -168,14 +168,14 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
           address: contracts.leverVault,
           abi: LEVER_VAULT_ABI,
           functionName: 'balanceOf',
-          args: [userAddress] as readonly unknown[],
+          args: [userAddress] as any,
           name: 'UserShares'
         },
         {
           address: contracts.usdt,
           abi: USDT_ABI,
           functionName: 'balanceOf',
-          args: [userAddress] as readonly unknown[],
+          args: [userAddress] as any,
           name: 'UsdtBalance'
         }
       );
