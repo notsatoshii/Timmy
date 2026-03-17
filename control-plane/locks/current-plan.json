@@ -4,55 +4,59 @@
       "id": "1",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Pure frontend display bug fixing React hooks and components, no external dependencies"
+      "reason": "Root cause is frontend data fetching hooks and React components. This is the core data infrastructure that other frontend tasks depend on."
     },
     {
       "id": "2",
-      "lane": "FRONTEND",
+      "lane": "CONTRACT",
       "depends_on": [],
-      "reason": "Frontend data fetching and display logic, independent of other tasks"
+      "reason": "Requires redeploying Solidity contract and updating deployment scripts. Independent contract work."
     },
     {
       "id": "3",
-      "lane": "CONTRACT",
-      "depends_on": [],
-      "reason": "Contract redeployment and role management, foundational fix needed by other contract operations"
+      "lane": "FRONTEND",
+      "depends_on": [
+        "1"
+      ],
+      "reason": "Frontend vault data hooks and React components. Depends on Task 1 since data fetching issues could affect share price calculations."
     },
     {
       "id": "4",
       "lane": "FRONTEND",
       "depends_on": [
-        "1"
+        "1",
+        "2"
       ],
-      "reason": "Frontend RPC optimization, but both tasks modify useVaultMulticall.ts so must be sequential to avoid conflicts"
+      "reason": "Frontend position hooks and components. Depends on Task 1 for data fetching and Task 2 to enable position opening beyond 1x to have real position data."
     },
     {
       "id": "5",
       "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "Frontend calculation logic in trade history hooks, independent of other tasks"
+      "depends_on": [
+        "1",
+        "2"
+      ],
+      "reason": "Frontend trade history hooks and market components. Depends on Task 1 for data fetching and Task 2 for position opening to generate volume data."
     },
     {
       "id": "6",
       "lane": "FRONTEND",
       "depends_on": [
-        "3"
+        "1"
       ],
-      "reason": "Frontend testing includes position opening form end-to-end, which requires properly deployed ExecutionEngine from task 3"
+      "reason": "Frontend vault data hooks and dashboard components. Depends on Task 1 since TVL calculation requires working data fetching."
     },
     {
       "id": "7",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Infrastructure service management for oracle keeper, independent Python process setup"
+      "reason": "Systemd service management and health check scripts. Independent infrastructure work."
     },
     {
       "id": "8",
       "lane": "CONTRACT",
-      "depends_on": [
-        "3"
-      ],
-      "reason": "Contract testing includes position operations and fee flows, requires working ExecutionEngine deployment from task 3"
+      "depends_on": [],
+      "reason": "Contract verification and potential redeployment of fee routing. Independent contract work."
     }
   ]
 }

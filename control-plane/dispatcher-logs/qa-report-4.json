@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-03-17T05:51:06.883112+00:00",
+  "frontend_status": "UP",
+  "data_checks": [
+    {
+      "name": "TVL",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Positions",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Global OI",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Insurance Fund",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Max Leverage",
+      "value": "",
+      "status": "error"
+    }
+  ],
+  "visual_issues": [
+    "Vision: $NaN share price display makes it look completely broken",
+    "Vision: Position opening fails with error messages",
+    "Vision: $0.00 position values suggest non-functional platform"
+  ],
+  "functional_issues": [],
+  "critical_blockers": [],
+  "score": 70,
+  "vision_review": {
+    "professional_score": 3,
+    "trust_score": 2,
+    "deal_breakers": [
+      "$NaN share price display makes it look completely broken",
+      "Position opening fails with error messages",
+      "$0.00 position values suggest non-functional platform"
+    ],
+    "improvements": [
+      "Fix $NaN vault share price display immediately",
+      "Enable position opening beyond 1x leverage",
+      "Show actual TVL instead of $0 to demonstrate real value locked"
+    ]
+  },
+  "recent_commits": "0cd26da0 fix(1): Fix $NaN Share Price Display in Vault Tab\n065dd84e fix(7): Ensure Oracle Keeper is Running for Live Price Updates - started mock_keeper.py service, created systemd service file, verified price updates flowing successfully\n90e0565f auto: cycle tasks complete\nc1884b66 fix(6): Verify Oracle Keeper is Running for Live Price Updates\nfa0ad23a auto: cycle tasks complete",
+  "known_issues_count": 27
+}

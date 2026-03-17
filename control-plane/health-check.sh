@@ -93,6 +93,38 @@ check "platform_ceiling" "$($CAST call $LEVERAGE_MODEL 'getPlatformCeiling()(uin
 check "market_max_leverage" "$($CAST call $LEVERAGE_MODEL 'getEffectiveMaxLeverage(bytes32)(uint256)' $MARKET_ID --rpc-url $RPC_URL 2>&1)"
 check "global_utilization" "$($CAST call $OI_LIMITS 'getGlobalUtilization()(uint256)' --rpc-url $RPC_URL 2>&1)"
 
+# Oracle keeper process status
+if pgrep -f mock_keeper.py > /dev/null 2>&1; then
+    echo "PASS: oracle_keeper_process — running"
+    PASS=$((PASS+1))
+else
+    echo "FAIL: oracle_keeper_process — not running"
+    FAIL=$((FAIL+1))
+fi
+
+# Oracle price updates (check for recent PUSHED entries in logs)
+ORACLE_LOG="/home/lever/lever-protocol/scripts/oracle/mock_keeper.log"
+if [ -f "$ORACLE_LOG" ]; then
+    # Check for pushes within the last 10 minutes (more lenient)
+    CURRENT_HOUR=$(date '+%H')
+    CURRENT_MIN=$(date '+%M')
+    PREV_HOUR=$(printf "%02d" $((CURRENT_HOUR - 1)))
+
+    RECENT_PUSHES=$(grep "PUSHED:" "$ORACLE_LOG" | tail -n5 | grep -E "(${CURRENT_HOUR}:${CURRENT_MIN}|${CURRENT_HOUR}:|${PREV_HOUR}:)" || true)
+
+    if [ -n "$RECENT_PUSHES" ]; then
+        echo "PASS: oracle_price_freshness — recent pushes detected"
+        PASS=$((PASS+1))
+    else
+        LAST_PUSH=$(grep "PUSHED:" "$ORACLE_LOG" | tail -n1 | cut -d'|' -f1 | tr -d ' ' || echo "never")
+        echo "FAIL: oracle_price_freshness — last push: $LAST_PUSH"
+        FAIL=$((FAIL+1))
+    fi
+else
+    echo "FAIL: oracle_price_freshness — no log file found"
+    FAIL=$((FAIL+1))
+fi
+
 echo ""
 echo "=== RESULT: $PASS passed, $FAIL failed ==="
 

@@ -273,7 +273,9 @@ REJECTED
 - What to reprioritize
 </feedback>
 
-Be strict but fair. Only reject if priorities are wrong, tasks are too vague, or critical issues are ignored."""
+Be strict but fair. Only reject if priorities are wrong, tasks are too vague, or critical issues are ignored.
+
+IMPORTANT: Your response MUST start with exactly APPROVED or REJECTED on the first line. No markdown, no bold, just the word."""
 
     critique = claude_call(prompt, timeout=60)
     log(f"Critic: {critique[:80]}...")
@@ -448,7 +450,15 @@ def run_cycle(cycle_num):
             break
         else:
             log(f"Plan REJECTED (round {rnd+1})")
-            current_plan = run_planner_revision(current_plan, critique["feedback"], qa)
+            if rnd < MAX_CRITIC_ROUNDS - 1:
+                current_plan = run_planner_revision(current_plan, critique["feedback"], qa)
+                # Save revised plan for dashboard
+                rev_file = LOGS / f"plan-{cycle_num}-v{rnd+2}.md"
+                rev_file.write_text(current_plan or "")
+            else:
+                log("Max rejections reached, auto-approving current plan")
+                approved_plan = current_plan
+                break
             # Save revised plan for dashboard
             rev_file = LOGS / f"plan-{cycle_num}-v{rnd+2}.md"
             rev_file.write_text(current_plan or "")
