@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-17T10:19:00.086705+00:00",
+  "timestamp": "2026-03-17T10:35:26.017150+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,12 +11,12 @@
     },
     {
       "name": "Positions",
-      "value": "77",
+      "value": "89",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "224222554735 [2.242e11]",
+      "value": "1334222554735 [1.334e12]",
       "status": "ok"
     },
     {
