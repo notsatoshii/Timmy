@@ -44,7 +44,7 @@ def notify(msg):
 
 def run(cmd, cwd=PROJECT, timeout=30):
     try:
-        r = subprocess.run(cmd, shell=True, capture_output=True, text=True, cwd=cwd, timeout=timeout)
+        r = subprocess.run(cmd, shell=True, capture_output=True, text=True, cwd=cwd, timeout=timeout, executable='/bin/bash')
         return r.stdout.strip(), r.returncode
     except: return "", 1
 
@@ -54,13 +54,14 @@ def source_env():
     for line in out.split('\n'):
         if '=' in line:
             k, _, v = line.partition('=')
-            if k.startswith('LEVER_') or k.startswith('RPC_') or k in ('DEPLOYER_KEY', 'TEST_WALLET_KEY'):
+            if k.startswith('LEVER_') or k.startswith('RPC_') or k in ('DEPLOYER_KEY', 'TEST_WALLET_KEY', 'LEVER_VAULT', 'INSURANCE_FUND', 'OI_LIMITS'):
                 env[k] = v
     return env
 
 def cast_call(addr, sig, env, args=""):
     rpc = env.get('RPC_URL', RPC_URL)
-    out, code = run(f"cast call {addr} '{sig}' {args} --rpc-url {rpc}")
+    cast_path = "/home/lever/.foundry/bin/cast"
+    out, code = run(f"{cast_path} call {addr} '{sig}' {args} --rpc-url {rpc}")
     return out if code == 0 else None
 
 def get_on_chain_truth(env):
@@ -75,13 +76,13 @@ def get_on_chain_truth(env):
         if r:
             try: truth['share_price'] = int(r, 16 if r.startswith('0x') else 10) / 1e6
             except: pass
-    ins = env.get('LEVER_INSURANCE_FUND', '')
+    ins = env.get('INSURANCE_FUND', '')
     if ins:
         r = cast_call(ins, "getBalance()(uint256)", env)
         if r:
             try: truth['insurance'] = int(r, 16 if r.startswith('0x') else 10) / 1e18
             except: pass
-    oi = env.get('LEVER_OI_LIMITS', '')
+    oi = env.get('OI_LIMITS', '')
     if oi:
         r = cast_call(oi, "getGlobalOI()(uint256)", env)
         if r:

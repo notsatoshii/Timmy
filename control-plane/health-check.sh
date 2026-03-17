@@ -119,6 +119,11 @@ if [ -f "$ORACLE_LOG" ]; then
         PUSH_MIN=$(echo "$LAST_PUSH_TIME" | cut -d':' -f2)
         PUSH_SEC=$(echo "$LAST_PUSH_TIME" | cut -d':' -f3)
 
+        # Force decimal interpretation (remove leading zeros to avoid octal interpretation)
+        PUSH_HOUR=$((10#$PUSH_HOUR))
+        PUSH_MIN=$((10#$PUSH_MIN))
+        PUSH_SEC=$((10#$PUSH_SEC))
+
         TODAY_MIDNIGHT=$(date -d 'today 00:00:00' '+%s')
         PUSH_TIMESTAMP=$((TODAY_MIDNIGHT + PUSH_HOUR*3600 + PUSH_MIN*60 + PUSH_SEC))
 

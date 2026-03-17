@@ -1,15 +1,18 @@
-# LOCKED BUILD PLAN — INVESTOR DEMO SPRINT
-# DO NOT DEVIATE FROM THESE THREE TASKS
+Based on the QA score of 52 and all contract checks failing, here are the prioritized tasks for the investor demo:
 
-### 1. Fix 24h Volume Display [CRITICAL] [FRONTEND]
-- [x] 1. In frontend/user-app/src/hooks/useVolumeCalculation.ts remove the mock fallback BigInt 12800000000 in the catch block. Set volume to BigInt 0 when no events found. Change fromBlock to 0 to fetch ALL historical events.
-- [ ] 2. In frontend/user-app/src/components/ProtocolStats.tsx change DEMO_FALLBACK_VALUES volume24h from BigInt 12800000000 to BigInt 0. Show zero not fake data.
-- [ ] 3. After changes run cd /home/lever/lever-protocol/frontend/user-app and npm run build and systemctl restart lever-frontend
+### 1. Fix Contract Data Pipeline [CRITICAL] [BACKEND]
+- [ ] **Investigate and resolve all contract check failures** - TVL, Positions, Global OI, and Insurance Fund all returning empty values with "error" status. This suggests fundamental RPC/contract interaction issues blocking the entire data layer.
 
-### 2. Fix Position Opening Auto-Fund Demo Wallet [CRITICAL] [FRONTEND]
-- [x] 1. Demo wallet 0xB072263740D7c60f1Aa0BF46e737F83544C7b785 has 9M USDT but 0 in AccountManager which is why positions fail. In frontend/user-app/src/components/Trading.tsx add auto-fund for demo mode. When user clicks Open Position in demo mode first check AccountManager getBalance. If zero then call sendDemoTransaction to approve USDT for AccountManager then deposit 10000 USDT 10000000000 in 6 decimals then call openPosition. Show progress text while funding. The sendDemoTransaction function already exists.
-- [ ] 2. After changes run cd /home/lever/lever-protocol/frontend/user-app and npm run build and systemctl restart lever-frontend
+### 2. Resolve Vault Display Issues [CRITICAL] [FRONTEND] 
+- [ ] **Fix $NaN share price and $0 TVL in vault tab** - useVaultMulticall returning undefined with 413 RPC errors. Investigate rate limiting, batch size, or RPC endpoint issues preventing vault data from loading.
 
-### 3. Fix Positions Read Real OnChain Data [CRITICAL] [FRONTEND]
-- [x] 1. In frontend/user-app/src/components/Positions.tsx and frontend/user-app/src/hooks/usePositions.ts the fetchPositionDetails function creates HARDCODED FAKE DATA for every position ID instead of reading the contract. Fix by calling getPosition on PositionManager for each ID using publicClient.readContract. The getPosition function exists in POSITION_MANAGER_ABI. Run grep -A 100 getPosition frontend/user-app/src/config/abis.ts to see struct fields. Map returned struct to PositionData interface. Keep baseDemoPositions for visitors with no wallet only.
-- [ ] 2. After changes run cd /home/lever/lever-protocol/frontend/user-app and npm run build and systemctl restart lever-frontend
+### 3. Fix Position Opening Functionality [CRITICAL] [CONTRACTS]
+- [ ] **Address ExecutionEngine limitation causing "Position Open Failed"** - Known issue with ExecutionEngine using old LeverageModel address, limiting positions to 1x. Investigate workarounds within protected contract constraints.
+
+### 4. Fix Position Value Display [HIGH] [FRONTEND]
+- [ ] **Replace stub position data with real on-chain values** - Positions tab shows $0.00 for all values in demo mode. Ensure position queries are fetching actual data rather than returning zero/stub values.
+
+### 5. Correct Volume Calculation [MEDIUM] [FRONTEND]
+- [ ] **Update 24h Volume to show notional (collateral × leverage) instead of collateral only** - Current volume display understates actual trading activity by not accounting for leverage multiplier in volume calculations.
+
+**Sprint Focus:** Fix data pipeline issues first (tasks 1-2), then trading functionality (task 3), then display accuracy (tasks 4-5). All tasks target investor demo readiness without redeploying protected contracts.

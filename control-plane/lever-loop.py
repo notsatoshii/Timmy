@@ -48,7 +48,7 @@ def tg(msg):
 
 def run_cmd(cmd, timeout=60):
     try:
-        r = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout, cwd=str(BASE))
+        r = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout, cwd=str(BASE), executable='/bin/bash')
         return r.stdout.strip()
     except subprocess.TimeoutExpired:
         return "[TIMEOUT]"
@@ -100,11 +100,12 @@ def run_qa():
         findings["critical_blockers"].append(f"Frontend down: HTTP {http_code}")
 
     src = f"source {CP}/deploy-env.sh"
+    cast_path = "/home/lever/.foundry/bin/cast"
     for name, cmd in [
-        ("TVL", f"{src} && cast call $LEVER_VAULT 'totalAssets()(uint256)' --rpc-url $RPC_URL 2>/dev/null"),
-        ("Positions", f"{src} && cast call $POSITION_MANAGER 'nextPositionId()(uint256)' --rpc-url $RPC_URL 2>/dev/null"),
-        ("Global OI", f"{src} && cast call $OI_LIMITS 'getGlobalOI()(uint256)' --rpc-url $RPC_URL 2>/dev/null"),
-        ("Insurance Fund", f"{src} && cast call $INSURANCE_FUND 'getBalance()(uint256)' --rpc-url $RPC_URL 2>/dev/null"),
+        ("TVL", f"{src} && {cast_path} call $LEVER_VAULT 'totalAssets()(uint256)' --rpc-url $RPC_URL 2>/dev/null"),
+        ("Positions", f"{src} && {cast_path} call $POSITION_MANAGER 'nextPositionId()(uint256)' --rpc-url $RPC_URL 2>/dev/null"),
+        ("Global OI", f"{src} && {cast_path} call $OI_LIMITS 'getGlobalOI()(uint256)' --rpc-url $RPC_URL 2>/dev/null"),
+        ("Insurance Fund", f"{src} && {cast_path} call $INSURANCE_FUND 'getBalance()(uint256)' --rpc-url $RPC_URL 2>/dev/null"),
     ]:
         val = run_cmd(cmd)
         status = "ok" if val and "[" not in val[:5] else "error"

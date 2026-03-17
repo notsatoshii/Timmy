@@ -1,18 +1,42 @@
 {
   "tasks": [
     {
-      "id": "task_2",
-      "lane": "FRONTEND",
+      "id": "1",
+      "lane": "INFRA",
       "depends_on": [],
-      "reason": "Frontend build and service restart after Trading.tsx auto-fund changes. No dependencies as this is the first remaining task."
+      "reason": "RPC/contract interaction issues and contract check failures indicate infrastructure problems with health checks, RPC configuration, or monitoring scripts that need fixing first"
     },
     {
-      "id": "task_3",
+      "id": "2",
       "lane": "FRONTEND",
       "depends_on": [
-        "task_2"
+        "1"
       ],
-      "reason": "Frontend build and service restart after Positions.tsx real data changes. Depends on task_2 because both involve building the same frontend app and restarting the same systemd service - must be sequential to avoid conflicts."
+      "reason": "useVaultMulticall hook returning undefined with 413 RPC errors - frontend React code issue that depends on fixing the underlying RPC/contract interaction problems"
+    },
+    {
+      "id": "3",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "1"
+      ],
+      "reason": "ExecutionEngine limitation requires frontend workarounds since contract is protected from redeployment - frontend interaction changes needed, and fundamental contract interaction issues must be resolved first"
+    },
+    {
+      "id": "4",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "1"
+      ],
+      "reason": "Replacing stub data with real on-chain values in React components - frontend display issue that requires the contract data pipeline to be working properly"
+    },
+    {
+      "id": "5",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "1"
+      ],
+      "reason": "Volume calculation changes in React UI - frontend display logic that needs real contract data from the fixed pipeline"
     }
   ]
 }
