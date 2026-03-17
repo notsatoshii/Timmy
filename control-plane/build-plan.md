@@ -20,7 +20,7 @@ RULES:
 **FAIL:** Any OI value exceeds $100M or shows $0 on any page.
 
 ### 3a. Fix 24h Volume Display [CRITICAL]
-- [ ] 3a. 24h Volume on stats banner and market cards shows only collateral amount. Must show notional = collateral × leverage. Find where volume is calculated and multiply by leverage.
+- [x] 3a. 24h Volume on stats banner and market cards shows only collateral amount. Must show notional = collateral × leverage. Find where volume is calculated and multiply by leverage.
 **DONE:** Volume numbers are larger than sum of collateral deposits.
 **FAIL:** Volume equals raw collateral amounts.
 

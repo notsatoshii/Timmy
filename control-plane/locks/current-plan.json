@@ -4,31 +4,29 @@
       "id": "4a",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Debugging React position opening - contract addresses, wallet integration, parameter encoding in frontend code"
+      "reason": "Frontend position opening failure requires fixing React components, contract address configuration, and demo mode signing. Root cause is in frontend code."
     },
     {
       "id": "5b",
-      "lane": "CONTRACT",
-      "depends_on": [],
-      "reason": "Using cast send CLI to test contract leverage functionality - pure contract interaction"
-    },
-    {
-      "id": "6b",
       "lane": "INFRA",
-      "depends_on": [],
-      "reason": "Checking and restarting oracle keeper systemd service - infrastructure management"
+      "depends_on": [
+        "4a"
+      ],
+      "reason": "Testing high-leverage positions via cast send commands. Depends on 4a because position opening must work before testing different leverage levels."
     },
     {
       "id": "7a",
       "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "Fixing React Positions tab error boundary and display logic - frontend component debugging"
+      "depends_on": [
+        "4a"
+      ],
+      "reason": "Fixing Positions tab crashes and display issues in React components. Depends on 4a because proper testing requires positions to exist and display correctly."
     },
     {
       "id": "7b",
       "lane": "CONTRACT",
       "depends_on": [],
-      "reason": "Using cast call to verify funding rate engine contract behavior and initialization"
+      "reason": "Verifying and potentially fixing FundingRateEngine contract behavior. Independent contract verification using cast call commands."
     },
     {
       "id": "8a",
@@ -37,7 +35,7 @@
         "4a",
         "7a"
       ],
-      "reason": "Building puppeteer test script - creates testing infrastructure. Depends on frontend fixes to avoid testing broken functionality"
+      "reason": "Creating automated testing script with puppeteer and Claude Vision. Depends on frontend tabs working properly before they can be tested."
     },
     {
       "id": "9a",
@@ -45,17 +43,20 @@
       "depends_on": [
         "8a"
       ],
-      "reason": "Modifying worker-rule.md config files - infrastructure workflow. Depends on 8a since it references the tab-sanity.js script"
+      "reason": "Adding validation rules to worker configuration files. Depends on 8a because the rule references the tab-sanity.js script created in 8a."
     },
     {
       "id": "10a",
       "lane": "FRONTEND",
       "depends_on": [
-        "8a",
         "4a",
-        "7a"
+        "5b",
+        "7a",
+        "7b",
+        "8a",
+        "9a"
       ],
-      "reason": "Final visual polish of React components using tab-sanity.js validation. Depends on testing script and prior frontend fixes"
+      "reason": "Final visual polish of React components. Depends on all other tasks since this is the final review step after all critical and high-priority fixes."
     }
   ]
 }
