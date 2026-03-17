@@ -33,16 +33,45 @@ const VaultOptimized: React.FC = () => {
     usdtBalance: vaultData.usdtBalance,
   });
 
-  // Memoized form calculations
+  // Calculate correct share price from useVaultMulticall (convertToAssets result)
+  const sharePrice = useMemo(() => {
+    try {
+      if (!vaultData.sharePrice || vaultData.sharePrice === BigInt(0)) {
+        console.warn('No share price from vaultData, using fallback $1.00');
+        return 1.0; // Fallback to $1.00
+      }
+
+      // vaultData.sharePrice comes from convertToAssets(1 WAD) and is in WAD format (18 decimals)
+      const sharePriceFloat = Number(vaultData.sharePrice) / 1e18;
+
+      console.log('=== SHARE PRICE CALCULATION ===', {
+        rawSharePrice: vaultData.sharePrice.toString(),
+        sharePriceFloat,
+        isValid: isFinite(sharePriceFloat) && sharePriceFloat > 0
+      });
+
+      if (!isFinite(sharePriceFloat) || sharePriceFloat <= 0) {
+        console.warn('Invalid share price from convertToAssets:', vaultData.sharePrice.toString());
+        return 1.0;
+      }
+
+      return sharePriceFloat;
+    } catch (error) {
+      console.warn('Error converting share price:', error);
+      return 1.0;
+    }
+  }, [vaultData.sharePrice]);
+
+  // Memoized form calculations using correct share price
   const formCalculations = useMemo(() => {
     const depositAmountFloat = parseFloat(depositAmount) || 0;
     const withdrawSharesFloat = parseFloat(withdrawShares) || 0;
 
-    const sharesFromDeposit = metrics.sharePrice > 0
-      ? depositAmountFloat / metrics.sharePrice
+    const sharesFromDeposit = sharePrice > 0
+      ? depositAmountFloat / sharePrice
       : 0;
 
-    const usdtFromWithdraw = withdrawSharesFloat * metrics.sharePrice;
+    const usdtFromWithdraw = withdrawSharesFloat * sharePrice;
 
     const dailyYieldFromDeposit = (depositAmountFloat * metrics.dailyYield) / 100;
 
@@ -51,7 +80,7 @@ const VaultOptimized: React.FC = () => {
       usdtFromWithdraw,
       dailyYieldFromDeposit,
     };
-  }, [depositAmount, withdrawShares, metrics.sharePrice, metrics.dailyYield]);
+  }, [depositAmount, withdrawShares, sharePrice, metrics.dailyYield]);
 
   // Memoized event handlers
   const handleApprove = useCallback(async () => {
@@ -129,7 +158,7 @@ const VaultOptimized: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <VaultStats
           tvl={metrics.tvl}
-          sharePrice={metrics.sharePrice}
+          sharePrice={sharePrice}
           utilization={metrics.utilization}
           annualizedAPY={metrics.annualizedAPY}
           isLoading={vaultData.isLoadingVaultData}

@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-17T11:31:17.638697+00:00",
+  "timestamp": "2026-03-17T11:42:10.794520+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,12 +11,12 @@
     },
     {
       "name": "Positions",
-      "value": "129",
+      "value": "135",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "4739722554735 [4.739e12]",
+      "value": "5089767554735 [5.089e12]",
       "status": "ok"
     },
     {
@@ -28,33 +28,30 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Frontend completely inaccessible - shows file directory instead of application",
-    "Vision: No actual LEVER Protocol interface visible",
-    "Vision: Exposes internal build structure to users",
-    "Vision: Service appears down or misconfigured",
-    "Vision: No professional presentation whatsoever",
-    "Vision: Critical deployment failure"
+    "Vision: Only static HTML shell returned - no dynamic content verification possible",
+    "Vision: Cannot verify if React app loads properly without JavaScript execution",
+    "Vision: No way to assess actual functionality, trading interface, or data display",
+    "Vision: Missing verification of key investor-facing features like TVL, positions, markets",
+    "Vision: Cannot validate if frontend connects properly to contracts"
   ],
   "functional_issues": [],
-  "score": 52,
+  "score": 60,
   "vision_review": {
-    "professional_score": 1,
-    "trust_score": 1,
+    "professional_score": 7,
+    "trust_score": 6,
     "issues": [
-      "Frontend completely inaccessible - shows file directory instead of application",
-      "No actual LEVER Protocol interface visible",
-      "Exposes internal build structure to users",
-      "Service appears down or misconfigured",
-      "No professional presentation whatsoever",
-      "Critical deployment failure"
+      "Only static HTML shell returned - no dynamic content verification possible",
+      "Cannot verify if React app loads properly without JavaScript execution",
+      "No way to assess actual functionality, trading interface, or data display",
+      "Missing verification of key investor-facing features like TVL, positions, markets",
+      "Cannot validate if frontend connects properly to contracts"
     ],
     "improvements": [
-      "Fix frontend service deployment immediately",
-      "Ensure React application is properly built and served",
-      "Configure proper web server routing",
-      "Add health checks and monitoring",
-      "Implement proper error pages instead of exposing directory structure",
-      "Test deployment pipeline before investor demos"
+      "Implement server-side rendering or static generation for better initial content",
+      "Add healthcheck endpoint that returns app status without JavaScript",
+      "Include basic market data in initial HTML for investors without JS",
+      "Add loading state indicators for better perceived performance",
+      "Implement proper error boundaries and fallback content"
     ]
   }
 }
