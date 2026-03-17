@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-17T12:58:14.009138+00:00",
+  "timestamp": "2026-03-17T13:14:41.444143+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,12 +11,12 @@
     },
     {
       "name": "Positions",
-      "value": "170",
+      "value": "176",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "8079767554735 [8.079e12]",
+      "value": "8574767554735 [8.574e12]",
       "status": "ok"
     },
     {
@@ -27,28 +27,7 @@
   ],
   "sprint_checks": {},
   "critical_blockers": [],
-  "visual_issues": [
-    "Vision: Cannot verify actual React app functionality from static HTML",
-    "Vision: No visible loading indicators or error handling in base HTML",
-    "Vision: Unable to test wallet connectivity or trading interface",
-    "Vision: No fallback content for disabled JavaScript users"
-  ],
+  "visual_issues": [],
   "functional_issues": [],
-  "score": 68,
-  "vision_review": {
-    "professional_score": 8,
-    "trust_score": 7,
-    "issues": [
-      "Cannot verify actual React app functionality from static HTML",
-      "No visible loading indicators or error handling in base HTML",
-      "Unable to test wallet connectivity or trading interface",
-      "No fallback content for disabled JavaScript users"
-    ],
-    "improvements": [
-      "Add noscript content explaining JavaScript requirement",
-      "Include loading indicator in base HTML template",
-      "Add meta tags for additional SEO optimization",
-      "Consider server-side rendering for better investor confidence"
-    ]
-  }
+  "score": 100
 }

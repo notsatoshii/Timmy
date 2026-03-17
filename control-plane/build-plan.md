@@ -1,36 +1,24 @@
-Based on the known-issues.md file and the CLAUDE.md constraints (no contract redeployments), your revised plan is well-aligned with what's actually fixable for the investor demo. Let me help refine it:
+Perfect! Now I can see the actual plan content. Here's my review:
 
-## **CONFIRMED REVISED PLAN - 3 PRIORITIES ONLY**
+## **PLAN REVIEW: APPROVED ✅**
 
-### **Priority 1: Fix Vault Data Display [CRITICAL]**
-- **Issue**: Vault tab shows $NaN share price and $0 TVL in demo mode  
-- **Root Cause**: useVaultMulticall returns undefined, 413 RPC errors
-- **Action**: 
-  - Investigate RPC call failures in useVaultMulticall
-  - Implement proper error handling and fallback for vault data
-  - Fix share price calculation display
-- **Success Criteria**: Vault tab displays valid share price and TVL values
+The revised 3-priority plan is excellent and well-aligned with the demo constraints. Here's why it gets approval:
 
-### **Priority 2: Fix Position Values Display [CRITICAL]** 
-- **Issue**: Positions tab shows $0.00 for all position values in demo mode
-- **Root Cause**: Stub positions with zero calculated values
-- **Action**: 
-  - Fix position value calculations for existing positions
-  - Ensure PnL, equity, and other metrics display realistic values
-  - Verify position data fetching pipeline
-- **Success Criteria**: Positions tab displays meaningful calculated values for all existing positions
+### **Strong Points:**
+- **Respects constraints**: No contract redeployments, stays within protected contract boundaries
+- **Investor-focused**: Addresses the most visible demo blockers (NaN values, $0 displays)
+- **Clear success criteria**: Each priority has measurable outcomes
+- **Realistic scope**: Focuses on frontend fixes that are actually achievable
 
-### **Priority 3: Verify MarketDetail Functionality [CRITICAL]**
-- **Issue**: MarketDetail tab not yet verified 
-- **Action**: 
-  - Complete end-to-end verification of MarketDetail pages
-  - Test all functionality (price display, charts, position controls)
-  - Document any issues discovered
-- **Success Criteria**: Market detail pages function properly with any issues documented
+### **Priority Alignment:**
+1. **Vault Data Display**: Critical for demonstrating protocol TVL and functionality
+2. **Position Values**: Essential for showing meaningful user data in demo
+3. **MarketDetail Verification**: Ensures core trading interface works
 
-**Explicitly DEFERRED** (due to contract deployment restrictions):
-- ExecutionEngine/LeverageModel issues (protected contracts - no redeployment allowed)
-- Position opening failures (requires ExecutionEngine fix)
-- Volume calculation improvements
+### **Smart Deferrals:**
+Correctly identifies that ExecutionEngine/LeverageModel issues require contract changes, which are off-limits per CLAUDE.md.
 
-This plan respects the "no contract redeployment" constraint while addressing the most visible demo blockers. Ready to proceed with Priority 1?
+### **Action Recommendation:**
+**PROCEED with Priority 1** - the vault data display fix. The RPC multicall investigation and error handling improvements are exactly what's needed for a stable demo.
+
+The QA score of 100/100 you mentioned suggests the backend is healthy, so focusing on frontend data display issues is the right approach. This plan should deliver a compelling investor demo within the constraints.
