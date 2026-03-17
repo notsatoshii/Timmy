@@ -4,13 +4,13 @@
       "id": "5b",
       "lane": "CONTRACT",
       "depends_on": [],
-      "reason": "Uses cast send to open positions on deployed contracts. No dependencies on other incomplete tasks."
+      "reason": "Uses cast send to open high-leverage positions on deployed contracts. CONTRACT lane for cast send operations. No dependencies on other listed tasks."
     },
     {
       "id": "7b",
       "lane": "CONTRACT",
       "depends_on": [],
-      "reason": "Uses cast call to verify contract behavior. Independent verification task with no dependencies on other incomplete tasks."
+      "reason": "Uses cast call to verify funding rate engine state. CONTRACT lane for cast call operations. No dependencies on other listed tasks."
     },
     {
       "id": "10a",
@@ -19,7 +19,7 @@
         "5b",
         "7b"
       ],
-      "reason": "Fixes React UI display issues. Task explicitly states 'Final visual review after all critical and high-priority fixes are done' - 5b is CRITICAL, 7b is HIGH priority."
+      "reason": "Fixes React frontend visual issues, number formatting, layout alignment. FRONTEND lane for React component changes. Depends on both 5b and 7b since it's explicitly described as 'final visual review after all critical and high-priority fixes are done'."
     }
   ]
 }

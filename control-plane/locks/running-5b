@@ -2,7 +2,7 @@
   "task_id": "5b",
   "lane": "CONTRACT",
   "title": "Open High-Leverage Positions",
-  "started": "2026-03-17T04:28:16.672705",
-  "pid": 862833,
-  "log": "/home/lever/lever-protocol/control-plane/dispatcher-logs/task-5b-042816.log"
+  "started": "2026-03-17T04:48:30.026740",
+  "pid": 876972,
+  "log": "/home/lever/lever-protocol/control-plane/dispatcher-logs/task-5b-044830.log"
 }
