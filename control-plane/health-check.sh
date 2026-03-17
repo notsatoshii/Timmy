@@ -1,6 +1,13 @@
 #!/bin/bash
 source /home/lever/lever-protocol/control-plane/deploy-env.sh
 
+# Ensure foundry tools are available
+CAST="/home/lever/.foundry/bin/cast"
+if [ ! -f "$CAST" ]; then
+    echo "ERROR: foundry cast not found at $CAST"
+    exit 1
+fi
+
 echo "=== LEVER HEALTH CHECK $(date -u +%Y-%m-%dT%H:%M:%SZ) ==="
 PASS=0
 FAIL=0
@@ -23,16 +30,16 @@ check() {
 }
 
 # Contracts exist
-check "usdt" "$(cast call $USDT_ADDRESS 'decimals()(uint8)' --rpc-url $RPC_URL 2>&1)"
-check "market_registry" "$(cast call $MARKET_REGISTRY 'hasRole(bytes32,address)(bool)' 0x0000000000000000000000000000000000000000000000000000000000000000 $DEPLOYER --rpc-url $RPC_URL 2>&1)"
-check "oracle_adapter" "$(cast call $ORACLE_ADAPTER 'hasRole(bytes32,address)(bool)' 0x0000000000000000000000000000000000000000000000000000000000000000 $DEPLOYER --rpc-url $RPC_URL 2>&1)"
-check "account_manager" "$(cast call $ACCOUNT_MANAGER 'hasRole(bytes32,address)(bool)' 0x0000000000000000000000000000000000000000000000000000000000000000 $DEPLOYER --rpc-url $RPC_URL 2>&1)"
-check "position_manager" "$(cast call $POSITION_MANAGER 'hasRole(bytes32,address)(bool)' 0x0000000000000000000000000000000000000000000000000000000000000000 $DEPLOYER --rpc-url $RPC_URL 2>&1)"
-check "lever_vault" "$(cast call $LEVER_VAULT 'totalAssets()(uint256)' --rpc-url $RPC_URL 2>&1)"
-check "fee_router" "$(cast call $FEE_ROUTER 'hasRole(bytes32,address)(bool)' 0x0000000000000000000000000000000000000000000000000000000000000000 $DEPLOYER --rpc-url $RPC_URL 2>&1)"
+check "usdt" "$($CAST call $USDT_ADDRESS 'decimals()(uint8)' --rpc-url $RPC_URL 2>&1)"
+check "market_registry" "$($CAST call $MARKET_REGISTRY 'hasRole(bytes32,address)(bool)' 0x0000000000000000000000000000000000000000000000000000000000000000 $DEPLOYER --rpc-url $RPC_URL 2>&1)"
+check "oracle_adapter" "$($CAST call $ORACLE_ADAPTER 'hasRole(bytes32,address)(bool)' 0x0000000000000000000000000000000000000000000000000000000000000000 $DEPLOYER --rpc-url $RPC_URL 2>&1)"
+check "account_manager" "$($CAST call $ACCOUNT_MANAGER 'hasRole(bytes32,address)(bool)' 0x0000000000000000000000000000000000000000000000000000000000000000 $DEPLOYER --rpc-url $RPC_URL 2>&1)"
+check "position_manager" "$($CAST call $POSITION_MANAGER 'hasRole(bytes32,address)(bool)' 0x0000000000000000000000000000000000000000000000000000000000000000 $DEPLOYER --rpc-url $RPC_URL 2>&1)"
+check "lever_vault" "$($CAST call $LEVER_VAULT 'totalAssets()(uint256)' --rpc-url $RPC_URL 2>&1)"
+check "fee_router" "$($CAST call $FEE_ROUTER 'hasRole(bytes32,address)(bool)' 0x0000000000000000000000000000000000000000000000000000000000000000 $DEPLOYER --rpc-url $RPC_URL 2>&1)"
 
 # TVL
-TVL=$(cast call $LEVER_VAULT 'totalAssets()(uint256)' --rpc-url $RPC_URL 2>&1)
+TVL=$($CAST call $LEVER_VAULT 'totalAssets()(uint256)' --rpc-url $RPC_URL 2>&1)
 if echo "$TVL" | grep -q "^0$"; then
     echo "FAIL: vault_tvl — TVL is 0"
     FAIL=$((FAIL+1))
@@ -42,7 +49,7 @@ else
 fi
 
 # Deployer ETH
-DEPLOYER_WEI=$(cast balance $DEPLOYER --rpc-url $RPC_URL --raw 2>/dev/null)
+DEPLOYER_WEI=$($CAST balance $DEPLOYER --rpc-url $RPC_URL --raw 2>/dev/null)
 if [ -n "$DEPLOYER_WEI" ] && [ "$DEPLOYER_WEI" -lt 10000000000000000 ] 2>/dev/null; then
     echo "WARN: deployer_eth — low balance ($DEPLOYER_WEI wei)"
 else

@@ -1,0 +1,8 @@
+{
+  "task_id": "1",
+  "lane": "CONTRACT",
+  "title": "Diagnose Contract Data Fetching Root Cause [CRITICAL]",
+  "started": "2026-03-17T05:07:31.103687",
+  "pid": 888539,
+  "log": "/home/lever/lever-protocol/control-plane/dispatcher-logs/task-1-050731.log"
+}

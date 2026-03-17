@@ -1,5 +1,6 @@
 import React, { useState, useCallback, lazy, Suspense } from 'react';
 import { useWallet } from '../hooks/useWallet';
+import { usePageTitle } from '../hooks/usePageTitle';
 import ConnectWallet from './ConnectWallet';
 import Header from './Header';
 import ProtocolStats from './ProtocolStats';
@@ -33,6 +34,11 @@ const DashboardOptimized: React.FC = () => {
   } | null>(null);
   const [selectedMarket, setSelectedMarket] = useState<Market | null>(null);
   const { isConnected } = useWallet();
+
+  // Dynamic page title based on current section
+  const currentSection = selectedMarket ? 'market-detail' : activeTab;
+  const customTitle = selectedMarket ? `${selectedMarket.description}` : undefined;
+  usePageTitle(currentSection, customTitle);
 
   const handleTradeSelection = useCallback((marketId: string, marketName: string, direction: 'long' | 'short') => {
     setSelectedTrade({ marketId, marketName, direction });
