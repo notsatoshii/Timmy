@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-17T14:32:11.753168+00:00",
+  "timestamp": "2026-03-17T14:49:44.824054+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,12 +11,12 @@
     },
     {
       "name": "Positions",
-      "value": "198",
+      "value": "201",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "10339767554735 [1.033e13]",
+      "value": "10469767554735 [1.046e13]",
       "status": "ok"
     },
     {
@@ -27,7 +27,31 @@
   ],
   "sprint_checks": {},
   "critical_blockers": [],
-  "visual_issues": [],
+  "visual_issues": [
+    "Vision: Unable to verify actual app functionality beyond static shell",
+    "Vision: No assessment possible of real-time data feeds or trading interfaces",
+    "Vision: Cannot validate blockchain connectivity or transaction flows",
+    "Vision: Missing evaluation of core user journeys (trading, portfolio management)",
+    "Vision: No insight into error handling or edge case behavior"
+  ],
   "functional_issues": [],
-  "score": 100
+  "score": 60,
+  "vision_review": {
+    "professional_score": 7,
+    "trust_score": 6,
+    "issues": [
+      "Unable to verify actual app functionality beyond static shell",
+      "No assessment possible of real-time data feeds or trading interfaces",
+      "Cannot validate blockchain connectivity or transaction flows",
+      "Missing evaluation of core user journeys (trading, portfolio management)",
+      "No insight into error handling or edge case behavior"
+    ],
+    "improvements": [
+      "Implement comprehensive end-to-end testing for investor demos",
+      "Add health check endpoints that verify full system functionality",
+      "Create investor-specific demo mode with sample data and guided flows",
+      "Implement monitoring dashboard showing system status and key metrics",
+      "Add automated screenshot testing to validate UI rendering across scenarios"
+    ]
+  }
 }
