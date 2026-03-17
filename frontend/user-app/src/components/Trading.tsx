@@ -79,13 +79,13 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
 
       const publicClient = createPublicClient({
         chain: baseSepolia,
-        transport: http(),
+        transport: http('https://base-sepolia-rpc.publicnode.com'),
       });
 
       const walletClient = createWalletClient({
         account,
         chain: baseSepolia,
-        transport: http(),
+        transport: http('https://base-sepolia-rpc.publicnode.com'),
       });
 
       // Simulate the transaction first
