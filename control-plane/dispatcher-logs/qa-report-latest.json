@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-17T18:04:23.771303+00:00",
+  "timestamp": "2026-03-17T18:18:53.720407+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,12 +11,12 @@
     },
     {
       "name": "Positions",
-      "value": "212",
+      "value": "213",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "11119767554735 [1.111e13]",
+      "value": "11159767554735 [1.115e13]",
       "status": "ok"
     },
     {
@@ -28,33 +28,30 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Critical: $NaN share price and $0 TVL displayed in vault tab - appears broken to investors",
-    "Vision: Critical: All position values show $0.00 for 212 positions - suggests non-functional trading",
-    "Vision: Major: Screenshot verification system broken - prevents proper QA of visual presentation",
-    "Vision: Major: Contract address mismatch in LeverageModel (config vs deployment) may cause integration issues",
-    "Vision: Moderate: 413 RPC errors from Base Sepolia affecting data fetching reliability",
-    "Vision: Minor: React app requires JavaScript - no graceful fallback for disabled JS"
+    "Vision: Oracle price freshness failing - no successful pushes found",
+    "Vision: Screenshot automation broken due to browser dependencies (libatk-1.0.so.0)",
+    "Vision: Cannot visually verify frontend UI/UX for investor presentation",
+    "Vision: Unable to test actual user flows or data display functionality",
+    "Vision: Demo readiness compromised without visual verification capability"
   ],
   "functional_issues": [],
-  "score": 52,
+  "score": 60,
   "vision_review": {
-    "professional_score": 4,
-    "trust_score": 3,
+    "professional_score": 6,
+    "trust_score": 5,
     "issues": [
-      "Critical: $NaN share price and $0 TVL displayed in vault tab - appears broken to investors",
-      "Critical: All position values show $0.00 for 212 positions - suggests non-functional trading",
-      "Major: Screenshot verification system broken - prevents proper QA of visual presentation",
-      "Major: Contract address mismatch in LeverageModel (config vs deployment) may cause integration issues",
-      "Moderate: 413 RPC errors from Base Sepolia affecting data fetching reliability",
-      "Minor: React app requires JavaScript - no graceful fallback for disabled JS"
+      "Oracle price freshness failing - no successful pushes found",
+      "Screenshot automation broken due to browser dependencies (libatk-1.0.so.0)",
+      "Cannot visually verify frontend UI/UX for investor presentation",
+      "Unable to test actual user flows or data display functionality",
+      "Demo readiness compromised without visual verification capability"
     ],
     "improvements": [
-      "Fix vault data pipeline to display real TVL and meaningful share prices instead of $NaN",
-      "Debug position value calculations to show actual equity and PnL for existing positions",
-      "Repair automated screenshot testing to enable proper UI verification",
-      "Resolve LeverageModel contract address mismatch between config and protected deployment",
-      "Implement RPC endpoint redundancy to handle 413 errors gracefully",
-      "Add loading states and error boundaries to handle failed data fetching more professionally"
+      "Fix oracle price feed issues to ensure real-time data",
+      "Install missing browser dependencies for screenshot automation",
+      "Implement visual regression testing for demo readiness",
+      "Create fallback manual verification checklist execution",
+      "Add health monitoring dashboard for real-time system status"
     ]
   }
 }
