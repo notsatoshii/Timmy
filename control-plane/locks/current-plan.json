@@ -4,25 +4,25 @@
       "id": "4",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Modifies React hooks and display formatting for volume calculation. Pure frontend logic change with no external dependencies."
-    },
-    {
-      "id": "5",
-      "lane": "INFRA",
-      "depends_on": [],
-      "reason": "Manages systemd services and Python processes for oracle keeper. Pure infrastructure task with no dependencies on other current tasks."
+      "reason": "Modifying React hooks to change volume calculation from collateral to notional. Root cause is in frontend calculation logic, not contract data."
     },
     {
       "id": "6",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Updates frontend contract configuration and ABIs. ExecutionEngine was already redeployed per git history, so this is just frontend config sync."
+      "reason": "Regenerating contract ABIs after ExecutionEngine deployment. Core work is updating frontend build artifacts via npm commands."
     },
     {
       "id": "7",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Enhances error handling and UX in TradeForm component. Pure frontend improvement that doesn't depend on other current tasks."
+      "reason": "Adding loading states to TradeForm.tsx component during position opening. Pure React component enhancement for UX."
+    },
+    {
+      "id": "8",
+      "lane": "CONTRACT",
+      "depends_on": [],
+      "reason": "Verifying FeeRouter integration using forge console and contract state inspection. Contract-level verification work."
     }
   ]
 }

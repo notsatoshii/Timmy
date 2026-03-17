@@ -20,7 +20,7 @@
 
 ### 5. Restart Oracle Keeper to Ensure Live Price Updates [HIGH] [INFRA]
 - [x] 1. Check if `control-plane/mock_keeper.py` process is running with `ps aux | grep mock_keeper`
-- [ ] 2. If not running, restart with `cd control-plane && python3 mock_keeper.py &` and verify price updates in dashboard
+- [x] 2. If not running, restart with `cd control-plane && python3 mock_keeper.py &` and verify price updates in dashboard
 - [x] 3. Ensure systemd service `lever-keeper` is enabled with `sudo systemctl enable lever-keeper && sudo systemctl start lever-keeper`
 
 ### 6. Update Frontend Contract Addresses After ExecutionEngine Deployment [HIGH] [FRONTEND]

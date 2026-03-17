@@ -515,6 +515,14 @@ const Positions: React.FC = () => {
 
   const displayPositions = positions.length > 0 ? positions : (address ? demoPositions : []);
 
+  console.log('[Positions] Display positions logic:', {
+    positionsCount: positions.length,
+    address: address || 'null',
+    demoPositionsCount: demoPositions.length,
+    displayPositionsCount: displayPositions.length,
+    displayPositionsSource: positions.length > 0 ? 'real' : (address ? 'demo' : 'empty')
+  });
+
   const handleCloseClick = (positionId: bigint) => {
     setSelectedPositionId(positionId);
     setCloseState('confirming');
