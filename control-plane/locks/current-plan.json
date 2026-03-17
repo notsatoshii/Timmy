@@ -1,24 +1,24 @@
 {
   "tasks": [
     {
-      "id": "screenshot_verification",
+      "id": "fix_screenshot_verification",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Node.js automation script, system package installation, and Puppeteer testing infrastructure - not React code changes"
+      "reason": "Infrastructure task requiring system dependency installation (libatk-1.0.so.0, Chrome) and fixing browser automation pipeline script. No dependencies as it's standalone infrastructure work."
     },
     {
-      "id": "vault_tab_data",
+      "id": "fix_vault_tab_display",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "React hooks and component data display issues, independent of other UI features"
+      "reason": "Frontend task fixing React hooks (useVaultMulticall), RPC connectivity, and LeverVault integration. Root cause is frontend data fetching and display logic."
     },
     {
-      "id": "position_values_display",
+      "id": "fix_position_values_display",
       "lane": "FRONTEND",
       "depends_on": [
-        "vault_tab_data"
+        "fix_vault_tab_display"
       ],
-      "reason": "React component display fixes in same lane as vault task, both may touch config/contracts.ts and similar hook patterns - sequential for safety"
+      "reason": "Frontend task fixing PositionManager integration and position display components. Depends on vault fix to avoid potential conflicts in frontend codebase since both modify React components/hooks."
     }
   ]
 }
