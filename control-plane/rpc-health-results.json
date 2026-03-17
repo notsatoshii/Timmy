@@ -1,0 +1,78 @@
+{
+  "timestamp": "2026-03-17T09:03:58.412Z",
+  "primary_rpc": "https://sepolia.base.org",
+  "fallback_rpcs": [],
+  "test_results": {
+    "endpoint_tests": [
+      {
+        "name": "Base Sepolia (Official)",
+        "url": "https://sepolia.base.org",
+        "success": 5,
+        "failed": 0,
+        "totalTime": 1325,
+        "avgResponseTime": 265,
+        "errors": [],
+        "healthy": true
+      },
+      {
+        "name": "Base Sepolia (Alchemy)",
+        "url": "https://base-sepolia.g.alchemy.com/v2/demo",
+        "success": 0,
+        "failed": 5,
+        "totalTime": 0,
+        "avgResponseTime": 0,
+        "errors": [
+          "Unexpected end of JSON input",
+          "Unexpected end of JSON input",
+          "Unexpected end of JSON input",
+          "Unexpected end of JSON input",
+          "Unexpected end of JSON input"
+        ],
+        "healthy": false
+      },
+      {
+        "name": "Base Sepolia (Infura)",
+        "url": "https://base-sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
+        "success": 0,
+        "failed": 5,
+        "totalTime": 0,
+        "avgResponseTime": 0,
+        "errors": [
+          "Unexpected token 'p', \"project ID\"... is not valid JSON",
+          "Unexpected token 'p', \"project ID\"... is not valid JSON",
+          "Unexpected token 'p', \"project ID\"... is not valid JSON",
+          "Unexpected token 'p', \"project ID\"... is not valid JSON",
+          "Unexpected token 'p', \"project ID\"... is not valid JSON"
+        ],
+        "healthy": false
+      },
+      {
+        "name": "Base Sepolia (BlockPI)",
+        "url": "https://base-sepolia.blockpi.network/v1/rpc/public",
+        "success": 0,
+        "failed": 5,
+        "totalTime": 0,
+        "avgResponseTime": 0,
+        "errors": [
+          "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+          "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+          "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+          "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+          "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON"
+        ],
+        "healthy": false
+      }
+    ],
+    "contract_tests": {
+      "https://sepolia.base.org": {
+        "success": true,
+        "result": "60508028315742 [6.05e13]",
+        "endpoint": "Base Sepolia (Official)"
+      }
+    }
+  },
+  "recommendations": [
+    "WARNING: Less than 2 healthy RPC endpoints found. Consider adding more providers.",
+    "Found 1 healthy RPC endpoints. Fallback configuration ready."
+  ]
+}

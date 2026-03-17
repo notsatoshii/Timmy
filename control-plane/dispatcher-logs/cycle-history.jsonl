@@ -15,3 +15,4 @@
 {"cycle": 15, "qa_score": 27, "done": 0, "failed": 0, "duration_min": 10.5, "mode": "LOCKED SPRINT", "sprint_checks": {"volume_no_fake_data": true, "stats_no_fake_volume": true, "trading_has_flow": true, "positions_real_data": false, "positions_hook_real_data": true, "all_passed": false}, "ts": "2026-03-17T08:26:06.136095+00:00"}
 {"cycle": 16, "qa_score": 0, "done": 0, "failed": 0, "duration_min": 10.5, "mode": "LOCKED SPRINT", "sprint_checks": {"volume_no_fake_data": true, "stats_no_fake_volume": true, "trading_has_flow": true, "positions_real_data": false, "positions_hook_real_data": true, "all_passed": false}, "ts": "2026-03-17T08:38:47.690487+00:00"}
 {"cycle": 17, "qa_score": 52, "done": 0, "failed": 0, "duration_min": 0, "mode": "PHASE_TRANSITION", "ts": "2026-03-17T08:40:49.961180+00:00"}
+{"cycle": 18, "qa_score": 52, "done": 1, "failed": 0, "duration_min": 5.9, "mode": "AUTO-IMPROVE", "sprint_checks": {}, "ts": "2026-03-17T08:49:46.904185+00:00"}

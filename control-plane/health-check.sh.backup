@@ -1,6 +1,5 @@
 #!/bin/bash
 source /home/lever/lever-protocol/control-plane/deploy-env.sh
-source /home/lever/lever-protocol/control-plane/rpc-config.env 2>/dev/null || true
 
 # Ensure foundry tools are available
 CAST="/home/lever/.foundry/bin/cast"
@@ -12,39 +11,6 @@ fi
 echo "=== LEVER HEALTH CHECK $(date -u +%Y-%m-%dT%H:%M:%SZ) ==="
 PASS=0
 FAIL=0
-
-
-# Enhanced RPC call with fallback handling
-rpc_call_with_fallback() {
-    local cmd="$1"
-    local fallback_rpcs=("$RPC_FALLBACK_1" "$RPC_FALLBACK_2" "$RPC_FALLBACK_3")
-
-    # Try primary RPC first
-    result=$(eval "$cmd" 2>&1)
-    if ! echo "$result" | grep -qi "413\|rate limit\|timeout\|network"; then
-        echo "$result"
-        return 0
-    fi
-
-    echo "WARN: Primary RPC failed with rate limit/network error, trying fallbacks..." >&2
-
-    # Try fallback RPCs
-    for fallback_rpc in "${fallback_rpcs[@]}"; do
-        if [ -n "$fallback_rpc" ]; then
-            fallback_cmd=$(echo "$cmd" | sed "s|--rpc-url \$RPC_URL|--rpc-url $fallback_rpc|g")
-            result=$(eval "$fallback_cmd" 2>&1)
-            if ! echo "$result" | grep -qi "413\|rate limit\|timeout\|network"; then
-                echo "INFO: Fallback RPC $fallback_rpc succeeded" >&2
-                echo "$result"
-                return 0
-            fi
-            sleep 1
-        fi
-    done
-
-    echo "$result"
-    return 1
-}
 
 check() {
     local name="$1"
@@ -69,11 +35,11 @@ check "market_registry" "$($CAST call $MARKET_REGISTRY 'hasRole(bytes32,address)
 check "oracle_adapter" "$($CAST call $ORACLE_ADAPTER 'hasRole(bytes32,address)(bool)' 0x0000000000000000000000000000000000000000000000000000000000000000 $DEPLOYER --rpc-url $RPC_URL 2>&1)"
 check "account_manager" "$($CAST call $ACCOUNT_MANAGER 'hasRole(bytes32,address)(bool)' 0x0000000000000000000000000000000000000000000000000000000000000000 $DEPLOYER --rpc-url $RPC_URL 2>&1)"
 check "position_manager" "$($CAST call $POSITION_MANAGER 'hasRole(bytes32,address)(bool)' 0x0000000000000000000000000000000000000000000000000000000000000000 $DEPLOYER --rpc-url $RPC_URL 2>&1)"
-check "lever_vault" "$(rpc_call_with_fallback "$CAST call $LEVER_VAULT 'totalAssets()(uint256)' --rpc-url $RPC_URL" 2>&1)"
+check "lever_vault" "$($CAST call $LEVER_VAULT 'totalAssets()(uint256)' --rpc-url $RPC_URL 2>&1)"
 check "fee_router" "$($CAST call $FEE_ROUTER 'hasRole(bytes32,address)(bool)' 0x0000000000000000000000000000000000000000000000000000000000000000 $DEPLOYER --rpc-url $RPC_URL 2>&1)"
 
 # TVL
-TVL=$(rpc_call_with_fallback "$CAST call $LEVER_VAULT 'totalAssets()(uint256)' --rpc-url $RPC_URL" 2>&1)
+TVL=$($CAST call $LEVER_VAULT 'totalAssets()(uint256)' --rpc-url $RPC_URL 2>&1)
 if echo "$TVL" | grep -q "^0$"; then
     echo "FAIL: vault_tvl — TVL is 0"
     FAIL=$((FAIL+1))
@@ -121,9 +87,9 @@ fi
 
 # Dashboard critical data points
 MARKET_ID="0x2841ef32b61fb3472aadbfc70d787a1bfaf5d0218c9601b87963af7bcca1bcf1"
-check "global_oi" "$(rpc_call_with_fallback "$CAST call $OI_LIMITS 'getGlobalOI()(uint256)' --rpc-url $RPC_URL" 2>&1)"
-check "insurance_fund" "$(rpc_call_with_fallback "$CAST call $INSURANCE_FUND 'getBalance()(uint256)' --rpc-url $RPC_URL" 2>&1)"
-check "platform_ceiling" "$(rpc_call_with_fallback "$CAST call $LEVERAGE_MODEL 'getPlatformCeiling()(uint256)' --rpc-url $RPC_URL" 2>&1)"
+check "global_oi" "$($CAST call $OI_LIMITS 'getGlobalOI()(uint256)' --rpc-url $RPC_URL 2>&1)"
+check "insurance_fund" "$($CAST call $INSURANCE_FUND 'getBalance()(uint256)' --rpc-url $RPC_URL 2>&1)"
+check "platform_ceiling" "$($CAST call $LEVERAGE_MODEL 'getPlatformCeiling()(uint256)' --rpc-url $RPC_URL 2>&1)"
 check "market_max_leverage" "$($CAST call $LEVERAGE_MODEL 'getEffectiveMaxLeverage(bytes32)(uint256)' $MARKET_ID --rpc-url $RPC_URL 2>&1)"
 check "global_utilization" "$($CAST call $OI_LIMITS 'getGlobalUtilization()(uint256)' --rpc-url $RPC_URL 2>&1)"
 

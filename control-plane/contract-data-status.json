@@ -1,0 +1,66 @@
+{
+  "timestamp": "2026-03-17T09:05:09.712Z",
+  "pipeline_health": "HEALTHY",
+  "success_rate": 80,
+  "fallback_usage": 1,
+  "total_duration_ms": 898,
+  "avg_response_time_ms": 861,
+  "data_points": {
+    "TVL": {
+      "dataPoint": "TVL",
+      "success": true,
+      "value": "60508028315742 [6.05e13]",
+      "error": null,
+      "duration": 847,
+      "retryCount": 0,
+      "fallbackUsed": false
+    },
+    "Insurance Fund": {
+      "dataPoint": "Insurance Fund",
+      "success": true,
+      "value": "11000000000000000000000 [1.1e22]",
+      "error": null,
+      "duration": 862,
+      "retryCount": 0,
+      "fallbackUsed": false
+    },
+    "Global OI": {
+      "dataPoint": "Global OI",
+      "success": true,
+      "value": "224222554735 [2.242e11]",
+      "error": null,
+      "duration": 869,
+      "retryCount": 0,
+      "fallbackUsed": false
+    },
+    "Position Count": {
+      "dataPoint": "Position Count",
+      "success": false,
+      "value": "77",
+      "error": "Command failed: bash -c 'source /home/lever/lever-protocol/control-plane/deploy-env.sh && /home/lever/.foundry/bin/cast call $POSITION_MANAGER \"getActivePositionCount()(uint256)\" --rpc-url $RPC_URL'\nError: server returned an error response: error code 3: execution reverted, data: \"0x\"\nError: server returned an error response: error code 3: execution reverted, data: \"0x\"\n",
+      "duration": 857,
+      "retryCount": 0,
+      "fallbackUsed": true
+    },
+    "Platform Ceiling": {
+      "dataPoint": "Platform Ceiling",
+      "success": true,
+      "value": "12016361465206468140 [1.201e19]",
+      "error": null,
+      "duration": 872,
+      "retryCount": 0,
+      "fallbackUsed": false
+    }
+  },
+  "error_analysis": {
+    "rpc_413_errors": 0,
+    "rate_limit_errors": 0,
+    "network_errors": 0,
+    "contract_errors": 1,
+    "total_errors": 1
+  },
+  "recommendations": [
+    "READY: Data pipeline is investor demo ready with reliable data retrieval."
+  ],
+  "investor_demo_ready": true
+}

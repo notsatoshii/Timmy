@@ -2,41 +2,35 @@
   "tasks": [
     {
       "id": "1",
-      "lane": "INFRA",
+      "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "RPC/contract interaction issues and contract check failures indicate infrastructure problems with health checks, RPC configuration, or monitoring scripts that need fixing first"
+      "reason": "Frontend React hook (useVaultMulticall) and RPC timeout issues in vault data fetching - frontend data layer problem"
     },
     {
       "id": "2",
       "lane": "FRONTEND",
-      "depends_on": [
-        "1"
-      ],
-      "reason": "useVaultMulticall hook returning undefined with 413 RPC errors - frontend React code issue that depends on fixing the underlying RPC/contract interaction problems"
+      "depends_on": [],
+      "reason": "Frontend position display and getPosition() contract calls - React component data fetching and rendering issue"
     },
     {
       "id": "3",
-      "lane": "FRONTEND",
-      "depends_on": [
-        "1"
-      ],
-      "reason": "ExecutionEngine limitation requires frontend workarounds since contract is protected from redeployment - frontend interaction changes needed, and fundamental contract interaction issues must be resolved first"
+      "lane": "CONTRACT",
+      "depends_on": [],
+      "reason": "ExecutionEngine and LeverageModel contract interaction issue - Solidity contract logic needs fixing"
     },
     {
       "id": "4",
-      "lane": "FRONTEND",
-      "depends_on": [
-        "1"
-      ],
-      "reason": "Replacing stub data with real on-chain values in React components - frontend display issue that requires the contract data pipeline to be working properly"
+      "lane": "INFRA",
+      "depends_on": [],
+      "reason": "Backend contract data pipeline and RPC error handling - infrastructure scripts and data aggregation services"
     },
     {
       "id": "5",
       "lane": "FRONTEND",
       "depends_on": [
-        "1"
+        "3"
       ],
-      "reason": "Volume calculation changes in React UI - frontend display logic that needs real contract data from the fixed pipeline"
+      "reason": "Frontend testing of MarketDetail and position opening flow - depends on Task 3 fixing position opening failures"
     }
   ]
 }

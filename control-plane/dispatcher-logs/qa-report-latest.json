@@ -1,5 +1,8 @@
 {
-  "timestamp": "2026-03-17T08:48:45.105764+00:00",
+  "timestamp": "2026-03-17T08:57:02.450761+00:00",
+  "frontend_status": "UP",
+  "tabs": {},
+  "data_checks": [],
   "contract_checks": [
     {
       "name": "TVL",
@@ -21,5 +24,40 @@
       "value": "11000000000000000000000 [1.1e22]",
       "status": "ok"
     }
-  ]
+  ],
+  "sprint_checks": {},
+  "critical_blockers": [],
+  "visual_issues": [
+    "Vision: Contract data pipeline shows all error status (TVL, Positions, Global OI, Insurance Fund)",
+    "Vision: Vault displays $NaN share price due to undefined useVaultMulticall returns",
+    "Vision: Positions showing $0.00 values despite claiming real on-chain data",
+    "Vision: 413 RPC errors preventing proper data retrieval",
+    "Vision: ExecutionEngine limited to 1x leverage due to immutable LeverageModel mismatch",
+    "Vision: Core metrics failing would signal broken infrastructure to investors",
+    "Vision: Technical errors visible in investor-facing interface undermine credibility"
+  ],
+  "functional_issues": [],
+  "score": 44,
+  "vision_review": {
+    "professional_score": 3,
+    "trust_score": 2,
+    "issues": [
+      "Contract data pipeline shows all error status (TVL, Positions, Global OI, Insurance Fund)",
+      "Vault displays $NaN share price due to undefined useVaultMulticall returns",
+      "Positions showing $0.00 values despite claiming real on-chain data",
+      "413 RPC errors preventing proper data retrieval",
+      "ExecutionEngine limited to 1x leverage due to immutable LeverageModel mismatch",
+      "Core metrics failing would signal broken infrastructure to investors",
+      "Technical errors visible in investor-facing interface undermine credibility"
+    ],
+    "improvements": [
+      "Fix contract data pipeline to show accurate TVL and position data",
+      "Resolve vault multicall issues to display proper share prices",
+      "Debug and fix 413 RPC timeout errors for reliable data fetching",
+      "Ensure positions display real equity, PnL, and collateral values",
+      "Address ExecutionEngine/LeverageModel integration for full leverage functionality",
+      "Implement proper error handling to hide technical errors from investors",
+      "Add data validation to prevent $NaN/$0.00 displays reaching production"
+    ]
+  }
 }

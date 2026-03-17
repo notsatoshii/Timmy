@@ -223,10 +223,13 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
     };
   }, [contracts, userAddress]);
 
+  // TEMPORARY FIX: Disable circuit breaker to debug vault data issues
+  const isCircuitBreakerDisabled = true;
+
   // Batch 1: Core vault multicall with enhanced retry logic
   const coreMulticallResult = useContractData({
     contracts: contractBatches.coreVaultCalls,
-    enabled: !circuitBreaker.isOpen,
+    enabled: isCircuitBreakerDisabled || !circuitBreaker.isOpen,
     fallbackValues: {
       TotalAssets: fallbackValues.totalAssets,
       TotalSupply: fallbackValues.totalSupply,
@@ -234,25 +237,44 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
       GlobalOI: fallbackValues.globalOI,
     },
     onError: (error, callIndex) => handleContractError(error, contractBatches.coreVaultCalls[callIndex]?.name || `core-call-${callIndex}`, callIndex),
-    retryAttempts: circuitBreaker.isOpen ? 0 : Math.max(1, 3 - circuitBreaker.failureCount), // 3 attempts initially, reduce based on failures
+    retryAttempts: isCircuitBreakerDisabled ? 3 : (circuitBreaker.isOpen ? 0 : Math.max(1, 3 - circuitBreaker.failureCount)),
   });
 
   // Batch 2: User data multicall with enhanced retry logic
   const userMulticallResult = useContractData({
     contracts: contractBatches.userDataCalls,
-    enabled: !circuitBreaker.isOpen && !!userAddress && contractBatches.userDataCalls.length > 0,
+    enabled: (isCircuitBreakerDisabled || !circuitBreaker.isOpen) && !!userAddress && contractBatches.userDataCalls.length > 0,
     fallbackValues: {
       UserShares: fallbackValues.userShares,
       UsdtBalance: fallbackValues.usdtBalance,
     },
     onError: (error, callIndex) => handleContractError(error, contractBatches.userDataCalls[callIndex]?.name || `user-call-${callIndex}`, callIndex),
-    retryAttempts: circuitBreaker.isOpen ? 0 : Math.max(1, 3 - circuitBreaker.failureCount), // 3 attempts initially, reduce based on failures
+    retryAttempts: isCircuitBreakerDisabled ? 3 : (circuitBreaker.isOpen ? 0 : Math.max(1, 3 - circuitBreaker.failureCount)),
   });
 
   // Process and return comprehensive data from batched multicalls
   return useMemo(() => {
-    // If circuit breaker is open, return fallback values
-    if (circuitBreaker.isOpen) {
+    // Enhanced debugging for vault data issues
+    console.log('=== VAULT MULTICALL DEBUG ===', {
+      circuitBreakerOpen: circuitBreaker.isOpen,
+      coreMulticallResult: {
+        data: coreMulticallResult?.data,
+        isLoading: coreMulticallResult?.isLoading,
+        errors: coreMulticallResult?.errors?.map(e => e.message),
+        hasError: coreMulticallResult?.hasError,
+      },
+      userMulticallResult: {
+        data: userMulticallResult?.data,
+        isLoading: userMulticallResult?.isLoading,
+        errors: userMulticallResult?.errors?.map(e => e.message),
+        hasError: userMulticallResult?.hasError,
+      },
+      contractAddresses: contracts,
+      fallbackValues,
+    });
+
+    // If circuit breaker is open, return fallback values (DISABLED FOR DEBUGGING)
+    if (!isCircuitBreakerDisabled && circuitBreaker.isOpen) {
       const timeUntilReset = Math.max(0, circuitBreaker.nextAttemptTime - Date.now());
       console.warn(`Circuit breaker is OPEN. Next attempt in ${Math.ceil(timeUntilReset / 1000)}s`);
 
@@ -310,6 +332,16 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
       }
     };
 
+    // Enhanced debugging for data extraction
+    console.log('=== VAULT DATA EXTRACTION ===', {
+      coreDataArray: coreData,
+      coreDataLength: coreData?.length,
+      coreDataValues: coreData?.map((val, idx) => ({ index: idx, value: val, type: typeof val })),
+      userDataArray: userData,
+      userDataLength: userData?.length,
+      userDataValues: userData?.map((val, idx) => ({ index: idx, value: val, type: typeof val })),
+    });
+
     const safeValues = {
       // Core vault data from batch 1
       totalAssets: safeBigIntValue(coreData[0], fallbackValues.totalAssets, 'totalAssets'),
@@ -320,6 +352,15 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
       userShares: userAddress ? safeBigIntValue(userData[0], fallbackValues.userShares, 'userShares') : fallbackValues.userShares,
       usdtBalance: userAddress ? safeBigIntValue(userData[1], fallbackValues.usdtBalance, 'usdtBalance') : fallbackValues.usdtBalance,
     };
+
+    console.log('=== SAFE VALUES EXTRACTED ===', {
+      totalAssets: safeValues.totalAssets.toString(),
+      totalSupply: safeValues.totalSupply.toString(),
+      sharePrice: safeValues.sharePrice.toString(),
+      globalOI: safeValues.globalOI.toString(),
+      userShares: safeValues.userShares.toString(),
+      usdtBalance: safeValues.usdtBalance.toString(),
+    });
 
     // Loading states - both batches must complete for vault data, user data depends on user batch only
     const isLoadingVaultData = (coreMulticallResult?.isLoading || false) && !circuitBreaker.isOpen;

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LEVER Vault Debug</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #fff; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #333; border-radius: 8px; }
+        .error { color: #ff6b6b; }
+        .success { color: #51cf66; }
+        .warning { color: #ffd43b; }
+        .loading { color: #339af0; }
+        pre { background: #2a2a2a; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>LEVER Vault Debug Console</h1>
+    <div id="status" class="section">Checking vault status...</div>
+    <div id="results" class="section"></div>
+
+    <script>
+        const status = document.getElementById('status');
+        const results = document.getElementById('results');
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toISOString();
+            const div = document.createElement('div');
+            div.className = type;
+            div.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            results.appendChild(div);
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        function formatBigInt(value, decimals = 18, symbol = '') {
+            if (!value) return '0';
+            const divisor = Math.pow(10, decimals);
+            const formatted = (Number(value) / divisor).toLocaleString('en-US', {
+                minimumFractionDigits: decimals === 6 ? 2 : 4,
+                maximumFractionDigits: decimals === 6 ? 2 : 4
+            });
+            return `${formatted}${symbol ? ' ' + symbol : ''}`;
+        }
+
+        async function checkVault() {
+            try {
+                log('Starting vault debug check...', 'loading');
+
+                // Check if we're on the vault tab
+                const currentUrl = window.location.href;
+                log(`Current URL: ${currentUrl}`, 'info');
+
+                // Wait for React to load
+                await new Promise(resolve => setTimeout(resolve, 3000));
+
+                // Try to find vault-related DOM elements
+                const vaultElements = document.querySelectorAll('[class*="vault"], [class*="Vault"]');
+                log(`Found ${vaultElements.length} vault-related elements`, 'info');
+
+                // Check for TVL display
+                const tvlElements = document.querySelectorAll('*');
+                let foundTvl = false;
+                let foundSharePrice = false;
+                let foundNaN = false;
+
+                tvlElements.forEach(el => {
+                    const text = el.textContent || '';
+
+                    // Check for TVL
+                    if (text.includes('Total Value Locked') || text.includes('TVL')) {
+                        log(`Found TVL section: "${text.trim()}"`, 'info');
+                        foundTvl = true;
+                    }
+
+                    // Check for Share Price
+                    if (text.includes('Share Price') || text.includes('lvUSDT per share')) {
+                        log(`Found share price section: "${text.trim()}"`, 'info');
+                        foundSharePrice = true;
+                    }
+
+                    // Check for NaN or error states
+                    if (text.includes('NaN') || text.includes('$NaN') || text.includes('undefined')) {
+                        log(`❌ Found NaN/undefined in: "${text.trim()}"`, 'error');
+                        foundNaN = true;
+                    }
+
+                    // Check for $0 values (potential issue)
+                    if (text.includes('$0') && (text.includes('TVL') || text.includes('Total'))) {
+                        log(`⚠️ Found $0 display: "${text.trim()}"`, 'warning');
+                    }
+                });
+
+                if (foundNaN) {
+                    log('❌ NaN values detected in the UI', 'error');
+                } else {
+                    log('✅ No NaN values found in displayed text', 'success');
+                }
+
+                // Check for loading states
+                const loadingElements = document.querySelectorAll('[class*="loading"], [class*="Loading"]');
+                log(`Found ${loadingElements.length} loading elements`, 'info');
+
+                // Check for error displays
+                const errorElements = document.querySelectorAll('[class*="error"], [class*="Error"]');
+                log(`Found ${errorElements.length} error elements`, 'info');
+
+                // Try to access React dev tools if available
+                if (window.React || document.querySelector('[data-reactroot]')) {
+                    log('✅ React app detected', 'success');
+                } else {
+                    log('⚠️ React app not detected or not loaded yet', 'warning');
+                }
+
+                // Check console errors
+                const consoleLogs = [];
+                const originalConsoleError = console.error;
+                const originalConsoleWarn = console.warn;
+
+                console.error = function(...args) {
+                    consoleLogs.push({type: 'error', args});
+                    originalConsoleError.apply(console, args);
+                };
+
+                console.warn = function(...args) {
+                    consoleLogs.push({type: 'warn', args});
+                    originalConsoleWarn.apply(console, args);
+                };
+
+                // Check network tab for failed requests
+                if (performance && performance.getEntriesByType) {
+                    const entries = performance.getEntriesByType('navigation');
+                    entries.forEach(entry => {
+                        log(`Navigation timing: ${entry.duration.toFixed(0)}ms`, 'info');
+                    });
+
+                    const resourceEntries = performance.getEntriesByType('resource');
+                    const failedRequests = resourceEntries.filter(entry =>
+                        entry.name.includes('sepolia') && entry.duration === 0
+                    );
+
+                    if (failedRequests.length > 0) {
+                        log(`⚠️ Found ${failedRequests.length} potentially failed RPC requests`, 'warning');
+                    }
+                }
+
+                status.innerHTML = `<span class="success">Debug check completed. Found ${foundNaN ? 'ISSUES' : 'no major issues'}.</span>`;
+
+            } catch (error) {
+                log(`❌ Debug check failed: ${error.message}`, 'error');
+                status.innerHTML = `<span class="error">Debug check failed: ${error.message}</span>`;
+            }
+        }
+
+        // Start the check when page loads
+        window.addEventListener('load', () => {
+            setTimeout(checkVault, 1000);
+        });
+
+        // Also run immediately in case page is already loaded
+        if (document.readyState === 'complete') {
+            setTimeout(checkVault, 1000);
+        }
+    </script>
+</body>
+</html>
