@@ -1,6 +1,6 @@
-# Getting Started with Create React App
+# LEVER Protocol - Frontend Application
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+LEVER Protocol provides synthetic leveraged perpetuals on prediction markets. This frontend application enables users to trade leveraged positions backed by a unified LP pool.
 
 ## Available Scripts
 

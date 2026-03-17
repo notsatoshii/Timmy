@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-17T12:25:58.348899+00:00",
+  "timestamp": "2026-03-17T12:41:55.475578+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,12 +11,12 @@
     },
     {
       "name": "Positions",
-      "value": "157",
+      "value": "163",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "7099767554735 [7.099e12]",
+      "value": "7554767554735 [7.554e12]",
       "status": "ok"
     },
     {
@@ -28,30 +28,30 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Manifest.json shows default 'Create React App' branding instead of LEVER Protocol",
-    "Vision: PWA configuration uses placeholder values (theme_color: '#000000' vs brand purple #7c3aed)",
-    "Vision: No health/status endpoints visible for monitoring",
-    "Vision: Cannot verify actual trading functionality without browser interaction",
-    "Vision: Default React App naming in manifest reduces professional appearance"
+    "Vision: Testnet labeling prominent in header reduces production credibility",
+    "Vision: Build plan indicates manifest.json still shows 'Create React App' branding",
+    "Vision: No health/status monitoring endpoints visible to investors",
+    "Vision: Read-only mode banner may suggest incomplete functionality",
+    "Vision: Base Sepolia testnet repeatedly emphasized over mainnet deployment"
   ],
   "functional_issues": [],
   "score": 60,
   "vision_review": {
-    "professional_score": 6,
-    "trust_score": 5,
+    "professional_score": 7,
+    "trust_score": 6,
     "issues": [
-      "Manifest.json shows default 'Create React App' branding instead of LEVER Protocol",
-      "PWA configuration uses placeholder values (theme_color: '#000000' vs brand purple #7c3aed)",
-      "No health/status endpoints visible for monitoring",
-      "Cannot verify actual trading functionality without browser interaction",
-      "Default React App naming in manifest reduces professional appearance"
+      "Testnet labeling prominent in header reduces production credibility",
+      "Build plan indicates manifest.json still shows 'Create React App' branding",
+      "No health/status monitoring endpoints visible to investors",
+      "Read-only mode banner may suggest incomplete functionality",
+      "Base Sepolia testnet repeatedly emphasized over mainnet deployment"
     ],
     "improvements": [
-      "Update manifest.json with proper LEVER Protocol branding and icons",
-      "Align PWA theme colors with brand colors (#7c3aed)",
-      "Add API health endpoints for monitoring and transparency",
-      "Implement proper error boundaries for production stability",
-      "Add loading states and offline functionality for better UX"
+      "Update manifest.json with proper LEVER Protocol branding",
+      "Add /health and /status endpoints for transparency",
+      "Consider mainnet deployment or de-emphasize testnet nature",
+      "Add investor-focused sections like roadmap or team info",
+      "Implement comprehensive error handling for contract call failures"
     ]
   }
 }
