@@ -1,28 +1,32 @@
-## Plan Review: APPROVED ✅
+Based on the current QA report showing a score of 60 with specific visual/professional issues identified, here's the **revised plan** focusing on the actual current blockers:
 
-Based on the plan content and current QA report, here's my assessment:
+## Revised Plan: Investor Demo Critical Path
 
-### Plan Strengths:
-1. **Clear Focus**: 3 well-defined, critical frontend tasks
-2. **Appropriate Constraints**: Respects the locked sprint rules (no contract redeployments, frontend-only)
-3. **Logical Priority**: Addresses investor demo blockers in order of severity
-4. **Verification Built-in**: Includes health checks after each task
+### 1. Fix Professional Branding [CRITICAL - 30 min] 
+- [ ] **Priority 1**: Update manifest.json with LEVER Protocol branding
+- [ ] Set proper theme_color to brand purple (#7c3aed) 
+- [ ] Replace "Create React App" with "LEVER Protocol" throughout
+- **Why**: QA identified this as the #1 professional appearance issue
+- **Success criteria**: PWA shows LEVER branding, purple theme
 
-### Current Status Analysis:
-The QA report shows a perfect score (100) with all systems "ok", but this appears to be a **detection gap** rather than resolved issues. The plan correctly identifies that:
+### 2. Add Health Monitoring Endpoints [CRITICAL - 45 min]
+- [ ] **Priority 2**: Add `/health` and `/status` API endpoints
+- [ ] Return system state JSON for transparency
+- [ ] Make endpoints visible to investors/operators
+- **Why**: QA flagged missing monitoring capabilities
+- **Success criteria**: Accessible health endpoints show system status
 
-- Frontend shows as "UP" but serves static HTML instead of React app
-- Critical display issues (vault data, position values) need fixing
-- These are **functional failures masked by basic health checks**
+### 3. Validate Current Data Display [CRITICAL - 30 min]
+- [ ] **Priority 3**: Verify vault data and position values in live frontend
+- [ ] Test if $NaN/$0.00 issues still exist (QA shows backend data is healthy)
+- [ ] Document actual current state vs perceived issues
+- **Why**: Backend shows 157 positions, $60.5M TVL - confirm frontend displays this
+- **Success criteria**: Accurate assessment of current frontend state
 
-### Recommendations:
+**Key Changes from Original**:
+- **Scope reduction**: Focus on QA-identified issues rather than assumed problems
+- **Data verification first**: Backend shows healthy data, need to confirm frontend issues
+- **Professional appearance priority**: QA scored this as the biggest gap
+- **Realistic timelines**: 2-hour total execution window
 
-**APPROVE this plan** because:
-1. It targets the right problems for investor demo success
-2. The scope is realistic and properly constrained  
-3. The QA system's perfect score likely means basic services are running, not that the frontend rendering issues are resolved
-4. The verification approach (health checks after each task) will catch real progress
-
-**Execute immediately** - these frontend rendering issues are exactly what investors will see, and the plan provides a clear path to resolution.
-
-The plan should succeed in fixing the gap between "service up" and "functional React app" that the current QA checks aren't detecting.
+**Current Status**: QA score 60, mode AUTO-IMPROVE, backend data healthy. Focus on closing the professional appearance gap.
