@@ -1,0 +1,8 @@
+{
+  "task_id": "1",
+  "lane": "FRONTEND",
+  "title": "Fix Vault $NaN Share Price and $0 TVL Display [CRITICAL]",
+  "started": "2026-03-17T06:31:31.136534",
+  "pid": 961993,
+  "log": "/home/lever/lever-protocol/control-plane/dispatcher-logs/task-1-063131.log"
+}

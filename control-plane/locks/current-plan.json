@@ -4,7 +4,7 @@
       "id": "1",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "FRONTEND: React build system, dist folder, npm commands, frontend service. No dependencies: foundational build fix that other frontend work needs"
+      "reason": "Frontend React hooks and components changes. No dependencies as this fixes vault display issues independently."
     },
     {
       "id": "2",
@@ -12,43 +12,51 @@
       "depends_on": [
         "1"
       ],
-      "reason": "FRONTEND: React hooks, components, RPC batching, display logic. Depends on 1: needs working build to test vault data fixes"
+      "reason": "Frontend position calculation fixes. Sequential after task 1 to avoid potential file conflicts in shared hooks/utils."
     },
     {
       "id": "3",
       "lane": "CONTRACT",
       "depends_on": [],
-      "reason": "CONTRACT: Solidity contract updates, forge deployment, contract addresses. No dependencies: independent contract layer work"
+      "reason": "Solidity contract deployment. Independent contract fix that other tasks depend on."
     },
     {
       "id": "4",
       "lane": "FRONTEND",
       "depends_on": [
-        "1"
+        "2"
       ],
-      "reason": "FRONTEND: React hooks, position components, stub data, decimal formatting. Depends on 1: needs working build to test position fixes"
+      "reason": "Frontend volume calculation changes. Sequential after other frontend display fixes to avoid conflicts."
     },
     {
       "id": "5",
-      "lane": "FRONTEND",
-      "depends_on": [
-        "1"
-      ],
-      "reason": "FRONTEND: React hooks, market data calculations, display formulas. Depends on 1: needs working build to test volume calculation fixes"
+      "lane": "INFRA",
+      "depends_on": [],
+      "reason": "Service management and process restart. Independent infrastructure task."
     },
     {
       "id": "6",
       "lane": "FRONTEND",
       "depends_on": [
-        "1"
+        "3",
+        "4"
       ],
-      "reason": "FRONTEND: wagmi config, RPC client configuration, retry logic. Depends on 1: needs working build to test RPC resilience changes"
+      "reason": "Frontend config updates requiring new ExecutionEngine address from task 3. Sequential after other frontend changes."
     },
     {
       "id": "7",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "3",
+        "6"
+      ],
+      "reason": "Frontend error handling improvements. Better to fix underlying contract issue first, then update config, then improve error handling."
+    },
+    {
+      "id": "8",
       "lane": "CONTRACT",
       "depends_on": [],
-      "reason": "CONTRACT: Verifying Solidity fee routing, calling contract methods, testing fee distribution. No dependencies: independent contract verification work"
+      "reason": "Contract verification and testing. Independent of ExecutionEngine deployment in task 3."
     }
   ]
 }

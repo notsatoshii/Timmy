@@ -131,9 +131,10 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
     return () => clearInterval(interval);
   }, []);
 
-  // Prepare batched contract calls - reduce batch size to avoid 413 errors
-  const contractCalls = useMemo(() => {
-    const baseCalls = [
+  // Split contract calls into smaller batches (max 5 calls each) to avoid 413 errors
+  const contractBatches = useMemo(() => {
+    // Batch 1: Core vault data (4 calls)
+    const coreVaultCalls = [
       {
         address: contracts.leverVault,
         abi: LEVER_VAULT_ABI,
@@ -161,43 +162,54 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
       }
     ];
 
-    // Add user-specific calls only if address is provided
-    if (userAddress) {
-      baseCalls.push(
-        {
-          address: contracts.leverVault,
-          abi: LEVER_VAULT_ABI,
-          functionName: 'balanceOf',
-          args: [userAddress] as any,
-          name: 'UserShares'
-        },
-        {
-          address: contracts.usdt,
-          abi: USDT_ABI as any,
-          functionName: 'balanceOf',
-          args: [userAddress] as any,
-          name: 'UsdtBalance'
-        }
-      );
-    }
+    // Batch 2: User-specific data (2 calls) - only if address is provided
+    const userDataCalls = userAddress ? [
+      {
+        address: contracts.leverVault,
+        abi: LEVER_VAULT_ABI,
+        functionName: 'balanceOf',
+        args: [userAddress] as any,
+        name: 'UserShares'
+      },
+      {
+        address: contracts.usdt,
+        abi: USDT_ABI as any,
+        functionName: 'balanceOf',
+        args: [userAddress] as any,
+        name: 'UsdtBalance'
+      }
+    ] : [];
 
-    return baseCalls;
+    return {
+      coreVaultCalls,
+      userDataCalls,
+    };
   }, [contracts, userAddress]);
 
-  // Single batched multicall to reduce RPC load and avoid 413 errors
-  const multicallResult = useContractData({
-    contracts: contractCalls,
+  // Batch 1: Core vault multicall (always enabled unless circuit breaker is open)
+  const coreMulticallResult = useContractData({
+    contracts: contractBatches.coreVaultCalls,
     enabled: !circuitBreaker.isOpen,
     fallbackValues: {
       TotalAssets: fallbackValues.totalAssets,
       TotalSupply: fallbackValues.totalSupply,
       SharePrice: fallbackValues.sharePrice,
       GlobalOI: fallbackValues.globalOI,
+    },
+    onError: (error, callIndex) => handleContractError(error, contractBatches.coreVaultCalls[callIndex]?.name || `core-call-${callIndex}`, callIndex),
+    retryAttempts: circuitBreaker.isOpen ? 0 : (circuitBreaker.failureCount > 0 ? 1 : 2),
+  });
+
+  // Batch 2: User data multicall (only if user address is provided)
+  const userMulticallResult = useContractData({
+    contracts: contractBatches.userDataCalls,
+    enabled: !circuitBreaker.isOpen && !!userAddress && contractBatches.userDataCalls.length > 0,
+    fallbackValues: {
       UserShares: fallbackValues.userShares,
       UsdtBalance: fallbackValues.usdtBalance,
     },
-    onError: (error, callIndex) => handleContractError(error, contractCalls[callIndex]?.name || `call-${callIndex}`, callIndex),
-    retryAttempts: circuitBreaker.isOpen ? 0 : (circuitBreaker.failureCount > 0 ? 1 : 2), // Reduce retries when we've had failures
+    onError: (error, callIndex) => handleContractError(error, contractBatches.userDataCalls[callIndex]?.name || `user-call-${callIndex}`, callIndex),
+    retryAttempts: circuitBreaker.isOpen ? 0 : (circuitBreaker.failureCount > 0 ? 1 : 2),
   });
 
   // Process and return comprehensive data from batched multicall

@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-03-17T06:28:12.952721+00:00",
+  "frontend_status": "UP",
+  "data_checks": [
+    {
+      "name": "TVL",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Positions",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Global OI",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Insurance Fund",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Max Leverage",
+      "value": "",
+      "status": "error"
+    }
+  ],
+  "visual_issues": [
+    "Vision: Vault shows $NaN share price and $0 TVL",
+    "Vision: All position values display $0.00",
+    "Vision: Position opening fails with error messages"
+  ],
+  "functional_issues": [],
+  "critical_blockers": [],
+  "score": 70,
+  "vision_review": {
+    "professional_score": 4,
+    "trust_score": 2,
+    "deal_breakers": [
+      "Vault shows $NaN share price and $0 TVL",
+      "All position values display $0.00",
+      "Position opening fails with error messages"
+    ],
+    "improvements": [
+      "Fix vault data display showing real TVL instead of $NaN",
+      "Resolve position value calculations to show actual USD amounts",
+      "Fix ExecutionEngine deployment to enable multi-leveraged trading"
+    ]
+  },
+  "recent_commits": "0c5b62fb auto: cycle tasks complete\n98c38066 fix(1): Fix React Frontend Build to Show Actual App Interface - rebuilt production assets with proper bundle references, fixed TypeScript ABI compilation error\n72ca051b auto: cycle tasks complete\n9977a43a fix(6): Verify Oracle Keeper Service Health - confirmed keeper running, price updates flowing, monitoring alerts active\n298f2946 auto: cycle tasks complete",
+  "known_issues_count": 27
+}
