@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { usePublicClient } from 'wagmi';
 import { useWallet } from '../hooks/useWallet';
 import { CONTRACT_ADDRESSES, formatWad, WAD } from '../config/contracts';
 import {
@@ -37,6 +38,7 @@ type CloseState = 'idle' | 'confirming' | 'pending' | 'success' | 'error';
 
 const Positions: React.FC = () => {
   const { address } = useWallet();
+  const publicClient = usePublicClient();
   const { showTradeConfirmation, showErrorToast, showLiquidationWarning } = useNotifications();
   const [positions, setPositions] = useState<PositionData[]>([]);
   const [selectedPositionId, setSelectedPositionId] = useState<bigint | null>(null);
@@ -131,7 +133,7 @@ const Positions: React.FC = () => {
       return;
     }
 
-    // For now, fall back to demo data with enhanced PnL calculations
+    // Read real position data from PositionManager contract
     // This ensures the component doesn't crash while we implement proper contract calls
     const posData: PositionData[] = [];
 
@@ -139,38 +141,44 @@ const Positions: React.FC = () => {
       try {
         console.log(`[Positions] Processing position ID: ${id.toString()}`);
 
-        // Create position with safer default values
+        // Read real position data from contract
+        if (!publicClient) {
+          console.warn('[Positions] No publicClient available, skipping position', id.toString());
+          continue;
+        }
+
+        const rawPos = await publicClient.readContract({
+          address: CONTRACT_ADDRESSES.positionManager,
+          abi: POSITION_MANAGER_ABI,
+          functionName: 'getPosition',
+          args: [id],
+        }) as any;
+
+        // Skip closed positions
+        if (rawPos.isOpen === false) {
+          console.log(`[Positions] Position ${id.toString()} is closed, skipping`);
+          continue;
+        }
+
         const position: PositionData = {
-          id,
-          marketId: '0x0000000000000000000000000000000000000000000000000000000000000000' as `0x${string}`,
-          marketName: `Position #${id.toString()}`,
-          isLong: true,
-          collateral: BigInt(1000) * WAD, // 1000 USDT as WAD
-          positionSize: BigInt(5000) * WAD, // 5000 USDT as WAD
-          entryPI: BigInt(350) * (WAD / BigInt(1000)), // 0.35 as WAD
-          entryPrice: BigInt(355) * (WAD / BigInt(1000)), // 0.355 as WAD
-          leverage: BigInt(5) * WAD, // 5x leverage as WAD
-          currentPI: BigInt(380) * (WAD / BigInt(1000)), // 0.38 as WAD
-          pnl: BigInt(0), // Will be calculated below
-          borrowFees: BigInt(12) * WAD,
-          fundingAccrued: BigInt(-3) * WAD,
-          equity: BigInt(0), // Will be calculated below
-          isOpen: true,
+          id: rawPos.id ?? id,
+          marketId: rawPos.marketId as `0x${string}`,
+          marketName: `Position #${(rawPos.id ?? id).toString()}`,
+          isLong: rawPos.isLong,
+          collateral: rawPos.collateral,
+          positionSize: rawPos.positionSize,
+          entryPI: rawPos.entryPI,
+          entryPrice: rawPos.entryPrice,
+          leverage: rawPos.leverage,
+          currentPI: rawPos.entryPI, // Updated with live price below
+          pnl: BigInt(0),
+          borrowFees: BigInt(0), // TODO: calculate from borrowIndex
+          fundingAccrued: BigInt(0), // TODO: calculate from fundingIndex
+          equity: BigInt(0),
+          isOpen: rawPos.isOpen,
         };
 
-        console.log(`[Positions] Position ${id} raw values:`, {
-          collateral: position.collateral.toString(),
-          collateralFormatted: formatWad(position.collateral),
-          positionSize: position.positionSize.toString(),
-          positionSizeFormatted: formatWad(position.positionSize),
-          entryPI: position.entryPI.toString(),
-          currentPI: position.currentPI.toString(),
-          borrowFees: position.borrowFees.toString(),
-          borrowFeesFormatted: formatWad(position.borrowFees),
-          fundingAccrued: position.fundingAccrued.toString(),
-          fundingAccruedFormatted: formatWad(position.fundingAccrued),
-          WAD: WAD.toString()
-        });
+        console.log(`[Positions] Loaded real position ${id.toString()} from contract`);
 
         // Calculate PnL with proper decimal scaling
         const priceDiff = Number(position.currentPI - position.entryPI);
