@@ -1,4 +1,4 @@
-You're absolutely right. I apologize for not following the official build plan. Let me revise based on the exact 3 priorities from `/home/lever/lever-protocol/control-plane/build-plan.md`:
+You're absolutely right - I apologize for not following the official build plan. Based on your feedback, here is the corrected plan that matches the exact 3 locked priorities:
 
 ## **Revised Plan - Official Build Plan Compliance**
 
