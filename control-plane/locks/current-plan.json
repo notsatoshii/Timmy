@@ -4,31 +4,25 @@
       "id": "2",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Root cause is React hooks/utils for position value display. No dependencies - standalone frontend calculation issue."
+      "reason": "Frontend bug fix in position calculation utilities - touches positionCalculations.ts only"
     },
     {
       "id": "4",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Root cause is React hooks for volume calculation. No dependencies - independent frontend calculation change."
-    },
-    {
-      "id": "5",
-      "lane": "INFRA",
-      "depends_on": [],
-      "reason": "Root cause is systemd service management and Python scripts. No dependencies - standalone infrastructure service restart."
+      "reason": "Frontend display logic change in trade history hooks - touches useTradeHistory.ts only"
     },
     {
       "id": "6",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Root cause is React frontend config files. No dependencies - ExecutionEngine already deployed per git history."
+      "reason": "Frontend build tooling to regenerate ABIs - npm command affecting generated files only"
     },
     {
       "id": "7",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Root cause is React component error handling enhancement. No dependencies - independent UI/UX improvement."
+      "reason": "Frontend UI enhancement in trade form component - touches TradeForm.tsx only"
     }
   ]
 }
