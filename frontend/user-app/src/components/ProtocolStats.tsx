@@ -25,7 +25,7 @@ const DEMO_FALLBACK_VALUES = {
   tvl: BigInt("50000000000"), // $50,000 in USDT (6 decimals)
   totalOI: BigInt("30000000000"), // $30,000 in USDT (6 decimals)
   insuranceFund: BigInt("10000000000000000000000"), // $10,000 in WAD (18 decimals)
-  volume24h: BigInt("12800000000"), // $12,800 in USDT (6 decimals)
+  volume24h: BigInt("0"), // $0 in USDT (6 decimals) - show zero not fake data
   borrowRate: BigInt("200000000000000"), // 0.02% per hour in WAD
 };
 

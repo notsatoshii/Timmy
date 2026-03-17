@@ -21,9 +21,8 @@ export const useVolumeCalculation = (enabled: boolean = true) => {
         // Get current block number
         const currentBlock = await publicClient.getBlockNumber();
 
-        // Estimate blocks for last 24 hours on Base (2 second block time)
-        const blocksIn24h = BigInt(24 * 60 * 60 / 2); // 43,200 blocks
-        const fromBlock = currentBlock > blocksIn24h ? currentBlock - blocksIn24h : BigInt(0);
+        // Fetch all historical events from block 0
+        const fromBlock = BigInt(0);
 
         const addresses = getContractAddresses();
 
@@ -67,13 +66,10 @@ export const useVolumeCalculation = (enabled: boolean = true) => {
       } catch (err) {
         console.error('Error calculating 24h volume:', err);
 
-        // Fallback to mock calculation if event fetching fails
-        // For now, we'll use the existing mock data from trade history
-        // This provides realistic demo data while event infrastructure is being established
-        const mockVolume24h = BigInt('12800000000'); // Sum of mock trade notionals: 8000 + 4800 = 12800 USDT (already notional, not just collateral)
-        setVolume24h(mockVolume24h);
+        // Set volume to zero when no events found
+        setVolume24h(BigInt(0));
 
-        setError('Using demo volume data - live event tracking pending');
+        setError('No volume events found - showing zero');
       } finally {
         setIsLoading(false);
       }
