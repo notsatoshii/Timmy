@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-17T12:41:55.475578+00:00",
+  "timestamp": "2026-03-17T12:58:14.009138+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,12 +11,12 @@
     },
     {
       "name": "Positions",
-      "value": "163",
+      "value": "170",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "7554767554735 [7.554e12]",
+      "value": "8079767554735 [8.079e12]",
       "status": "ok"
     },
     {
@@ -28,30 +28,27 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Testnet labeling prominent in header reduces production credibility",
-    "Vision: Build plan indicates manifest.json still shows 'Create React App' branding",
-    "Vision: No health/status monitoring endpoints visible to investors",
-    "Vision: Read-only mode banner may suggest incomplete functionality",
-    "Vision: Base Sepolia testnet repeatedly emphasized over mainnet deployment"
+    "Vision: Cannot verify actual React app functionality from static HTML",
+    "Vision: No visible loading indicators or error handling in base HTML",
+    "Vision: Unable to test wallet connectivity or trading interface",
+    "Vision: No fallback content for disabled JavaScript users"
   ],
   "functional_issues": [],
-  "score": 60,
+  "score": 68,
   "vision_review": {
-    "professional_score": 7,
-    "trust_score": 6,
+    "professional_score": 8,
+    "trust_score": 7,
     "issues": [
-      "Testnet labeling prominent in header reduces production credibility",
-      "Build plan indicates manifest.json still shows 'Create React App' branding",
-      "No health/status monitoring endpoints visible to investors",
-      "Read-only mode banner may suggest incomplete functionality",
-      "Base Sepolia testnet repeatedly emphasized over mainnet deployment"
+      "Cannot verify actual React app functionality from static HTML",
+      "No visible loading indicators or error handling in base HTML",
+      "Unable to test wallet connectivity or trading interface",
+      "No fallback content for disabled JavaScript users"
     ],
     "improvements": [
-      "Update manifest.json with proper LEVER Protocol branding",
-      "Add /health and /status endpoints for transparency",
-      "Consider mainnet deployment or de-emphasize testnet nature",
-      "Add investor-focused sections like roadmap or team info",
-      "Implement comprehensive error handling for contract call failures"
+      "Add noscript content explaining JavaScript requirement",
+      "Include loading indicator in base HTML template",
+      "Add meta tags for additional SEO optimization",
+      "Consider server-side rendering for better investor confidence"
     ]
   }
 }
