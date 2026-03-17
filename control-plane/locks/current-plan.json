@@ -4,13 +4,15 @@
       "id": "1",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Root cause is frontend data fetching hooks and React components. This is the core data infrastructure that other frontend tasks depend on."
+      "reason": "FRONTEND: Fixes React hooks, wagmi config, and contract address verification. No dependencies: foundational fix that enables other data fetching."
     },
     {
       "id": "2",
       "lane": "CONTRACT",
-      "depends_on": [],
-      "reason": "Requires redeploying Solidity contract and updating deployment scripts. Independent contract work."
+      "depends_on": [
+        "1"
+      ],
+      "reason": "CONTRACT: Deploys new ExecutionEngine contract and updates addresses. Depends on 1: both tasks touch contracts.ts (verification before update prevents conflicts)."
     },
     {
       "id": "3",
@@ -18,7 +20,7 @@
       "depends_on": [
         "1"
       ],
-      "reason": "Frontend vault data hooks and React components. Depends on Task 1 since data fetching issues could affect share price calculations."
+      "reason": "FRONTEND: Fixes React component display and hook calculations. Depends on 1: needs RPC errors fixed to properly fetch vault data that sharePrice calculation depends on."
     },
     {
       "id": "4",
@@ -27,36 +29,33 @@
         "1",
         "2"
       ],
-      "reason": "Frontend position hooks and components. Depends on Task 1 for data fetching and Task 2 to enable position opening beyond 1x to have real position data."
+      "reason": "FRONTEND: Improves React error handling and debugging. Depends on 1: needs RPC working to capture revert reasons. Depends on 2: needs correct ExecutionEngine address for proper debugging."
     },
     {
       "id": "5",
       "lane": "FRONTEND",
       "depends_on": [
-        "1",
-        "2"
+        "1"
       ],
-      "reason": "Frontend trade history hooks and market components. Depends on Task 1 for data fetching and Task 2 for position opening to generate volume data."
+      "reason": "FRONTEND: Updates React hooks and components for volume calculation. Depends on 1: needs RPC errors fixed to properly fetch trade history data for volume calculations."
     },
     {
       "id": "6",
       "lane": "FRONTEND",
-      "depends_on": [
-        "1"
-      ],
-      "reason": "Frontend vault data hooks and dashboard components. Depends on Task 1 since TVL calculation requires working data fetching."
+      "depends_on": [],
+      "reason": "FRONTEND: Adds React error boundaries and loading states. No dependencies: error boundaries can be implemented regardless of underlying data issues."
     },
     {
       "id": "7",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Systemd service management and health check scripts. Independent infrastructure work."
+      "reason": "INFRA: Checks systemd services and Python scripts. No dependencies: independent infrastructure monitoring work."
     },
     {
       "id": "8",
       "lane": "CONTRACT",
       "depends_on": [],
-      "reason": "Contract verification and potential redeployment of fee routing. Independent contract work."
+      "reason": "CONTRACT: Debugs Solidity fee distribution logic. No dependencies: independent contract investigation work."
     }
   ]
 }

@@ -1,0 +1,53 @@
+{
+  "timestamp": "2026-03-17T06:02:40.437228+00:00",
+  "frontend_status": "UP",
+  "data_checks": [
+    {
+      "name": "TVL",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Positions",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Global OI",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Insurance Fund",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Max Leverage",
+      "value": "",
+      "status": "error"
+    }
+  ],
+  "visual_issues": [
+    "Vision: $NaN share price display in vault tab",
+    "Vision: Position opening fails with error messages"
+  ],
+  "functional_issues": [],
+  "critical_blockers": [],
+  "score": 80,
+  "vision_review": {
+    "professional_score": 6,
+    "trust_score": 3,
+    "deal_breakers": [
+      "$NaN share price display in vault tab",
+      "Position opening fails with error messages"
+    ],
+    "improvements": [
+      "Fix $NaN and $0.00 displays throughout UI",
+      "Resolve ExecutionEngine limitation blocking position opening",
+      "Display accurate 24h volume (notional not just collateral)"
+    ]
+  },
+  "recent_commits": "a7fae3a4 auto: cycle tasks complete\n25a311da fix(7): Ensure Oracle Keeper Stays Running for Live Price Updates - implemented systemd service, health monitoring, auto-restart via cron, all health checks passing\n0cd26da0 fix(1): Fix $NaN Share Price Display in Vault Tab\n065dd84e fix(7): Ensure Oracle Keeper is Running for Live Price Updates - started mock_keeper.py service, created systemd service file, verified price updates flowing successfully\n90e0565f auto: cycle tasks complete",
+  "known_issues_count": 27
+}

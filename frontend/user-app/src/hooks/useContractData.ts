@@ -54,26 +54,41 @@ export function useContractData(config: ContractDataConfig) {
         const enhanced = enhanceError(error);
 
         // Log all errors for debugging
-        console.warn(`Contract call failed (attempt ${failureCount + 1}):`, {
+        console.warn(`Contract multicall failed (attempt ${failureCount + 1}/${retryAttempts}):`, {
           error: enhanced.message,
           code: enhanced.code,
           isNetworkError: enhanced.isNetworkError,
           isRateLimit: enhanced.isRateLimit,
-          contracts: contracts.map(c => ({ address: c.address, function: c.functionName }))
+          contracts: contracts.map(c => ({ address: c.address, function: c.functionName })),
+          failureCount: failureCount + 1,
         });
 
-        // Retry logic based on error type
+        // More conservative retry logic for rate limiting
         if (failureCount < retryAttempts) {
-          if (enhanced.isNetworkError || enhanced.isRateLimit) {
+          if (enhanced.isRateLimit) {
+            // Only retry rate limits once to avoid hammering
+            return failureCount === 0;
+          }
+          if (enhanced.isNetworkError) {
             return true;
           }
         }
         return false;
       },
-      retryDelay: (attemptIndex) => {
-        // Exponential backoff with jitter for rate limit handling
-        const baseDelay = Math.min(1000 * Math.pow(2, attemptIndex), 30000);
-        const jitter = Math.random() * 1000;
+      retryDelay: (attemptIndex, error) => {
+        const enhanced = enhanceError(error);
+
+        // Much longer delays for rate limiting
+        if (enhanced.isRateLimit) {
+          const rateLimit Delay = Math.min(10000 * Math.pow(2, attemptIndex), 60000); // 10s, 20s, 40s, 60s max
+          const jitter = Math.random() * 2000; // More jitter for rate limits
+          console.log(`Rate limit retry delay: ${rateLimitDelay + jitter}ms`);
+          return rateLimitDelay + jitter;
+        }
+
+        // Normal exponential backoff with jitter for other errors
+        const baseDelay = Math.min(1000 * Math.pow(2, attemptIndex), 15000);
+        const jitter = Math.random() * 500;
         return baseDelay + jitter;
       },
       staleTime: 15000, // 15s

@@ -10,20 +10,43 @@ const baseSepoliaRPCs = [
   'https://sepolia.base.org/v1/rpc', // Alternative base endpoint
 ];
 
-// Enhanced transport with fallback and retry logic
+// Enhanced transport with fallback, reduced batch size, and aggressive 413 handling
 const baseSepoliaTransport = fallback(
-  baseSepoliaRPCs.map((url) =>
+  baseSepoliaRPCs.map((url, index) =>
     http(url, {
-      batch: true,
-      timeout: 10000, // 10 second timeout
-      retryCount: 3,
-      retryDelay: 2000, // 2 second base retry delay
+      batch: {
+        multicall: {
+          batchSize: index === 0 ? 8 : 4, // Smaller batch sizes to avoid 413 errors
+          wait: 100, // Increased batching wait time
+        }
+      },
+      timeout: 15000, // Increased timeout for slower responses under rate limiting
+      retryCount: 2, // Reduced retries to avoid hammering rate-limited RPCs
+      retryDelay: (config) => {
+        // Exponential backoff with longer delays for rate limiting
+        const attempt = config.count;
+        const isRateLimit = config.error && (
+          config.error.message?.includes('413') ||
+          config.error.message?.includes('429') ||
+          config.error.message?.includes('rate limit') ||
+          config.error.message?.includes('too many requests')
+        );
+
+        if (isRateLimit) {
+          // Much longer delays for rate limiting
+          return Math.min(5000 * Math.pow(2, attempt), 60000);
+        }
+
+        // Normal exponential backoff for other errors
+        return Math.min(1000 * Math.pow(2, attempt), 10000);
+      },
     })
   ),
   {
     rank: {
-      interval: 60000, // Check RPC health every minute
-      sampleCount: 5,
+      interval: 30000, // More frequent RPC health checks
+      sampleCount: 3,
+      targetCount: 2, // Try to keep 2 healthy RPCs
     },
   }
 );
@@ -37,7 +60,10 @@ export const config = createConfig({
     [baseSepolia.id]: baseSepoliaTransport,
   },
   batch: {
-    multicall: true,
+    multicall: {
+      batchSize: 6, // Conservative batch size to avoid 413 errors
+      wait: 150, // Longer wait time to batch fewer frequent requests
+    },
   },
 });
 
