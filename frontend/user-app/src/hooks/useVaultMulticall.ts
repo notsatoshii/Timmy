@@ -142,7 +142,7 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
     return {
       totalAssets: createSafeBigInt("250000000000", "totalAssets"), // $250,000 in USDT format (6 decimals) - more realistic TVL
       totalSupply: createSafeBigInt("250000000000000000000000", "totalSupply"), // 250,000 shares in WAD format (18 decimals)
-      sharePrice: createSafeBigInt("1000000000000000000", "sharePrice"), // $1.00 in WAD format (18 decimals)
+      sharePrice: createSafeBigInt("1000000", "sharePrice"), // $1.00 in USDT format (6 decimals) - convertToAssets returns USDT
       globalOI: createSafeBigInt("50000000000", "globalOI"), // $50,000 OI in USDT format
       userShares: createSafeBigInt("0", "userShares"),
       usdtBalance: createSafeBigInt("10000000000", "usdtBalance"), // $10,000 USDT balance

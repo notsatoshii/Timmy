@@ -40,6 +40,7 @@ const VaultOptimized: React.FC = () => {
   const metrics = useMemoizedVaultCalculations({
     totalAssets: vaultData.totalAssets,
     totalSupply: vaultData.totalSupply,
+    sharePrice: vaultData.sharePrice, // Pass direct sharePrice from convertToAssets
     borrowFees: BigInt(0), // Not available in new hook, use defaults
     transactionFees: BigInt(0),
     liquidationFees: BigInt(0),
@@ -49,63 +50,64 @@ const VaultOptimized: React.FC = () => {
     usdtBalance: vaultData.usdtBalance,
   });
 
-  // Calculate correct share price from useVaultMulticall (convertToAssets result)
+  // Use share price directly from useVaultMulticall (comes from convertToAssets call)
   const sharePrice = useMemo(() => {
     try {
       // Enhanced debugging and validation
-      console.log('=== SHARE PRICE CALCULATION DEBUG ===', {
+      console.log('=== SHARE PRICE DIRECT FROM VAULT DATA ===', {
         hasVaultData: !!vaultData,
         rawSharePrice: vaultData.sharePrice?.toString(),
-        sharePriceType: typeof vaultData.sharePrice,
         isLoading: vaultData.isLoadingVaultData,
         hasError: vaultData.hasError,
         errors: vaultData.errors?.map(e => e.message),
       });
 
+      // If loading or no data, return fallback
       if (!vaultData || vaultData.isLoadingVaultData) {
-        console.log('Vault data is loading, using fallback share price');
+        console.log('Vault data is loading, using fallback share price $1.00');
         return 1.0;
       }
 
+      // If no sharePrice or zero, return fallback
       if (!vaultData.sharePrice || vaultData.sharePrice === BigInt(0)) {
         console.warn('No share price from vaultData, using fallback $1.00', {
-          sharePrice: vaultData.sharePrice,
+          sharePrice: vaultData.sharePrice?.toString(),
           hasError: vaultData.hasError,
         });
-        return 1.0; // Fallback to $1.00
+        return 1.0; // Professional fallback
       }
 
-      // CRITICAL FIX: vaultData.sharePrice comes from convertToAssets(1 WAD)
-      // Based on testing, it appears to be returning WAD format instead of USDT format
-      // So we need to convert from WAD (18 decimals) to USD
-      const sharePriceFloat = Number(vaultData.sharePrice) / 1e18;
+      // FIXED: vaultData.sharePrice comes from convertToAssets(WAD) and is already in USDT format
+      // convertToAssets returns the amount of assets that would be received for 1 share (WAD = 1e18)
+      // The result is in USDT format (6 decimals), so we need to convert from USDT to float
+      const sharePriceFloat = Number(vaultData.sharePrice) / 1e6; // Convert USDT (6 decimals) to float
 
-      console.log('=== SHARE PRICE CALCULATION ===', {
+      console.log('=== SHARE PRICE DIRECT CALCULATION ===', {
         rawSharePrice: vaultData.sharePrice.toString(),
         sharePriceFloat,
         isValid: isFinite(sharePriceFloat) && sharePriceFloat > 0,
-        vaultDataError: vaultData.hasError,
         errorCount: vaultData.errors?.length || 0,
       });
 
+      // Validate the calculated share price
       if (!isFinite(sharePriceFloat) || sharePriceFloat <= 0 || isNaN(sharePriceFloat)) {
-        console.warn('Invalid share price from convertToAssets, using fallback:', {
+        console.warn('Invalid share price from vaultData.sharePrice, using fallback:', {
           rawValue: vaultData.sharePrice.toString(),
           calculatedFloat: sharePriceFloat,
           isFinite: isFinite(sharePriceFloat),
           isPositive: sharePriceFloat > 0,
           isNaN: isNaN(sharePriceFloat),
         });
-        return 1.0;
+        return 1.0; // Fallback to $1.00
       }
 
       return sharePriceFloat;
     } catch (error) {
-      console.error('Error converting share price, using fallback:', error, {
-        vaultDataSharePrice: vaultData?.sharePrice,
+      console.error('Error processing share price from vaultData, using fallback:', error, {
+        vaultDataSharePrice: vaultData?.sharePrice?.toString(),
         hasVaultData: !!vaultData,
       });
-      return 1.0;
+      return 1.0; // Fallback on any error
     }
   }, [vaultData, vaultData?.sharePrice, vaultData?.isLoadingVaultData, vaultData?.hasError]);
 

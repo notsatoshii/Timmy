@@ -7,8 +7,56 @@ const DIR = '/home/lever/lever-protocol/control-plane/screenshots';
 const TIMEOUT = 30000; // 30 second timeout
 const MAX_RETRIES = 3;
 
+const standaloneChrome = '/home/lever/local-libs/standalone-chrome/chrome';
+
 const browserConfigs = [
-    // Default config
+    // Standalone Chrome (if available)
+    ...(fs.existsSync(standaloneChrome) ? [{
+        executablePath: standaloneChrome,
+        headless: 'new',
+        env: {
+            ...process.env,
+            CHROME_DEVEL_SANDBOX: '',
+            DISPLAY: ''
+        },
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-gpu',
+            '--disable-software-rasterizer',
+            '--no-first-run',
+            '--no-default-browser-check',
+            '--disable-web-security',
+            '--disable-features=VizDisplayCompositor',
+            '--disable-background-networking',
+            '--ignore-certificate-errors',
+            '--disable-extensions',
+            '--disable-plugins',
+            '--disable-sync',
+            '--disable-default-apps',
+            '--mute-audio'
+        ]
+    }] : []),
+    // Chrome wrapper script
+    {
+        executablePath: '/home/lever/local-libs/chrome-wrapper.sh',
+        headless: 'new',
+        env: {
+            ...process.env,
+            LD_LIBRARY_PATH: '/home/lever/local-libs/usr/lib/x86_64-linux-gnu:' + (process.env.LD_LIBRARY_PATH || ''),
+            CHROME_DEVEL_SANDBOX: '',
+            DISPLAY: ''
+        },
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-gpu',
+            '--headless=new'
+        ]
+    },
+    // Default Puppeteer config (original)
     {
         headless: 'new',
         args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
@@ -27,11 +75,6 @@ const browserConfigs = [
             '--disable-backgrounding-occluded-windows',
             '--disable-renderer-backgrounding'
         ]
-    },
-    // Fallback config 2 - basic headless
-    {
-        headless: true,
-        args: ['--no-sandbox', '--disable-dev-shm-usage']
     }
 ];
 

@@ -4,6 +4,7 @@ import { formatWad, formatUsdt, WAD } from '../config/contracts';
 interface VaultData {
   totalAssets?: bigint;
   totalSupply?: bigint;
+  sharePrice?: bigint; // Direct from convertToAssets call
   borrowFees?: bigint;
   transactionFees?: bigint;
   liquidationFees?: bigint;
@@ -92,73 +93,76 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
       tvl = 250000; // Fallback on error
     }
 
-    // Share price calculation (assets per share) with enhanced NaN protection
-    // totalAssets is USDT format (6 decimals), totalSupply is WAD format (18 decimals) for lvUSDT shares
+    // Share price: Use direct value from convertToAssets if available, fallback to calculation
     let sharePrice = 1.0; // Default fallback
     try {
       console.log('=== SHARE PRICE CALCULATION DEBUG ===', {
+        hasDirectSharePrice: !!data.sharePrice,
+        directSharePrice: data.sharePrice?.toString(),
         totalAssets: totalAssets?.toString(),
         totalSupply: totalSupply?.toString(),
-        hasBothValues: !!(totalSupply && totalSupply > BigInt(0) && totalAssets && totalAssets > BigInt(0)),
       });
 
-      if (totalSupply && totalSupply > BigInt(0) && totalAssets && totalAssets > BigInt(0)) {
-        const assetsFloat = parseFloat(formatUsdt(totalAssets)); // USDT format (6 decimals)
-        const supplyFloat = parseFloat(formatWad(totalSupply));   // WAD format (18 decimals)
+      // PRIORITY 1: Use direct sharePrice from convertToAssets if available (most reliable)
+      if (data.sharePrice && data.sharePrice > BigInt(0)) {
+        // sharePrice comes from convertToAssets(WAD) and is in USDT format
+        const sharePriceFloat = Number(data.sharePrice) / 1e6; // Convert USDT to float
 
-        console.log('=== SHARE PRICE INPUTS ===', {
-          assetsFloat,
-          supplyFloat,
-          assetsIsFinite: isFinite(assetsFloat),
-          supplyIsFinite: isFinite(supplyFloat),
-          supplyIsPositive: supplyFloat > 0,
-          assetsIsNaN: isNaN(assetsFloat),
-          supplyIsNaN: isNaN(supplyFloat),
+        console.log('=== DIRECT SHARE PRICE ===', {
+          rawSharePrice: data.sharePrice.toString(),
+          convertedFloat: sharePriceFloat,
+          isValid: isFinite(sharePriceFloat) && sharePriceFloat > 0 && !isNaN(sharePriceFloat),
         });
 
-        // Enhanced safety checks to prevent NaN
-        if (isFinite(assetsFloat) && isFinite(supplyFloat) && supplyFloat > 0 &&
-            !isNaN(assetsFloat) && !isNaN(supplyFloat) && assetsFloat >= 0) {
-          const calculatedPrice = assetsFloat / supplyFloat;
-
-          console.log('=== SHARE PRICE CALCULATION ===', {
-            calculatedPrice,
-            isFinite: isFinite(calculatedPrice),
-            isPositive: calculatedPrice > 0,
-            isNaN: isNaN(calculatedPrice),
-          });
-
-          if (isFinite(calculatedPrice) && calculatedPrice > 0 && !isNaN(calculatedPrice)) {
-            sharePrice = calculatedPrice;
-          } else {
-            console.warn('Invalid calculated share price, using fallback:', {
-              calculatedPrice,
-              assetsFloat,
-              supplyFloat,
-              isFinite: isFinite(calculatedPrice),
-              isPositive: calculatedPrice > 0,
-              isNaN: isNaN(calculatedPrice),
-            });
-            sharePrice = 1.0;
-          }
+        if (isFinite(sharePriceFloat) && sharePriceFloat > 0 && !isNaN(sharePriceFloat)) {
+          sharePrice = sharePriceFloat;
+          console.log('Using direct share price from convertToAssets:', sharePrice);
         } else {
-          console.warn('Invalid share price inputs, using fallback:', {
+          console.warn('Invalid direct share price, falling back to calculation');
+          sharePrice = 1.0; // Will attempt calculation below
+        }
+      }
+
+      // FALLBACK: Calculate from totalAssets / totalSupply if direct sharePrice not available or invalid
+      if ((sharePrice === 1.0 && !data.sharePrice) || sharePrice === 1.0) {
+        console.log('Calculating share price from totalAssets / totalSupply');
+
+        if (totalSupply && totalSupply > BigInt(0) && totalAssets && totalAssets > BigInt(0)) {
+          const assetsFloat = parseFloat(formatUsdt(totalAssets)); // USDT format (6 decimals)
+          const supplyFloat = parseFloat(formatWad(totalSupply));   // WAD format (18 decimals)
+
+          console.log('=== CALCULATED SHARE PRICE INPUTS ===', {
             assetsFloat,
             supplyFloat,
             assetsIsFinite: isFinite(assetsFloat),
             supplyIsFinite: isFinite(supplyFloat),
             supplyIsPositive: supplyFloat > 0,
-            assetsIsNaN: isNaN(assetsFloat),
-            supplyIsNaN: isNaN(supplyFloat),
           });
+
+          // Enhanced safety checks to prevent NaN
+          if (isFinite(assetsFloat) && isFinite(supplyFloat) && supplyFloat > 0 &&
+              !isNaN(assetsFloat) && !isNaN(supplyFloat) && assetsFloat >= 0) {
+            const calculatedPrice = assetsFloat / supplyFloat;
+
+            if (isFinite(calculatedPrice) && calculatedPrice > 0 && !isNaN(calculatedPrice)) {
+              sharePrice = calculatedPrice;
+              console.log('Using calculated share price:', sharePrice);
+            } else {
+              console.warn('Invalid calculated share price, using fallback $1.00');
+              sharePrice = 1.0;
+            }
+          } else {
+            console.warn('Invalid calculation inputs, using fallback $1.00');
+            sharePrice = 1.0;
+          }
+        } else {
+          console.log('Missing totalAssets or totalSupply for calculation, using fallback $1.00');
           sharePrice = 1.0;
         }
-      } else {
-        console.log('Share price: missing totalAssets or totalSupply, using fallback');
-        sharePrice = 1.0;
       }
     } catch (error) {
-      console.error('Error calculating share price, using fallback:', error, {
+      console.error('Error in share price calculation, using fallback:', error, {
+        directSharePrice: data.sharePrice?.toString(),
         totalAssets: totalAssets?.toString(),
         totalSupply: totalSupply?.toString(),
       });

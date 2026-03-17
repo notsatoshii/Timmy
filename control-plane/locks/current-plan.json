@@ -1,25 +1,24 @@
 {
   "tasks": [
     {
-      "id": "fix_screenshot_verification",
+      "id": "1",
       "lane": "INFRA",
+      "depends_on": [],
+      "reason": "Installing system dependencies (libatk-1.0.so.0) and debugging Puppeteer automation scripts. Pure infrastructure task involving system packages and control-plane scripts."
+    },
+    {
+      "id": "2",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "Fixing React hooks (useVaultMulticall) and vault data display. Frontend data pipeline issue specific to vault components and RPC integration."
+    },
+    {
+      "id": "3",
+      "lane": "FRONTEND",
       "depends_on": [
-        "fix_vault_display",
-        "fix_position_values"
+        "2"
       ],
-      "reason": "INFRA lane because fixing Puppeteer scripts and system dependencies. Depends on frontend fixes because screenshots should verify working displays, not broken ones."
-    },
-    {
-      "id": "fix_vault_display",
-      "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "FRONTEND lane because fixing React hooks (useVaultMulticall) and component display issues in Vault tab. Independent of position fixes."
-    },
-    {
-      "id": "fix_position_values",
-      "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "FRONTEND lane because fixing Positions tab display and frontend integration with PositionManager contract. Independent of vault fixes."
+      "reason": "Fixing position values display in React components. Same lane as task 2 and both involve contract data integration - sequencing to avoid conflicts in shared web3/RPC infrastructure."
     }
   ]
 }

@@ -1,26 +1,24 @@
-Based on the current build plan and QA report showing a score of 60/100, here are the **3 CRITICAL TASKS** for the locked investor demo sprint:
+Based on the QA report (score: 52) and locked sprint priorities in build-plan.md, here are the **3 CRITICAL TASKS** for investor demo readiness:
 
 ### 1. Fix Screenshot Verification System [CRITICAL] [INFRASTRUCTURE]
-- [ ] Install missing browser dependencies (`libatk-1.0.so.0`) causing Puppeteer crashes
-- [ ] Debug and fix screenshot automation hanging processes preventing visual verification
-- [ ] **SUCCESS CRITERIA**: `node scripts/take-screenshots.js` completes successfully with actual screenshots for investor demo readiness
+- [ ] Install missing browser dependencies (`libatk-1.0.so.0`) causing Puppeteer crashes in verification pipeline
+- [ ] Debug screenshot automation hanging processes preventing visual QA validation  
+- [ ] **SUCCESS CRITERIA**: `node scripts/take-screenshots.js` completes successfully with actual screenshots
 
 ### 2. Fix Vault Tab $NaN/$0 Display [CRITICAL] [FRONTEND] 
-- [ ] Debug `useVaultMulticall` returning undefined causing vault data pipeline failure
-- [ ] Resolve 413 RPC errors from Base Sepolia affecting vault TVL/share price fetching
-- [ ] **SUCCESS CRITERIA**: Vault tab displays meaningful TVL and share price (currently shows $NaN and $0)
+- [ ] Debug `useVaultMulticall` hook returning undefined, breaking vault data pipeline
+- [ ] Resolve 413 RPC errors from Base Sepolia affecting TVL/share price fetching
+- [ ] **SUCCESS CRITERIA**: Vault tab shows meaningful TVL and share price instead of $NaN/$0
 
 ### 3. Fix Position Values $0.00 Display [CRITICAL] [FRONTEND]
-- [ ] Debug why demo mode shows $0.00 for all 213 position values in Positions tab  
-- [ ] Fix PositionManager integration to calculate and display actual position equity/PnL
-- [ ] **SUCCESS CRITERIA**: Positions tab shows meaningful non-zero values for existing positions
+- [ ] Debug why all 213 positions show $0.00 values in demo mode instead of actual equity/PnL
+- [ ] Fix PositionManager integration to properly calculate and display position values from contract data
+- [ ] **SUCCESS CRITERIA**: Positions tab displays meaningful non-zero values for existing positions
 
-**SPRINT CONSTRAINTS (ENFORCED):**
-- ✅ Work ONLY on these 3 priorities until ALL pass completely
-- ✅ NO contract redeployment (all protected contracts remain untouched)  
-- ✅ NO fake/fabricated data - fix actual data pipeline issues
-- ✅ Focus on frontend integration and RPC connectivity issues
+**SPRINT LOCK ENFORCED:**
+- ✅ Work ONLY on these 3 priorities until ALL pass completely  
+- ✅ NO contract redeployment (ExecutionEngine leverage fix blocked until Phase 2)
+- ✅ NO fake data - fix actual RPC/integration issues 
+- ✅ Focus on frontend data pipeline and visual verification
 
-**Completion Gate:** Only when all 3 priorities achieve 100% pass rate → transition to Phase 2 auto-improve mode
-
-**Current Blockers:** Oracle price freshness + visual verification broken = investor demo compromised
+**Gate to Phase 2:** Only when all 3 achieve 100% success → unlock auto-improve mode and remaining features.
