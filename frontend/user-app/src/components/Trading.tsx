@@ -88,17 +88,15 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
         transport: http('https://base-sepolia-rpc.publicnode.com'),
       });
 
-      // Simulate the transaction first
-      const { request } = await publicClient.simulateContract({
+      // Write directly - signs locally, sends via eth_sendRawTransaction
+      const hash = await walletClient.writeContract({
         address: contractAddress,
         abi,
         functionName,
         args,
-        account: account.address,
+        account,
+        chain: baseSepolia,
       });
-
-      // Execute the transaction
-      const hash = await walletClient.writeContract(request);
       console.log('Demo transaction sent:', hash);
       return hash;
     } catch (error: any) {
