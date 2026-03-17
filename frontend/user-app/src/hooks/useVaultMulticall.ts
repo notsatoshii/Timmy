@@ -45,6 +45,14 @@ const VAULT_DEBUG_MODE = true;
  * Implements fallback values when RPC fails to prevent $NaN displays
  */
 export function useVaultMulticall(userAddress?: `0x${string}`) {
+  // CRITICAL: Early validation to prevent undefined returns
+  if (VAULT_DEBUG_MODE) {
+    console.log('=== useVaultMulticall called ===', {
+      userAddress,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
   // Circuit breaker state
   const [circuitBreaker, setCircuitBreaker] = useState<CircuitBreakerState>(getCircuitBreakerState);
   const retriesRef = useRef<number>(0);
@@ -273,6 +281,7 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
 
   // Process and return comprehensive data from batched multicalls
   return useMemo(() => {
+    try {
     // Enhanced debugging for vault data issues (conditional on debug mode)
     if (VAULT_DEBUG_MODE) {
       console.log('=== VAULT MULTICALL DEBUG ===', {
@@ -545,8 +554,57 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
       });
     }
 
+    // CRITICAL: Final safety net - ensure we NEVER return undefined
+    if (!finalReturn || typeof finalReturn !== 'object') {
+      console.error('CRITICAL: useVaultMulticall would return invalid data, forcing complete fallback:', {
+        finalReturn,
+        type: typeof finalReturn,
+      });
+      return {
+        totalAssets: fallbackValues.totalAssets,
+        totalSupply: fallbackValues.totalSupply,
+        sharePrice: fallbackValues.sharePrice,
+        globalOI: fallbackValues.globalOI,
+        userShares: fallbackValues.userShares,
+        usdtBalance: fallbackValues.usdtBalance,
+        isLoadingVaultData: false,
+        isLoadingUserData: false,
+        hasError: true,
+        hasNetworkError: false,
+        hasRateLimit: false,
+        errors: [{ message: 'Hook return value validation failed - critical safety fallback', code: 'CRITICAL_SAFETY_FALLBACK' }],
+        circuitBreakerOpen: false,
+        nextAttemptTime: 0,
+        retryAttempts: 0,
+        batchingActive: true,
+        validationErrors: ['Critical safety fallback triggered'],
+      };
+    }
+
     return finalReturn;
 
+    } catch (error) {
+      console.error('CRITICAL: useVaultMulticall crashed, returning emergency fallback:', error);
+      return {
+        totalAssets: fallbackValues.totalAssets,
+        totalSupply: fallbackValues.totalSupply,
+        sharePrice: fallbackValues.sharePrice,
+        globalOI: fallbackValues.globalOI,
+        userShares: fallbackValues.userShares,
+        usdtBalance: fallbackValues.usdtBalance,
+        isLoadingVaultData: false,
+        isLoadingUserData: false,
+        hasError: true,
+        hasNetworkError: false,
+        hasRateLimit: false,
+        errors: [{ message: `Hook crashed: ${error.message}`, code: 'HOOK_CRASH' }],
+        circuitBreakerOpen: false,
+        nextAttemptTime: 0,
+        retryAttempts: 0,
+        batchingActive: true,
+        validationErrors: ['Hook execution crashed - emergency fallback'],
+      };
+    }
   }, [
     coreMulticallResult,
     userMulticallResult,

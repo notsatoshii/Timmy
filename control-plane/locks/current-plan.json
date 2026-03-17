@@ -2,23 +2,21 @@
   "tasks": [
     {
       "id": "1",
-      "lane": "FRONTEND",
+      "lane": "CONTRACT",
       "depends_on": [],
-      "reason": "React app loading verification must happen first before any other frontend work can proceed. No dependencies since this is the foundation."
+      "reason": "Investigation involves checking deployed contract behavior, integration between ExecutionEngine and LeverageModel, and contract state analysis using cast calls"
     },
     {
       "id": "2",
       "lane": "FRONTEND",
-      "depends_on": [
-        "1"
-      ],
-      "reason": "RPC data fixes are FRONTEND lane. Depends on Task 1 since we need React app to load before fixing data display issues. Same lane dependency."
+      "depends_on": [],
+      "reason": "Frontend data fetching issue in useVaultMulticall hook, independent of other frontend tasks since it's vault-specific"
     },
     {
       "id": "3",
-      "lane": "CONTRACT",
+      "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Contract redeployment and position opening logic is CONTRACT lane. Independent of frontend issues, can run in parallel."
+      "reason": "Frontend position value display issue, independent of vault data issues since it's positions-specific"
     },
     {
       "id": "4",
@@ -27,18 +25,13 @@
         "2",
         "3"
       ],
-      "reason": "Data display polish is FRONTEND lane. Depends on Task 2 (same lane, need basic data working first) and Task 3 (need real position data for notional volume calculations)."
+      "reason": "Frontend functionality verification that involves data loading and statistics display, should wait for core data issues to be resolved first"
     },
     {
       "id": "5",
-      "lane": "INFRA",
-      "depends_on": [
-        "1",
-        "2",
-        "3",
-        "4"
-      ],
-      "reason": "System health verification is INFRA lane (testing services, end-to-end flows). Depends on all other tasks since it validates the complete system is working."
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "Frontend volume calculation fix, independent calculation logic that doesn't conflict with data display fixes"
     }
   ]
 }

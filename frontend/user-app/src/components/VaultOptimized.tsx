@@ -20,34 +20,56 @@ const VaultOptimized: React.FC = () => {
   // Vault multicall hook with fallback values for failed RPC calls
   const vaultData = useVaultMulticall(address);
 
-  // Debug vault data received in component (conditional on vault data having errors)
-  if (vaultData?.hasError || !vaultData?.totalAssets || vaultData?.totalAssets === BigInt(0)) {
+  // CRITICAL FIX: Ensure safeVaultData is never undefined by providing robust fallback
+  const safeVaultData = useMemo(() => {
+    if (!safeVaultData) {
+      console.warn('=== VAULT DATA IS UNDEFINED - Creating safe fallback ===');
+      return {
+        totalAssets: BigInt("250000000000"), // $250k TVL
+        totalSupply: BigInt("250000000000000000000000"), // 250k shares
+        sharePrice: BigInt("1000000000000000000"), // $1.00 per share
+        globalOI: BigInt("50000000000"), // $50k OI
+        userShares: BigInt("0"),
+        usdtBalance: BigInt("0"),
+        isLoadingVaultData: false,
+        isLoadingUserData: false,
+        hasError: true,
+        errors: [{ message: 'Vault data hook returned undefined - using complete fallbacks', code: 'UNDEFINED_HOOK_RETURN' }],
+        circuitBreakerOpen: false,
+      };
+    }
+    return safeVaultData;
+  }, [safeVaultData]);
+
+  // Debug vault data received in component
+  if (safeVaultData?.hasError || !safeVaultData?.totalAssets || safeVaultData?.totalAssets === BigInt(0)) {
     console.log('=== VAULT COMPONENT DEBUG (Error/No Data) ===', {
-      vaultData,
-      totalAssets: vaultData?.totalAssets?.toString(),
-      totalSupply: vaultData?.totalSupply?.toString(),
-      sharePrice: vaultData?.sharePrice?.toString(),
-      globalOI: vaultData?.globalOI?.toString(),
-      isLoading: vaultData?.isLoadingVaultData,
-      hasError: vaultData?.hasError,
-      errors: vaultData?.errors?.map(e => e.message),
+      originalVaultData: !!safeVaultData,
+      safeVaultData,
+      totalAssets: safeVaultData?.totalAssets?.toString(),
+      totalSupply: safeVaultData?.totalSupply?.toString(),
+      sharePrice: safeVaultData?.sharePrice?.toString(),
+      globalOI: safeVaultData?.globalOI?.toString(),
+      isLoading: safeVaultData?.isLoadingVaultData,
+      hasError: safeVaultData?.hasError,
+      errors: safeVaultData?.errors?.map(e => e.message),
       contractAddress: "0x84a1Eb3b1eFD60b193b271DCfaB2711cE1c41921",
-      usingFallbacks: vaultData?.totalAssets?.toString() === "250000000000"
+      usingFallbacks: safeVaultData?.totalAssets?.toString() === "250000000000"
     });
   }
 
   // Memoized calculations - expensive computations only run when data changes
   const metrics = useMemoizedVaultCalculations({
-    totalAssets: vaultData.totalAssets,
-    totalSupply: vaultData.totalSupply,
-    sharePrice: vaultData.sharePrice, // Pass direct sharePrice from convertToAssets
+    totalAssets: safeVaultData.totalAssets,
+    totalSupply: safeVaultData.totalSupply,
+    sharePrice: safeVaultData.sharePrice, // Pass direct sharePrice from convertToAssets
     borrowFees: BigInt(0), // Not available in new hook, use defaults
     transactionFees: BigInt(0),
     liquidationFees: BigInt(0),
     settlementFees: BigInt(0),
-    globalOI: vaultData.globalOI,
-    userShares: vaultData.userShares,
-    usdtBalance: vaultData.usdtBalance,
+    globalOI: safeVaultData.globalOI,
+    userShares: safeVaultData.userShares,
+    usdtBalance: safeVaultData.usdtBalance,
   });
 
   // Use share price directly from useVaultMulticall (comes from convertToAssets call)
@@ -55,44 +77,44 @@ const VaultOptimized: React.FC = () => {
     try {
       // Enhanced debugging and validation
       console.log('=== SHARE PRICE DIRECT FROM VAULT DATA ===', {
-        hasVaultData: !!vaultData,
-        rawSharePrice: vaultData.sharePrice?.toString(),
-        isLoading: vaultData.isLoadingVaultData,
-        hasError: vaultData.hasError,
-        errors: vaultData.errors?.map(e => e.message),
+        hasVaultData: !!safeVaultData,
+        rawSharePrice: safeVaultData.sharePrice?.toString(),
+        isLoading: safeVaultData.isLoadingVaultData,
+        hasError: safeVaultData.hasError,
+        errors: safeVaultData.errors?.map(e => e.message),
       });
 
       // If loading or no data, return fallback
-      if (!vaultData || vaultData.isLoadingVaultData) {
+      if (!safeVaultData || safeVaultData.isLoadingVaultData) {
         console.log('Vault data is loading, using fallback share price $1.00');
         return 1.0;
       }
 
       // If no sharePrice or zero, return fallback
-      if (!vaultData.sharePrice || vaultData.sharePrice === BigInt(0)) {
-        console.warn('No share price from vaultData, using fallback $1.00', {
-          sharePrice: vaultData.sharePrice?.toString(),
-          hasError: vaultData.hasError,
+      if (!safeVaultData.sharePrice || safeVaultData.sharePrice === BigInt(0)) {
+        console.warn('No share price from safeVaultData, using fallback $1.00', {
+          sharePrice: safeVaultData.sharePrice?.toString(),
+          hasError: safeVaultData.hasError,
         });
         return 1.0; // Professional fallback
       }
 
-      // FIXED: vaultData.sharePrice comes from convertToAssets(WAD) and is in WAD format
+      // FIXED: safeVaultData.sharePrice comes from convertToAssets(WAD) and is in WAD format
       // convertToAssets returns the amount of assets that would be received for 1 share (WAD = 1e18)
       // The result is in WAD format (18 decimals), so we need to convert from WAD to float
-      const sharePriceFloat = Number(vaultData.sharePrice) / 1e18; // Convert WAD (18 decimals) to float
+      const sharePriceFloat = Number(safeVaultData.sharePrice) / 1e18; // Convert WAD (18 decimals) to float
 
       console.log('=== SHARE PRICE DIRECT CALCULATION ===', {
-        rawSharePrice: vaultData.sharePrice.toString(),
+        rawSharePrice: safeVaultData.sharePrice.toString(),
         sharePriceFloat,
         isValid: isFinite(sharePriceFloat) && sharePriceFloat > 0,
-        errorCount: vaultData.errors?.length || 0,
+        errorCount: safeVaultData.errors?.length || 0,
       });
 
       // Validate the calculated share price
       if (!isFinite(sharePriceFloat) || sharePriceFloat <= 0 || isNaN(sharePriceFloat)) {
-        console.warn('Invalid share price from vaultData.sharePrice, using fallback:', {
-          rawValue: vaultData.sharePrice.toString(),
+        console.warn('Invalid share price from safeVaultData.sharePrice, using fallback:', {
+          rawValue: safeVaultData.sharePrice.toString(),
           calculatedFloat: sharePriceFloat,
           isFinite: isFinite(sharePriceFloat),
           isPositive: sharePriceFloat > 0,
@@ -103,13 +125,13 @@ const VaultOptimized: React.FC = () => {
 
       return sharePriceFloat;
     } catch (error) {
-      console.error('Error processing share price from vaultData, using fallback:', error, {
-        vaultDataSharePrice: vaultData?.sharePrice?.toString(),
-        hasVaultData: !!vaultData,
+      console.error('Error processing share price from safeVaultData, using fallback:', error, {
+        safeVaultDataSharePrice: safeVaultData?.sharePrice?.toString(),
+        hasVaultData: !!safeVaultData,
       });
       return 1.0; // Fallback on any error
     }
-  }, [vaultData, vaultData?.sharePrice, vaultData?.isLoadingVaultData, vaultData?.hasError]);
+  }, [safeVaultData]);
 
   // Memoized form calculations using correct share price
   const formCalculations = useMemo(() => {
@@ -182,16 +204,16 @@ const VaultOptimized: React.FC = () => {
 
   // Memoized max deposit/withdraw helpers
   const setMaxDeposit = useCallback(() => {
-    if (vaultData.usdtBalance) {
-      setDepositAmount(formatUsdt(vaultData.usdtBalance));
+    if (safeVaultData.usdtBalance) {
+      setDepositAmount(formatUsdt(safeVaultData.usdtBalance));
     }
-  }, [vaultData.usdtBalance]);
+  }, [safeVaultData.usdtBalance]);
 
   const setMaxWithdraw = useCallback(() => {
-    if (vaultData.userShares) {
-      setWithdrawShares(formatWad(vaultData.userShares));
+    if (safeVaultData.userShares) {
+      setWithdrawShares(formatWad(safeVaultData.userShares));
     }
-  }, [vaultData.userShares]);
+  }, [safeVaultData.userShares]);
 
   // Component render
   return (
@@ -210,8 +232,8 @@ const VaultOptimized: React.FC = () => {
           sharePrice={sharePrice}
           utilization={metrics.utilization}
           annualizedAPY={metrics.annualizedAPY}
-          isLoading={vaultData.isLoadingVaultData}
-          hasError={vaultData.hasError}
+          isLoading={safeVaultData.isLoadingVaultData}
+          hasError={safeVaultData.hasError}
         />
       </div>
 
@@ -219,7 +241,7 @@ const VaultOptimized: React.FC = () => {
       {address && (
         <div className="bg-surface-2 rounded-lg border border-purple/20 p-6 shadow-glow-purple">
           <h3 className="text-lg font-semibold text-gray-100 mb-4">Your Position</h3>
-          {vaultData.isLoadingUserData ? (
+          {safeVaultData.isLoadingUserData ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[1, 2, 3].map((index) => (
                 <div key={index}>
@@ -282,7 +304,7 @@ const VaultOptimized: React.FC = () => {
                 className="w-full rounded-md bg-surface-3 border-border text-gray-200 shadow-sm focus:border-accent focus:ring-accent/30 font-mono"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Wallet Balance: {vaultData.isLoadingUserData ? (
+                Wallet Balance: {safeVaultData.isLoadingUserData ? (
                   <Skeleton width="60px" height="16px" className="inline-block" />
                 ) : (
                   <span className="font-mono text-gray-400">{metrics.userBalance.formatted} USDT</span>
@@ -353,7 +375,7 @@ const VaultOptimized: React.FC = () => {
                 className="w-full rounded-md bg-surface-3 border-border text-gray-200 shadow-sm focus:border-accent focus:ring-accent/30 font-mono"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Available: {vaultData.isLoadingUserData ? (
+                Available: {safeVaultData.isLoadingUserData ? (
                   <Skeleton width="60px" height="16px" className="inline-block" />
                 ) : (
                   <span className="font-mono text-gray-400">{metrics.userPosition.shares.toFixed(4)} lvUSDT</span>
@@ -388,20 +410,20 @@ const VaultOptimized: React.FC = () => {
       </div>
 
       {/* Error/Info Display */}
-      {vaultData.hasError && (
+      {safeVaultData.hasError && (
         <div className="bg-warning/10 border border-warning/20 text-warning rounded-lg p-4">
           <h4 className="font-semibold mb-2">Using Fallback Vault Data</h4>
           <p className="text-sm mb-2">
             RPC connection issues detected. Showing fallback values while reconnecting...
           </p>
           <p className="text-xs text-warning/70">
-            Contract: {getContractAddresses().leverVault} | Error: {vaultData.errors[0]?.message || 'Unknown RPC error'}
+            Contract: {getContractAddresses().leverVault} | Error: {safeVaultData.errors[0]?.message || 'Unknown RPC error'}
           </p>
         </div>
       )}
 
       {/* Loading Indicator when vault is loading */}
-      {vaultData.isLoadingVaultData && (
+      {safeVaultData.isLoadingVaultData && (
         <div className="bg-accent/10 border border-accent/20 text-accent rounded-lg p-4">
           <h4 className="font-semibold mb-2">Loading Vault Data...</h4>
           <p className="text-sm">
