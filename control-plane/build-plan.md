@@ -1,30 +1,29 @@
-You're absolutely right. Let me create a corrected plan that follows the exact priorities from build-plan.md and respects all constraints:
+Perfect! Now I understand the exact 3 priorities. Based on the verification report showing Puppeteer issues and the known-issues.md showing the critical blockers, here's the **REVISED PLAN** that strictly follows the constraints:
 
-## CORRECTED PLAN - INVESTOR DEMO SPRINT (LOCKED)
+## REVISED PLAN - INVESTOR DEMO SPRINT (LOCKED)
 
 ### 1. Fix Screenshot Verification [CRITICAL] [FRONTEND]
-- [ ] Run `node scripts/take-screenshots.js` and capture the specific error causing verification failures
-- [ ] Diagnose if browser/puppeteer process is hanging (implement 30-second timeout)
-- [ ] Add fallback: manual screenshot capture + basic UI load test if automation fails
-- [ ] **GOAL**: Confirm all UI tabs load without blank screens for investor demo
+- [ ] Resolve Puppeteer dependency issue: missing `libatk-1.0.so.0` (Chrome dependency)
+- [ ] Install required system packages for automated browser testing
+- [ ] Implement 30-second timeout to prevent hanging processes
+- [ ] **SUCCESS CRITERIA**: `node scripts/take-screenshots.js` completes successfully with actual screenshots
 
 ### 2. Fix Vault Tab Data Display [CRITICAL] [FRONTEND] 
-- [ ] Verify LeverVault address in `config/contracts.ts` matches deployed contract (0x84a1Eb3b1eFD60b193b271DCfaB2711cE1c41921)
-- [ ] Add debug logging to `useVaultMulticall` to identify why it returns undefined (RPC 413 errors)
-- [ ] Implement graceful fallback for vault data when RPC calls fail
-- [ ] **GOAL**: Show meaningful TVL and share price numbers instead of $NaN and $0
+- [ ] Debug `useVaultMulticall` returning undefined causing $NaN share price and $0 TVL
+- [ ] Address 413 RPC errors from Base Sepolia endpoints
+- [ ] Verify LeverVault address matches deployed contract (0x84a1Eb3b1eFD60b193b271DCfaB2711cE1c41921)
+- [ ] **SUCCESS CRITERIA**: Vault tab displays meaningful TVL and share price numbers (no $NaN/$0)
 
 ### 3. Fix Position Values Display [CRITICAL] [FRONTEND]
-- [ ] Verify PositionManager address in frontend config (should be 0x25ba54a7b2fBac753B601Da05e3661F2E959510b)
-- [ ] Debug why demo mode shows $0.00 for all position values
-- [ ] Add fallback to display position count and basic data when value calculation fails
-- [ ] **GOAL**: Show existing positions with meaningful non-zero values
+- [ ] Debug why demo mode shows $0.00 for all position values in Positions tab
+- [ ] Verify PositionManager address in frontend config (0x25ba54a7b2fBac753B601Da05e3661F2E959510b)
+- [ ] Fix stub positions to display actual calculated values
+- [ ] **SUCCESS CRITERIA**: Positions tab shows meaningful non-zero values for existing positions
 
-**Key Constraints Respected:**
-- ✅ Work ONLY on these 3 priorities until all pass
-- ✅ No contract redeployment (protected contracts untouched)
-- ✅ No address changes 
-- ✅ Frontend-only fixes
-- ✅ No additional tasks beyond the 3 priorities
+**Constraints Strictly Followed:**
+- ✅ Work ONLY on these 3 priorities until ALL pass
+- ✅ No contract redeployment (all protected contracts untouched)
+- ✅ No additional tasks beyond the approved 3 priorities
+- ✅ Frontend-only fixes as specified
 
-**Success Criteria:** All tabs load with real data, no $NaN/$0.00 displays, investor demo runs smoothly. Then transition to Phase 2 auto-improve mode.
+**Completion Gate:** Only when all 3 pass completely → transition to Phase 2 (auto-improve mode)
