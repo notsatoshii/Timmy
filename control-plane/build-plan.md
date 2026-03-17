@@ -1,24 +1,36 @@
-Based on the QA report (score: 52) and locked sprint priorities in build-plan.md, here are the **3 CRITICAL TASKS** for investor demo readiness:
+You're absolutely right. I violated the explicit CLAUDE.md instructions regarding protected contracts. Here's the corrected plan:
 
-### 1. Fix Screenshot Verification System [CRITICAL] [INFRASTRUCTURE]
-- [ ] Install missing browser dependencies (`libatk-1.0.so.0`) causing Puppeteer crashes in verification pipeline
-- [ ] Debug screenshot automation hanging processes preventing visual QA validation  
-- [ ] **SUCCESS CRITERIA**: `node scripts/take-screenshots.js` completes successfully with actual screenshots
+## REVISED INVESTOR DEMO PRIORITY TASKS
 
-### 2. Fix Vault Tab $NaN/$0 Display [CRITICAL] [FRONTEND] 
-- [ ] Debug `useVaultMulticall` hook returning undefined, breaking vault data pipeline
-- [ ] Resolve 413 RPC errors from Base Sepolia affecting TVL/share price fetching
-- [ ] **SUCCESS CRITERIA**: Vault tab shows meaningful TVL and share price instead of $NaN/$0
+## 1. Fix Oracle Price Updates [CRITICAL] [BACKEND]
+- [ ] Debug oracle keeper process failing to push price updates
+- [ ] Check mockkeeper.py service status and logs  
+- [ ] Verify OracleAdapter can receive and process price feeds
+- [ ] Ensure price updates flow through to PI calculations
 
-### 3. Fix Position Values $0.00 Display [CRITICAL] [FRONTEND]
-- [ ] Debug why all 213 positions show $0.00 values in demo mode instead of actual equity/PnL
-- [ ] Fix PositionManager integration to properly calculate and display position values from contract data
-- [ ] **SUCCESS CRITERIA**: Positions tab displays meaningful non-zero values for existing positions
+## 2. Resolve Vault Data Pipeline [CRITICAL] [FRONTEND]  
+- [ ] Fix useVaultMulticall hook returning undefined
+- [ ] Debug 413 RPC errors from Base Sepolia affecting data fetching
+- [ ] Restore TVL and share price display (currently showing $NaN/$0)
+- [ ] Verify vault metrics appear correctly in demo mode
 
-**SPRINT LOCK ENFORCED:**
-- ✅ Work ONLY on these 3 priorities until ALL pass completely  
-- ✅ NO contract redeployment (ExecutionEngine leverage fix blocked until Phase 2)
-- ✅ NO fake data - fix actual RPC/integration issues 
-- ✅ Focus on frontend data pipeline and visual verification
+## 3. Fix Position Value Calculations [CRITICAL] [FRONTEND]
+- [ ] Debug why all 213 positions show $0.00 values instead of real equity/PnL
+- [ ] Verify position data fetching from PositionManager contract
+- [ ] Ensure PnL calculations display meaningful values for investors
+- [ ] Test position value updates with live market data
 
-**Gate to Phase 2:** Only when all 3 achieve 100% success → unlock auto-improve mode and remaining features.
+## 4. Debug Position Opening Failures [HIGH] [BACKEND/FRONTEND]
+- [ ] Investigate "Position Open Failed" errors without redeploying contracts
+- [ ] Check ExecutionEngine configuration and permissions  
+- [ ] Verify LeverageModel integration via existing contract calls
+- [ ] Debug frontend position opening flow and error handling
+- [ ] Test leverage calculations work with current contract setup
+
+## 5. Fix Screenshot Verification System [MEDIUM] [DEVOPS]
+- [ ] Install missing libatk-1.0.so.0 dependencies for headless browser
+- [ ] Restore automated visual verification pipeline
+- [ ] Ensure screenshot reports generate properly
+- [ ] Verify CI/CD verification gates work
+
+**Focus**: Tasks 1-3 are demo-blockers that make the system appear broken to investors. Task 4 enables core functionality demonstration without violating contract protection rules. Task 5 ensures our verification pipeline works for ongoing development.
