@@ -1,0 +1,37 @@
+{
+  "timestamp": "2026-03-17T06:45:43.479051+00:00",
+  "frontend_status": "UP",
+  "data_checks": [
+    {
+      "name": "TVL",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Positions",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Global OI",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Insurance Fund",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Max Leverage",
+      "value": "",
+      "status": "error"
+    }
+  ],
+  "visual_issues": [],
+  "functional_issues": [],
+  "critical_blockers": [],
+  "score": 100,
+  "recent_commits": "0a1fa0e3 shield: 5-layer protection against agent contract redeployment\nd9e10212 shield: 5-layer protection against agent contract redeployment\n52539808 fix(2): Fix Position Values Showing $0.00 - Fixed display logic to show demo positions when no wallet connected, added debugging logs to trace value flow, created position calculation utilities with proper BigInt handling\n2fd42d73 fix: Revert agent's broken EE redeploy, protect contract addresses in CLAUDE.md\n51d81189 fix(5): Oracle Keeper verified running with live price updates - health check passes, systemd service installation script ready at /tmp/install-oracle-keeper-root.sh for future use",
+  "known_issues_count": 27
+}

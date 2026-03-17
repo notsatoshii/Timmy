@@ -27,7 +27,7 @@ check_addr "LEVER_VAULT" "0x84a1Eb3b1eFD60b193b271DCfaB2711cE1c41921" "$LEVER_VA
 check_addr "POSITION_MANAGER" "0x25ba54a7b2fBac753B601Da05e3661F2E959510b" "$POSITION_MANAGER"
 
 # Check 2: Frontend config has correct EE
-FE_EE=$(grep 'executionEngine:' /home/lever/lever-protocol/frontend/user-app/src/config/contracts.ts | grep -o '0x[0-9a-fA-F]*' | head -1)
+FE_EE=$(grep "executionEngine: \"0x" /home/lever/lever-protocol/frontend/user-app/src/config/contracts.ts | grep -o "0x[0-9a-fA-F]\{40\}" | head -1)
 if [ "$FE_EE" != "0xc749C6aAe8a5ACBDD924DF7f833Dd3115307a60D" ] && [ -n "$FE_EE" ]; then
     echo "BROKEN: Frontend EE is $FE_EE"
     sed -i 's|executionEngine: "[^"]*"|executionEngine: "0xc749C6aAe8a5ACBDD924DF7f833Dd3115307a60D"|' /home/lever/lever-protocol/frontend/user-app/src/config/contracts.ts

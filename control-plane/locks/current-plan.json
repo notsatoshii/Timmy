@@ -1,22 +1,59 @@
 {
   "tasks": [
     {
-      "id": "4",
+      "id": "1",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Modifying React hooks to change volume calculation from collateral to notional. Pure frontend logic change with no external dependencies."
+      "reason": "FRONTEND because fixing React hooks/components for stats display. No dependencies as this is fixing the source of stats display issues."
+    },
+    {
+      "id": "2",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "FRONTEND because fixing React utilities and hooks for position calculations. Independent of other tasks."
+    },
+    {
+      "id": "3",
+      "lane": "CONTRACT",
+      "depends_on": [],
+      "reason": "CONTRACT because verifying contract integration and deployment configuration. Independent contract-level verification."
+    },
+    {
+      "id": "4",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "1"
+      ],
+      "reason": "FRONTEND because fixing React component error handling. Depends on task 1 because both modify useVaultMulticall.ts and could have overlapping RPC error fixes."
+    },
+    {
+      "id": "5",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "FRONTEND because fixing volume calculation logic in React hooks. Independent calculation logic."
     },
     {
       "id": "6",
       "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "Updating frontend contract addresses and regenerating ABIs. Frontend configuration changes that are independent of other tasks."
+      "depends_on": [
+        "1",
+        "4"
+      ],
+      "reason": "FRONTEND because creating batching utilities and updating hooks. Depends on tasks 1 and 4 because it will modify the same hooks (useVaultMulticall, useStats) that those tasks fix."
     },
     {
       "id": "7",
-      "lane": "FRONTEND",
+      "lane": "INFRA",
       "depends_on": [],
-      "reason": "Improving error handling and loading states in React components. Frontend UX enhancement with no dependencies on other task outcomes."
+      "reason": "INFRA because managing systemd services and monitoring scripts. Independent infrastructure work."
+    },
+    {
+      "id": "8",
+      "lane": "CONTRACT",
+      "depends_on": [
+        "3"
+      ],
+      "reason": "CONTRACT because verifying contract fee routing and configuration. Depends on task 3 because fee flow testing requires working position opening via ExecutionEngine."
     }
   ]
 }

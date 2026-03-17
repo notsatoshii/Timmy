@@ -102,22 +102,38 @@ else
     FAIL=$((FAIL+1))
 fi
 
-# Oracle price updates (check for recent PUSHED entries in logs)
+# Oracle price updates (check for stale prices >5 minutes old)
 ORACLE_LOG="/home/lever/lever-protocol/scripts/oracle/mock_keeper.log"
 if [ -f "$ORACLE_LOG" ]; then
-    # Check for pushes within the last 10 minutes (more lenient)
-    CURRENT_HOUR=$(date '+%H')
-    CURRENT_MIN=$(date '+%M')
-    PREV_HOUR=$(printf "%02d" $((CURRENT_HOUR - 1)))
+    # Get the timestamp of the last successful PUSHED entry
+    LAST_PUSH_LINE=$(grep "PUSHED:" "$ORACLE_LOG" | tail -n1)
 
-    RECENT_PUSHES=$(grep "PUSHED:" "$ORACLE_LOG" | tail -n5 | grep -E "(${CURRENT_HOUR}:${CURRENT_MIN}|${CURRENT_HOUR}:|${PREV_HOUR}:)" || true)
+    if [ -n "$LAST_PUSH_LINE" ]; then
+        LAST_PUSH_TIME=$(echo "$LAST_PUSH_LINE" | cut -d'|' -f1 | tr -d ' ')
 
-    if [ -n "$RECENT_PUSHES" ]; then
-        echo "PASS: oracle_price_freshness — recent pushes detected"
-        PASS=$((PASS+1))
+        # Convert HH:MM:SS to seconds since midnight for comparison
+        CURRENT_SECONDS=$(date '+%s')
+
+        # Extract time components and convert to seconds since midnight today
+        PUSH_HOUR=$(echo "$LAST_PUSH_TIME" | cut -d':' -f1)
+        PUSH_MIN=$(echo "$LAST_PUSH_TIME" | cut -d':' -f2)
+        PUSH_SEC=$(echo "$LAST_PUSH_TIME" | cut -d':' -f3)
+
+        TODAY_MIDNIGHT=$(date -d 'today 00:00:00' '+%s')
+        PUSH_TIMESTAMP=$((TODAY_MIDNIGHT + PUSH_HOUR*3600 + PUSH_MIN*60 + PUSH_SEC))
+
+        # Check if last push was more than 5 minutes (300 seconds) ago
+        TIME_DIFF=$((CURRENT_SECONDS - PUSH_TIMESTAMP))
+
+        if [ $TIME_DIFF -le 300 ]; then
+            echo "PASS: oracle_price_freshness — last push ${TIME_DIFF}s ago (${LAST_PUSH_TIME})"
+            PASS=$((PASS+1))
+        else
+            echo "FAIL: oracle_price_freshness — STALE: last push ${TIME_DIFF}s ago (${LAST_PUSH_TIME})"
+            FAIL=$((FAIL+1))
+        fi
     else
-        LAST_PUSH=$(grep "PUSHED:" "$ORACLE_LOG" | tail -n1 | cut -d'|' -f1 | tr -d ' ' || echo "never")
-        echo "FAIL: oracle_price_freshness — last push: $LAST_PUSH"
+        echo "FAIL: oracle_price_freshness — no successful pushes found"
         FAIL=$((FAIL+1))
     fi
 else
