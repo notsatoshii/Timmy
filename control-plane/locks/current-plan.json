@@ -1,91 +1,70 @@
 {
   "tasks": [
     {
-      "id": "1",
-      "lane": "CONTRACT",
-      "depends_on": [],
-      "reason": "CONTRACT lane: involves testing deployed contracts with cast/forge and verifying contract state. No dependencies as this is the foundational diagnostic task."
-    },
-    {
       "id": "2",
       "lane": "FRONTEND",
-      "depends_on": [
-        "1"
-      ],
-      "reason": "FRONTEND lane: updates React config files. Depends on Task 1 to know the correct contract addresses from diagnosis."
+      "depends_on": [],
+      "reason": "Updates frontend/user-app/src/config/contracts.ts configuration file. Independent task fixing address mismatches."
     },
     {
       "id": "3",
       "lane": "CONTRACT",
-      "depends_on": [
-        "1"
-      ],
-      "reason": "CONTRACT lane: involves debugging and potentially redeploying LeverageModel contract. Depends on Task 1 to understand contract state issues first."
+      "depends_on": [],
+      "reason": "Fixes Solidity LeverageModel and ExecutionEngine contracts. Root cause fix that other tasks depend on."
     },
     {
       "id": "4",
-      "lane": "CONTRACT",
+      "lane": "INFRA",
       "depends_on": [
         "3"
       ],
-      "reason": "CONTRACT lane: testing contract functionality with cast commands. Depends on Task 3 to fix leverage model first before testing leverage levels."
+      "reason": "Testing scripts using cast commands to validate contract functionality. Depends on Task 3 fixing the leverage model first."
     },
     {
       "id": "5",
       "lane": "INFRA",
-      "depends_on": [
-        "1",
-        "3"
-      ],
-      "reason": "INFRA lane: modifying Python dashboard script in control-plane. Depends on Tasks 1 and 3 to have working contract data to display properly."
+      "depends_on": [],
+      "reason": "Modifies control-plane/dashboard.py Python script for error handling. Independent of other fixes."
     },
     {
       "id": "6",
       "lane": "FRONTEND",
       "depends_on": [
-        "1",
         "2"
       ],
-      "reason": "FRONTEND lane: fixing React hooks and components for vault display. Depends on Task 1 for working contract data and Task 2 for correct addresses."
+      "reason": "Fixes frontend vault hooks and components. Depends on Task 2 fixing contract addresses that could cause RPC errors."
     },
     {
       "id": "7",
       "lane": "FRONTEND",
       "depends_on": [
-        "1",
         "2",
-        "3"
+        "6"
       ],
-      "reason": "FRONTEND lane: fixing React components for positions. Depends on Task 1 for contract data, Task 2 for addresses, Task 3 for leverage functionality that positions display."
+      "reason": "Fixes frontend position hooks and display. Depends on Task 2 for contract addresses and Task 6 to avoid frontend file conflicts."
     },
     {
       "id": "8",
       "lane": "INFRA",
       "depends_on": [
-        "1",
         "2",
         "3",
-        "4",
-        "5",
         "6",
         "7"
       ],
-      "reason": "INFRA lane: comprehensive system testing script. Depends on all prior fixes as it validates the complete user flow end-to-end."
+      "reason": "End-to-end testing scripts validating complete user flow. Depends on contract fixes (3), frontend config (2), and display fixes (6,7)."
     },
     {
       "id": "9",
       "lane": "FRONTEND",
-      "depends_on": [
-        "1",
-        "2"
-      ],
-      "reason": "FRONTEND lane: updating React hooks for volume calculation. Depends on Task 1 for working contracts and Task 2 for correct addresses."
+      "depends_on": [],
+      "reason": "Updates frontend/user-app/src/hooks/useTradeHistory.ts calculation logic. Independent calculation fix."
     },
     {
       "id": "10",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "FRONTEND lane: updating HTML/meta tags for branding. No dependencies as this is pure cosmetic work with no data flow requirements."
+      "reason": "Updates frontend/user-app/index.html and meta tags. Independent polish task."
     }
   ]
 }

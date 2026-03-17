@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-LEVER Protocol — Timmy Dashboard v5
+LEVER Protocol — Timmy Dashboard v4
 Supports: parallel dispatcher lanes, old worker logs, execution plan, live progress.
 All timestamps ICT (UTC+7). Run: python3 dashboard.py — Access: http://SERVER_IP:8080
 """
@@ -322,127 +322,6 @@ def contract_health():
     return {"contracts": len(contracts), "tests": len(tests)}
 
 
-
-def get_loop_data():
-    """Get autonomous loop state for dashboard."""
-    import glob as _glob
-    logs_dir = f"{CONTROL}/dispatcher-logs"
-    result = {
-        "cycle": 0,
-        "phase": "unknown",
-        "qa_score": None,
-        "qa_checks": [],
-        "plan_text": "",
-        "critique_text": "",
-        "critic_verdict": "",
-        "cycle_history": [],
-        "loop_log": "",
-        "loop_running": False,
-    }
-
-    # Check if loop service is running
-    try:
-        import subprocess as _sp
-        r = _sp.run(['systemctl', 'is-active', 'lever-loop'], capture_output=True, text=True, timeout=5)
-        result["loop_running"] = r.stdout.strip() == 'active'
-    except:
-        pass
-
-    # Read loop log (last 50 lines)
-    loop_log = f"{logs_dir}/loop.log"
-    try:
-        with open(loop_log) as f:
-            lines = f.readlines()
-        result["loop_log"] = ''.join(lines[-50:])
-        # Parse current phase from last lines
-        for line in reversed(lines[-20:]):
-            if 'CYCLE' in line:
-                import re as _re
-                m = _re.search(r'CYCLE\s+(\d+)', line)
-                if m:
-                    result["cycle"] = int(m.group(1))
-            if 'QA PHASE' in line:
-                result["phase"] = "qa"
-            elif 'PLANNER PHASE' in line or 'PLANNER REVISION' in line:
-                result["phase"] = "planning"
-            elif 'CRITIC PHASE' in line:
-                result["phase"] = "critic"
-            elif 'DISPATCH PHASE' in line or 'Dispatcher running' in line:
-                result["phase"] = "dispatching"
-            elif 'QA Score' in line:
-                m2 = _re.search(r'QA Score:\s*(\d+)', line)
-                if m2:
-                    result["qa_score"] = int(m2.group(1))
-            elif 'APPROVED' in line:
-                result["critic_verdict"] = "approved"
-            elif 'REJECTED' in line:
-                result["critic_verdict"] = "rejected"
-    except:
-        pass
-
-    # Read latest QA report
-    qa_reports = sorted(_glob.glob(f"{logs_dir}/qa-report-*.json"), reverse=True)
-    if qa_reports:
-        try:
-            import json as _json
-            with open(qa_reports[0]) as f:
-                qa = _json.load(f)
-            result["qa_score"] = qa.get("score", result["qa_score"])
-            result["qa_checks"] = qa.get("checks", [])
-        except:
-            pass
-
-    # Read latest plan
-    plans = sorted(_glob.glob(f"{logs_dir}/plan-*.md"), reverse=True)
-    if plans:
-        try:
-            with open(plans[0]) as f:
-                result["plan_text"] = f.read()[:3000]
-        except:
-            pass
-
-    # Read latest critique
-    critiques = sorted(_glob.glob(f"{logs_dir}/critique-*.md"), reverse=True)
-    if critiques:
-        try:
-            with open(critiques[0]) as f:
-                result["critique_text"] = f.read()[:2000]
-        except:
-            pass
-
-    # Build cycle history from QA reports
-    for qr in sorted(qa_reports)[-10:]:
-        try:
-            import json as _json
-            with open(qr) as f:
-                q = _json.load(f)
-            import os as _os
-            fname = _os.path.basename(qr)
-            # Extract cycle number from filename: qa-report-1.json
-            m3 = _re.search(r'qa-report-(\d+)', fname)
-            cnum = int(m3.group(1)) if m3 else 0
-            result["cycle_history"].append({
-                "cycle": cnum,
-                "score": q.get("score", 0),
-                "critical": len(q.get("critical_issues", [])),
-                "timestamp": q.get("timestamp", ""),
-            })
-        except:
-            pass
-
-    # Read loop state file
-    state_file = f"{logs_dir}/loop-state.json"
-    try:
-        import json as _json
-        with open(state_file) as f:
-            state = _json.load(f)
-        result["cycle"] = max(result["cycle"], state.get("next_cycle", 1) - 1)
-    except:
-        pass
-
-    return result
-
-
 # ── API ─────────────────────────────────────────────────────────────────────
 
 
@@ -734,7 +613,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Instrument Sans',sans-ser
 <div id="toast" class="toast"></div>
 <div class="app">
 <div class="hdr">
-<div class="logo"><div class="logo-icon">T</div><div class="logo-title"><h1>Timmy</h1><span>LEVER Protocol — Autonomous Loop</span></div></div>
+<div class="logo"><div class="logo-icon">T</div><div class="logo-title"><h1>Timmy</h1><span>LEVER Protocol — Parallel Build</span></div></div>
 <div class="hdr-r">
 <div class="pill" id="status-pill"><div class="dot dot-off"></div><span>—</span></div>
 <div class="clock" id="clock"></div>
@@ -744,30 +623,15 @@ body{background:var(--bg);color:var(--tx);font-family:'Instrument Sans',sans-ser
 </div>
 
 <div class="tabs">
-<button class="tab on" data-v="v-loop">&#x1F504; Loop</button>
-<button class="tab" data-v="v-live">&#9889; Live</button>
+<button class="tab on" data-v="v-live">&#9889; Live</button>
 <button class="tab" data-v="v-plan">&#9632; Plan</button>
 <button class="tab" data-v="v-work">&#128295; Work</button>
 <button class="tab" data-v="v-issues">&#9888; Issues</button>
 <button class="tab" data-v="v-git">&#128200; Git</button>
 </div>
 
-<!-- LOOP -->
-<div id="v-loop" class="view on">
-<div class="g4" id="loop-stats"></div>
-<div class="g2" style="margin-top:10px">
-<div class="card"><div class="card-head"><span class="card-label">Cycle Phase</span><span class="badge b-ac" id="loop-phase">-</span></div><div id="loop-pipeline" style="padding:8px 0"></div></div>
-<div class="card"><div class="card-head"><span class="card-label">QA Checks</span><span class="badge b-bl" id="loop-qa-badge">-</span></div><div id="loop-qa-checks" style="max-height:300px;overflow-y:auto"></div></div>
-</div>
-<div class="g2" style="margin-top:10px">
-<div class="card"><div class="card-head"><span class="card-label">Latest Plan</span></div><div class="term"><div class="term-body" id="loop-plan" style="max-height:350px">Waiting for first cycle...</div></div></div>
-<div class="card"><div class="card-head"><span class="card-label">Critic Feedback</span><span class="badge" id="loop-verdict">-</span></div><div class="term"><div class="term-body" id="loop-critique" style="max-height:350px">Waiting for first cycle...</div></div></div>
-</div>
-<div class="card" style="margin-top:10px"><div class="card-head"><span class="card-label">Loop Log</span></div><div class="term"><div class="term-body" id="loop-log" style="max-height:400px">Starting...</div></div></div>
-</div>
-
 <!-- LIVE -->
-<div id="v-live" class="view">
+<div id="v-live" class="view on">
 <div id="live-banner"></div>
 <div class="g3" id="lane-cards" style="margin-bottom:14px"></div>
 <div class="term">
@@ -810,8 +674,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Instrument Sans',sans-ser
 </div>
 
 <nav class="mnav"><div class="mnav-row">
-<button class="on" data-v="v-loop"><em>&#x1F504;</em>Loop</button>
-<button data-v="v-live"><em>&#9889;</em>Live</button>
+<button class="on" data-v="v-live"><em>&#9889;</em>Live</button>
 <button data-v="v-plan"><em>&#9632;</em>Plan</button>
 <button data-v="v-work"><em>&#128295;</em>Work</button>
 <button data-v="v-issues"><em>&#9888;</em>Issues</button>
@@ -1014,91 +877,9 @@ function renderIssues(d){
   document.getElementById('issues-box').innerHTML=h;
 }
 
-
-// Loop view
-function renderLoop(d){
-  const loop=d.loop||{};
-  const score=loop.qa_score!==null?loop.qa_score:'--';
-  const scoreColor=score>=80?'var(--ac)':score>=50?'var(--yl)':'var(--rd)';
-  const cycle=loop.cycle||0;
-  const phase=loop.phase||'idle';
-  const verdict=loop.critic_verdict||'pending';
-  const history=loop.cycle_history||[];
-
-  // Stats cards
-  document.getElementById('loop-stats').innerHTML=
-    '<div class="card"><div class="stat-n" style="color:'+scoreColor+'">'+score+'</div><div class="stat-l">QA Score</div></div>'+
-    '<div class="card"><div class="stat-n">'+cycle+'</div><div class="stat-l">Cycle #</div></div>'+
-    '<div class="card"><div class="stat-n" style="font-size:16px;text-transform:capitalize">'+phase+'</div><div class="stat-l">Current Phase</div></div>'+
-    '<div class="card"><div class="stat-n">'+(loop.loop_running?'<span style="color:var(--ac)">ON</span>':'<span style="color:var(--rd)">OFF</span>')+'</div><div class="stat-l">Loop Status</div></div>';
-
-  // Phase badge
-  const phaseEl=document.getElementById('loop-phase');
-  phaseEl.textContent=phase.toUpperCase();
-  phaseEl.className='badge '+(phase==='dispatching'?'b-ac':phase==='qa'?'b-bl':phase==='planning'?'b-pp':phase==='critic'?'b-yl':'b-or');
-
-  // Pipeline visualization
-  const phases=['qa','planning','critic','dispatching'];
-  const phaseLabels={'qa':'QA Test','planning':'Planner','critic':'Critic','dispatching':'Dispatch'};
-  const phaseIcons={'qa':'&#128269;','planning':'&#128203;','critic':'&#128270;','dispatching':'&#9889;'};
-  let pipe='<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">';
-  phases.forEach((p,i)=>{
-    const active=p===phase;
-    const done=phases.indexOf(phase)>i;
-    const bg=active?'var(--acd)':done?'var(--s3)':'var(--s2)';
-    const bdr=active?'var(--acb)':done?'var(--bdr2)':'var(--bdr)';
-    const col=active?'var(--ac)':done?'var(--dim)':'var(--dim)';
-    pipe+='<div style="flex:1;padding:10px;border-radius:8px;border:1px solid '+bdr+';background:'+bg+';text-align:center">';
-    pipe+='<div style="font-size:18px;margin-bottom:4px">'+phaseIcons[p]+'</div>';
-    pipe+='<div style="font:600 10px JetBrains Mono,monospace;color:'+col+';text-transform:uppercase">'+phaseLabels[p]+'</div>';
-    if(active)pipe+='<div style="margin-top:4px"><div class="dot dot-on" style="display:inline-block"></div></div>';
-    if(done)pipe+='<div style="font-size:10px;color:var(--ac);margin-top:2px">&#10003;</div>';
-    pipe+='</div>';
-    if(i<phases.length-1)pipe+='<div style="color:var(--dim);font-size:12px">&#9654;</div>';
-  });
-  pipe+='</div>';
-
-  // History sparkline
-  if(history.length>1){
-    pipe+='<div style="margin-top:12px;display:flex;align-items:end;gap:2px;height:40px">';
-    history.forEach(h=>{
-      const pct=Math.max(5,h.score||0);
-      const c=pct>=80?'var(--ac)':pct>=50?'var(--yl)':'var(--rd)';
-      pipe+='<div title="Cycle '+h.cycle+': '+pct+'%" style="flex:1;height:'+pct+'%;background:'+c+';border-radius:2px;min-width:8px;cursor:help"></div>';
-    });
-    pipe+='</div>';
-    pipe+='<div style="display:flex;justify-content:space-between;font:400 9px JetBrains Mono,monospace;color:var(--dim);margin-top:2px"><span>Cycle '+(history[0].cycle||1)+'</span><span>Cycle '+(history[history.length-1].cycle||cycle)+'</span></div>';
-  }
-  document.getElementById('loop-pipeline').innerHTML=pipe;
-
-  // QA Checks
-  const checks=loop.qa_checks||[];
-  document.getElementById('loop-qa-badge').textContent=checks.filter(c=>c.pass).length+'/'+checks.length+' pass';
-  let qh='';
-  checks.forEach(c=>{
-    const icon=c.pass?'<span style="color:var(--ac)">&#10003;</span>':'<span style="color:var(--rd)">&#10007;</span>';
-    qh+='<div style="display:flex;justify-content:space-between;padding:6px 8px;border-bottom:1px solid var(--bdr);font-size:12px"><span>'+icon+' '+esc(c.name||'')+'</span><span class="mono" style="font-size:10px;color:var(--dim)">'+esc(c.detail||'')+'</span></div>';
-  });
-  document.getElementById('loop-qa-checks').innerHTML=qh||'<div style="padding:12px;color:var(--dim);font-size:12px">No QA data yet</div>';
-
-  // Plan text
-  document.getElementById('loop-plan').innerHTML=colorize(loop.plan_text||'No plan generated yet');
-
-  // Critique
-  const verdictEl=document.getElementById('loop-verdict');
-  if(verdict==='approved'){verdictEl.textContent='APPROVED';verdictEl.className='badge b-ac';}
-  else if(verdict==='rejected'){verdictEl.textContent='REJECTED';verdictEl.className='badge b-rd';}
-  else{verdictEl.textContent='PENDING';verdictEl.className='badge b-yl';}
-  document.getElementById('loop-critique').innerHTML=colorize(loop.critique_text||'No critique yet');
-
-  // Loop log
-  document.getElementById('loop-log').innerHTML=colorize(loop.loop_log||'Loop not started yet');
-}
-
 // Main render
 function render(d){
   DATA=d;
-  renderLoop(d);
   renderPlan(d);
   renderLogList('disp-list',d.dispatcher_logs,'dl');
   renderLogList('work-list',d.worker_logs,'wl');
@@ -1117,7 +898,7 @@ function refresh(){
 }
 
 refresh();
-setInterval(()=>{fetch('/api/status').then(r=>r.json()).then(d=>{render(d);statusBar(d.running?'Building':'Idle',d.now)}).catch(()=>{})},10000);
+setInterval(()=>{fetch('/api/status').then(r=>r.json()).then(d=>{render(d);statusBar(d.running?'Building':'Idle',d.now)}).catch(()=>{})},30000);
 setInterval(()=>{if(lastRefresh){const ago=Math.round((Date.now()-lastRefresh)/1000);const r=document.getElementById('sb-right').textContent;if(r.includes('Updated'))document.getElementById('sb-right').textContent=r.replace(/Updated \d+s/,'Updated '+ago+'s');}},5000);
 </script>
 </body>
@@ -1170,5 +951,5 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
 
 if __name__ == '__main__':
-    print(f"Timmy Dashboard v5 — http://0.0.0.0:{PORT}")
+    print(f"Timmy Dashboard v4 — http://0.0.0.0:{PORT}")
     http.server.HTTPServer(('0.0.0.0', PORT), Handler).serve_forever()

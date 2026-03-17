@@ -1,0 +1,8 @@
+{
+  "task_id": "5",
+  "lane": "INFRA",
+  "title": "Fix Dashboard Data Display with Proper Error Handling [CRITICAL]",
+  "started": "2026-03-17T05:12:11.350887",
+  "pid": 892154,
+  "log": "/home/lever/lever-protocol/control-plane/dispatcher-logs/task-5-051211.log"
+}
