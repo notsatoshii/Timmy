@@ -339,27 +339,7 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
       });
 
       if (isDemoMode) {
-        setIsAutoFunding(true);
-        // Auto-approve USDT for AccountManager
-        try {
-          await sendDemoTransaction(
-            CONTRACT_ADDRESSES.usdt,
-            USDT_ABI,
-            'approve',
-            [CONTRACT_ADDRESSES.accountManager, BigInt('115792089237316195423570985008687907853269984665640564039457584007913129639935')]
-          );
-        } catch (e) { console.log('Approve already set:', e); }
-        // Auto-deposit collateral
-        try {
-          await sendDemoTransaction(
-            CONTRACT_ADDRESSES.accountManager,
-            ACCOUNT_MANAGER_ABI,
-            'deposit',
-            [collateralAmount]
-          );
-        } catch (e) { console.log('Deposit skipped:', e); }
-        setIsAutoFunding(false);
-        // Open position
+        // Demo wallet already funded — go straight to openPosition
         const hash = await sendDemoTransaction(
           CONTRACT_ADDRESSES.executionEngine,
           EXECUTION_ENGINE_ABI,
