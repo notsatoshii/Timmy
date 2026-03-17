@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-17T16:32:30.273669+00:00",
+  "timestamp": "2026-03-17T16:48:00.934197+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,12 +11,12 @@
     },
     {
       "name": "Positions",
-      "value": "210",
+      "value": "211",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "10979767554735 [1.097e13]",
+      "value": "11019767554735 [1.101e13]",
       "status": "ok"
     },
     {
@@ -28,26 +28,30 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Cannot evaluate actual React app functionality from static HTML response",
-    "Vision: No visible loading or error handling in static shell",
-    "Vision: Domain referenced (lever.finance) may not match current deployment (localhost:3000)"
+    "Vision: Cannot verify visual interface rendering - potential blank/error state",
+    "Vision: No functional testing possible without visual confirmation",
+    "Vision: Security scanning attempts detected in logs indicate exposure to attacks",
+    "Vision: Unable to confirm core trading functionality is working",
+    "Vision: No clear indication that markets, positions, or LP features are operational"
   ],
   "functional_issues": [],
-  "score": 76,
+  "score": 60,
   "vision_review": {
     "professional_score": 7,
     "trust_score": 6,
     "issues": [
-      "Cannot evaluate actual React app functionality from static HTML response",
-      "No visible loading or error handling in static shell",
-      "Domain referenced (lever.finance) may not match current deployment (localhost:3000)"
+      "Cannot verify visual interface rendering - potential blank/error state",
+      "No functional testing possible without visual confirmation",
+      "Security scanning attempts detected in logs indicate exposure to attacks",
+      "Unable to confirm core trading functionality is working",
+      "No clear indication that markets, positions, or LP features are operational"
     ],
     "improvements": [
-      "Add server-side rendering or static preload for better SEO and loading experience",
-      "Include loading states in the HTML shell for better UX",
-      "Ensure meta tags reflect actual deployment environment",
-      "Add error boundary fallback in noscript tag",
-      "Include structured data markup for better search visibility"
+      "Fix screenshot testing capability for proper UI verification",
+      "Add API health endpoints for functional testing",
+      "Implement rate limiting to prevent security scanning",
+      "Add monitoring dashboard to verify all features are working",
+      "Ensure React app renders properly without JavaScript errors"
     ]
   }
 }
