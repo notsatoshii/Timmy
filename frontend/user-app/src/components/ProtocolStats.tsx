@@ -81,7 +81,7 @@ const ProtocolStats: React.FC = () => {
       if (!tvlRaw || tvlError) fallbacksUsed.push('TVL');
       if (totalOIRaw === undefined || oiError) fallbacksUsed.push('Total OI');
       if (insuranceRaw === undefined || insuranceError) fallbacksUsed.push('Insurance Fund');
-      if (volume24h === undefined) fallbacksUsed.push('24h Volume');
+      if (volume24h === undefined) fallbacksUsed.push('Volume');
       if (!currentBorrowRate || borrowRateError || currentBorrowRate <= BigInt(0)) fallbacksUsed.push('Borrow Rate');
 
       if (fallbacksUsed.length > 0) {
@@ -147,9 +147,9 @@ const ProtocolStats: React.FC = () => {
             )}
           </div>
 
-          {/* 24h Volume */}
+          {/* Volume */}
           <div className="text-center">
-            <div className="text-sm font-medium text-gray-400 mb-1">24h Volume</div>
+            <div className="text-sm font-medium text-gray-400 mb-1">Volume</div>
             {isLoading ? (
               <Skeleton variant="text" className="h-6 w-20 mx-auto" />
             ) : (

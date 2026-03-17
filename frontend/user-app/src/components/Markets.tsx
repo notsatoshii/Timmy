@@ -95,7 +95,7 @@ const Markets: React.FC<MarketsProps> = ({ onTradeSelect, onMarketDetail }) => {
         <div>
           <h2 className="text-2xl font-bold text-gray-100">Prediction Markets</h2>
           <p className="text-gray-500">
-            Browse active binary outcome markets with up to 30x leverage
+            Browse active binary outcome markets with up to 12x leverage
           </p>
         </div>
         <div className="flex flex-col space-y-3 md:text-right">
@@ -205,7 +205,7 @@ const Markets: React.FC<MarketsProps> = ({ onTradeSelect, onMarketDetail }) => {
                   </button>
                 </div>
                 <p className="text-xs text-gray-600 text-center mt-2">
-                  Up to 30x leverage
+                  Up to 12x leverage
                 </p>
               </div>
             </div>

@@ -29,7 +29,7 @@ const Header: React.FC = () => {
                     Prediction Market Leverage
                   </p>
                   <p className="text-xs text-gray-500">
-                    Binary outcomes &bull; Up to 30x leverage
+                    Binary outcomes &bull; Up to 12x leverage
                   </p>
                 </div>
               </div>
