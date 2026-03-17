@@ -17,7 +17,7 @@ contract TestPositionOpeningFixed is Script {
         console2.log("=== Testing Position Opening with Fixed ExecutionEngine ===");
 
         // Use the new ExecutionEngine address
-        IExecutionEngine executionEngine = IExecutionEngine(0x15a05b36D68e88f3264157dDa034f6C1e666065b);
+        IExecutionEngine executionEngine = IExecutionEngine(0x28FBFaCaa72BdB504d77D561870B5F3cC13e3ed7);
         IAccountManager accountManager = IAccountManager(0x6D2231BB7E8704C1e76de63A06A16d9B59bA6684);
 
         // Use SpaceX market for testing

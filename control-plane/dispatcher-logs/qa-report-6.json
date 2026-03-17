@@ -1,0 +1,53 @@
+{
+  "timestamp": "2026-03-17T06:11:02.361833+00:00",
+  "frontend_status": "UP",
+  "data_checks": [
+    {
+      "name": "TVL",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Positions",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Global OI",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Insurance Fund",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Max Leverage",
+      "value": "",
+      "status": "error"
+    }
+  ],
+  "visual_issues": [
+    "Vision: Frontend completely broken - shows file directory instead of app",
+    "Vision: No functioning user interface to interact with protocol"
+  ],
+  "functional_issues": [],
+  "critical_blockers": [],
+  "score": 80,
+  "vision_review": {
+    "professional_score": 1,
+    "trust_score": 1,
+    "deal_breakers": [
+      "Frontend completely broken - shows file directory instead of app",
+      "No functioning user interface to interact with protocol"
+    ],
+    "improvements": [
+      "Fix React build deployment to serve actual app",
+      "Complete frontend build with proper index.html and assets",
+      "Test basic navigation and core functionality before launch"
+    ]
+  },
+  "recent_commits": "298f2946 auto: cycle tasks complete\ncdeeef34 fix(7): Verify Oracle Keeper Service Health - confirmed keeper running, price updates flowing, monitoring alerts active\na7fae3a4 auto: cycle tasks complete\n25a311da fix(7): Ensure Oracle Keeper Stays Running for Live Price Updates - implemented systemd service, health monitoring, auto-restart via cron, all health checks passing\n0cd26da0 fix(1): Fix $NaN Share Price Display in Vault Tab",
+  "known_issues_count": 27
+}

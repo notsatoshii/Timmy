@@ -4,58 +4,53 @@
       "id": "1",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "FRONTEND: Fixes React hooks, wagmi config, and contract address verification. No dependencies: foundational fix that enables other data fetching."
+      "reason": "Frontend build configuration and React app deployment - foundational build system issue"
     },
     {
       "id": "2",
-      "lane": "CONTRACT",
-      "depends_on": [
-        "1"
-      ],
-      "reason": "CONTRACT: Deploys new ExecutionEngine contract and updates addresses. Depends on 1: both tasks touch contracts.ts (verification before update prevents conflicts)."
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "Frontend RPC configuration and data fetching - networking issue independent of other systems"
     },
     {
       "id": "3",
-      "lane": "FRONTEND",
-      "depends_on": [
-        "1"
-      ],
-      "reason": "FRONTEND: Fixes React component display and hook calculations. Depends on 1: needs RPC errors fixed to properly fetch vault data that sharePrice calculation depends on."
+      "lane": "CONTRACT",
+      "depends_on": [],
+      "reason": "Solidity contract redeployment and configuration - contract layer issue"
     },
     {
       "id": "4",
       "lane": "FRONTEND",
       "depends_on": [
-        "1",
-        "2"
+        "2",
+        "3"
       ],
-      "reason": "FRONTEND: Improves React error handling and debugging. Depends on 1: needs RPC working to capture revert reasons. Depends on 2: needs correct ExecutionEngine address for proper debugging."
+      "reason": "Frontend position display - depends on RPC working (task 2) and ExecutionEngine being fixed to have valid position data (task 3)"
     },
     {
       "id": "5",
       "lane": "FRONTEND",
       "depends_on": [
-        "1"
+        "2"
       ],
-      "reason": "FRONTEND: Updates React hooks and components for volume calculation. Depends on 1: needs RPC errors fixed to properly fetch trade history data for volume calculations."
+      "reason": "Frontend vault display - depends on RPC working (task 2) for multicall data fetching"
     },
     {
       "id": "6",
-      "lane": "FRONTEND",
+      "lane": "INFRA",
       "depends_on": [],
-      "reason": "FRONTEND: Adds React error boundaries and loading states. No dependencies: error boundaries can be implemented regardless of underlying data issues."
+      "reason": "Infrastructure service monitoring and management - independent systemd service check"
     },
     {
       "id": "7",
-      "lane": "INFRA",
-      "depends_on": [],
-      "reason": "INFRA: Checks systemd services and Python scripts. No dependencies: independent infrastructure monitoring work."
-    },
-    {
-      "id": "8",
-      "lane": "CONTRACT",
-      "depends_on": [],
-      "reason": "CONTRACT: Debugs Solidity fee distribution logic. No dependencies: independent contract investigation work."
+      "lane": "FRONTEND",
+      "depends_on": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "reason": "Frontend trading flow integration - depends on build working (1), RPC working (2), ExecutionEngine fixed (3), and position display working (4)"
     }
   ]
 }
