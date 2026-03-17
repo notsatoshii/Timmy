@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-17T19:53:14.060634+00:00",
+  "timestamp": "2026-03-17T20:07:58.778799+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -28,10 +28,10 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Share price displays '$NaN' in vault section - technical display issue",
-    "Vision: High TVL ($60M) on testnet may confuse investors about actual production scale",
-    "Vision: Read-only mode messaging not prominent enough for demo clarity",
-    "Vision: Missing tooltips/explanations for technical metrics (LP APY, utilization, etc.)"
+    "Vision: Dashboard server returns 501 for HEAD requests - suggests basic Python server",
+    "Vision: Frontend shows update check warnings in logs",
+    "Vision: Some suspicious query strings in logs (though properly handled)",
+    "Vision: Dashboard service uses BaseHTTP/0.6 which appears less enterprise-grade"
   ],
   "functional_issues": [],
   "score": 68,
@@ -39,18 +39,18 @@
     "professional_score": 8,
     "trust_score": 7,
     "issues": [
-      "Share price displays '$NaN' in vault section - technical display issue",
-      "High TVL ($60M) on testnet may confuse investors about actual production scale",
-      "Read-only mode messaging not prominent enough for demo clarity",
-      "Missing tooltips/explanations for technical metrics (LP APY, utilization, etc.)"
+      "Dashboard server returns 501 for HEAD requests - suggests basic Python server",
+      "Frontend shows update check warnings in logs",
+      "Some suspicious query strings in logs (though properly handled)",
+      "Dashboard service uses BaseHTTP/0.6 which appears less enterprise-grade"
     ],
     "improvements": [
-      "Fix NaN display bugs in vault metrics calculations",
-      "Add clear testnet vs mainnet distinction in header",
-      "Include tooltips explaining key DeFi metrics for broader investor audience",
-      "Add prominent link to whitepaper/documentation for technical details",
-      "Better visual distinction between demo mode and wallet-required actions",
-      "Consider more realistic testnet TVL numbers to avoid production confusion"
+      "Upgrade dashboard to production-grade server (nginx/Apache)",
+      "Add proper health check endpoints for both services",
+      "Implement proper error handling for unsupported HTTP methods",
+      "Add request rate limiting to prevent log spam",
+      "Include service monitoring and alerting",
+      "Add security headers to responses"
     ]
   }
 }
