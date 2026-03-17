@@ -513,14 +513,15 @@ const Positions: React.FC = () => {
     createLivePosition(basePos, demoMarketIds[index])
   );
 
-  const displayPositions = positions.length > 0 ? positions : (address ? demoPositions : []);
+  // Always show demo positions if no real positions exist, regardless of wallet connection
+  const displayPositions = positions.length > 0 ? positions : demoPositions;
 
   console.log('[Positions] Display positions logic:', {
     positionsCount: positions.length,
     address: address || 'null',
     demoPositionsCount: demoPositions.length,
     displayPositionsCount: displayPositions.length,
-    displayPositionsSource: positions.length > 0 ? 'real' : (address ? 'demo' : 'empty')
+    displayPositionsSource: positions.length > 0 ? 'real' : 'demo'
   });
 
   const handleCloseClick = (positionId: bigint) => {
@@ -1063,7 +1064,7 @@ const Positions: React.FC = () => {
       </div>
 
       {/* Empty State */}
-      {displayPositions.length === 0 && (
+      {positions.length === 0 && !address && (
         <div className="space-y-8">
           {!address && (
             <div className="bg-surface-1 rounded-lg border border-border p-6">

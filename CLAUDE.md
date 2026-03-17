@@ -292,3 +292,11 @@ Primary references: lever-concept.png (trading), space-portfolio.png (positions)
 - `MarketNotFound` = markets not onboarded
 - Black screen = React provider crash (check App.tsx)
 - $0.00 stats = wrong addresses in frontend config/contracts.ts
+
+## PROTECTED CONTRACTS — DO NOT REDEPLOY
+These contracts are correctly deployed and configured. Do NOT redeploy, replace, or change their addresses:
+- ExecutionEngine: 0xc749C6aAe8a5ACBDD924DF7f833Dd3115307a60D
+- LeverageModel: 0xA7D95F94dA06E29fc8eFf948Bca3B4AF1d2585ed
+- LeverVault: 0x84a1Eb3b1eFD60b193b271DCfaB2711cE1c41921
+- PositionManager: 0x25ba54a7b2fBac753B601Da05e3661F2E959510b
+If you think a contract needs redeployment, STOP and log the issue instead of deploying.
