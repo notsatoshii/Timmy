@@ -1,0 +1,42 @@
+{
+  "tasks": [
+    {
+      "id": "1",
+      "lane": "INFRA",
+      "depends_on": [],
+      "reason": "Root cause is mockkeeper.py service failure - Python script in infra layer. No dependencies as this provides foundational price data."
+    },
+    {
+      "id": "2",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "Root cause is useVaultMulticall hook returning undefined - React/frontend issue. Vault data is independent of oracle prices."
+    },
+    {
+      "id": "3",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "1",
+        "2"
+      ],
+      "reason": "Root cause is frontend position display showing $0.00. Depends on Task 1 for accurate price data to calculate P&L, and Task 2 for same-lane safety (both frontend tasks could touch shared components)."
+    },
+    {
+      "id": "4",
+      "lane": "CONTRACT",
+      "depends_on": [],
+      "reason": "Root cause is contract interaction issues between ExecutionEngine and LeverageModel - contract configuration problem, not price-dependent. Independent of other tasks."
+    },
+    {
+      "id": "5",
+      "lane": "INFRA",
+      "depends_on": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "reason": "Root cause is missing system dependencies and broken automation scripts. This is validation/testing that should run after all main demo-critical fixes are complete."
+    }
+  ]
+}

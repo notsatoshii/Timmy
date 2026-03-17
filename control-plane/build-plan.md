@@ -1,36 +1,33 @@
-You're absolutely right. I violated the explicit CLAUDE.md instructions regarding protected contracts. Here's the corrected plan:
+Based on the build plan and QA score of 52 (critical for investor demo), here are the prioritized tasks:
 
-## REVISED INVESTOR DEMO PRIORITY TASKS
+### 1. Fix Oracle Price Feed Pipeline [CRITICAL] [ORACLE]
+- [ ] Debug mockkeeper.py service that's failing to push live price updates
+- [ ] Verify OracleAdapter contract can receive and process external feeds  
+- [ ] Restore real-time PI calculations from stale price data
+- [ ] Test price propagation through entire trading system
 
-## 1. Fix Oracle Price Updates [CRITICAL] [BACKEND]
-- [ ] Debug oracle keeper process failing to push price updates
-- [ ] Check mockkeeper.py service status and logs  
-- [ ] Verify OracleAdapter can receive and process price feeds
-- [ ] Ensure price updates flow through to PI calculations
+### 2. Restore Vault Data Display [CRITICAL] [FRONTEND] 
+- [ ] Fix useVaultMulticall hook returning undefined (causing $NaN display)
+- [ ] Debug 413 RPC errors from Base Sepolia blocking data fetching
+- [ ] Restore TVL and share price display from current $0/$NaN state
+- [ ] Verify vault metrics render correctly for investor demonstration
 
-## 2. Resolve Vault Data Pipeline [CRITICAL] [FRONTEND]  
-- [ ] Fix useVaultMulticall hook returning undefined
-- [ ] Debug 413 RPC errors from Base Sepolia affecting data fetching
-- [ ] Restore TVL and share price display (currently showing $NaN/$0)
-- [ ] Verify vault metrics appear correctly in demo mode
+### 3. Fix Position Value Calculations [CRITICAL] [FRONTEND]
+- [ ] Debug why all 213 positions display $0.00 instead of actual equity/PnL
+- [ ] Verify position data pipeline from PositionManager contract
+- [ ] Restore meaningful P&L display for existing leveraged positions  
+- [ ] Test position value updates integrate with live price data
 
-## 3. Fix Position Value Calculations [CRITICAL] [FRONTEND]
-- [ ] Debug why all 213 positions show $0.00 values instead of real equity/PnL
-- [ ] Verify position data fetching from PositionManager contract
-- [ ] Ensure PnL calculations display meaningful values for investors
-- [ ] Test position value updates with live market data
+### 4. Enable Position Opening Without Redeployment [HIGH] [BACKEND]
+- [ ] Debug "Position Open Failed" errors within contract protection constraints
+- [ ] Verify ExecutionEngine can access updated LeverageModel via calls (not redeploy)
+- [ ] Test leverage calculations work beyond current 1x limitation
+- [ ] Ensure frontend position opening flow demonstrates core functionality
 
-## 4. Debug Position Opening Failures [HIGH] [BACKEND/FRONTEND]
-- [ ] Investigate "Position Open Failed" errors without redeploying contracts
-- [ ] Check ExecutionEngine configuration and permissions  
-- [ ] Verify LeverageModel integration via existing contract calls
-- [ ] Debug frontend position opening flow and error handling
-- [ ] Test leverage calculations work with current contract setup
+### 5. Restore Screenshot Verification System [MEDIUM] [DEVOPS]
+- [ ] Install missing libatk dependencies for headless Chrome browser
+- [ ] Fix automated visual verification pipeline for ongoing QA  
+- [ ] Ensure screenshot reports generate for demo verification
+- [ ] Test verification gates work for continuous integration
 
-## 5. Fix Screenshot Verification System [MEDIUM] [DEVOPS]
-- [ ] Install missing libatk-1.0.so.0 dependencies for headless browser
-- [ ] Restore automated visual verification pipeline
-- [ ] Ensure screenshot reports generate properly
-- [ ] Verify CI/CD verification gates work
-
-**Focus**: Tasks 1-3 are demo-blockers that make the system appear broken to investors. Task 4 enables core functionality demonstration without violating contract protection rules. Task 5 ensures our verification pipeline works for ongoing development.
+**Critical Path**: Tasks 1-3 are demo-blockers making system appear non-functional. Task 4 enables core trading demonstration. Task 5 maintains quality assurance pipeline.

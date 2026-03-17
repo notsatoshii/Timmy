@@ -105,8 +105,8 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
 
       // PRIORITY 1: Use direct sharePrice from convertToAssets if available (most reliable)
       if (data.sharePrice && data.sharePrice > BigInt(0)) {
-        // sharePrice comes from convertToAssets(WAD) and is in USDT format
-        const sharePriceFloat = Number(data.sharePrice) / 1e6; // Convert USDT to float
+        // sharePrice comes from convertToAssets(WAD) and is in WAD format (18 decimals)
+        const sharePriceFloat = Number(data.sharePrice) / 1e18; // Convert WAD to float
 
         console.log('=== DIRECT SHARE PRICE ===', {
           rawSharePrice: data.sharePrice.toString(),

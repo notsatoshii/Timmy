@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-17T18:55:26.667556+00:00",
+  "timestamp": "2026-03-17T19:09:48.756480+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,12 +11,12 @@
     },
     {
       "name": "Positions",
-      "value": "213",
+      "value": "214",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "11159767554735 [1.115e13]",
+      "value": "11199767554735 [1.119e13]",
       "status": "ok"
     },
     {
@@ -28,12 +28,12 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Oracle price updates failing (no successful pushes found)",
-    "Vision: Vault tab displaying $NaN/$0 instead of real TVL and share prices",
+    "Vision: Oracle price feeds completely failing - no successful price updates found",
+    "Vision: TVL and vault metrics displaying as $NaN/$0 instead of real values",
     "Vision: All 213 positions showing $0.00 values instead of actual equity/PnL",
-    "Vision: Screenshot verification system broken (missing libatk-1.0.so.0 dependencies)",
-    "Vision: RPC 413 errors from Base Sepolia affecting data fetching pipeline",
-    "Vision: useVaultMulticall hook returning undefined breaking vault data display"
+    "Vision: Position opening failures preventing core trading functionality",
+    "Vision: Screenshot verification system broken (missing libatk dependencies)",
+    "Vision: Core derivatives functionality non-operational due to stale price data"
   ],
   "functional_issues": [],
   "score": 52,
@@ -41,20 +41,20 @@
     "professional_score": 4,
     "trust_score": 3,
     "issues": [
-      "Oracle price updates failing (no successful pushes found)",
-      "Vault tab displaying $NaN/$0 instead of real TVL and share prices",
+      "Oracle price feeds completely failing - no successful price updates found",
+      "TVL and vault metrics displaying as $NaN/$0 instead of real values",
       "All 213 positions showing $0.00 values instead of actual equity/PnL",
-      "Screenshot verification system broken (missing libatk-1.0.so.0 dependencies)",
-      "RPC 413 errors from Base Sepolia affecting data fetching pipeline",
-      "useVaultMulticall hook returning undefined breaking vault data display"
+      "Position opening failures preventing core trading functionality",
+      "Screenshot verification system broken (missing libatk dependencies)",
+      "Core derivatives functionality non-operational due to stale price data"
     ],
     "improvements": [
-      "Fix oracle keeper process to successfully push price updates",
-      "Resolve vault data pipeline to display meaningful TVL and share prices",
-      "Fix position value calculations to show real equity/PnL instead of $0.00",
-      "Install missing browser dependencies for automated visual verification",
-      "Resolve Base Sepolia RPC connectivity issues affecting frontend data",
-      "Debug useVaultMulticall hook to properly fetch and display vault metrics"
+      "Fix oracle keeper service to push live price updates from external sources",
+      "Repair vault data pipeline to display real TVL and share prices",
+      "Debug position value calculations to show meaningful P&L for existing positions",
+      "Restore position opening functionality without contract redeployment",
+      "Install missing Chrome dependencies for automated visual verification",
+      "Add error boundaries and fallback states for critical data display failures"
     ]
   }
 }

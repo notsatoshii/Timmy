@@ -77,10 +77,10 @@ const VaultOptimized: React.FC = () => {
         return 1.0; // Professional fallback
       }
 
-      // FIXED: vaultData.sharePrice comes from convertToAssets(WAD) and is already in USDT format
+      // FIXED: vaultData.sharePrice comes from convertToAssets(WAD) and is in WAD format
       // convertToAssets returns the amount of assets that would be received for 1 share (WAD = 1e18)
-      // The result is in USDT format (6 decimals), so we need to convert from USDT to float
-      const sharePriceFloat = Number(vaultData.sharePrice) / 1e6; // Convert USDT (6 decimals) to float
+      // The result is in WAD format (18 decimals), so we need to convert from WAD to float
+      const sharePriceFloat = Number(vaultData.sharePrice) / 1e18; // Convert WAD (18 decimals) to float
 
       console.log('=== SHARE PRICE DIRECT CALCULATION ===', {
         rawSharePrice: vaultData.sharePrice.toString(),
