@@ -4,6 +4,7 @@
 - [x] **OracleAdapter source validation was dead code** — FIXED 2026-03-15
 - [ ] **Oracle fallback sources broken — SINGLE POINT OF FAILURE** — DISCOVERED 2026-03-15. Gamma API returns 0.0 prices for all markets (broken parameter/parsing). CLOB orderbook returns static 0.5 for all markets (empty books). Only CLOB midpoint functional. If primary source fails, oracle provides invalid prices.
 - [ ] **Feed monitor fallback chain non-functional** — DISCOVERED 2026-03-15. Current feed_monitor.py 3-tier fallback (CLOB→Gamma→cached) would fail in production due to broken Gamma integration. Single point of failure creates liquidation risk.
+- [ ] **LeverageModel TVL decimal mismatch crushing leverage caps** — DISCOVERED 2026-03-17. LeverVault.totalAssets() returns USDT 6-decimal format but LeverageModel expects WAD 18-decimal format. 60.5M USDT treated as 0.00006 WAD, causing TVL_Mult = 0.1x instead of 1.0x. Platform ceiling crushed from 30x to 3x, all markets capped at ~1x leverage instead of 20-30x. Blocks realistic trading, market maker operations, fee generation. Full analysis: control-plane/leverage-debug-2026-03-17.md
 
 ## MEDIUM
 - [x] **OracleAdapter role assignments** — FIXED 2026-03-16. freezeMarket/unfreezeMarket/updateSmoothingParams now use DEFAULT_ADMIN_ROLE as per spec.
