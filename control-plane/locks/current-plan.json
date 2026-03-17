@@ -1,0 +1,42 @@
+{
+  "tasks": [
+    {
+      "id": "1",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "Root cause is Vite/serve configuration for React SPA. No dependencies - this is foundational for all frontend work."
+    },
+    {
+      "id": "2",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "1"
+      ],
+      "reason": "Root cause is React hooks and data display logic. Depends on task 1 because frontend must serve properly before fixing data display."
+    },
+    {
+      "id": "3",
+      "lane": "CONTRACT",
+      "depends_on": [],
+      "reason": "Root cause is ExecutionEngine using wrong LeverageModel address - contract deployment/configuration issue. Independent of frontend issues."
+    },
+    {
+      "id": "4",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "1",
+        "2"
+      ],
+      "reason": "Root cause is React UI/UX improvements (title, error boundaries, loading states). Polish work that should come after core functionality is fixed."
+    },
+    {
+      "id": "5",
+      "lane": "INFRA",
+      "depends_on": [
+        "1",
+        "3"
+      ],
+      "reason": "Root cause is end-to-end testing and verification across systems (oracle keeper monitoring, user flow testing). Needs frontend serving (1) and position opening working (3) for complete testing."
+    }
+  ]
+}
