@@ -4,56 +4,56 @@
       "id": "1",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "FRONTEND because fixing React hooks/components for stats display. No dependencies as this is fixing the source of stats display issues."
+      "reason": "Frontend build and service configuration issue. Root cause is in Vite config, dist files, and service setup. No dependencies as this is foundational infrastructure."
     },
     {
       "id": "2",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "FRONTEND because fixing React utilities and hooks for position calculations. Independent of other tasks."
+      "reason": "Frontend RPC data handling issue in React hooks. Root cause is in useVaultMulticall.ts and BigInt formatting. Independent of other tasks."
     },
     {
       "id": "3",
-      "lane": "CONTRACT",
+      "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "CONTRACT because verifying contract integration and deployment configuration. Independent contract-level verification."
+      "reason": "Frontend position opening flow debugging. Root cause is in React components and contract config files. Contract testing is for verification only, not redeployment."
     },
     {
       "id": "4",
       "lane": "FRONTEND",
-      "depends_on": [
-        "1"
-      ],
-      "reason": "FRONTEND because fixing React component error handling. Depends on task 1 because both modify useVaultMulticall.ts and could have overlapping RPC error fixes."
+      "depends_on": [],
+      "reason": "Frontend demo mode position display. Root cause is in React hooks and position calculation utilities. Independent frontend-only fix."
     },
     {
       "id": "5",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "FRONTEND because fixing volume calculation logic in React hooks. Independent calculation logic."
+      "reason": "Frontend volume calculation formula. Root cause is in React stats hooks. Independent calculation fix."
     },
     {
       "id": "6",
       "lane": "FRONTEND",
       "depends_on": [
-        "1",
         "4"
       ],
-      "reason": "FRONTEND because creating batching utilities and updating hooks. Depends on tasks 1 and 4 because it will modify the same hooks (useVaultMulticall, useStats) that those tasks fix."
+      "reason": "Frontend demo mode UI improvements. Depends on task 4 because it builds comprehensive demo experience on top of fixed demo position values."
     },
     {
       "id": "7",
-      "lane": "INFRA",
-      "depends_on": [],
-      "reason": "INFRA because managing systemd services and monitoring scripts. Independent infrastructure work."
+      "lane": "FRONTEND",
+      "depends_on": [
+        "2"
+      ],
+      "reason": "Frontend error handling utilities. Depends on task 2 because it builds comprehensive error handling on top of the RPC failure and retry logic work."
     },
     {
       "id": "8",
-      "lane": "CONTRACT",
+      "lane": "FRONTEND",
       "depends_on": [
-        "3"
+        "1",
+        "2"
       ],
-      "reason": "CONTRACT because verifying contract fee routing and configuration. Depends on task 3 because fee flow testing requires working position opening via ExecutionEngine."
+      "reason": "Frontend performance optimization. Depends on task 1 (homepage must load) and task 2 (RPC issues fixed) before optimizing performance makes sense."
     }
   ]
 }

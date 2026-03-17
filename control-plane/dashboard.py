@@ -1359,7 +1359,7 @@ function renderLoop(d){
     pipe+='</div>';
     pipe+='<div style="display:flex;justify-content:space-between;font:400 9px JetBrains Mono,monospace;color:var(--dim);margin-top:2px"><span>Cycle '+(history[0].cycle||1)+'</span><span>Cycle '+(history[history.length-1].cycle||cycle)+'</span></div>';
   }
-  document.getElementById('loop-pipeline').innerHTML=pipe;
+  (document.getElementById('loop-pipeline')||{}).innerHTML=pipe;
 
   // QA Checks
   const checks=loop.qa_checks||[];
@@ -1369,20 +1369,20 @@ function renderLoop(d){
     const icon=c.pass?'<span style="color:var(--ac)">&#10003;</span>':'<span style="color:var(--rd)">&#10007;</span>';
     qh+='<div style="display:flex;justify-content:space-between;padding:6px 8px;border-bottom:1px solid var(--bdr);font-size:12px"><span>'+icon+' '+esc(c.name||'')+'</span><span class="mono" style="font-size:10px;color:var(--dim)">'+esc(c.detail||'')+'</span></div>';
   });
-  document.getElementById('loop-qa-checks').innerHTML=qh||'<div style="padding:12px;color:var(--dim);font-size:12px">No QA data yet</div>';
+  (document.getElementById('loop-qa-checks')||{}).innerHTML=qh||'<div style="padding:12px;color:var(--dim);font-size:12px">No QA data yet</div>';
 
   // Plan text
-  document.getElementById('loop-plan').innerHTML=colorize(loop.plan_text||'No plan generated yet');
+  (document.getElementById('loop-plan')||{}).innerHTML=colorize(loop.plan_text||'No plan generated yet');
 
   // Critique
   const verdictEl=document.getElementById('loop-verdict');
   if(verdict==='approved'){verdictEl.textContent='APPROVED';verdictEl.className='badge b-ac';}
   else if(verdict==='rejected'){verdictEl.textContent='REJECTED';verdictEl.className='badge b-rd';}
   else{verdictEl.textContent='PENDING';verdictEl.className='badge b-yl';}
-  document.getElementById('loop-critique').innerHTML=colorize(loop.critique_text||'No critique yet');
+  (document.getElementById('loop-critique')||{}).innerHTML=colorize(loop.critique_text||'No critique yet');
 
   // Loop log
-  document.getElementById('loop-log').innerHTML=colorize(loop.loop_log||'Loop not started yet');
+  (document.getElementById('loop-log')||{}).innerHTML=colorize(loop.loop_log||'Loop not started yet');
 }
 
 function renderContracts(d){

@@ -1,0 +1,53 @@
+{
+  "timestamp": "2026-03-17T06:53:37.449478+00:00",
+  "frontend_status": "UP",
+  "data_checks": [
+    {
+      "name": "TVL",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Positions",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Global OI",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Insurance Fund",
+      "value": "",
+      "status": "error"
+    },
+    {
+      "name": "Max Leverage",
+      "value": "",
+      "status": "error"
+    }
+  ],
+  "visual_issues": [
+    "Vision: Homepage doesn't load - shows file directory instead of trading platform",
+    "Vision: All financial values display as $NaN or $0.00 making platform appear broken"
+  ],
+  "functional_issues": [],
+  "critical_blockers": [],
+  "score": 80,
+  "vision_review": {
+    "professional_score": 2,
+    "trust_score": 1,
+    "deal_breakers": [
+      "Homepage doesn't load - shows file directory instead of trading platform",
+      "All financial values display as $NaN or $0.00 making platform appear broken"
+    ],
+    "improvements": [
+      "Fix frontend service to serve actual React build from correct directory",
+      "Resolve $NaN and $0.00 display issues in vault and positions",
+      "Fix core position opening functionality that currently fails"
+    ]
+  },
+  "recent_commits": "c32e7cc6 auto: cycle tasks complete\ne896c0a1 fix(7): Oracle Keeper verified running with live price updates - enhanced health-check.sh with 5min stale price detection, added verification script\n0a1fa0e3 shield: 5-layer protection against agent contract redeployment\nd9e10212 shield: 5-layer protection against agent contract redeployment\n52539808 fix(2): Fix Position Values Showing $0.00 - Fixed display logic to show demo positions when no wallet connected, added debugging logs to trace value flow, created position calculation utilities with proper BigInt handling",
+  "known_issues_count": 27
+}

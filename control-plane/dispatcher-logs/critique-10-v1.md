@@ -1,0 +1,5 @@
+- Task 3 violates CLAUDE.md constraints: ExecutionEngine (0xc749C6aAe8a5ACBDD924DF7f833Dd3115307a60D) is explicitly listed as PROTECTED - DO NOT REDEPLOY. This could break working functionality.
+- Missing investigation of WHY position opening fails before jumping to redeployment - could be frontend config, wrong contract calls, or different contract issue
+- Need alternative approach for position opening fix that doesn't redeploy protected contracts - maybe frontend ExecutionEngine address is wrong, or calling wrong functions
+- Plan should investigate existing contract state and frontend integration before assuming contract redeployment is needed
+- Otherwise priorities are correct (homepage + $NaN displays are investor deal-breakers) and tasks are specific enough

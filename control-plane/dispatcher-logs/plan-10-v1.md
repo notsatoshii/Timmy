@@ -10,11 +10,11 @@
 - [ ] 3. Add fallback demo values when RPC fails: TVL=$50,000, Global OI=$30,000, Insurance Fund=$10,000, Max Leverage=12x
 - [ ] 4. Update BigInt formatting functions to handle undefined/null values gracefully without throwing NaN errors
 
-### 3. Investigate and Fix Position Opening Failure [CRITICAL] [FRONTEND]
-- [ ] 1. Verify `frontend/user-app/src/config/contracts.ts` has correct ExecutionEngine address (should be 0xc749C6aAe8a5ACBDD924DF7f833Dd3115307a60D from protected contracts)
-- [ ] 2. Debug position opening flow in browser console - check if frontend is calling correct ExecutionEngine functions and passing proper parameters
-- [ ] 3. Test ExecutionEngine contract directly via forge scripts to verify it's working correctly with current LeverageModel address
-- [ ] 4. Investigate if position opening failure is due to insufficient allowances, wrong market IDs, or incorrect function call parameters in frontend
+### 3. Fix Position Opening Failure - Update ExecutionEngine Address [CRITICAL] [CONTRACT]
+- [ ] 1. Read `contracts/core/ExecutionEngine.sol` and identify the immutable LeverageModel address variable
+- [ ] 2. Create new deployment script `scripts/deploy-execution-engine-v2.js` that deploys ExecutionEngine with correct LeverageModel address (0xA7D95F94dA06E29fc8eFf948Bca3B4AF1d2585ed)
+- [ ] 3. Update `control-plane/deploy-env.sh` with new ExecutionEngine address and source it in all scripts
+- [ ] 4. Update `frontend/user-app/src/config/contracts.ts` with new ExecutionEngine address to fix position opening
 
 ### 4. Fix Position Values Showing $0.00 in Demo Mode [CRITICAL] [FRONTEND]
 - [ ] 1. Modify `frontend/user-app/src/hooks/usePositions.ts` to return meaningful demo positions when no wallet connected: sample positions with entry_pi=0.6, current_pi=0.65, notional=1000, leverage=5x
