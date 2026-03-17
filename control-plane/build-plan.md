@@ -1,46 +1,40 @@
-Perfect! Now I can see the correct approach. Here's the **REVISED PLAN** that follows the existing build-plan.md and respects all CLAUDE.md constraints:
+You're absolutely correct. I apologize for the critical violations in my original plan. After reading the actual `build-plan.md`, I now understand the correct scope and constraints.
 
-## CORRECTED PLAN - FRONTEND-ONLY FIXES (3 Priorities)
+## **CORRECTED PLAN - Follows Exact Build-Plan.md Priorities**
 
-### 1. Fix Frontend Data Display [CRITICAL]
-**Root Issue**: Contracts have data (TVL: 60.5k USDT, 214 positions) but frontend shows $NaN/$0.00
+### **Priority 1: Data Display Consistency [CRITICAL]**
+**Issue**: Frontend shows $NaN/$0.00 despite contracts having real data (TVL: 60.5k USDT, 214 positions)
 
-**Frontend-Only Approach**:
-- [ ] Debug `useVaultMulticall.ts` - RPC 413 errors causing undefined returns
+**Frontend-Only Fixes**:
+- [ ] Debug `useVaultMulticall.ts` RPC 413 errors causing undefined returns
 - [ ] Add fallback logic when multicall fails → direct contract reads  
-- [ ] Verify contract addresses in `frontend/user-app/src/config/contracts.ts` match `deploy-env.sh`
-- [ ] **Bypass multicall entirely if needed** - use individual contract calls for demo
+- [ ] Verify contract addresses in `frontend/user-app/src/config/contracts.ts` match `control-plane/deploy-env.sh`
+- [ ] Implement bypass logic if multicall completely fails
 
-### 2. Remove All Fake Data [CRITICAL] 
-**Build Plan Requirement**: No fabricated data allowed per CLAUDE.md
+### **Priority 2: Remove ALL Fake Data [CRITICAL]**
+**Issue**: Fabricated volume values violate CLAUDE.md constraints
 
 **Exact Removals**:
-- [ ] `useVolumeCalculation.ts` - remove `BigInt('12800000000')`  
-- [ ] `ProtocolStats.tsx` - remove `DEMO_FALLBACK_VALUES.volume24h`
+- [ ] `useVolumeCalculation.ts` - remove `BigInt('12800000000')` fake volume
+- [ ] `ProtocolStats.tsx` - remove any `DEMO_FALLBACK_VALUES`
 - [ ] Show honest "$0.00" when no real trading events exist
 - [ ] Fix volume calculation = notional (collateral × leverage), not just collateral
 
-### 3. Fix QA Data Checks [CRITICAL]
-**Issue**: `data_checks: []` empty in QA report despite working contracts
+### **Priority 3: QA Integration Success [CRITICAL]**  
+**Issue**: `data_checks: []` empty despite working contracts
 
-**Frontend Debug Focus**:
-- [ ] Debug why `control-plane/qa-agent.py` can't extract frontend values
-- [ ] Add debugging logs to identify exact break point in data flow  
-- [ ] Ensure QA can read displayed values from frontend DOM
-- [ ] Test that demo mode provides fallback when wallet disconnected
+**Frontend Debug**:
+- [ ] Debug why QA agent can't extract displayed values from DOM
+- [ ] Add logging to identify exact break point in data extraction
+- [ ] Ensure demo mode provides readable fallback values
+- [ ] Test QA agent can read displayed TVL/position values
 
 ---
 
-**Key Corrections from Original Plan**:
+**Key Corrections**:
 - ❌ Removed ExecutionEngine redeployment (violates protected contracts)
-- ✅ Follows existing build-plan.md Phase 1 priorities  
-- ✅ Frontend-only solutions (no contract changes)
-- ✅ Exactly 3 priorities as mandated
-- ✅ Addresses QA report within allowed constraints
+- ✅ Frontend-only solutions (no contract changes)  
+- ✅ Exactly 3 priorities from approved build-plan.md
+- ✅ Respects current sprint constraints
 
-**Success Criteria**: 
-- Frontend displays real TVL/position data (not $NaN/$0.00)
-- QA report shows populated `data_checks[]` array  
-- Volume shows honest "$0.00" (no fake numbers)
-
-This plan now correctly aligns with the existing approved priorities and respects all CLAUDE.md constraints. Should I proceed with Priority 1?
+**Should I proceed with Priority 1: Debugging the RPC 413 errors in `useVaultMulticall.ts`?**
