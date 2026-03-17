@@ -80,7 +80,7 @@ export function useContractData(config: ContractDataConfig) {
 
         // Much longer delays for rate limiting
         if (enhanced.isRateLimit) {
-          const rateLimit Delay = Math.min(10000 * Math.pow(2, attemptIndex), 60000); // 10s, 20s, 40s, 60s max
+          const rateLimitDelay = Math.min(10000 * Math.pow(2, attemptIndex), 60000); // 10s, 20s, 40s, 60s max
           const jitter = Math.random() * 2000; // More jitter for rate limits
           console.log(`Rate limit retry delay: ${rateLimitDelay + jitter}ms`);
           return rateLimitDelay + jitter;
@@ -220,7 +220,7 @@ export function useContractReadEnhanced({
       retry: (failureCount, error) => {
         const enhanced = enhanceError(error, { address, functionName, name });
 
-        console.warn(`Contract read failed (attempt ${failureCount + 1}):`, {
+        console.warn(`Contract read failed (attempt ${failureCount + 1}/3):`, {
           name: name || functionName,
           address,
           error: enhanced.message,
@@ -230,15 +230,29 @@ export function useContractReadEnhanced({
         });
 
         if (failureCount < 3) {
-          if (enhanced.isNetworkError || enhanced.isRateLimit) {
+          if (enhanced.isRateLimit) {
+            // Only retry rate limits once
+            return failureCount === 0;
+          }
+          if (enhanced.isNetworkError) {
             return true;
           }
         }
         return false;
       },
-      retryDelay: (attemptIndex) => {
-        const baseDelay = Math.min(1000 * Math.pow(2, attemptIndex), 30000);
-        const jitter = Math.random() * 1000;
+      retryDelay: (attemptIndex, error) => {
+        const enhanced = enhanceError(error, { address, functionName, name });
+
+        // Much longer delays for rate limiting
+        if (enhanced.isRateLimit) {
+          const rateLimitDelay = Math.min(8000 * Math.pow(2, attemptIndex), 45000);
+          const jitter = Math.random() * 2000;
+          return rateLimitDelay + jitter;
+        }
+
+        // Normal exponential backoff
+        const baseDelay = Math.min(1000 * Math.pow(2, attemptIndex), 15000);
+        const jitter = Math.random() * 500;
         return baseDelay + jitter;
       },
     },
@@ -296,13 +310,25 @@ function enhanceError(error: any, context?: { address?: string; functionName?: s
     enhanced.code === 'ECONNRESET'
   );
 
-  // Rate limiting (413 and similar)
+  // Rate limiting (413 and similar) - enhanced detection
   enhanced.isRateLimit = (
     enhanced.code === 413 ||
     enhanced.code === 429 ||
+    enhanced.code === '413' ||
+    enhanced.code === '429' ||
+    message.includes('413') ||
+    message.includes('429') ||
     message.includes('rate limit') ||
     message.includes('too many requests') ||
-    message.includes('throttled')
+    message.includes('throttled') ||
+    message.includes('quota exceeded') ||
+    message.includes('request limit') ||
+    message.includes('payload too large') ||
+    message.includes('entity too large') ||
+    // RPC specific rate limiting responses
+    message.includes('exceeded') ||
+    (enhanced.code === -32005) || // RPC rate limit code
+    (enhanced.code === -32000 && message.includes('limit'))
   );
 
   return enhanced;
