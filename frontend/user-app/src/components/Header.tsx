@@ -1,9 +1,9 @@
 import React from 'react';
-import { useAccount } from 'wagmi';
+import { useWallet } from '../hooks/useWallet';
 import ConnectWallet from './ConnectWallet';
 
 const Header: React.FC = () => {
-  const { isConnected } = useAccount();
+  const { isConnected } = useWallet();
 
   return (
     <>
