@@ -1,8 +1,0 @@
-{
-  "task_id": "1",
-  "lane": "FRONTEND",
-  "title": "Fix Vault Tab $NaN Display [CRITICAL]",
-  "started": "2026-03-17T22:51:36.499107",
-  "pid": 1514943,
-  "log": "/home/lever/lever-protocol/control-plane/dispatcher-logs/task-1-225136.log"
-}

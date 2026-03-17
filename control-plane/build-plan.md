@@ -4,7 +4,7 @@ Looking at the QA score (60) and critical issues blocking the investor demo, her
 - [ ] 1. Investigate useVaultMulticall returning undefined and 413 RPC errors causing $NaN share price and $0 TVL display in Vault tab
 
 ### 2. Redeploy ExecutionEngine with New LeverageModel [CRITICAL] [CONTRACT]
-- [ ] 2. Deploy new ExecutionEngine pointing to updated LeverageModel (0xf649e342...F9EF) to fix 1x leverage limitation blocking position opening
+- [x] 2. Deploy new ExecutionEngine pointing to updated LeverageModel (0xf649e342...F9EF) to fix 1x leverage limitation blocking position opening
 
 ### 3. Fix Position Values Display [CRITICAL] [FRONTEND]  
 - [ ] 3. Debug and fix $0.00 position values in demo mode - positions tab showing zero values for all metrics despite 215 active positions
