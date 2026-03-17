@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-17T16:17:42.154647+00:00",
+  "timestamp": "2026-03-17T16:32:30.273669+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -28,27 +28,26 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Oracle price freshness failure - no successful price updates detected",
-    "Vision: Unable to verify visual UI functionality due to screenshot system errors",
-    "Vision: Live pricing data not updating which is critical for trading platform credibility",
-    "Vision: No confirmation that real market data is displaying to users"
+    "Vision: Cannot evaluate actual React app functionality from static HTML response",
+    "Vision: No visible loading or error handling in static shell",
+    "Vision: Domain referenced (lever.finance) may not match current deployment (localhost:3000)"
   ],
   "functional_issues": [],
-  "score": 68,
+  "score": 76,
   "vision_review": {
-    "professional_score": 6,
-    "trust_score": 4,
+    "professional_score": 7,
+    "trust_score": 6,
     "issues": [
-      "Oracle price freshness failure - no successful price updates detected",
-      "Unable to verify visual UI functionality due to screenshot system errors",
-      "Live pricing data not updating which is critical for trading platform credibility",
-      "No confirmation that real market data is displaying to users"
+      "Cannot evaluate actual React app functionality from static HTML response",
+      "No visible loading or error handling in static shell",
+      "Domain referenced (lever.finance) may not match current deployment (localhost:3000)"
     ],
     "improvements": [
-      "Fix oracle keeper service to ensure price feeds are updating regularly",
-      "Verify that live market data is displaying in the frontend UI",
-      "Fix screenshot system for proper QA visual verification",
-      "Add real-time price update indicators so investors can see data is live"
+      "Add server-side rendering or static preload for better SEO and loading experience",
+      "Include loading states in the HTML shell for better UX",
+      "Ensure meta tags reflect actual deployment environment",
+      "Add error boundary fallback in noscript tag",
+      "Include structured data markup for better search visibility"
     ]
   }
 }
