@@ -1,0 +1,78 @@
+{
+  "tasks": [
+    {
+      "id": "2a",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "Frontend display bug - OI values shown incorrectly due to decimal scaling in React components. No dependencies as this is isolated display fix."
+    },
+    {
+      "id": "3a",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "2a"
+      ],
+      "reason": "Frontend volume calculation fix in stats banner and market cards. Depends on 2a since both tasks may modify market card components."
+    },
+    {
+      "id": "4a",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "3a"
+      ],
+      "reason": "Frontend position opening debugging - contract interaction from UI failing. Depends on 3a to avoid conflicts in trading interface components."
+    },
+    {
+      "id": "5b",
+      "lane": "CONTRACT",
+      "depends_on": [],
+      "reason": "Using cast send to create high-leverage positions - direct contract interaction via CLI. Independent of frontend fixes."
+    },
+    {
+      "id": "6b",
+      "lane": "INFRA",
+      "depends_on": [],
+      "reason": "Oracle keeper service management and systemd restart. Pure infrastructure task, independent of other work."
+    },
+    {
+      "id": "7a",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "4a"
+      ],
+      "reason": "Positions tab error boundary crash fix. Depends on 4a to avoid conflicts in position-related components and ensure positions exist for testing."
+    },
+    {
+      "id": "7b",
+      "lane": "CONTRACT",
+      "depends_on": [],
+      "reason": "Contract verification using cast call to check funding rate engine. Independent contract verification task."
+    },
+    {
+      "id": "8a",
+      "lane": "INFRA",
+      "depends_on": [],
+      "reason": "Building new puppeteer test script for visual validation. Creates new automation tooling, independent of fixes."
+    },
+    {
+      "id": "9a",
+      "lane": "INFRA",
+      "depends_on": [
+        "8a"
+      ],
+      "reason": "Updating worker rules to reference tab-sanity.js. Depends on 8a since it requires the script created in 8a to exist."
+    },
+    {
+      "id": "10a",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "2a",
+        "3a",
+        "4a",
+        "7a",
+        "8a"
+      ],
+      "reason": "Final visual polish using tab-sanity.js validation. Depends on all frontend fixes (2a,3a,4a,7a) since it validates their visual output, and 8a for the validation script."
+    }
+  ]
+}

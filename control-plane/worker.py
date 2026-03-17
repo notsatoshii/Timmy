@@ -356,7 +356,7 @@ def release_lock():
     try: os.remove(LOCK_FILE)
     except: pass
 
-def pass  # pass  # run_readme_gen() disabled during active dev — disabled during active dev:
+def run_readme_gen():
     """Regenerate README after tasks complete."""
     if os.path.exists(README_GEN):
         try:

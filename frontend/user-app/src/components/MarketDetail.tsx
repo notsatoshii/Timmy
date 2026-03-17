@@ -137,7 +137,11 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack }) => {
       const count = candleCount[selectedTimeframe];
       const volatility = 0.015; // 1.5% volatility per candle
 
+      // Ensure currentPrice is valid, fallback to market.price or 0.5
       let price = currentPrice;
+      if (typeof price !== 'number' || isNaN(price) || price <= 0) {
+        price = typeof market.price === 'number' && !isNaN(market.price) ? market.price : 0.5;
+      }
 
       for (let i = count; i >= 0; i--) {
         const timestamp = now - (i * interval);
@@ -178,7 +182,7 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack }) => {
     };
 
     setCandlestickData(generateCandlestickData());
-  }, [market.id, currentPrice, selectedTimeframe]);
+  }, [market.id, market.price, currentPrice, selectedTimeframe]);
 
   // Generate demo recent positions
   useEffect(() => {
@@ -186,18 +190,31 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack }) => {
       const positions = [];
       const now = Date.now();
 
+      // Ensure currentPrice is valid
+      const validCurrentPrice = typeof currentPrice === 'number' && !isNaN(currentPrice) && currentPrice > 0
+        ? currentPrice
+        : (typeof market.price === 'number' && !isNaN(market.price) ? market.price : 0.5);
+
       for (let i = 0; i < 8; i++) {
         const direction: 'long' | 'short' = Math.random() > 0.5 ? 'long' : 'short';
-        const entryPrice = currentPrice + (Math.random() - 0.5) * 0.1;
+        const entryPrice = validCurrentPrice + (Math.random() - 0.5) * 0.1;
         const size = Math.random() * 50000 + 10000; // $10k - $60k
         const timestamp = now - (i * 15 * 60 * 1000); // Every 15 minutes
-        const pnl = direction === 'long'
-          ? (currentPrice - entryPrice) * size / entryPrice
-          : (entryPrice - currentPrice) * size / entryPrice;
+
+        // Safe PnL calculation with zero division check
+        let pnl = 0;
+        if (entryPrice > 0) {
+          pnl = direction === 'long'
+            ? (validCurrentPrice - entryPrice) * size / entryPrice
+            : (entryPrice - validCurrentPrice) * size / entryPrice;
+        }
+
+        // Ensure PnL is not NaN
+        if (isNaN(pnl)) pnl = 0;
 
         positions.push({
           id: `pos-${i}`,
-          trader: `0x${Math.random().toString(16).substr(2, 6)}...${Math.random().toString(16).substr(2, 4)}`,
+          trader: `0x${Math.random().toString(16).substring(2, 8)}...${Math.random().toString(16).substring(2, 6)}`,
           direction,
           size,
           entryPrice,
@@ -210,7 +227,7 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack }) => {
     };
 
     setRecentPositions(generateRecentPositions());
-  }, [market.id, currentPrice]);
+  }, [market.id, market.price, currentPrice]);
 
   const formatTimeToResolution = (timestamp: number): string => {
     const now = new Date().getTime();
@@ -231,9 +248,23 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack }) => {
     return `$${value.toFixed(0)}`;
   };
 
-  const formatRate = (rate: bigint): string => {
-    const rateNum = Number(rate) / 1e18; // Convert from wei
-    return `${(rateNum * 8760 * 100).toFixed(2)}%`; // Annual percentage
+  const formatRate = (rate: bigint | number | undefined): string => {
+    try {
+      let rateBigInt: bigint;
+      if (typeof rate === 'bigint') {
+        rateBigInt = rate;
+      } else if (typeof rate === 'number' && !isNaN(rate)) {
+        rateBigInt = BigInt(Math.floor(rate));
+      } else {
+        rateBigInt = BigInt(0);
+      }
+      const rateNum = Number(rateBigInt) / 1e18; // Convert from wei
+      if (isNaN(rateNum)) return '0.00%';
+      return `${(rateNum * 8760 * 100).toFixed(2)}%`; // Annual percentage
+    } catch (error) {
+      console.warn('Error formatting rate:', error);
+      return '0.00%';
+    }
   };
 
   const formatTimestamp = (timestamp: number): string => {
@@ -351,9 +382,13 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack }) => {
     return null;
   };
 
-  const totalOI = Number(longOI || 0) + Number(shortOI || 0);
-  const longPercentage = totalOI > 0 ? (Number(longOI || 0) / totalOI) * 100 : 50;
-  const shortPercentage = 100 - longPercentage;
+  // Safe BigInt to Number conversion for OI values (USDT format - 6 decimals, divide by 1e6)
+  const longOINum = typeof longOI === 'bigint' ? Number(longOI) / 1e6 : (typeof longOI === 'number' && !isNaN(longOI) ? longOI / 1e6 : 0);
+  const shortOINum = typeof shortOI === 'bigint' ? Number(shortOI) / 1e6 : (typeof shortOI === 'number' && !isNaN(shortOI) ? shortOI / 1e6 : 0);
+
+  const totalOI = longOINum + shortOINum;
+  const longPercentage = totalOI > 0 ? (longOINum / totalOI) * 100 : 50;
+  const shortPercentage = totalOI > 0 ? (shortOINum / totalOI) * 100 : 50;
 
   return (
     <div className="space-y-6">
@@ -559,13 +594,13 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack }) => {
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center">
                 <p className="text-accent text-2xl font-bold font-mono">
-                  {formatCurrency(Number(longOI || 0))}
+                  {formatCurrency(longOINum)}
                 </p>
                 <p className="text-sm text-gray-500">Long OI</p>
               </div>
               <div className="text-center">
                 <p className="text-danger text-2xl font-bold font-mono">
-                  {formatCurrency(Number(shortOI || 0))}
+                  {formatCurrency(shortOINum)}
                 </p>
                 <p className="text-sm text-gray-500">Short OI</p>
               </div>
@@ -583,14 +618,14 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack }) => {
             <div>
               <p className="text-gray-500 text-sm mb-1">Funding Rate</p>
               <p className="text-xl font-bold text-purple font-mono">
-                {formatRate(BigInt(fundingRate || 0))}
+                {formatRate(fundingRate)}
               </p>
               <p className="text-xs text-gray-600">Annual</p>
             </div>
             <div>
               <p className="text-gray-500 text-sm mb-1">Borrow Rate</p>
               <p className="text-xl font-bold text-warning font-mono">
-                {formatRate(BigInt(borrowRate || 0))}
+                {formatRate(borrowRate)}
               </p>
               <p className="text-xs text-gray-600">Annual</p>
             </div>
