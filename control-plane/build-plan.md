@@ -1,19 +1,27 @@
-I can see the issue - the build-plan.md file contains a Claude timeout response instead of actual content. This confirms the file is corrupted as mentioned in the feedback.
+## REVISED PLAN — INVESTOR DEMO SPRINT (LOCKED)
 
-Since CLAUDE.md mandates working ONLY on three specific priorities for the investor demo, but I can't see what those priorities are due to the corrupted file, I need to either:
+Based on the restored build-plan.md, here is the focused plan addressing **ONLY** the three mandated priorities:
 
-1. **Restore the build-plan.md** with the actual three priorities
-2. **Get the priorities from you** directly
+### Priority 1: Fix Visual Verification Infrastructure [CRITICAL BLOCKER]
+- [ ] Install missing browser automation dependencies (libatk-1.0.so.0) 
+- [ ] Fix frontend service configuration to prevent manual restart requirements
+- [ ] Restore automated screenshot-based UI verification functionality
+- [ ] Achieve QA Score ≥90/100 (currently 52/100)
 
-Based on the feedback mentioning MarketDetail tabs, volume calculations, and QA score of 100, I suspect the three priorities for the investor demo might be:
+### Priority 2: Verify MarketDetail Tab Functionality [CRITICAL]
+- [ ] Manual inspection of MarketDetail tab since automation is broken
+- [ ] Confirm market data loads, charts render, trading controls work
+- [ ] Document any issues preventing investor demo readiness
+- [ ] Resolve known-issues.md CRITICAL blocker
 
-1. **MarketDetail Tab Functionality** (critical for demo)
-2. **24h Volume Display Fix** (visual accuracy for investors)  
-3. **Insurance Fund Fee Verification** (fund mechanics demonstration)
+### Priority 3: Fix 24h Volume Display Bug [CRITICAL]
+- [ ] Correct volume calculation to show notional (collateral × leverage) instead of collateral only
+- [ ] Verify volume displays reflect actual trading activity accurately  
+- [ ] Test that volume metrics update properly with new positions
+- [ ] Resolve known-issues.md CRITICAL blocker
 
-**Should I:**
-- Create a new build-plan.md with these three focused priorities?
-- Wait for you to provide the actual three priorities?
-- Look elsewhere for the sprint requirements?
+**Sprint Discipline:** Work exclusively on these three priorities. No contract redeployment, no fake data, no scope creep. Priority 1 is the current blocker preventing verification of Priorities 2 and 3.
 
-The investor demo sprint discipline requires me to work ONLY on the mandated three priorities, so I need to get the correct list before proceeding with any plan revision.
+**Success Criteria:** All three priorities must pass before transitioning to Phase 2 (auto-improve mode).
+
+This revised plan now aligns with the locked investor demo sprint requirements and focuses exclusively on the three mandated priorities.
