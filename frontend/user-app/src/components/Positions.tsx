@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { usePublicClient } from 'wagmi';
 import { useWallet } from '../hooks/useWallet';
-import { CONTRACT_ADDRESSES, formatWad, WAD } from '../config/contracts';
+import { CONTRACT_ADDRESSES, formatWad, formatUsdt, WAD } from '../config/contracts';
 import {
   POSITION_MANAGER_ABI,
   EXECUTION_ENGINE_ABI,
@@ -207,7 +207,7 @@ const Positions: React.FC = () => {
           borrowFees: position.borrowFees.toString(),
           fundingAccrued: position.fundingAccrued.toString(),
           equity: position.equity.toString(),
-          equityFormatted: formatWad(position.equity)
+          equityFormatted: formatUsdt(position.equity)
         });
 
         posData.push(position);
@@ -609,7 +609,7 @@ const Positions: React.FC = () => {
 
   const totalEquity = displayPositions.reduce((sum, pos) => {
     try {
-      const equity = Number(pos.equity) / Number(WAD);
+      const equity = Number(pos.equity) / 1e6;
       console.log(`[totalEquity] Position ${pos.id.toString()}:`, {
         equityBigInt: pos.equity.toString(),
         equityNumber: equity,
@@ -625,7 +625,7 @@ const Positions: React.FC = () => {
 
   const totalNetPnl = displayPositions.reduce((sum, pos) => {
     try {
-      const netPnl = Number(computeNetPnl(pos)) / Number(WAD);
+      const netPnl = Number(computeNetPnl(pos)) / 1e6;
       console.log(`[totalNetPnl] Position ${pos.id.toString()}:`, {
         netPnlBigInt: computeNetPnl(pos).toString(),
         netPnlNumber: netPnl,
@@ -641,7 +641,7 @@ const Positions: React.FC = () => {
 
   const totalCollateral = displayPositions.reduce((sum, pos) => {
     try {
-      const collateral = Number(pos.collateral) / Number(WAD);
+      const collateral = Number(pos.collateral) / 1e6;
       console.log(`[totalCollateral] Position ${pos.id.toString()}:`, {
         collateralBigInt: pos.collateral.toString(),
         collateralNumber: collateral,
@@ -665,8 +665,8 @@ const Positions: React.FC = () => {
   // Monitor positions for liquidation warnings
   useEffect(() => {
     displayPositions.forEach(position => {
-      const equity = Number(position.equity) / 1e18;
-      const notional = Number(position.positionSize) / 1e18;
+      const equity = Number(position.equity) / 1e6;
+      const notional = Number(position.positionSize) / 1e6;
 
       if (notional > 0) {
         // Calculate maintenance margin requirement (simplified: 2.5% of notional)
@@ -947,11 +947,11 @@ const Positions: React.FC = () => {
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 text-sm">
                     <div>
                       <p className="text-gray-500 text-xs uppercase tracking-wide">Collateral</p>
-                      <p className="font-semibold font-mono text-gray-200">${formatWad(position.collateral)}</p>
+                      <p className="font-semibold font-mono text-gray-200">${formatUsdt(position.collateral)}</p>
                     </div>
                     <div>
                       <p className="text-gray-500 text-xs uppercase tracking-wide">Notional</p>
-                      <p className="font-semibold font-mono text-gray-200">${formatWad(position.positionSize)}</p>
+                      <p className="font-semibold font-mono text-gray-200">${formatUsdt(position.positionSize)}</p>
                     </div>
                     <div>
                       <p className="text-gray-500 text-xs uppercase tracking-wide">Entry</p>
@@ -989,7 +989,7 @@ const Positions: React.FC = () => {
                       <span>Funding: <span className={`font-mono ${position.fundingAccrued >= BigInt(0) ? 'text-accent' : 'text-danger'}`}>
                         {formatPnl(position.fundingAccrued)}
                       </span></span>
-                      <span>Equity: <span className="font-mono text-gray-300">${formatWad(position.equity)}</span></span>
+                      <span>Equity: <span className="font-mono text-gray-300">${formatUsdt(position.equity)}</span></span>
                       {priceLastUpdate > 0 && (
                         <span className="text-accent">
                           Updated: {new Date(priceLastUpdate).toLocaleTimeString()}
@@ -1008,7 +1008,7 @@ const Positions: React.FC = () => {
                         <div className="space-y-1 text-xs">
                           <div className="flex justify-between">
                             <span className="text-gray-500">Collateral returned:</span>
-                            <span className="font-mono text-gray-200">${formatWad(position.collateral)}</span>
+                            <span className="font-mono text-gray-200">${formatUsdt(position.collateral)}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-500">Est. net PnL:</span>
@@ -1016,7 +1016,7 @@ const Positions: React.FC = () => {
                           </div>
                           <div className="flex justify-between border-t border-border pt-1 mt-1">
                             <span className="text-gray-300 font-medium">Est. payout:</span>
-                            <span className="font-mono font-medium text-gray-200">${formatWad(position.equity)}</span>
+                            <span className="font-mono font-medium text-gray-200">${formatUsdt(position.equity)}</span>
                           </div>
                         </div>
                       </div>
