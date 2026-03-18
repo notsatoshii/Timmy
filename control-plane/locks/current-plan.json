@@ -1,45 +1,52 @@
 {
   "tasks": [
     {
-      "id": "1",
+      "id": "2.2",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "React/TypeScript build and Vite configuration issues - core frontend build system that blocks all other work."
+      "reason": "React component fix for position value display - no dependencies from other incomplete tasks"
     },
     {
-      "id": "2",
+      "id": "2.3",
       "lane": "FRONTEND",
       "depends_on": [
-        "1"
+        "2.2"
       ],
-      "reason": "React hooks and component display fixes. Depends on Task 1 as frontend must build and serve before data display issues can be diagnosed and fixed."
+      "reason": "Frontend formatting fixes - same lane as 2.2 and could touch similar display code, must be sequential"
     },
     {
-      "id": "3",
-      "lane": "CONTRACT",
+      "id": "2.4",
+      "lane": "INFRA",
       "depends_on": [
-        "1"
+        "2.2",
+        "2.3"
       ],
-      "reason": "ExecutionEngine contract using wrong LeverageModel address - Solidity contract configuration issue. Depends on Task 1 for end-to-end testing but core diagnosis is contract-level."
+      "reason": "Testing script that validates the frontend data display fixes created by 2.2 and 2.3"
     },
     {
-      "id": "4",
+      "id": "3.2",
       "lane": "FRONTEND",
-      "depends_on": [
-        "1",
-        "3"
-      ],
-      "reason": "Volume calculation logic in React components. Depends on Task 1 (frontend working) and Task 3 (position opening working to generate accurate volume data)."
+      "depends_on": [],
+      "reason": "Frontend fix for position opening functionality - constraint says frontend fixes only, no contract changes"
     },
     {
-      "id": "5",
-      "lane": "FRONTEND",
+      "id": "3.3",
+      "lane": "INFRA",
       "depends_on": [
-        "1",
-        "2",
-        "3"
+        "3.2"
       ],
-      "reason": "End-to-end verification and testing of React interface. Depends on all core functionality being fixed before comprehensive investor demo flow testing."
+      "reason": "Testing script that validates the position opening functionality fixed by 3.2"
+    },
+    {
+      "id": "3.4",
+      "lane": "INFRA",
+      "depends_on": [
+        "2.2",
+        "2.3",
+        "3.2",
+        "3.3"
+      ],
+      "reason": "End-to-end verification that requires both position opening to work (3.2, 3.3) and position values to display correctly (2.2, 2.3)"
     }
   ]
 }
