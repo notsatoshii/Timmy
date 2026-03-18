@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-18T19:26:16.935516+00:00",
+  "timestamp": "2026-03-18T19:35:46.680773+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,12 +11,12 @@
     },
     {
       "name": "Positions",
-      "value": "255",
+      "value": "256",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "14170722554735 [1.417e13]",
+      "value": "14220722554735 [1.422e13]",
       "status": "ok"
     },
     {
@@ -28,11 +28,11 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Assessment limited to HTML metadata only - cannot evaluate actual user interface",
-    "Vision: No visual confirmation of trading interface functionality",
-    "Vision: Cannot verify real-time data accuracy or feed quality",
-    "Vision: No visible security audits or certifications in metadata",
-    "Vision: Unable to test user experience flows and responsiveness"
+    "Vision: Cannot verify actual application functionality from HTML shell",
+    "Vision: CSP policy may block legitimate functionality in development",
+    "Vision: No visible error handling or fallback content in noscript tag",
+    "Vision: Claims 'audited' in keywords without visible audit references",
+    "Vision: Production domain referenced (lever.finance) while running on localhost"
   ],
   "functional_issues": [],
   "score": 60,
@@ -40,19 +40,19 @@
     "professional_score": 7,
     "trust_score": 6,
     "issues": [
-      "Assessment limited to HTML metadata only - cannot evaluate actual user interface",
-      "No visual confirmation of trading interface functionality",
-      "Cannot verify real-time data accuracy or feed quality",
-      "No visible security audits or certifications in metadata",
-      "Unable to test user experience flows and responsiveness"
+      "Cannot verify actual application functionality from HTML shell",
+      "CSP policy may block legitimate functionality in development",
+      "No visible error handling or fallback content in noscript tag",
+      "Claims 'audited' in keywords without visible audit references",
+      "Production domain referenced (lever.finance) while running on localhost"
     ],
     "improvements": [
-      "Conduct visual UI assessment to evaluate design professionalism",
-      "Verify trading functionality and real-time price feeds",
-      "Test mobile responsiveness and cross-browser compatibility",
-      "Add security audit badges or certifications to build trust",
-      "Implement comprehensive user flow testing from investor perspective",
-      "Add performance monitoring and loading state indicators"
+      "Add meaningful noscript fallback content explaining JavaScript requirement",
+      "Include audit badge or security certification links in metadata",
+      "Implement proper development/production environment detection",
+      "Add performance monitoring meta tags",
+      "Include more specific business contact information in metadata",
+      "Consider adding structured data markup for better SEO"
     ]
   }
 }
