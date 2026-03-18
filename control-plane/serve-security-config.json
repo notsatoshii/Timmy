@@ -1,0 +1,23 @@
+{
+  "rewrites": [
+    { "source": "**", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(deployments|health.html|prices.json)/**",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive, nosnippet"
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/deployments/**",
+      "destination": "/",
+      "type": 301
+    }
+  ]
+}

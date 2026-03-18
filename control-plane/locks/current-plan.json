@@ -1,27 +1,18 @@
 {
   "tasks": [
     {
-      "id": "1",
-      "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "Root cause is React app build/deployment failure. Involves Vite config, npm build, or React build artifacts that need restoration."
-    },
-    {
       "id": "2",
       "lane": "INFRA",
-      "depends_on": [
-        "1"
-      ],
-      "reason": "Server configuration (nginx/Apache) to properly serve React app. Depends on Task 1 to ensure there's a working React app to configure the server for."
+      "depends_on": [],
+      "reason": "Root cause is web server configuration (nginx/Apache) to serve React app instead of directory listing. This is deployment infrastructure, not React code changes."
     },
     {
       "id": "3",
       "lane": "INFRA",
       "depends_on": [
-        "1",
         "2"
       ],
-      "reason": "Updates health-check.sh bash script to validate the fixes. Must wait for both React app restoration and server configuration to be complete before updating validation logic."
+      "reason": "Updating health-check.sh and running verification scripts is infrastructure work. Depends on task 2 because cannot properly validate demo until frontend serves React app instead of directory listing."
     }
   ]
 }
