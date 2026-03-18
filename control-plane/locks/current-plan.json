@@ -4,7 +4,7 @@
       "id": "1",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "FRONTEND lane because it involves copying React build files and restarting frontend service. No dependencies as this is the critical blocker that must be fixed first."
+      "reason": "Root cause is React build failure requiring Vite config and deployment pipeline fixes. No dependencies as this is the core blocking issue."
     },
     {
       "id": "2",
@@ -12,30 +12,30 @@
       "depends_on": [
         "1"
       ],
-      "reason": "INFRA lane because it involves running health check scripts and testing functionality. Depends on Task 1 because you can't test the app functionality until the React app is actually serving."
+      "reason": "Running verification scripts and user journey testing. Depends on Task 1 because cannot test user flows without a working frontend."
     },
     {
       "id": "3",
       "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "FRONTEND lane because it involves investigating package.json, build config, and npm run build process. No dependencies as this investigates root cause and can run parallel to the immediate fix."
+      "depends_on": [
+        "1"
+      ],
+      "reason": "React component and styling polish work. Depends on Task 1 because cannot polish a broken frontend build."
     },
     {
       "id": "4",
-      "lane": "CONTRACT",
+      "lane": "INFRA",
       "depends_on": [],
-      "reason": "CONTRACT lane because it involves Solidity contract behavior, fee calculations, oracle keeper, and on-chain state. No dependencies as this is independent of frontend issues."
+      "reason": "Oracle keeper service management and Python script issues. Independent of frontend problems."
     },
     {
       "id": "5",
       "lane": "INFRA",
       "depends_on": [
         "1",
-        "2",
-        "3",
-        "4"
+        "2"
       ],
-      "reason": "INFRA lane because it involves testing scripts, professional audit, and demo documentation. Depends on all other tasks as this is final polish that assumes all fixes are complete."
+      "reason": "Monitoring setup and verification scripts. Depends on Task 1 for working system and Task 2 for validated flows to monitor."
     }
   ]
 }

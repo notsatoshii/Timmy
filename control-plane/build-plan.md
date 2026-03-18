@@ -1,37 +1,18 @@
-Based on the QA report showing a critically low score (28) and frontend completely non-functional, I've identified the root cause: **missing index.html in the build directory**. Here are the prioritized tasks:
+Based on the QA report showing a score of **36** with critical frontend deployment failures, here are the prioritized tasks:
 
-### 1. Restore Frontend React Application [CRITICAL] [FRONTEND]
-- [x] 1. Copy missing index.html and static directory from build.safe to build directory
-- [ ] 2. Restart lever-frontend systemd service to serve the restored React app
-- [ ] 3. Verify application loads at localhost:3000 instead of directory listing
-- [ ] 4. Test basic navigation and ensure no immediate crashes or error boundaries
-- [ ] 5. Take screenshots to confirm professional UI is displaying
+### 1. Fix React App Deployment [P0 CRITICAL] [FRONTEND]
+- [ ] 1. **EMERGENCY: Restore functional React app** - Frontend serving directory listing instead of trading interface. React build completely failed with no index.html. Must restore working build from build.safe and fix deployment pipeline to stop reverting.
 
-### 2. Verify Core Demo Functionality [CRITICAL] [VERIFICATION] 
-- [x] 1. Test trading interface - position opening with various leverage levels
-- [ ] 2. Verify portfolio/positions tab shows data correctly (not $0.00 values)
-- [ ] 3. Confirm market data displays properly with live TVL ($60.5M) and metrics
-- [ ] 4. Check vault tab shows correct share price and APY information
-- [ ] 5. Run complete health check script and achieve score >90
+### 2. Verify Complete User Journey [P1 HIGH] [INTEGRATION]  
+- [ ] 2. **End-to-end demo validation** - After frontend fix, run full investor demo flow: browse markets → open position → view portfolio → close position. All tabs must render properly without crashes or $0.00 display bugs.
 
-### 3. Fix Frontend Build Process [HIGH] [FRONTEND]
-- [x] 1. Investigate why React build process is not generating index.html
-- [ ] 2. Check package.json scripts and build configuration
-- [ ] 3. Test `npm run build` manually to identify compilation issues
-- [ ] 4. Ensure proper permissions on build directory and files
-- [ ] 5. Document build steps to prevent future deployment failures
+### 3. Frontend Polish for Investor Demo [P1 HIGH] [FRONTEND]
+- [ ] 3. **Visual QA pass** - Ensure all UI elements match design references (lever-concept.png, space-portfolio.png). Fix any remaining visual glitches, loading states, and error boundaries that could embarrass during investor presentations.
 
-### 4. Address Low LP APY and Fee Flow [MEDIUM] [CONTRACTS]
-- [x] 1. Investigate why LP APY shows only 0.21% (should be higher with $60.5M TVL)
-- [ ] 2. Check if Insurance Fund is stuck at $10K bootstrap (should grow with fees)
-- [ ] 3. Verify oracle keeper (mockkeeper.py) is running and updating market prices
-- [ ] 4. Test that FeeRouter is properly distributing fees to RewardsDistributor
+### 4. Oracle Price Stability [P2 MEDIUM] [INFRASTRUCTURE]
+- [ ] 4. **Verify oracle keeper running** - Check mockkeeper.py service status and restart if needed. Stale prices during demo would be problematic. Test price updates are flowing to frontend.
 
-### 5. Final Investor Demo Polish [HIGH] [DEMO]
-- [x] 1. Run professional appearance audit - ensure branding and UI quality
-- [ ] 2. Test complete investor user journey from landing to position management  
-- [ ] 3. Verify all key metrics display impressive, realistic values
-- [ ] 4. Document any remaining minor issues that won't impact demo presentation
-- [ ] 5. Create demo script highlighting key product features and TVL growth
+### 5. Performance Monitoring Setup [P2 MEDIUM] [OPERATIONS]
+- [ ] 5. **Demo readiness check** - Run all verification scripts (health-check.sh, screenshots, user-flow-test). Set up real-time monitoring during investor demo to catch issues immediately.
 
-**The missing index.html is the #1 blocker** - investors currently see a file directory instead of the product, giving a professional score of 1/10. This must be fixed immediately.
+**Critical Note:** The repeated identical commits for "Frontend Deployment Process" suggest the React build fix isn't persisting. Priority #1 must identify why the fix keeps reverting and create a permanent solution.
