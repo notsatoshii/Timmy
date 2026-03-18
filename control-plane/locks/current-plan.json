@@ -1,22 +1,22 @@
 {
   "tasks": [
     {
-      "id": "fix-missing-social-assets",
+      "id": "insurance_fund_display_fix",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Creates image assets and tests social sharing functionality in React app - pure frontend work with PWA manifest and social media integration"
+      "reason": "Root cause is WAD/USDT decimal conversion in React display formatting. Pure frontend bug fix with no dependencies on other tasks."
     },
     {
-      "id": "fix-insurance-display-bug",
-      "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "Fixes display formatting bug in React dashboard components - frontend decimal conversion issue, not contract data problem"
-    },
-    {
-      "id": "update-known-issues-docs",
+      "id": "oracle_keeper_stability",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Updates control-plane documentation file (known-issues.md) - pure documentation task not touching React or Solidity"
+      "reason": "Root cause is verifying Python scripts (mockkeeper.py) and systemd services are running consistently. Infrastructure task independent of display bugs or docs."
+    },
+    {
+      "id": "known_issues_documentation",
+      "lane": "INFRA",
+      "depends_on": [],
+      "reason": "Root cause is updating known-issues.md file in control-plane configs. Documentation maintenance task with no dependencies on other fixes."
     }
   ]
 }
