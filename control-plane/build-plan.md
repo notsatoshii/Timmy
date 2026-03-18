@@ -10,7 +10,7 @@ Based on the QA report showing a score of **36** with critical frontend deployme
 - [ ] 3. **Visual QA pass** - Ensure all UI elements match design references (lever-concept.png, space-portfolio.png). Fix any remaining visual glitches, loading states, and error boundaries that could embarrass during investor presentations.
 
 ### 4. Oracle Price Stability [P2 MEDIUM] [INFRASTRUCTURE]
-- [ ] 4. **Verify oracle keeper running** - Check mockkeeper.py service status and restart if needed. Stale prices during demo would be problematic. Test price updates are flowing to frontend.
+- [x] 4. **Verify oracle keeper running** - Check mockkeeper.py service status and restart if needed. Stale prices during demo would be problematic. Test price updates are flowing to frontend.
 
 ### 5. Performance Monitoring Setup [P2 MEDIUM] [OPERATIONS]
 - [ ] 5. **Demo readiness check** - Run all verification scripts (health-check.sh, screenshots, user-flow-test). Set up real-time monitoring during investor demo to catch issues immediately.

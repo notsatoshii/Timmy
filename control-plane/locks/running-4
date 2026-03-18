@@ -1,8 +1,0 @@
-{
-  "task_id": "4",
-  "lane": "INFRA",
-  "title": "Oracle Price Stability [P2 MEDIUM]",
-  "started": "2026-03-18T16:31:47.298662",
-  "pid": 2058593,
-  "log": "/home/lever/lever-protocol/control-plane/dispatcher-logs/task-4-163147.log"
-}
