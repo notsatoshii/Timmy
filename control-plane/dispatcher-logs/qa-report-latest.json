@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-18T15:23:25.272362+00:00",
+  "timestamp": "2026-03-18T15:32:13.710911+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,12 +11,12 @@
     },
     {
       "name": "Positions",
-      "value": "233",
+      "value": "234",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "12168722554735 [1.216e13]",
+      "value": "12468722554735 [1.246e13]",
       "status": "ok"
     },
     {
@@ -28,31 +28,36 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Fee router system failure (critical component)",
-    "Vision: Insurance Fund displays corrupted value $5.011e24 instead of expected ~$10K",
-    "Vision: Browser automation/screenshot system failing due to missing dependencies",
-    "Vision: LP APY appears unusually low (0.21%) despite $11.5M OI and 228 positions",
-    "Vision: Manual verification required - automated testing incomplete"
+    "Vision: Frontend application completely non-functional - serving directory listing instead of trading interface",
+    "Vision: React build process failing with permission errors on build/deployments/core-deployment.json",
+    "Vision: No index.html, JavaScript, or CSS files present in build directory",
+    "Vision: Health monitoring endpoint non-responsive",
+    "Vision: Infrastructure permission issues preventing proper deployment",
+    "Vision: Service appears to be running but serving wrong content",
+    "Vision: No proper error handling or fallback pages visible to users"
   ],
   "functional_issues": [],
-  "score": 60,
+  "score": 44,
   "vision_review": {
-    "professional_score": 6,
-    "trust_score": 5,
+    "professional_score": 1,
+    "trust_score": 1,
     "issues": [
-      "Fee router system failure (critical component)",
-      "Insurance Fund displays corrupted value $5.011e24 instead of expected ~$10K",
-      "Browser automation/screenshot system failing due to missing dependencies",
-      "LP APY appears unusually low (0.21%) despite $11.5M OI and 228 positions",
-      "Manual verification required - automated testing incomplete"
+      "Frontend application completely non-functional - serving directory listing instead of trading interface",
+      "React build process failing with permission errors on build/deployments/core-deployment.json",
+      "No index.html, JavaScript, or CSS files present in build directory",
+      "Health monitoring endpoint non-responsive",
+      "Infrastructure permission issues preventing proper deployment",
+      "Service appears to be running but serving wrong content",
+      "No proper error handling or fallback pages visible to users"
     ],
     "improvements": [
-      "Fix fee router component to restore full system health (19/20 \u2192 20/20)",
-      "Correct Insurance Fund display formatting to show proper $10K-$50K range",
-      "Install missing Chrome dependencies for automated testing",
-      "Investigate and fix LP yield distribution pipeline",
-      "Add comprehensive error handling and user feedback for failed transactions",
-      "Implement automated health monitoring with investor-facing status dashboard"
+      "Fix file permissions in build directory to allow proper compilation",
+      "Complete React application build process successfully",
+      "Implement proper error pages and health checks",
+      "Set up automated build verification to catch deployment failures",
+      "Add monitoring to detect when frontend becomes non-functional",
+      "Implement proper CI/CD pipeline with build validation",
+      "Add user-friendly error messages for system downtime"
     ]
   }
 }

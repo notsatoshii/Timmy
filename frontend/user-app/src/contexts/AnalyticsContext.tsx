@@ -135,6 +135,7 @@ export const withAnalytics = <P extends object>(
       };
     }, [trackCustomEvent]);
 
+    // @ts-ignore
     return <WrappedComponent {...props} ref={ref} />;
   });
 };

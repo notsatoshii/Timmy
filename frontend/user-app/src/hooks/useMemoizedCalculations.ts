@@ -71,7 +71,7 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
 
         console.log('=== TVL FORMATTED ===', {
           totalAssets: totalAssets.toString(),
-          tvlFormatted,
+          tvl,
           tvlParsed: tvl,
           isFinite: isFinite(tvl),
           isNaN: isNaN(tvl),
@@ -79,7 +79,7 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
         });
 
         if (!isFinite(tvl) || tvl < 0 || isNaN(tvl) || tvl === 0) {
-          console.warn('Invalid TVL calculated, using fallback:', { tvlFormatted, tvl, totalAssets: totalAssets.toString() });
+          console.warn('Invalid TVL calculated, using fallback:', { tvl, tvl, totalAssets: totalAssets.toString() });
           tvl = 250000; // Fallback to $250,000 when calculation fails
         }
       } else {
