@@ -1,39 +1,41 @@
 {
   "tasks": [
     {
-      "id": "fix-react-loading",
+      "id": "1",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "FRONTEND lane: React app loading issues require changes to React components, build config, or frontend service. No dependencies as this is the blocking issue."
+      "reason": "React app loading is a core frontend issue with React/Vite configuration. No dependencies as this is the foundational issue blocking other frontend work."
     },
     {
-      "id": "verify-oracle-feeds",
+      "id": "2",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "INFRA lane: Oracle service (mockkeeper.py script) and price data infrastructure. Can be debugged independently of frontend issues."
+      "reason": "Oracle service verification involves checking mockkeeper.py service and prices.json updates - these are infrastructure services. Independent of other tasks."
     },
     {
-      "id": "test-trading-flow",
+      "id": "3",
       "lane": "INFRA",
       "depends_on": [
-        "fix-react-loading",
-        "verify-oracle-feeds"
+        "1",
+        "2"
       ],
-      "reason": "INFRA lane: End-to-end testing requires test scripts and automation. Depends on React app working and oracle feeds providing data to test properly."
+      "reason": "End-to-end testing involves test scripts and automation. Depends on React app working (1) to test trading UI and live oracle feeds (2) to have real prices for trading."
     },
     {
-      "id": "fix-fee-flows",
-      "lane": "INFRA",
+      "id": "4",
+      "lane": "CONTRACT",
       "depends_on": [],
-      "reason": "INFRA lane: Debugging deployed contract state and fee distribution configuration. Can investigate backend fee issues independently."
+      "reason": "Fee flow issues involve Insurance Fund and FeeRouter contract logic - these are Solidity contract fixes. Independent contract-level issue."
     },
     {
-      "id": "demo-polish",
+      "id": "5",
       "lane": "FRONTEND",
       "depends_on": [
-        "fix-react-loading"
+        "1",
+        "2",
+        "4"
       ],
-      "reason": "FRONTEND lane: UI polish and display improvements in React components. Must have working React app before polishing the interface."
+      "reason": "UI polish involves React frontend changes. Depends on React app working (1), live prices for professional data display (2), and fee calculations working for proper metrics display (4)."
     }
   ]
 }
