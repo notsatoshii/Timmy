@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-18T02:05:36.034502+00:00",
+  "timestamp": "2026-03-18T02:21:36.775165+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -28,30 +28,39 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Cannot verify actual UI functionality or user experience via static HTML",
-    "Vision: No way to assess real-time data accuracy or trading functionality",
-    "Vision: Unable to verify wallet integration or transaction flows",
-    "Vision: Cannot evaluate market data feeds or price accuracy",
-    "Vision: No assessment possible of responsive design or mobile experience"
+    "Vision: MarketDetail showing unrealistic $39B Open Interest instead of ~$150K (decimal conversion bug)",
+    "Vision: Position opening fails in frontend despite working in CLI (demo mode broken)",
+    "Vision: Browser automation broken (missing libatk dependency prevents investor validation)",
+    "Vision: Error boundary failures in MarketDetail tab causing crashes",
+    "Vision: No functioning API endpoints for real-time data display",
+    "Vision: Demo mode displays clearly fabricated rather than realistic trading data",
+    "Vision: Frontend sanity checks fail for 3 out of 4 core tabs",
+    "Vision: Missing screenshot validation prevents investor demo verification"
   ],
   "functional_issues": [],
-  "score": 60,
+  "score": 36,
   "vision_review": {
-    "professional_score": 7,
-    "trust_score": 6,
+    "professional_score": 3,
+    "trust_score": 2,
     "issues": [
-      "Cannot verify actual UI functionality or user experience via static HTML",
-      "No way to assess real-time data accuracy or trading functionality",
-      "Unable to verify wallet integration or transaction flows",
-      "Cannot evaluate market data feeds or price accuracy",
-      "No assessment possible of responsive design or mobile experience"
+      "MarketDetail showing unrealistic $39B Open Interest instead of ~$150K (decimal conversion bug)",
+      "Position opening fails in frontend despite working in CLI (demo mode broken)",
+      "Browser automation broken (missing libatk dependency prevents investor validation)",
+      "Error boundary failures in MarketDetail tab causing crashes",
+      "No functioning API endpoints for real-time data display",
+      "Demo mode displays clearly fabricated rather than realistic trading data",
+      "Frontend sanity checks fail for 3 out of 4 core tabs",
+      "Missing screenshot validation prevents investor demo verification"
     ],
     "improvements": [
-      "Implement server-side rendering or static generation for better SEO and initial load assessment",
-      "Add health check endpoints that can be tested programmatically",
-      "Include demo mode or mock data for evaluation without wallet connection",
-      "Add comprehensive error boundaries with investor-appropriate messaging",
-      "Implement progressive enhancement for core functionality without JavaScript"
+      "Fix WAD vs USDT decimal conversion causing $39B display error",
+      "Resolve frontend position opening failure (contracts work via CLI)",
+      "Install missing browser dependencies for automated validation",
+      "Implement proper error boundaries for MarketDetail component",
+      "Replace demo mode with realistic ~$150K trading volumes",
+      "Add comprehensive 4-tab frontend testing with screenshots",
+      "Enable proper investor demo validation workflow",
+      "Fix browser automation for reliable QA assessment"
     ]
   }
 }

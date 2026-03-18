@@ -1,27 +1,39 @@
-Perfect! Now I understand the correct structure. Looking at the original build plan, I can see that tasks 1.1, 2.1, 3.1, 4.1, and 5.1 are already completed (marked [x]). Let me create the correct revised plan following the exact task numbering:
+Now I understand! Based on the QA report showing a **36/100 score** with 8 critical visual issues, I need to revise the build plan to prioritize the most severe demo-blocking problems first.
 
-## Corrected Plan: Complete All Remaining Build Plan Tasks
+## **REVISED PLAN** (Based on QA Score 36/100)
 
-### **Priority 1: MarketDetail Error Boundary** [CRITICAL]
-- [ ] **Task 1.2**: Rewrite sanity-check-frontend.sh to test ALL 4 tabs (Trading, Positions, Vault, MarketDetail) with screenshots
-- [ ] **Task 1.3**: Ensure error boundary failures cause script to exit with failure status
+### **IMMEDIATE PRIORITY: Demo-Blocking Visual Issues** 
 
-### **Priority 2: Demo Mode Data Display** [CRITICAL] 
-- [ ] **Task 2.2**: Fix MarketDetail OI showing $39B instead of realistic ~$150K (WAD vs USDT decimal conversion bug)
-- [ ] **Task 2.3**: Verify all numerical formatting displays properly across all tabs in demo mode
+**Task 1.2A** [CRITICAL]: Fix $39B decimal conversion bug in MarketDetail
+- Root cause: WAD vs USDT formatting error showing $39B instead of realistic ~$150K 
+- Target: Realistic OI displays (~$150K range)
 
-### **Priority 3: Position Opening via Configuration** [HIGH]
-- [ ] **Task 3.2**: Test position opening with 5-15x leverage using test wallet after configuration fix
-- [ ] **Task 3.3**: Fix frontend position opening in demo mode (contracts work via CLI, frontend shows "Position Open Failed")
+**Task 1.3A** [CRITICAL]: Restore frontend position opening 
+- Issue: CLI works but frontend fails with "Position Open Failed"
+- Test: 5-15x leverage position opening in demo mode
 
-### **Priority 4: Browser Automation** [MEDIUM]
-- [ ] **Task 4.2**: Restore automated screenshot testing capability for investor demo validation
+**Task 1.4A** [CRITICAL]: Fix MarketDetail error boundary crashes
+- Root cause: Error boundaries failing and causing tab crashes
+- Target: Stable navigation across all 4 tabs
 
-### **Priority 5: Final Verification** [MEDIUM]
-- [ ] **Task 5.2**: Target QA score improvement from current 60 to 80+ via MarketDetail stability and realistic demo data
+### **SECONDARY PRIORITY: Validation Infrastructure**
 
-**Working Order**: 1.2 → 1.3 → 2.2 → 2.3 → 3.2 → 3.3 → 4.2 → 5.2
+**Task 2.1B** [HIGH]: Fix browser automation dependencies  
+- Issue: Missing libatk preventing screenshot validation
+- Target: Automated investor demo verification working
 
-**Constraints**: Configuration fixes only, no contract redeployment, no address changes, no fake data injection.
+**Task 2.2B** [HIGH]: Rewrite sanity-check-frontend.sh for all 4 tabs
+- Current: 3/4 tabs failing sanity checks  
+- Target: All tabs (Trading, Positions, Vault, MarketDetail) passing with screenshots
 
-Should I start with **Task 1.2** (rewriting the sanity-check-frontend.sh script to test all 4 tabs)?
+### **FINAL VERIFICATION**
+
+**Task 3.1C** [MEDIUM]: Complete QA score improvement
+- Current: 36/100 → Target: 80+
+- Focus: Realistic data display, stable navigation, working position opening
+
+**Revised Working Order:** 1.2A → 1.3A → 1.4A → 2.1B → 2.2B → 3.1C
+
+**Success Criteria:** All 8 visual issues resolved, functional investor demo, QA score >80
+
+Should I **start with Task 1.2A** (fixing the $39B decimal conversion bug)?
