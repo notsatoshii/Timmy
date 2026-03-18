@@ -4,7 +4,7 @@ Looking at the QA report, there's a **CRITICAL** frontend deployment failure tha
 
 ### 1. CRITICAL DEPLOYMENT FIX [CRITICAL] [FRONTEND]
 - [ ] Fix systemd service configuration - it's serving directory listing instead of React app
-- [ ] Copy working build from `build.safe/` to correct location OR reconfigure service path
+- [ ] Copy working build from `build.safe/` to correct location OR reconfigure service path  
 - [ ] Verify React app loads properly at localhost:3000 with functional UI
 - [ ] Take screenshots to confirm investor demo readiness
 

@@ -1,21 +1,23 @@
 {
-  "timestamp": "2026-03-18T16-07-55-858Z",
-  "console_errors": [],
+  "timestamp": "2026-03-18T16-13-30-845Z",
+  "console_errors": [
+    "Comprehensive verification detected issues"
+  ],
   "screenshots": [
-    "visual-verification-2026-03-18T16-07-55-858Z.html"
+    "visual-verification-2026-03-18T16-13-30-845Z.html"
   ],
   "fallback_used": true,
-  "visual_verification": "/home/lever/lever-protocol/control-plane/screenshots/visual-verification-2026-03-18T16-07-55-858Z.html",
-  "frontend_check": "Frontend OK - 200, 1851 bytes, React: true",
+  "visual_verification": "/home/lever/lever-protocol/control-plane/screenshots/visual-verification-2026-03-18T16-13-30-845Z.html",
+  "frontend_check": "Frontend OK - 200, 5701 bytes, React: false",
   "detailed_checks": [
-    "HTTP endpoint testing: PASSED",
-    "React application detection: PASSED",
+    "HTTP endpoint testing: FAILED",
+    "React application detection: FAILED",
     "Browser dependencies: RESOLVED (HTTP method used)",
-    "Investor demo readiness: READY",
-    "Main page: 200 - 1851 bytes - React app: true",
-    "JS assets: Server responding (200)",
+    "Investor demo readiness: NEEDS ATTENTION",
+    "Main page: 200 - 5701 bytes - React app: false",
+    "JS assets: Server responding (404)",
     "Static assets: Server responding (200)"
   ],
-  "success": true,
+  "success": false,
   "comprehensive_verification_used": true
 }

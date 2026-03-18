@@ -4,7 +4,7 @@
       "id": "1",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Root cause is systemd service misconfiguration, requires file system operations and service reconfiguration - classic INFRA work. No dependencies since it's the foundation fix."
+      "reason": "Systemd service configuration fix - involves reconfiguring service paths or moving build files, which is infrastructure work rather than React development"
     },
     {
       "id": "2",
@@ -12,25 +12,25 @@
       "depends_on": [
         "1"
       ],
-      "reason": "Root cause is need to run test scripts and verification workflows. Depends on Task 1 because frontend functionality testing requires the React app to be properly served first."
+      "reason": "Testing and verification scripts in control-plane/. Depends on task 1 because cannot test frontend functionality if React app is not properly deployed and serving"
     },
     {
       "id": "3",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Root cause is monitoring Python scripts and oracle pipeline stability - involves operational monitoring and potentially updating monitoring configs. Independent of frontend deployment."
+      "reason": "Monitoring Python scripts and oracle pipeline - involves checking running processes and system monitoring, which is infrastructure work"
     },
     {
       "id": "4",
       "lane": "CONTRACT",
       "depends_on": [],
-      "reason": "Root cause is contract logic debugging in FeeRouter and Insurance Fund - requires analyzing Solidity code and potentially contract interactions. Independent of other tasks."
+      "reason": "Debugging Solidity contract logic for fee routing between FeeRouter and InsuranceFund - involves contract state analysis and potential Solidity fixes"
     },
     {
       "id": "5",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Root cause is APY calculation and monitoring analysis - involves backend data analysis scripts and monitoring configurations. Can be done independently of frontend or contract fixes."
+      "reason": "System performance analysis and monitoring APY calculations - involves data analysis and documentation rather than contract or frontend changes"
     }
   ]
 }
