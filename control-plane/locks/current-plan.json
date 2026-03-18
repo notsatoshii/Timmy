@@ -1,16 +1,25 @@
 {
   "tasks": [
     {
-      "id": "1",
+      "id": "insurance-fund-display-bug",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Root cause is frontend decimal conversion and display formatting. Fixes React components that show Insurance Fund balance."
+      "reason": "Frontend formatting issue for display values in React components. No dependencies as this is isolated UI formatting."
     },
     {
-      "id": "3",
+      "id": "oracle-keeper-stability",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Documentation verification and updates. Involves testing functionality and updating markdown files, which falls under INFRA."
+      "reason": "Python script reliability check (mockkeeper.py). INFRA lane handles scripts/ Python files. Independent of other tasks."
+    },
+    {
+      "id": "known-issues-documentation",
+      "lane": "INFRA",
+      "depends_on": [
+        "insurance-fund-display-bug",
+        "oracle-keeper-stability"
+      ],
+      "reason": "Documentation accuracy verification in control-plane files. Depends on other fixes being completed to accurately confirm resolved items."
     }
   ]
 }

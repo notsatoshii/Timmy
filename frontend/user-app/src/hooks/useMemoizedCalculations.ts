@@ -193,7 +193,7 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
 
     // APY calculation using projected approach like ProtocolStats
     // Use BASE_BORROW_RATE × Total_OI × 8760_hours × 0.50_LP_share / TVL
-    const BASE_BORROW_RATE = BigInt("200000000000000"); // 0.02% per hour in WAD
+    const BASE_BORROW_RATE = BigInt("550000000000000"); // 0.055% per hour effective avg in WAD
     const hoursPerYear = BigInt(8760);
     const lpShare = BigInt(50); // 50% LP share
     const hundredPercent = BigInt(100);

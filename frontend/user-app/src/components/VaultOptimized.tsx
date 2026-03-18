@@ -3,6 +3,7 @@ import { useWriteContract } from 'wagmi';
 import { useWallet } from '../hooks/useWallet';
 import { CONTRACT_ADDRESSES, formatUsdt, formatWad, parseUsdt, WAD, getContractAddresses } from '../config/contracts';
 import { LEVER_VAULT_ABI, USDT_ABI, FEE_ROUTER_ABI, OI_LIMITS_ABI } from '../config/abis';
+import { useRealAPY } from '../hooks/useRealAPY';
 import { useVaultMulticall } from '../hooks/useVaultMulticall';
 import { useMemoizedVaultCalculations } from '../hooks/useMemoizedCalculations';
 import Skeleton from './Skeleton';
@@ -61,6 +62,7 @@ const VaultOptimized: React.FC = () => {
 
   // Memoized calculations - expensive computations only run when data changes
   const metrics = useMemoizedVaultCalculations({
+
     totalAssets: safeVaultData.totalAssets,
     totalSupply: safeVaultData.totalSupply,
     sharePrice: safeVaultData.sharePrice, // Pass direct sharePrice from convertToAssets
@@ -72,6 +74,7 @@ const VaultOptimized: React.FC = () => {
     userShares: safeVaultData.userShares,
     usdtBalance: safeVaultData.usdtBalance,
   });
+  const { apyPercent } = useRealAPY(safeVaultData.totalAssets);
 
   // Use share price directly from useVaultMulticall (comes from convertToAssets call)
   const sharePrice = useMemo(() => {
@@ -235,7 +238,7 @@ const VaultOptimized: React.FC = () => {
           tvl={metrics.tvl}
           sharePrice={sharePrice}
           utilization={metrics.utilization}
-          annualizedAPY={metrics.annualizedAPY}
+          annualizedAPY={apyPercent || metrics.annualizedAPY}
           isLoading={safeVaultData.isLoadingVaultData}
           hasError={safeVaultData.hasError}
         />
