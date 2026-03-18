@@ -597,7 +597,7 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
         hasError: true,
         hasNetworkError: false,
         hasRateLimit: false,
-        errors: [{ message: `Hook crashed: ${error.message}`, code: 'HOOK_CRASH' }],
+        errors: [{ message: `Hook crashed: ${error instanceof Error ? error.message : String(error)}`, code: 'HOOK_CRASH' }],
         circuitBreakerOpen: false,
         nextAttemptTime: 0,
         retryAttempts: 0,
