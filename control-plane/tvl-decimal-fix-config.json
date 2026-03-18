@@ -1,0 +1,31 @@
+{
+  "tvl_decimal_conversion": {
+    "issue": "LeverVault returns USDT (6 decimals) but LeverageModel expects WAD (18 decimals)",
+    "vault_address": "0x84a1Eb3b1eFD60b193b271DCfaB2711cE1c41921",
+    "leverage_model_address": "0x474E2eE2911544a385eb017369e8516Ad6DcCAbd",
+    "conversion_factor": "1000000000000",
+    "status": "requires_contract_update"
+  },
+  "leverage_fix_options": {
+    "option_1": {
+      "name": "Update LeverageModel contract",
+      "description": "Modify LeverageModel to multiply vault.totalAssets() by 1e12",
+      "feasibility": "requires_redeployment"
+    },
+    "option_2": {
+      "name": "Create adapter contract",
+      "description": "Deploy TVLAdapter that converts 6->18 decimals for LeverageModel",
+      "feasibility": "possible_but_complex"
+    },
+    "option_3": {
+      "name": "Mock high TVL for testing",
+      "description": "Temporarily override TVL calculation for demo purposes",
+      "feasibility": "immediate_but_temporary"
+    }
+  },
+  "immediate_action": {
+    "recommendation": "Use option_3 for demo, then implement option_1 for production",
+    "demo_tvl_override": "60504028315742000000000000000000",
+    "expected_leverage_improvement": "from_1x_to_20-30x"
+  }
+}

@@ -77,35 +77,46 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
   // Convert market ID to bytes32 format for contract calls (already in correct format)
   const marketBytes32 = market.id as `0x${string}`;
 
-  // Get OI data
-  const { data: longOI = 0 } = useReadContract({
+  // Get OI data with error handling
+  const { data: longOI = 0, error: longOIError, isLoading: longOILoading } = useReadContract({
     address: CONTRACT_ADDRESSES.oiLimits,
     abi: OI_LIMITS_ABI,
     functionName: 'getSideOI',
     args: [marketBytes32, true], // true for long
+    query: {
+      enabled: !!market.id && !!CONTRACT_ADDRESSES.oiLimits,
+    },
   });
 
-  const { data: shortOI = 0 } = useReadContract({
+  const { data: shortOI = 0, error: shortOIError, isLoading: shortOILoading } = useReadContract({
     address: CONTRACT_ADDRESSES.oiLimits,
     abi: OI_LIMITS_ABI,
     functionName: 'getSideOI',
     args: [marketBytes32, false], // false for short
+    query: {
+      enabled: !!market.id && !!CONTRACT_ADDRESSES.oiLimits,
+    },
   });
 
-
   // Get current rates (using long side for borrow rate)
-  const { data: borrowRate = 0 } = useReadContract({
+  const { data: borrowRate = 0, error: borrowRateError, isLoading: borrowRateLoading } = useReadContract({
     address: CONTRACT_ADDRESSES.borrowFeeEngine,
     abi: BORROW_FEE_ENGINE_ABI,
     functionName: 'getCurrentBorrowRate',
     args: [marketBytes32, true], // true for long side
+    query: {
+      enabled: !!market.id && !!CONTRACT_ADDRESSES.borrowFeeEngine,
+    },
   });
 
-  const { data: fundingRate = 0 } = useReadContract({
+  const { data: fundingRate = 0, error: fundingRateError, isLoading: fundingRateLoading } = useReadContract({
     address: CONTRACT_ADDRESSES.fundingRateEngine,
     abi: FUNDING_RATE_ENGINE_ABI,
     functionName: 'getCurrentFundingRate',
     args: [marketBytes32],
+    query: {
+      enabled: !!market.id && !!CONTRACT_ADDRESSES.fundingRateEngine,
+    },
   });
 
   // Generate demo candlestick data for chart
@@ -254,16 +265,18 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
       let rateBigInt: bigint;
       if (typeof rate === 'bigint') {
         rateBigInt = rate;
-      } else if (typeof rate === 'number' && !isNaN(rate)) {
+      } else if (typeof rate === 'number' && !isNaN(rate) && isFinite(rate)) {
         rateBigInt = BigInt(Math.floor(rate));
       } else {
-        rateBigInt = BigInt(0);
+        return '0.00%';
       }
       const rateNum = Number(rateBigInt) / 1e18; // Convert from wei
-      if (isNaN(rateNum)) return '0.00%';
-      return `${(rateNum * 8760 * 100).toFixed(2)}%`; // Annual percentage
+      if (isNaN(rateNum) || !isFinite(rateNum)) return '0.00%';
+      const annualRate = rateNum * 8760 * 100; // Annual percentage
+      if (isNaN(annualRate) || !isFinite(annualRate)) return '0.00%';
+      return `${annualRate.toFixed(2)}%`;
     } catch (error) {
-      console.warn('Error formatting rate:', error);
+      console.warn('Error formatting rate:', rate, error);
       return '0.00%';
     }
   };
@@ -384,12 +397,86 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
   };
 
   // Safe BigInt to Number conversion for OI values (USDT format - 6 decimals, divide by 1e6)
-  const longOINum = typeof longOI === 'bigint' ? Number(longOI) / 1e6 : (typeof longOI === 'number' && !isNaN(longOI) ? longOI / 1e6 : 0);
-  const shortOINum = typeof shortOI === 'bigint' ? Number(shortOI) / 1e6 : (typeof shortOI === 'number' && !isNaN(shortOI) ? shortOI / 1e6 : 0);
+  const longOINum = (() => {
+    try {
+      if (typeof longOI === 'bigint') {
+        const num = Number(longOI) / 1e6;
+        return isFinite(num) ? num : 0;
+      } else if (typeof longOI === 'number' && !isNaN(longOI) && isFinite(longOI)) {
+        return longOI / 1e6;
+      }
+      return 0;
+    } catch (error) {
+      console.warn('Error converting longOI:', longOI, error);
+      return 0;
+    }
+  })();
+
+  const shortOINum = (() => {
+    try {
+      if (typeof shortOI === 'bigint') {
+        const num = Number(shortOI) / 1e6;
+        return isFinite(num) ? num : 0;
+      } else if (typeof shortOI === 'number' && !isNaN(shortOI) && isFinite(shortOI)) {
+        return shortOI / 1e6;
+      }
+      return 0;
+    } catch (error) {
+      console.warn('Error converting shortOI:', shortOI, error);
+      return 0;
+    }
+  })();
+
+  // Log contract call errors for debugging
+  useEffect(() => {
+    if (longOIError) console.error('Long OI contract call error:', longOIError);
+    if (shortOIError) console.error('Short OI contract call error:', shortOIError);
+    if (borrowRateError) console.error('Borrow rate contract call error:', borrowRateError);
+    if (fundingRateError) console.error('Funding rate contract call error:', fundingRateError);
+  }, [longOIError, shortOIError, borrowRateError, fundingRateError]);
 
   const totalOI = longOINum + shortOINum;
   const longPercentage = totalOI > 0 ? (longOINum / totalOI) * 100 : 50;
   const shortPercentage = totalOI > 0 ? (shortOINum / totalOI) * 100 : 50;
+
+  // Validate market data after all hooks are called
+  if (!market) {
+    return (
+      <div className="bg-surface-1 border border-danger/30 rounded-lg p-8 text-center">
+        <div className="text-danger mb-4">
+          <h3 className="text-lg font-semibold">Invalid Market Data</h3>
+          <p className="text-sm text-gray-400">Market data is missing or invalid.</p>
+        </div>
+        <button
+          onClick={onBack}
+          className="px-4 py-2 bg-accent text-surface-0 rounded-md hover:bg-accent-dim transition-colors"
+        >
+          Back to Markets
+        </button>
+      </div>
+    );
+  }
+
+  if (!market.id || typeof market.price !== 'number' || isNaN(market.price)) {
+    console.error('Invalid market data:', market);
+    return (
+      <div className="bg-surface-1 border border-danger/30 rounded-lg p-8 text-center">
+        <div className="text-danger mb-4">
+          <h3 className="text-lg font-semibold">Invalid Market Data</h3>
+          <p className="text-sm text-gray-400">Market ID or price data is invalid.</p>
+          <p className="text-xs text-gray-500 mt-2 font-mono">
+            ID: {market?.id || 'missing'}, Price: {typeof market?.price === 'number' ? market.price : 'invalid'}
+          </p>
+        </div>
+        <button
+          onClick={onBack}
+          className="px-4 py-2 bg-accent text-surface-0 rounded-md hover:bg-accent-dim transition-colors"
+        >
+          Back to Markets
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -419,11 +506,11 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
           <div className="flex-1">
             <div className="flex items-center space-x-3 mb-4">
               <span
-                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCategoryColor(market.category)}`}
+                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCategoryColor(market?.category || '')}`}
               >
-                {market.category}
+                {market?.category || 'Unknown'}
               </span>
-              {market.isLive && (
+              {market?.isLive && (
                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-accent-muted text-accent border border-accent/20">
                   <div className="w-1.5 h-1.5 bg-accent rounded-full mr-1 animate-pulse"></div>
                   Live
@@ -432,7 +519,7 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
             </div>
 
             <h1 className="text-2xl font-bold text-gray-100 mb-4">
-              {market.description}
+              {market?.description || 'Unknown Market'}
             </h1>
 
             <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
@@ -459,7 +546,7 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
               <div>
                 <p className="text-gray-500 text-sm">Resolution</p>
                 <p className="text-lg font-semibold text-gray-200">
-                  {formatTimeToResolution(market.resolutionTime)}
+                  {formatTimeToResolution(market?.resolutionTime || Date.now())}
                 </p>
               </div>
               <div>
@@ -473,10 +560,10 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
 
           <div className="flex-shrink-0 lg:ml-6">
             <div className="flex space-x-3">
-              <button onClick={() => { if (onTradeSelect) onTradeSelect(market.id, market.description, "long"); if (onBack) onBack(); }} className="bg-accent/10 text-accent border border-accent/30 px-6 py-3 rounded-md font-semibold hover:bg-accent/20 hover:border-accent/50 transition-all">
+              <button onClick={() => { if (onTradeSelect && market?.id) onTradeSelect(market.id, market.description || 'Unknown', "long"); if (onBack) onBack(); }} className="bg-accent/10 text-accent border border-accent/30 px-6 py-3 rounded-md font-semibold hover:bg-accent/20 hover:border-accent/50 transition-all">
                 Long
               </button>
-              <button onClick={() => { if (onTradeSelect) onTradeSelect(market.id, market.description, "short"); if (onBack) onBack(); }} className="bg-danger/10 text-danger border border-danger/30 px-6 py-3 rounded-md font-semibold hover:bg-danger/20 hover:border-danger/50 transition-all">
+              <button onClick={() => { if (onTradeSelect && market?.id) onTradeSelect(market.id, market.description || 'Unknown', "short"); if (onBack) onBack(); }} className="bg-danger/10 text-danger border border-danger/30 px-6 py-3 rounded-md font-semibold hover:bg-danger/20 hover:border-danger/50 transition-all">
                 Short
               </button>
             </div>

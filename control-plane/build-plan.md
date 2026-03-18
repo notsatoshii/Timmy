@@ -1,43 +1,32 @@
-Perfect! Now I have the official plan. Let me create a corrected approach that follows the exact 3 priorities and constraints:
+### 1. **Fix MarketDetail Error Boundary** [CRITICAL] [FRONTEND]
+- [ ] 1. Debug and fix MarketDetail component crashes when users click on market cards
+- [ ] 2. Rewrite sanity-check-frontend.sh to test ALL 4 tabs (Trading, Positions, Vault, MarketDetail) with screenshots
+- [ ] 3. Ensure error boundary failures cause script to exit with failure status
 
-## **Corrected Plan: Following Official Build Plan**
+**Status**: Trading/Vault/Positions tabs fixed. Only MarketDetail remains broken, blocking investor demo.
 
-### **Priority #1: Fix Frontend Build & Deployment [CRITICAL] [FRONTEND]**
-- [ ] **1.1** Fix MarketDetail error boundary (crashes when clicking markets)  
-- [ ] **1.2** Rewrite sanity-check-frontend.sh to click ALL 4 tabs, screenshot each, FAIL if any shows error boundary
+### 2. **Fix Demo Mode Data Display** [CRITICAL] [FRONTEND] 
+- [ ] 1. Fix 24h Volume calculation to show NOTIONAL (collateral × leverage) instead of collateral only
+- [ ] 2. Fix MarketDetail OI showing $39B instead of realistic ~$150K (WAD vs USDT decimal conversion bug)
+- [ ] 3. Verify all numerical formatting displays properly in demo mode across all tabs
 
-**Status**: Trading, Vault, Positions tabs fixed. Only MarketDetail remains.
+**Status**: Vault tab now shows correct TVL ($60.5M), share price ($1.00), APY (0.2%). Volume/OI display bugs remain.
 
-### **Priority #2: Fix Demo Mode Data Display [CRITICAL] [FRONTEND]**
-- [ ] **2.1** Fix 24h Volume to show NOTIONAL (collateral × leverage), not collateral only
-- [ ] **2.2** Fix MarketDetail OI displaying $39B instead of ~$150K (WAD vs USDT decimal bug)
-- [ ] **2.3** Test complete user flow through all tabs in demo mode
-- [ ] **2.4** Ensure all numerical values display properly formatted
+### 3. **Fix Position Opening via Configuration** [HIGH] [CONFIGURATION]
+- [ ] 1. Fix leverage configuration bug causing SpaceX to show 1.8x max instead of 20-30x (decimal format mismatch)
+- [ ] 2. Test position opening with 5-15x leverage using test wallet after configuration fix  
+- [ ] 3. Fix frontend position opening in demo mode (contracts work via CLI, frontend shows "Position Open Failed")
 
-**Status**: Vault tab fixed (TVL $60.5M, Share Price $1.00, APY 0.2%). Volume and OI display remain.
+**Status**: Root cause identified as decimal format mismatch per official plan. Fix through configuration, NOT redeployment.
 
-### **Priority #3: Fix Position Opening Functionality [HIGH] [CONFIGURATION]**
-- [ ] **3.1** Fix leverage bug via **configuration fixes**: SpaceX shows 1.8x max instead of 20-30x (decimal format mismatch per official plan)
-- [ ] **3.2** Open 10 positions at 5-15x leverage using test wallet after fix
-- [ ] **3.3** Fix frontend position opening in demo mode (contract works via CLI)
-- [ ] **3.4** Verify APY updates with new higher-leverage OI
+### 4. **Fix Browser Automation Dependencies** [MEDIUM] [INFRASTRUCTURE]
+- [ ] 1. Fix Puppeteer libatk-1.0.so.0 dependency error preventing proper UI verification
+- [ ] 2. Restore automated screenshot testing capability for investor demo validation
 
-**Status**: Root cause identified as decimal format mismatch. Fix through configuration, NOT redeployment.
+**Status**: Visual verification failing due to browser automation issues, preventing full QA validation.
 
-## **Key Constraints Followed:**
-- ✅ No contract redeployments  
-- ✅ Work within existing deployed addresses
-- ✅ Focus on configuration and frontend fixes
-- ✅ Respect PROTECTED contracts list
+### 5. **Verify Complete User Flow** [MEDIUM] [TESTING]
+- [ ] 1. Run complete verification protocol after fixes: frontend build → restart service → sanity check
+- [ ] 2. Target QA score improvement from current 60 to 80+ via MarketDetail stability and realistic demo data
 
-## **Verification Protocol:**
-```bash
-cd frontend/user-app && npm run build
-systemctl restart lever-frontend  
-sleep 3
-bash scripts/sanity-check-frontend.sh
-```
-
-**Target Outcome**: QA score improvement via MarketDetail stability + realistic leverage values (10x+ instead of 1.8x) + proper demo mode data display.
-
-Ready to proceed with Priority #1 (MarketDetail error boundary fix)?
+**Status**: Ready for final verification once Priority 1-3 complete. Current QA score 60, target 80+.
