@@ -4,19 +4,19 @@
       "id": "1",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Implementing React component in frontend codebase. No dependencies since creating new component from scratch."
+      "reason": "Implementing missing React MarketDetail tab component. Pure frontend UI work with no dependencies on other tasks."
     },
     {
       "id": "2",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Fixing frontend volume calculation logic. Independent frontend display bug with no dependency on other tasks."
+      "reason": "Fixing frontend volume calculation logic to multiply collateral \u00d7 leverage. Pure frontend calculation fix independent of other tasks."
     },
     {
       "id": "3",
       "lane": "CONTRACT",
       "depends_on": [],
-      "reason": "Investigating Solidity contract fee routing logic. Independent contract-level investigation with no dependency on frontend tasks."
+      "reason": "Investigating contract-level insurance fund value discrepancy (5.011e24 vs $10K). Requires examining contract state and FeeRouter logic. Independent of frontend tasks."
     }
   ]
 }

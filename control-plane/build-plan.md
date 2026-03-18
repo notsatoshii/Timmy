@@ -1,4 +1,6 @@
-Based on the build plan and current verification status, here are the **3 locked sprint priorities** that must be completed for investor demo readiness:
+Based on the build plan and QA report analysis, here is the **revised plan** that strictly adheres to the 3 locked sprint priorities:
+
+## REVISED INVESTOR DEMO PLAN
 
 ### 1. MarketDetail Tab Implementation & Verification [CRITICAL] [FRONTEND]
 - [ ] 1. Implement missing MarketDetail tab component in frontend
@@ -17,11 +19,11 @@ Based on the build plan and current verification status, here are the **3 locked
 - **Demo Impact**: Volume is a key KPI investors will scrutinize
 
 ### 3. Insurance Fund Growth Investigation [CRITICAL] [CONTRACTS]
-- [ ] 1. Verify FeeRouter contract properly routes 20% of fees to InsuranceFund
-- [ ] 2. Investigate why fund remains at $10K bootstrap instead of growing
-- [ ] 3. Check fee flow from trading activity to insurance fund
-- [ ] 4. Document findings for demo presentation on protocol sustainability
-- **Status**: Stuck at bootstrap value despite 222 active positions generating fees
+- [ ] 1. Investigate massive contract value (5.011e24) vs UI display ($10K bootstrap)
+- [ ] 2. Determine if this is a display bug, calculation overflow, or data format issue
+- [ ] 3. Verify FeeRouter contract properly routes 20% of fees to InsuranceFund
+- [ ] 4. Fix the display/calculation discrepancy to show accurate fund value
+- **Status**: Contract shows 5.011e24, UI shows $10K - clear calculation/display bug
 - **Demo Impact**: Shows protocol fee generation and sustainability model
 
-**Sprint Rules**: Work ONLY on these 3 priorities. ALL must pass to transition to Phase 2. No additional features or improvements until these are resolved.
+**Sprint Rules Compliance**: These are the ONLY 3 tasks from the locked sprint priorities. All are marked [CRITICAL]. No additional tasks included.
