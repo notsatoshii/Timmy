@@ -226,7 +226,7 @@ const Positions: React.FC = () => {
       }))
     );
     setPositions(posData);
-  }, [positionIds, address, oracleMarkets]);
+  }, [positionIds, address]);
 
   useEffect(() => {
     fetchPositionDetails();
