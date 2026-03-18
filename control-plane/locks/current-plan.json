@@ -1,22 +1,22 @@
 {
   "tasks": [
     {
-      "id": "insurance_fund_display_fix",
+      "id": "fix-insurance-fund-display",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Root cause is WAD/USDT decimal conversion in React display formatting. Pure frontend bug fix with no dependencies on other tasks."
+      "reason": "React component display formatting bug - needs frontend WAD/USDT conversion fixes. No dependencies since it's isolated display logic."
     },
     {
-      "id": "oracle_keeper_stability",
+      "id": "oracle-keeper-stability-check",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Root cause is verifying Python scripts (mockkeeper.py) and systemd services are running consistently. Infrastructure task independent of display bugs or docs."
+      "reason": "Python service monitoring and operational stability check - involves mockkeeper.py script verification. Independent of display bugs and documentation."
     },
     {
-      "id": "known_issues_documentation",
+      "id": "fix-known-issues-docs",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Root cause is updating known-issues.md file in control-plane configs. Documentation maintenance task with no dependencies on other fixes."
+      "reason": "Documentation file updates in control-plane - updating known-issues.md markdown. Tasks appear to be verification of already-resolved items, no dependencies on other fixes."
     }
   ]
 }
