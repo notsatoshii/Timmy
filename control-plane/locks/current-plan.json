@@ -1,27 +1,24 @@
 {
   "tasks": [
     {
-      "id": "1",
-      "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "React app build/deployment issue - must fix React application build process and output"
-    },
-    {
       "id": "2",
       "lane": "INFRA",
-      "depends_on": [
-        "1"
-      ],
-      "reason": "Web server configuration for SPA routing - needs React app properly built first before configuring server to serve it"
+      "depends_on": [],
+      "reason": "Web server configuration requires changing infrastructure config files (nginx, routing rules, service config) - not React code. No dependencies as this is the critical blocker that must be fixed first."
     },
     {
       "id": "3",
       "lane": "INFRA",
       "depends_on": [
-        "1",
         "2"
       ],
-      "reason": "Verification testing - requires both React app fixed and web server configured before validating functionality"
+      "reason": "Running verification scripts and testing infrastructure. Depends on Task 2 because verifying frontend priorities requires the web server to be properly serving the React SPA."
+    },
+    {
+      "id": "5",
+      "lane": "INFRA",
+      "depends_on": [],
+      "reason": "Monitoring oracle keeper service status via Python scripts and operations tooling. Independent of web server issues - can run in parallel."
     }
   ]
 }
