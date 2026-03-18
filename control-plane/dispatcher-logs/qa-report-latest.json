@@ -1,12 +1,12 @@
 {
-  "timestamp": "2026-03-18T07:49:33.092387+00:00",
+  "timestamp": "2026-03-18T08:02:41.533891+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
   "contract_checks": [
     {
       "name": "TVL",
-      "value": "60508028315742 [6.05e13]",
+      "value": "60501227994841 [6.05e13]",
       "status": "ok"
     },
     {
@@ -16,7 +16,7 @@
     },
     {
       "name": "Global OI",
-      "value": "11262767554735 [1.126e13]",
+      "value": "11074722554735 [1.107e13]",
       "status": "ok"
     },
     {
@@ -27,32 +27,7 @@
   ],
   "sprint_checks": {},
   "critical_blockers": [],
-  "visual_issues": [
-    "Vision: Cannot assess actual trading interface functionality through curl alone",
-    "Vision: Unable to verify data accuracy of prices and portfolio information",
-    "Vision: Cannot test user workflows like position opening/closing",
-    "Vision: No visibility into error handling or edge case behavior",
-    "Vision: Cannot evaluate mobile responsiveness and cross-browser compatibility"
-  ],
+  "visual_issues": [],
   "functional_issues": [],
-  "score": 60,
-  "vision_review": {
-    "professional_score": 8,
-    "trust_score": 7,
-    "issues": [
-      "Cannot assess actual trading interface functionality through curl alone",
-      "Unable to verify data accuracy of prices and portfolio information",
-      "Cannot test user workflows like position opening/closing",
-      "No visibility into error handling or edge case behavior",
-      "Cannot evaluate mobile responsiveness and cross-browser compatibility"
-    ],
-    "improvements": [
-      "Implement headless browser testing to verify full UI functionality",
-      "Add automated screenshot testing to validate visual presentation",
-      "Test complete user workflows from investor demo perspective",
-      "Verify all data displays correctly (prices, positions, vault stats)",
-      "Test error states and loading behaviors",
-      "Validate mobile and tablet user experience"
-    ]
-  }
+  "score": 100
 }
