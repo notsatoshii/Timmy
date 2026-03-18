@@ -1,0 +1,8 @@
+{
+  "task_id": "2",
+  "lane": "INFRA",
+  "title": "**WEB SERVER CONFIGURATION** [CRITICAL]",
+  "started": "2026-03-18T18:18:26.848526",
+  "pid": 2107128,
+  "log": "/home/lever/lever-protocol/control-plane/dispatcher-logs/task-2-181826.log"
+}

@@ -1,22 +1,24 @@
 {
   "tasks": [
     {
-      "id": "3",
+      "id": "2",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Verification task using control-plane scripts and testing tools to validate system functionality despite frontend issues. No dependencies since checking existing state."
+      "reason": "Web server routing configuration involves systemd services, nginx/server configs, and deployment scripts - pure infrastructure. No dependencies as this is the root blocker preventing frontend access."
     },
     {
-      "id": "4",
-      "lane": "CONTRACT",
-      "depends_on": [],
-      "reason": "Contract investigation of FeeRouter and Insurance Fund fee flow logic. Independent Solidity debugging work with no dependencies on verification or oracle status."
+      "id": "3",
+      "lane": "INFRA",
+      "depends_on": [
+        "2"
+      ],
+      "reason": "Sprint verification involves running control-plane validation scripts and testing workflows. Depends on task 2 because frontend priorities cannot be verified until the web server properly serves the React SPA."
     },
     {
       "id": "5",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Operational monitoring of mockkeeper.py Python script status. Independent infrastructure monitoring work with no dependencies on other tasks."
+      "reason": "Oracle monitoring involves checking Python keeper scripts and operational status - pure infrastructure concern. Independent of web server issues since oracle feeds backend contracts directly."
     }
   ]
 }
