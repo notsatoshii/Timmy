@@ -16,6 +16,7 @@ import { useNotifications } from '../contexts/NotificationContext';
 // // import FeeBreakdown from './FeeBreakdown'; // Removed — showing $0 // Removed — showing $0
 // // import MarginUsage from './MarginUsage'; // Removed — showing $0 // Removed — showing $0
 import Skeleton from './Skeleton';
+import LeverLoader from './LeverLoader';
 const MARKET_NAMES: Record<string, string> = {
   "0x2841ef32b61fb3472aadbfc70d787a1bfaf5d0218c9601b87963af7bcca1bcf1": "SpaceX IPO 2026",
   "0x9fe694e72b00a6aab573e11a17e2240b64d7aca455305b65289b77cc2f2d077a": "US-Iran Ceasefire",
@@ -745,6 +746,11 @@ const Positions: React.FC = () => {
     window.addEventListener('navigate-to-positions', handleNavigateToPositions);
     return () => window.removeEventListener('navigate-to-positions', handleNavigateToPositions);
   }, []);
+
+  // Show branded loader while fetching positions
+  if (isLoadingPositions) {
+    return <LeverLoader message="Loading positions..." size="lg" />;
+  }
 
   return (
     <div className="space-y-6">

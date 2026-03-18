@@ -4,7 +4,7 @@
       "id": "2",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Pure React component work - adding banners, disclaimers, labeling hardcoded values across pages. No dependencies as this is standalone UI improvement."
+      "reason": "Modifying React components to add testnet banners, remove hardcoded values, add disclaimers - all UI/presentation layer changes"
     },
     {
       "id": "3",
@@ -12,7 +12,7 @@
       "depends_on": [
         "2"
       ],
-      "reason": "End-to-end validation using test scripts and screenshot tools. Depends on task 2 because it validates investor demo readiness after critical presentation fixes are complete."
+      "reason": "End-to-end testing, browser screenshots, and system validation work. Depends on task 2 because it needs to validate the professional presentation improvements and testnet clarity changes"
     }
   ]
 }
