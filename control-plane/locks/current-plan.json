@@ -1,27 +1,43 @@
 {
   "tasks": [
     {
-      "id": "critical_frontend_repair",
+      "id": "1",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "Testing React app functionality, UI components, and navigation - core frontend verification that must work before other frontend tasks"
+    },
+    {
+      "id": "2",
+      "lane": "INFRA",
+      "depends_on": [
+        "1",
+        "4"
+      ],
+      "reason": "End-to-end user journey testing and screenshot automation - INFRA testing scripts that need both React app working (1) and system health verified (4)"
+    },
+    {
+      "id": "3",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "1",
+        "4"
+      ],
+      "reason": "Fixing data display issues in React components - FRONTEND task needing React app functional (1) and Oracle/system running properly (4) for data source"
+    },
+    {
+      "id": "4",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Root cause is web server/deployment serving directory listing instead of React app. Files to change are web server configs, systemd services, deployment scripts."
+      "reason": "Running health-check.sh, Oracle keeper verification, and system scripts - pure INFRA task independent of frontend changes"
     },
     {
-      "id": "web_server_configuration",
-      "lane": "INFRA",
+      "id": "5",
+      "lane": "FRONTEND",
       "depends_on": [
-        "critical_frontend_repair"
+        "2",
+        "3"
       ],
-      "reason": "Configuring SPA routing and preventing directory listing. Depends on diagnosis from Task 1 to understand the specific web server configuration needed."
-    },
-    {
-      "id": "sprint_priorities_verification",
-      "lane": "INFRA",
-      "depends_on": [
-        "critical_frontend_repair",
-        "web_server_configuration"
-      ],
-      "reason": "Running verification scripts, health checks, and screenshots to validate fixes from both previous tasks work properly."
+      "reason": "Mobile/browser testing may require CSS/Vite config changes - FRONTEND task needing user journey working (2) and display issues fixed (3) before final polish"
     }
   ]
 }

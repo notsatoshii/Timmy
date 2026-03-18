@@ -1,0 +1,122 @@
+{
+  "timestamp": "2026-03-18T18-50-00-353Z",
+  "checks": [
+    {
+      "name": "main_page_loads",
+      "status": "PASS",
+      "detail": "HTTP 200, 1851 bytes"
+    },
+    {
+      "name": "react_root_div",
+      "status": "PASS",
+      "detail": "React root div found"
+    },
+    {
+      "name": "javascript_bundle",
+      "status": "PASS",
+      "detail": "JS bundle link found"
+    },
+    {
+      "name": "css_bundle",
+      "status": "PASS",
+      "detail": "CSS bundle link found"
+    },
+    {
+      "name": "lever_branding",
+      "status": "PASS",
+      "detail": "LEVER branding in title"
+    },
+    {
+      "name": "description_meta",
+      "status": "PASS",
+      "detail": "Product description found"
+    },
+    {
+      "name": "og_image",
+      "status": "PASS",
+      "detail": "OG image meta tag found"
+    },
+    {
+      "name": "js_bundle_accessible",
+      "status": "PASS",
+      "detail": "JS bundle: HTTP 200, 731324 bytes"
+    },
+    {
+      "name": "css_bundle_accessible",
+      "status": "PASS",
+      "detail": "CSS bundle: HTTP 200, 37377 bytes"
+    },
+    {
+      "name": "deployment_core_deployment",
+      "status": "PASS",
+      "detail": "Accessible: 322 bytes"
+    },
+    {
+      "name": "deployment_core_deployment_valid",
+      "status": "PASS",
+      "detail": "Valid JSON with 5 contract addresses"
+    },
+    {
+      "name": "deployment_engines_deployment",
+      "status": "PASS",
+      "detail": "Accessible: 531 bytes"
+    },
+    {
+      "name": "deployment_engines_deployment_valid",
+      "status": "PASS",
+      "detail": "Valid JSON with 8 contract addresses"
+    },
+    {
+      "name": "deployment_pool_deployment",
+      "status": "PASS",
+      "detail": "Accessible: 260 bytes"
+    },
+    {
+      "name": "deployment_pool_deployment_valid",
+      "status": "PASS",
+      "detail": "Valid JSON with 4 contract addresses"
+    },
+    {
+      "name": "source_app",
+      "status": "PASS",
+      "detail": "File exists with exports (2772 chars)"
+    },
+    {
+      "name": "source_dashboardoptimized",
+      "status": "PASS",
+      "detail": "File exists with exports (7607 chars)"
+    },
+    {
+      "name": "source_vault",
+      "status": "PASS",
+      "detail": "File exists with exports (18997 chars)"
+    },
+    {
+      "name": "source_marketsoptimized",
+      "status": "PASS",
+      "detail": "File exists with exports (17733 chars)"
+    },
+    {
+      "name": "source_errorboundary",
+      "status": "PASS",
+      "detail": "File exists with exports (4652 chars)"
+    },
+    {
+      "name": "build_directory",
+      "status": "PASS",
+      "detail": "Build directory with 17 files"
+    },
+    {
+      "name": "package_dependencies",
+      "status": "PASS",
+      "detail": "29 dependencies"
+    },
+    {
+      "name": "react_scripts",
+      "status": "PASS",
+      "detail": "react-scripts: 5.0.1"
+    }
+  ],
+  "pass": 23,
+  "fail": 0
+}

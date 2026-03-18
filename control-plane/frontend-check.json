@@ -1,0 +1,67 @@
+{
+  "timestamp": "2026-03-18T18-46-22-696Z",
+  "checks": [
+    {
+      "name": "http_response",
+      "status": "PASS",
+      "detail": "HTTP 200 OK, 1851 bytes"
+    },
+    {
+      "name": "react_structure",
+      "status": "PASS",
+      "detail": "React root div found"
+    },
+    {
+      "name": "lever_branding",
+      "status": "PASS",
+      "detail": "LEVER branding in meta tags"
+    },
+    {
+      "name": "js_bundle",
+      "status": "PASS",
+      "detail": "JS bundle: src=\"/static/js/main.461e6943.js\""
+    },
+    {
+      "name": "css_bundle",
+      "status": "PASS",
+      "detail": "CSS bundle: href=\"/static/css/main.430bfc09.css\""
+    },
+    {
+      "name": "deployment_core_deployment",
+      "status": "PASS",
+      "detail": "File accessible: /deployments/core-deployment.json"
+    },
+    {
+      "name": "deployment_engines_deployment",
+      "status": "PASS",
+      "detail": "File accessible: /deployments/engines-deployment.json"
+    },
+    {
+      "name": "deployment_pool_deployment",
+      "status": "PASS",
+      "detail": "File accessible: /deployments/pool-deployment.json"
+    },
+    {
+      "name": "source_app",
+      "status": "PASS",
+      "detail": "File exists: frontend/user-app/src/App.tsx"
+    },
+    {
+      "name": "source_dashboard",
+      "status": "PASS",
+      "detail": "File exists: frontend/user-app/src/components/Dashboard.tsx"
+    },
+    {
+      "name": "source_vault",
+      "status": "PASS",
+      "detail": "File exists: frontend/user-app/src/components/Vault.tsx"
+    },
+    {
+      "name": "source_marketsoptimized",
+      "status": "PASS",
+      "detail": "File exists: frontend/user-app/src/components/MarketsOptimized.tsx"
+    }
+  ],
+  "pass": 12,
+  "fail": 0
+}

@@ -1,25 +1,33 @@
-You're absolutely correct. I misunderstood the situation completely. Let me revise the plan to focus exclusively on the three locked sprint priorities:
+Based on the QA report and investor demo context, I'll generate focused tasks to address the current verification gaps. The frontend is UP but we need to confirm actual React app functionality beyond the HTML shell.
 
-## REVISED PLAN - LOCKED SPRINT PRIORITIES ONLY
+### 1. **REACT APP FUNCTIONALITY VERIFICATION** [CRITICAL] [FRONTEND]
+- [ ] Run visual-verify.js to confirm React app loads properly with real UI components
+- [ ] Verify trading interface displays market data, position forms, and interactive elements
+- [ ] Test wallet connectivity and transaction preparation flows
+- [ ] Confirm all navigation tabs (Trading, Vault, Positions) render without errors
 
-### 1. **CRITICAL FRONTEND REPAIR** [CRITICAL] [DEPLOYMENT]
-- [ ] **Diagnose directory listing issue**: Check why the frontend is serving directory contents instead of the React app
-- [ ] **Fix React app deployment**: Restore proper React application serving 
-- [ ] **Verify React app loads**: Confirm LEVER Protocol interface appears instead of file listing
-- [ ] **Test core functionality**: Ensure wallet connection and basic navigation work
+### 2. **INVESTOR DEMO PATH TESTING** [HIGH] [VALIDATION]
+- [ ] Execute complete user journey: connect wallet → deposit to vault → open position → view positions
+- [ ] Verify key metrics display correctly: TVL ($68.5M), OI ($14.09M), position count (253)
+- [ ] Test position opening with realistic leverage (5x-15x) using current ExecutionEngine
+- [ ] Screenshot all demo screens showing professional, functional interface
 
-### 2. **WEB SERVER CONFIGURATION** [CRITICAL] [INFRASTRUCTURE] 
-- [ ] **Configure SPA routing**: Set index.html as default route for single-page application
-- [ ] **Hide internal file structure**: Prevent directory listing exposure
-- [ ] **Test routing**: Verify all React routes work properly (no 404s on refresh)
-- [ ] **Secure configuration**: Ensure proper web server security
+### 3. **DATA DISPLAY QUALITY ASSURANCE** [HIGH] [FRONTEND]
+- [ ] Verify LP APY shows meaningful value (currently 0.21% - investigate if this needs improvement)
+- [ ] Confirm Insurance Fund displays correct value (currently shows $5M vs expected $10K bootstrap)
+- [ ] Test Oracle keeper status and ensure prices update properly for demo
+- [ ] Validate all financial formatting shows professional precision (no $NaN or $0.00 errors)
 
-### 3. **SPRINT PRIORITIES VERIFICATION** [HIGH] [VALIDATION]
-- [ ] **Run health-check.sh**: Verify system-wide pass/fail status
-- [ ] **Take screenshots**: Document that React app is properly deployed and functional
-- [ ] **Verify user flows**: Test that critical demo paths work end-to-end
-- [ ] **Confirm QA improvement**: Re-run verification to show QA score improvement from fixing deployment
+### 4. **SYSTEM HEALTH PRE-DEMO** [MEDIUM] [INFRASTRUCTURE]
+- [ ] Run health-check.sh and confirm all contract checks pass
+- [ ] Verify Oracle keeper (mockkeeper.py) is running and updating prices
+- [ ] Test FeeRouter to ensure Insurance Fund receives proper fee flow
+- [ ] Confirm all three verification scripts pass for investor demo confidence
 
-**CONSTRAINT**: Work ONLY on these three priorities. Do NOT add additional tasks or work on anything else until all three pass verification.
+### 5. **DEMO PRESENTATION READINESS** [MEDIUM] [DOCUMENTATION]
+- [ ] Document current system metrics and functionality for investor presentation
+- [ ] Prepare screenshots showing clean, professional interface with real data
+- [ ] Verify mobile responsiveness for potential tablet/phone demo scenarios
+- [ ] Test cross-browser compatibility (Chrome/Firefox/Safari) for demo environment flexibility
 
-The 52/100 QA score reflects the deployment failure, not feature issues. Let me start with Priority 1 - diagnosing the directory listing problem.
+**Current Score: 68/100** - Focus on functionality verification to reach investor demo quality standard.

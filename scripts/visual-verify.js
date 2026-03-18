@@ -16,14 +16,24 @@ async function verify() {
 
     let browser;
     try {
+        console.log('Launching browser with default Puppeteer settings...');
+
         browser = await puppeteer.launch({
             headless: 'new',
-            executablePath: '/usr/bin/chromium-browser',
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
-                '--disable-gpu'
+                '--disable-gpu',
+                '--disable-extensions',
+                '--disable-background-timer-throttling',
+                '--disable-backgrounding-occluded-windows',
+                '--disable-renderer-backgrounding',
+                '--disable-features=TranslateUI',
+                '--disable-ipc-flooding-protection',
+                '--no-first-run',
+                '--no-default-browser-check',
+                '--ignore-certificate-errors'
             ]
         });
     } catch (e) {

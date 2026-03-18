@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-03-18T11-40-45-710Z",
+  "timestamp": "2026-03-18T18-48-40-871Z",
   "checks": [
     {
       "name": "browser_launch",
       "status": "FAIL",
-      "detail": "Failed to launch the browser process:  Code: 1\n\nstderr:\n/usr/bin/chromium-browser: 12: xdg-settings: not found\n/system.slice/lever-loop.service is not a snap cgroup for tag snap.chromium.chromium\n\nTROUBLESHOOTING: https://pptr.dev/troubleshooting\n"
+      "detail": "Failed to launch the browser process:  Code: 127\n\nstderr:\n/home/lever/.cache/puppeteer/chrome/linux-146.0.7680.76/chrome-linux64/chrome: error while loading shared libraries: libatk-1.0.so.0: cannot open shared object file: No such file or directory\n\nTROUBLESHOOTING: https://pptr.dev/troubleshooting\n"
     }
   ],
   "pass": 0,
