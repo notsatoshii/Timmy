@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-18T19:35:46.680773+00:00",
+  "timestamp": "2026-03-18T19:49:53.752774+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,12 +11,12 @@
     },
     {
       "name": "Positions",
-      "value": "256",
+      "value": "258",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "14220722554735 [1.422e13]",
+      "value": "14420722554735 [1.442e13]",
       "status": "ok"
     },
     {
@@ -28,31 +28,27 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Cannot verify actual application functionality from HTML shell",
-    "Vision: CSP policy may block legitimate functionality in development",
-    "Vision: No visible error handling or fallback content in noscript tag",
-    "Vision: Claims 'audited' in keywords without visible audit references",
-    "Vision: Production domain referenced (lever.finance) while running on localhost"
+    "Vision: Cannot evaluate actual application functionality from HTML shell",
+    "Vision: No way to assess real-time data accuracy or trading interface quality",
+    "Vision: Unable to verify if charts, positions, and market data load properly",
+    "Vision: Cannot test user flows like connecting wallet or placing trades"
   ],
   "functional_issues": [],
-  "score": 60,
+  "score": 68,
   "vision_review": {
     "professional_score": 7,
     "trust_score": 6,
     "issues": [
-      "Cannot verify actual application functionality from HTML shell",
-      "CSP policy may block legitimate functionality in development",
-      "No visible error handling or fallback content in noscript tag",
-      "Claims 'audited' in keywords without visible audit references",
-      "Production domain referenced (lever.finance) while running on localhost"
+      "Cannot evaluate actual application functionality from HTML shell",
+      "No way to assess real-time data accuracy or trading interface quality",
+      "Unable to verify if charts, positions, and market data load properly",
+      "Cannot test user flows like connecting wallet or placing trades"
     ],
     "improvements": [
-      "Add meaningful noscript fallback content explaining JavaScript requirement",
-      "Include audit badge or security certification links in metadata",
-      "Implement proper development/production environment detection",
-      "Add performance monitoring meta tags",
-      "Include more specific business contact information in metadata",
-      "Consider adding structured data markup for better SEO"
+      "Need functional testing of actual React application beyond HTML shell",
+      "Verify real-time price feeds and market data are displaying correctly",
+      "Test complete user journey from wallet connection to trade execution",
+      "Ensure professional trading interface matches institutional branding promise"
     ]
   }
 }

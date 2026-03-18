@@ -1,0 +1,26 @@
+{
+  "tasks": [
+    {
+      "id": "professional_ui_polish",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "FRONTEND lane - fixes React components, HTML shell issues, branding, and loading states. No dependencies as it's foundational UI work that other tasks build upon."
+    },
+    {
+      "id": "enhanced_market_analytics",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "professional_ui_polish"
+      ],
+      "reason": "FRONTEND lane - improves React data visualization and testing. Depends on professional_ui_polish because it builds on the polished UI foundation and both work with real-time data display components that could conflict."
+    },
+    {
+      "id": "advanced_lp_features",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "professional_ui_polish"
+      ],
+      "reason": "FRONTEND lane - adds LP dashboard React components and vault interface improvements. Depends on professional_ui_polish because both involve loading states and professional UI components that could conflict if done simultaneously."
+    }
+  ]
+}
