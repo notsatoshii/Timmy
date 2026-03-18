@@ -83,6 +83,18 @@ const ProtocolStats: React.FC = () => {
   // Calculate derived stats with comprehensive error handling and fallbacks
   useEffect(() => {
     try {
+      // Debug logging for contract values
+      console.log('ProtocolStats Debug Values:');
+      console.log('- tvlRaw:', tvlRaw?.toString());
+      console.log('- tvlError:', tvlError);
+      console.log('- totalOIRaw:', totalOIRaw?.toString());
+      console.log('- oiError:', oiError);
+      console.log('- insuranceRaw:', insuranceRaw?.toString());
+      console.log('- insuranceError:', insuranceError);
+      console.log('- volume24h:', volume24h?.toString());
+      console.log('- currentBorrowRate:', currentBorrowRate?.toString());
+      console.log('- borrowRateError:', borrowRateError);
+
       // Use actual data if available, otherwise use demo fallback values
       const safeTvl = tvlRaw && !tvlError ? tvlRaw : DEMO_FALLBACK_VALUES.tvl;
       const safeTotalOI = totalOIRaw !== undefined && !oiError ? totalOIRaw : DEMO_FALLBACK_VALUES.totalOI;
@@ -127,14 +139,22 @@ const ProtocolStats: React.FC = () => {
       // Calculate utilization rate: Total_OI / TVL * 100
       const utilizationBpsTimes100 = totalOIInWad * BigInt(10000) / tvlInWad;
 
-      setStats({
+      const calculatedStats = {
         tvl: `$${formatUsdt(safeTvl)}`,
         dailyVolume: `$${formatUsdt(safeVolume)}`,
         totalOI: `$${formatUsdt(safeTotalOI)}`,
         lpApy: `${(Number(apyBpsTimes100) / 100).toFixed(2)}%`,
         utilizationRate: `${(Number(utilizationBpsTimes100) / 100).toFixed(2)}%`,
         insuranceFund: `$${formatWad(safeInsurance)}`, // InsuranceFund.getBalance() returns WAD values
-      });
+      };
+
+      console.log('ProtocolStats Final Calculated Values:');
+      console.log('- Final TVL:', calculatedStats.tvl);
+      console.log('- Final Total OI:', calculatedStats.totalOI);
+      console.log('- Final Insurance Fund:', calculatedStats.insuranceFund);
+      console.log('- Final LP APY:', calculatedStats.lpApy);
+
+      setStats(calculatedStats);
     } catch (error) {
       console.error('Error calculating protocol stats:', error);
 

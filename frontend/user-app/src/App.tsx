@@ -1,20 +1,11 @@
 import React from 'react';
-import { WagmiProvider, createConfig, http } from 'wagmi';
-import { baseSepolia } from 'wagmi/chains';
-import { injected } from 'wagmi/connectors';
+import { WagmiProvider } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import DashboardOptimized from './components/DashboardOptimized';
 import ErrorBoundary from './components/ErrorBoundary';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { DemoProvider } from './contexts/DemoContext';
-
-const config = createConfig({
-  chains: [baseSepolia],
-  connectors: [injected()],
-  transports: {
-    [baseSepolia.id]: http(),
-  },
-});
+import { config } from './config/wagmi';
 
 const queryClient = new QueryClient({
   defaultOptions: {
