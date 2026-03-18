@@ -1,40 +1,26 @@
 {
   "tasks": [
     {
-      "id": "1",
+      "id": "professional-ui-polish",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "FRONTEND lane: Changes React components, styling, typography, branding throughout the interface. Independent foundational UI work that other frontend tasks will build upon."
+      "reason": "React components, CSS styling, branding assets, and design system changes. No dependencies as this establishes the foundational design system."
     },
     {
-      "id": "2",
+      "id": "enhanced-market-analytics",
       "lane": "FRONTEND",
       "depends_on": [
-        "1"
+        "professional-ui-polish"
       ],
-      "reason": "FRONTEND lane: Modifies Markets page React components, charts, trading interface. Depends on Task 1 for design consistency since UI polish affects the same interface areas."
+      "reason": "React components for Markets page, charts, and trading interface. Depends on UI polish to ensure consistent design system and visual hierarchy are established first."
     },
     {
-      "id": "3",
+      "id": "advanced-lp-features",
       "lane": "FRONTEND",
       "depends_on": [
-        "1"
+        "enhanced-market-analytics"
       ],
-      "reason": "FRONTEND lane: Enhances Vault section React components and LP interface. Depends on Task 1 for design consistency and professional branding applied throughout the interface."
-    },
-    {
-      "id": "4",
-      "lane": "INFRA",
-      "depends_on": [],
-      "reason": "INFRA lane: Runs Python scripts (mockkeeper.py), health check scripts, and verification scripts. Independent backend system verification work that doesn't modify React components."
-    },
-    {
-      "id": "5",
-      "lane": "FRONTEND",
-      "depends_on": [
-        "1"
-      ],
-      "reason": "FRONTEND lane: CSS/responsive design changes across React components. Depends on Task 1 because you need the polished design established before making it responsive across screen sizes."
+      "reason": "React components for Vault/LP section, charts, and dashboard features. Sequential after market analytics to avoid conflicts in shared components and styling systems."
     }
   ]
 }
