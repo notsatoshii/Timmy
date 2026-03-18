@@ -188,9 +188,14 @@ const ProtocolStats: React.FC = () => {
     <div className="lever-inset text-center">
       <div className="text-[10px] uppercase tracking-widest font-medium text-steel mb-2 flex items-center justify-center space-x-1">
         <span>{label}</span>
-        {isFallback && (
+        {isFallback ? (
           <span className="bg-warning/20 text-warning px-1.5 py-0.5 rounded text-[9px] border border-warning/40 font-semibold">
-            TESTNET
+            DEMO DATA
+          </span>
+        ) : (
+          <span className="bg-long/20 text-long px-1.5 py-0.5 rounded text-[9px] border border-long/40 font-semibold flex items-center space-x-1">
+            <span className="w-1 h-1 bg-long rounded-full animate-pulse"></span>
+            <span>LIVE</span>
           </span>
         )}
       </div>
@@ -222,12 +227,44 @@ const ProtocolStats: React.FC = () => {
             <StatBox label="Insurance Fund" value={stats?.insuranceFund} isLoading={isLoading} isFallback={fallbackStatus.insuranceFallback} />
           </div>
 
-          {/* Professional Status Row */}
+          {/* Professional Status Row with Live/Demo Data Indicators */}
           <div className="flex justify-center items-center space-x-6 mt-6 pt-6 border-t border-border/30">
-            <LiveDataIndicator label="PRICES" value="LIVE" status="live" compact={true} />
-            <LiveDataIndicator label="ORACLE" value="ACTIVE" status="live" compact={true} />
-            <LiveDataIndicator label="NETWORK" value="BASE" status="live" compact={true} />
-            <LiveDataIndicator label="AUDIT" value="PENDING" status="stale" compact={true} />
+            <LiveDataIndicator
+              label="TVL"
+              value={fallbackStatus.tvlFallback ? "DEMO" : "LIVE"}
+              status={fallbackStatus.tvlFallback ? "stale" : "live"}
+              compact={true}
+            />
+            <LiveDataIndicator
+              label="PRICES"
+              value="LIVE FEED"
+              status="live"
+              compact={true}
+            />
+            <LiveDataIndicator
+              label="ORACLE"
+              value="POLYMARKET"
+              status="live"
+              compact={true}
+            />
+            <LiveDataIndicator
+              label="VOLUME"
+              value={fallbackStatus.volumeFallback ? "DEMO" : "LIVE"}
+              status={fallbackStatus.volumeFallback ? "stale" : "live"}
+              compact={true}
+            />
+            <LiveDataIndicator
+              label="NETWORK"
+              value="BASE SEPOLIA"
+              status="live"
+              compact={true}
+            />
+            <LiveDataIndicator
+              label="AUDIT"
+              value="60% COMPLETE"
+              status="loading"
+              compact={true}
+            />
           </div>
         </div>
 

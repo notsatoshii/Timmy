@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import LiveDataIndicator from './LiveDataIndicator';
+import AuditProgressTimeline from './AuditProgressTimeline';
 
 interface ProfessionalStatusBarProps {
   className?: string;
@@ -124,18 +125,8 @@ const ProfessionalStatusBar: React.FC<ProfessionalStatusBarProps> = ({
               </div>
             </div>
 
-            {/* Audit Status */}
-            <div className="lever-badge-audit">
-              <div className="flex items-center space-x-1.5">
-                <div className="w-1.5 h-1.5 bg-warning rounded-full" />
-                <span className="text-xs font-mono font-semibold text-warning">
-                  AUDIT
-                </span>
-                <span className="text-xs text-steel/70 font-mono">
-                  PENDING
-                </span>
-              </div>
-            </div>
+            {/* Audit Progress */}
+            <AuditProgressTimeline compact={true} />
 
             {/* Compliance Badge */}
             <div className="lever-badge-compliance">
