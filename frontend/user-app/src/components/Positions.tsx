@@ -9,6 +9,7 @@ import {
   ACCOUNT_MANAGER_ABI,
 } from '../config/abis';
 import { useLivePrices } from '../hooks/useLivePrices';
+import { useMarketProbabilities } from '../hooks/useMarketProbabilities';
 import { useNotifications } from '../contexts/NotificationContext';
 // // import TradeHistory from './TradeHistory';
 // // import PnLChart from './PnLChart'; // Removed — showing $0 // Removed — showing $0
@@ -92,6 +93,7 @@ const Positions: React.FC = () => {
   const isLoadingAccountData = address && (loadingAccountBalance || loadingFreeCollateral);
   const isLoadingPositions = address && loadingPositionIds;
 
+  const { markets: oracleMarkets } = useMarketProbabilities();
   useEffect(() => {
     if (txPending && closeState === 'confirming') {
       setCloseState('pending');
@@ -194,10 +196,11 @@ const Positions: React.FC = () => {
         console.log(`[Positions] Loaded real position ${id.toString()} from contract`);
 
         // Calculate PnL with proper decimal scaling
-        // Update currentPI from live oracle
+        // Update currentPI from on-chain oracle (same source as Markets tab)
         const mktId = (position.marketId as string).toLowerCase();
-        if (livePrices && livePrices[mktId] && livePrices[mktId].pi > 0) {
-          position.currentPI = BigInt(Math.round(livePrices[mktId]?.pi * Number(WAD)));
+        const oracleMatch = oracleMarkets?.find((m: any) => m.id.toLowerCase() === mktId);
+        if (oracleMatch && oracleMatch.probability > 0 && oracleMatch.probability <= 1) {
+          position.currentPI = BigInt(Math.round(oracleMatch.probability * Number(WAD)));
         }
         const priceDiff = Number(position.currentPI - position.entryPI);
         const direction = position.isLong ? 1 : -1;
@@ -244,7 +247,7 @@ const Positions: React.FC = () => {
       }))
     );
     setPositions(posData);
-  }, [positionIds, address]);
+  }, [positionIds, address, oracleMarkets]);
 
   useEffect(() => {
     fetchPositionDetails();

@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-18T04:21:16.016876+00:00",
+  "timestamp": "2026-03-18T04:35:22.147792+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -28,11 +28,11 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Vault shows $0 Total Value Locked and $NaN share price, indicating data loading issues",
-    "Vision: Very low utilization (0.25%) and APY (0.21%) metrics may concern investors about protocol adoption",
-    "Vision: Read-only mode limits demonstrability of actual trading functionality",
-    "Vision: Some UI polish needed - spacing, loading states, and error handling could be improved",
-    "Vision: Limited help documentation or onboarding guidance for new users"
+    "Vision: MarketDetail tab functionality incomplete (critical demo blocker)",
+    "Vision: 24h volume displays collateral instead of notional (misleading metrics)",
+    "Vision: Unable to verify complete UI rendering due to browser automation failure",
+    "Vision: Missing Chrome dependencies prevents full visual verification",
+    "Vision: Investor-critical market data visibility uncertain without screenshots"
   ],
   "functional_issues": [],
   "score": 60,
@@ -40,20 +40,18 @@
     "professional_score": 7,
     "trust_score": 6,
     "issues": [
-      "Vault shows $0 Total Value Locked and $NaN share price, indicating data loading issues",
-      "Very low utilization (0.25%) and APY (0.21%) metrics may concern investors about protocol adoption",
-      "Read-only mode limits demonstrability of actual trading functionality",
-      "Some UI polish needed - spacing, loading states, and error handling could be improved",
-      "Limited help documentation or onboarding guidance for new users"
+      "MarketDetail tab functionality incomplete (critical demo blocker)",
+      "24h volume displays collateral instead of notional (misleading metrics)",
+      "Unable to verify complete UI rendering due to browser automation failure",
+      "Missing Chrome dependencies prevents full visual verification",
+      "Investor-critical market data visibility uncertain without screenshots"
     ],
     "improvements": [
-      "Fix vault data loading to show proper TVL and share price calculations",
-      "Implement better loading states and error handling for all data fetches",
-      "Add demo mode with simulated successful trades to showcase functionality",
-      "Improve mobile responsiveness and cross-device compatibility",
-      "Add comprehensive help documentation and user guides",
-      "Enhance visual feedback for user actions and system status",
-      "Consider adding more detailed analytics and charts for market data"
+      "Implement MarketDetail tab with market-specific data display",
+      "Fix volume calculation to show notional (collateral \u00d7 leverage) not raw collateral",
+      "Install libatk-1.0.so.0 and browser dependencies for complete testing",
+      "Add visual verification screenshots for investor presentation materials",
+      "Ensure all trading interface tabs render with meaningful demo data"
     ]
   }
 }
