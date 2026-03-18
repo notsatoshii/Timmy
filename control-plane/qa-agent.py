@@ -181,7 +181,7 @@ VISION_PROMPT = """You are a senior investor reviewing LEVER Protocol's live dem
 
 EXPECTED: TVL ~$60M, 10 markets, positions at 1x-30x leverage, APY 0.1-50%, share price ~$1, OI $100K-$10M range, professional dark trading UI.
 
-This is the {tab_name} tab. Page text: {text_snippet}
+This screenshot shows the actual React application rendered in a browser (not HTML shell). Tab: {tab_name}. Page text: {text_snippet}
 
 Evaluate:
 1. Do numbers match expected ranges?
@@ -189,6 +189,8 @@ Evaluate:
 3. Charts rendering with real data?
 4. Professional quality (Hyperliquid-tier) or hackathon-tier?
 5. Deal-breakers that would make you pass on investing?
+
+IMPORTANT: This is actual browser-rendered content from the React SPA, not curl HTML shell.
 
 JSON only: {{"pass":true/false,"score":1-10,"issues":["specific"],"investor_impression":"one sentence","deal_breakers":["if any"]}}"""
 
@@ -217,9 +219,17 @@ def report_issues(issues):
 def run_cycle(n):
     log(f"═══ QA Cycle #{n} — 3 Layers ═══════════")
     env = source_env()
-    out, _ = run("curl -s -o /dev/null -w '%{http_code}' http://localhost:3000")
-    if out != '200':
-        log(f"❌ Frontend HTTP {out}"); notify(f"Frontend down HTTP {out}"); return
+    # Test React SPA with proper browser testing (replaces curl)
+    react_out, react_code = run("node scripts/react-spa-verification.js --quick", timeout=30)
+    if react_code != 0:
+        # Fallback to curl for basic connectivity
+        fallback_out, _ = run("curl -s -o /dev/null -w '%{http_code}' http://localhost:3000")
+        if fallback_out != '200':
+            log(f"❌ Frontend React SPA failed AND HTTP {fallback_out}"); notify(f"Frontend down - both React and HTTP failed"); return
+        else:
+            log(f"⚠️  React SPA verification failed but HTTP works - continuing with degraded testing"); notify(f"React SPA testing failed, using fallback")
+    else:
+        log("✅ React SPA verified with browser testing")
 
     log("⛓  On-chain truth...")
     truth = get_on_chain_truth(env)

@@ -91,9 +91,20 @@ else
     PASS=$((PASS+1))
 fi
 
-# Frontend
-HTTP=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000 2>/dev/null)
-check "frontend" "$HTTP" "200"
+# Frontend (React SPA Testing)
+FRONTEND_RESULT=$(node /home/lever/lever-protocol/scripts/react-spa-verification.js --quick 2>/dev/null)
+FRONTEND_EXIT_CODE=$?
+if [ $FRONTEND_EXIT_CODE -eq 0 ]; then
+    check "frontend_react_spa" "PASS - React SPA verified via browser testing" ""
+else
+    # Fallback to basic HTTP check if browser testing fails
+    HTTP=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000 2>/dev/null)
+    if [ "$HTTP" = "200" ]; then
+        check "frontend_basic_http" "PASS - HTTP 200 (browser testing failed, using fallback)" ""
+    else
+        check "frontend" "FAIL - HTTP $HTTP and browser testing failed" ""
+    fi
+fi
 
 # Deployment JSONs accessible
 HTTP2=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/deployments/core-deployment.json 2>/dev/null)
