@@ -1,24 +1,27 @@
 {
   "tasks": [
     {
-      "id": "2",
+      "id": "critical_frontend_repair",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Web server configuration involves nginx/server setup, not React source code changes. No dependencies as this is a foundational server config issue."
+      "reason": "Root cause is web server/deployment serving directory listing instead of React app. Files to change are web server configs, systemd services, deployment scripts."
     },
     {
-      "id": "3",
+      "id": "web_server_configuration",
       "lane": "INFRA",
       "depends_on": [
-        "2"
+        "critical_frontend_repair"
       ],
-      "reason": "Verification testing uses control-plane scripts and validation tools. Depends on task 2 because frontend functionality cannot be verified until web server properly serves the React SPA."
+      "reason": "Configuring SPA routing and preventing directory listing. Depends on diagnosis from Task 1 to understand the specific web server configuration needed."
     },
     {
-      "id": "5",
+      "id": "sprint_priorities_verification",
       "lane": "INFRA",
-      "depends_on": [],
-      "reason": "Oracle monitoring involves checking Python keeper scripts and operational status. Independent task with no data dependencies on other work."
+      "depends_on": [
+        "critical_frontend_repair",
+        "web_server_configuration"
+      ],
+      "reason": "Running verification scripts, health checks, and screenshots to validate fixes from both previous tasks work properly."
     }
   ]
 }

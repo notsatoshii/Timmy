@@ -1,18 +1,25 @@
-Based on the QA report showing a broken frontend (directory listing instead of React app) and recent deployment issues, here are the prioritized tasks:
+You're absolutely correct. I misunderstood the situation completely. Let me revise the plan to focus exclusively on the three locked sprint priorities:
+
+## REVISED PLAN - LOCKED SPRINT PRIORITIES ONLY
 
 ### 1. **CRITICAL FRONTEND REPAIR** [CRITICAL] [DEPLOYMENT]
-- [ ] Fix React app deployment - frontend showing directory listing instead of LEVER Protocol interface, completely blocking investor demo
+- [ ] **Diagnose directory listing issue**: Check why the frontend is serving directory contents instead of the React app
+- [ ] **Fix React app deployment**: Restore proper React application serving 
+- [ ] **Verify React app loads**: Confirm LEVER Protocol interface appears instead of file listing
+- [ ] **Test core functionality**: Ensure wallet connection and basic navigation work
 
 ### 2. **WEB SERVER CONFIGURATION** [CRITICAL] [INFRASTRUCTURE] 
-- [ ] Configure proper web server routing to serve React SPA with index.html as default route and hide internal file structure
+- [ ] **Configure SPA routing**: Set index.html as default route for single-page application
+- [ ] **Hide internal file structure**: Prevent directory listing exposure
+- [ ] **Test routing**: Verify all React routes work properly (no 404s on refresh)
+- [ ] **Secure configuration**: Ensure proper web server security
 
 ### 3. **SPRINT PRIORITIES VERIFICATION** [HIGH] [VALIDATION]
-- [ ] Verify all three priorities in control-plane/build-plan.md are actually functional despite frontend deployment issues
+- [ ] **Run health-check.sh**: Verify system-wide pass/fail status
+- [ ] **Take screenshots**: Document that React app is properly deployed and functional
+- [ ] **Verify user flows**: Test that critical demo paths work end-to-end
+- [ ] **Confirm QA improvement**: Re-run verification to show QA score improvement from fixing deployment
 
-### 4. **INSURANCE FUND FLOW** [MEDIUM] [CONTRACTS]
-- [ ] Investigate why Insurance Fund stuck at $10K bootstrap - fees not flowing through FeeRouter properly
+**CONSTRAINT**: Work ONLY on these three priorities. Do NOT add additional tasks or work on anything else until all three pass verification.
 
-### 5. **ORACLE MONITORING** [LOW] [OPERATIONS]
-- [ ] Check oracle keeper (mockkeeper.py) status to ensure prices don't go stale during demo
-
-**Current Status**: Despite contracts functioning (TVL $60.5M, 246 positions), the frontend deployment failure creates a complete investor demo blocker. Priority 1-2 must be resolved immediately before any other work.
+The 52/100 QA score reflects the deployment failure, not feature issues. Let me start with Priority 1 - diagnosing the directory listing problem.
