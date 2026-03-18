@@ -1,34 +1,36 @@
 {
   "tasks": [
     {
-      "id": "browser-deps",
+      "id": "fix_browser_dependencies",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Installing system packages and fixing screenshot testing infrastructure - pure infra work with no dependencies on other tasks"
+      "reason": "System package installation for browser testing infrastructure - pure INFRA work with no dependencies"
     },
     {
-      "id": "marketdetail-tab",
+      "id": "verify_marketdetail_tab",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Testing and fixing React component functionality - frontend work that can be tested independently without visual verification"
+      "reason": "React component functionality testing - FRONTEND lane, no data dependencies on other tasks"
     },
     {
-      "id": "volume-calc",
+      "id": "fix_volume_calculation",
       "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "Updating display calculation logic in React components - pure frontend math fix with no dependencies"
+      "depends_on": [
+        "verify_marketdetail_tab"
+      ],
+      "reason": "Frontend analytics calculation logic - FRONTEND lane, depends on tab verification since both touch frontend code and volume may display in MarketDetail"
     },
     {
-      "id": "oracle-keeper",
+      "id": "oracle_price_stability",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Managing Python service and systemd daemon - infra work independent of other tasks"
+      "reason": "Python service monitoring and stability - INFRA lane, no dependencies on other tasks"
     },
     {
-      "id": "insurance-fund",
+      "id": "insurance_fund_investigation",
       "lane": "CONTRACT",
       "depends_on": [],
-      "reason": "Investigating fee routing behavior in Solidity contracts (FeeRouter, InsuranceFund) - contract logic issue"
+      "reason": "Contract fee routing mechanism diagnosis - CONTRACT lane, no dependencies on other tasks"
     }
   ]
 }

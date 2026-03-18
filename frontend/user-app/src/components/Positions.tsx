@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { usePublicClient } from 'wagmi';
 import { useWallet } from '../hooks/useWallet';
+import { useDemoWallet } from '../hooks/useDemoWallet';
 import { CONTRACT_ADDRESSES, formatWad, formatUsdt, WAD } from '../config/contracts';
 import {
   POSITION_MANAGER_ABI,
@@ -55,6 +56,7 @@ type CloseState = 'idle' | 'confirming' | 'pending' | 'success' | 'error';
 
 const Positions: React.FC = () => {
   const { address } = useWallet();
+  const { isDemoMode: isDemoWallet, sendTransaction: demoSend } = useDemoWallet();
   const publicClient = usePublicClient();
   const { showTradeConfirmation, showErrorToast, showLiquidationWarning } = useNotifications();
   const [positions, setPositions] = useState<PositionData[]>([]);
@@ -614,14 +616,40 @@ const Positions: React.FC = () => {
     resetWrite();
   };
 
-  const handleConfirmClose = (position: PositionData) => {
+  const handleConfirmClose = async (position: PositionData) => {
     setClosedPositionPnl(position.pnl);
-    writeContract({
-      address: CONTRACT_ADDRESSES.executionEngine,
-      abi: EXECUTION_ENGINE_ABI,
-      functionName: 'closePosition',
-      args: [position.id],
-    });
+
+    if (isDemoWallet) {
+      try {
+        setCloseState('pending');
+        const result = await demoSend({
+          address: CONTRACT_ADDRESSES.executionEngine,
+          abi: EXECUTION_ENGINE_ABI,
+          functionName: 'closePosition',
+          args: [position.id],
+        });
+        console.log('[Positions] Demo close tx:', result.hash);
+        setCloseState('success');
+        setTimeout(() => {
+          refetchPositionIds();
+          refetchBalance();
+          refetchFreeCollateral();
+          setSelectedPositionId(null);
+          setCloseState('idle');
+        }, 2000);
+      } catch (error: any) {
+        console.error('[Positions] Demo close error:', error);
+        setCloseError(error?.message || 'Close failed');
+        setCloseState('error');
+      }
+    } else {
+      writeContract({
+        address: CONTRACT_ADDRESSES.executionEngine,
+        abi: EXECUTION_ENGINE_ABI,
+        functionName: 'closePosition',
+        args: [position.id],
+      });
+    }
   };
 
   const handleCancelClose = () => {
