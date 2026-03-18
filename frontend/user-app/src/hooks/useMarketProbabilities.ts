@@ -8,61 +8,61 @@ const DEMO_MARKETS_FALLBACK = {
   "0x2841ef32b61fb3472aadbfc70d787a1bfaf5d0218c9601b87963af7bcca1bcf1": {
     name: "Largest IPO by Market Cap 2026: SpaceX?",
     category: "Technology",
-    initial_probability: 0.88,
+    initial_probability: 0.60163,
     expiry: "2026-12-30T00:00:00Z"
   },
   "0x9fe694e72b00a6aab573e11a17e2240b64d7aca455305b65289b77cc2f2d077a": {
     name: "US-Iran Ceasefire by April 30, 2026?",
     category: "Geopolitics",
-    initial_probability: 0.35,
+    initial_probability: 0.2882,
     expiry: "2026-04-30T00:00:00Z"
   },
   "0x62fcede467dc87c6e1001987c73f5b90ddae5df334e990414a89b6e48cf1826d": {
     name: "Nothing Ever Happens: 2026",
     category: "Speculative",
-    initial_probability: 0.42,
+    initial_probability: 0.3582,
     expiry: "2026-12-30T00:00:00Z"
   },
   "0xe824af6184169f8f70511158f848d86056ebcc5b283928333c722159bafd82e2": {
     name: "2026 FIFA World Cup Winner: Spain?",
     category: "Sports",
-    initial_probability: 0.22,
+    initial_probability: 0.3758,
     expiry: "2026-07-19T00:00:00Z"
   },
   "0x14c648a4f4d0bc145e52ef68c38e29448c3f53a7856efe028b8b9282bb53ece7": {
     name: "Fed Rate End of 2026: Below 4%?",
     category: "Economy",
-    initial_probability: 0.55,
+    initial_probability: 0.4371,
     expiry: "2026-12-08T00:00:00Z"
   },
   "0xc75c5438583a86308c965cee1a062f63b322bf00c9d47ccfc1c85b0b220111f2": {
     name: "SpaceX IPO via Ackman SPAR?",
     category: "Technology",
-    initial_probability: 0.30,
+    initial_probability: 0.3458,
     expiry: "2026-12-31T00:00:00Z"
   },
   "0x9f22dfb07feaf97cf92a3dc91483a9ecb508f5815f331b4611a8d582e2dd4554": {
     name: "AAPL Above $250 in April 2026?",
     category: "Stocks",
-    initial_probability: 0.60,
+    initial_probability: 0.6202,
     expiry: "2026-04-30T00:00:00Z"
   },
   "0x6dd2ecd673a166f34be2f101b96a048035bcfbcd0f98014491ca94449c159dbc": {
     name: "OpenSea Token Launch by 2026?",
     category: "Crypto",
-    initial_probability: 0.45,
+    initial_probability: 0.4396,
     expiry: "2026-12-31T00:00:00Z"
   },
   "0xf715c6d9592ef93a01ff357bb5a3514c22ceeaa60e06223c0dcf75afad145e9f": {
     name: "Fed April 2026: Rate Cut?",
     category: "Economy",
-    initial_probability: 0.40,
+    initial_probability: 0.389,
     expiry: "2026-04-28T00:00:00Z"
   },
   "0xe73fd3dd7e069a651cfc9d63dae43702c320a661ab5c9dada3678994d18dffea": {
     name: "Argentina USD Rate Above 1500 ARS End of 2026?",
     category: "Forex",
-    initial_probability: 0.65,
+    initial_probability: 0.601,
     expiry: "2026-12-31T00:00:00Z"
   }
 };
