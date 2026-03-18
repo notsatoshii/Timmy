@@ -1,0 +1,8 @@
+{
+    "timestamp": 1773873284,
+    "process_status": "running",
+    "price_age_seconds": 36,
+    "rpc_endpoint": "https://sepolia.base.org",
+    "last_check": "2026-03-18 22:34:44",
+    "watchdog_status": "active"
+}
