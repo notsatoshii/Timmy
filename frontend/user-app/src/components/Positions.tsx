@@ -222,7 +222,7 @@ const Positions: React.FC = () => {
         });
 
         // Calculate equity: collateral + PnL - borrow fees + funding
-        position.equity = position.collateral + position.pnl - position.borrowFees + position.fundingAccrued;
+        // equity calculated in displayPositions useMemo
 
         console.log(`[Positions] Position ${id} equity calculation:`, {
           collateral: position.collateral.toString(),

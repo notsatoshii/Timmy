@@ -157,48 +157,23 @@ const DashboardOptimized: React.FC = () => {
         <ProtocolStats />
       </ErrorBoundary>
 
-      {/* Navigation Tabs */}
-      <div className="bg-surface-1 border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Desktop navigation */}
-          <div className="hidden md:flex space-x-8">
+      {/* Navigation Tabs — Neumorphic pill switcher */}
+      <div className="border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="lever-inset p-1 flex">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                className={`flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all duration-200 ${
                   activeTab === tab.id
-                    ? 'border-accent text-accent'
-                    : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-border-light'
+                    ? 'bg-surface-2 text-accent shadow-raised font-semibold'
+                    : 'text-steel hover:text-ivory'
                 }`}
               >
-                <div className="flex flex-col items-center">
-                  <span>{tab.label}</span>
-                  <span className="text-xs opacity-60">{tab.description}</span>
-                </div>
+                {tab.label}
               </button>
             ))}
-          </div>
-
-          {/* Mobile navigation */}
-          <div className="md:hidden">
-            <div className="grid grid-cols-4">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => handleTabChange(tab.id)}
-                  className={`py-3 px-1 border-b-2 font-medium text-xs transition-colors duration-200 ${
-                    activeTab === tab.id
-                      ? 'border-accent text-accent'
-                      : 'border-transparent text-gray-500'
-                  }`}
-                >
-                  <div className="flex flex-col items-center space-y-1">
-                    <span className="text-center leading-tight">{tab.label}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
           </div>
         </div>
       </div>
