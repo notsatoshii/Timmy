@@ -4,40 +4,37 @@
       "id": "1",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Testing React app functionality, UI components, and navigation - core frontend verification that must work before other frontend tasks"
+      "reason": "FRONTEND lane: Changes React components, styling, typography, branding throughout the interface. Independent foundational UI work that other frontend tasks will build upon."
     },
     {
       "id": "2",
-      "lane": "INFRA",
+      "lane": "FRONTEND",
       "depends_on": [
-        "1",
-        "4"
+        "1"
       ],
-      "reason": "End-to-end user journey testing and screenshot automation - INFRA testing scripts that need both React app working (1) and system health verified (4)"
+      "reason": "FRONTEND lane: Modifies Markets page React components, charts, trading interface. Depends on Task 1 for design consistency since UI polish affects the same interface areas."
     },
     {
       "id": "3",
       "lane": "FRONTEND",
       "depends_on": [
-        "1",
-        "4"
+        "1"
       ],
-      "reason": "Fixing data display issues in React components - FRONTEND task needing React app functional (1) and Oracle/system running properly (4) for data source"
+      "reason": "FRONTEND lane: Enhances Vault section React components and LP interface. Depends on Task 1 for design consistency and professional branding applied throughout the interface."
     },
     {
       "id": "4",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Running health-check.sh, Oracle keeper verification, and system scripts - pure INFRA task independent of frontend changes"
+      "reason": "INFRA lane: Runs Python scripts (mockkeeper.py), health check scripts, and verification scripts. Independent backend system verification work that doesn't modify React components."
     },
     {
       "id": "5",
       "lane": "FRONTEND",
       "depends_on": [
-        "2",
-        "3"
+        "1"
       ],
-      "reason": "Mobile/browser testing may require CSS/Vite config changes - FRONTEND task needing user journey working (2) and display issues fixed (3) before final polish"
+      "reason": "FRONTEND lane: CSS/responsive design changes across React components. Depends on Task 1 because you need the polished design established before making it responsive across screen sizes."
     }
   ]
 }

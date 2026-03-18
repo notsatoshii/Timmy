@@ -1,6 +1,7 @@
 import React from 'react';
 import { useWallet } from '../hooks/useWallet';
 import ConnectWallet from './ConnectWallet';
+import ConnectionStatus, { NetworkIndicator } from './ConnectionStatus';
 
 const Header: React.FC = () => {
   const { isConnected } = useWallet();
@@ -25,34 +26,70 @@ const Header: React.FC = () => {
         </div>
       </div>
 
-      <header className="border-b border-border">
+      <header className="border-b border-border bg-surface-1/30 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            {/* Logo */}
-            <div className="flex items-center space-x-3">
-              <div className="flex-shrink-0">
-                <img
-                  src="/lever-logo.png"
-                  alt="LEVER"
-                  className="h-8"
-                  style={{ filter: 'drop-shadow(0 0 12px rgba(230,255,43,0.2))' }}
-                />
+            {/* Enhanced Logo Section */}
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
+                <div className="flex-shrink-0 relative">
+                  <img
+                    src="/lever-logo.svg"
+                    alt="LEVER Protocol"
+                    className="h-10"
+                    style={{ filter: 'drop-shadow(0 0 16px rgba(230,255,43,0.25))' }}
+                  />
+                  <div className="absolute -inset-1 bg-gradient-to-r from-accent/20 to-teal/10 rounded-lg blur opacity-30" />
+                </div>
+                <div className="hidden sm:block">
+                  <div className="flex items-center space-x-2">
+                    <h1 className="text-ivory font-display font-bold text-lg tracking-tight">
+                      LEVER
+                    </h1>
+                    <span className="text-steel text-sm font-medium">Protocol</span>
+                  </div>
+                  <p className="text-xs font-medium text-steel">
+                    Synthetic Leveraged Perpetuals
+                  </p>
+                </div>
               </div>
-              <div className="hidden sm:block">
-                <p className="text-xs font-medium text-steel">Synthetic Leveraged Perpetuals</p>
-                <p className="text-[10px] text-steel/50 uppercase tracking-wider">Base Sepolia</p>
+
+              {/* Network & Connection Status */}
+              <div className="hidden md:flex items-center space-x-4 pl-4 border-l border-border/50">
+                <ConnectionStatus className="text-xs" />
+                <div className="h-4 w-px bg-border" />
+                <NetworkIndicator />
               </div>
             </div>
 
-            {/* Right side */}
-            <div className="flex items-center space-x-3">
-              <div className="hidden lg:block text-right">
-                <p className="text-xs font-medium text-ivory">Prediction Market Leverage</p>
-                <p className="text-[10px] text-steel">
-                  Binary outcomes · Up to <span className="text-accent font-semibold">12x</span> leverage
+            {/* Right side - Enhanced with status indicators */}
+            <div className="flex items-center space-x-4">
+              {/* Product highlights */}
+              <div className="hidden xl:block text-right">
+                <p className="text-sm font-semibold text-ivory">
+                  Prediction Market Leverage
                 </p>
+                <div className="flex items-center space-x-2 justify-end">
+                  <p className="text-xs text-steel">
+                    Binary outcomes · Up to <span className="text-accent font-bold">12x</span> leverage
+                  </p>
+                  <div className="w-1 h-1 bg-accent rounded-full opacity-75" />
+                  <span className="text-xs text-steel font-mono">v1.0.0-beta</span>
+                </div>
               </div>
-              <ConnectWallet />
+
+              {/* Wallet Connection */}
+              <div className="flex items-center space-x-3">
+                <ConnectWallet />
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile status indicators */}
+          <div className="md:hidden border-t border-border/30 pt-3 pb-2">
+            <div className="flex items-center justify-between">
+              <ConnectionStatus className="text-xs" showLabel={true} />
+              <NetworkIndicator className="text-xs" />
             </div>
           </div>
         </div>

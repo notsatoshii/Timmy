@@ -11,6 +11,7 @@ import {
 import { useRealAPY } from '../hooks/useRealAPY';
 import Skeleton from './Skeleton';
 import { useVolumeCalculation } from '../hooks/useVolumeCalculation';
+import { LiveDataBadge } from './ConnectionStatus';
 
 interface ProtocolStatsData {
   tvl: string;
@@ -221,36 +222,40 @@ const ProtocolStats: React.FC = () => {
           </div>
         </div>
 
-        {/* Status Indicators */}
-        <div className="mt-3 space-y-2">
-          <div className="flex justify-center items-center space-x-6 text-xs">
+        {/* Professional Status Indicators */}
+        <div className="mt-4 space-y-3">
+          {/* Primary Status Row */}
+          <div className="flex justify-center items-center space-x-8 text-xs">
+            <LiveDataBadge className="text-xs" />
             <div className="flex items-center space-x-1.5">
               <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse"></div>
-              <span className="text-steel">Live Prices</span>
+              <span className="text-ivory font-medium">Live Prices</span>
             </div>
             <div className="flex items-center space-x-1.5">
               <div className="w-1.5 h-1.5 bg-teal rounded-full"></div>
-              <span className="text-steel">Base Sepolia</span>
+              <span className="text-ivory font-medium">Base Sepolia</span>
             </div>
             <div className="flex items-center space-x-1.5">
-              <div className="w-1.5 h-1.5 bg-accent rounded-full"></div>
-              <span className="text-steel">Oracle Active</span>
+              <div className="w-1.5 h-1.5 bg-long rounded-full"></div>
+              <span className="text-ivory font-medium">Oracle Active</span>
             </div>
           </div>
 
-          {/* Audit & Deployment Status */}
-          <div className="flex justify-center items-center space-x-6 text-xs">
+          {/* Institutional Compliance Row */}
+          <div className="flex justify-center items-center space-x-8 text-xs bg-surface-2/30 rounded-lg py-2 px-4">
             <div className="flex items-center space-x-1.5">
-              <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full"></div>
-              <span className="text-steel">Audit: In Progress</span>
+              <div className="w-1.5 h-1.5 bg-warning rounded-full"></div>
+              <span className="text-steel">Security Audit: <span className="text-warning font-medium">In Progress</span></span>
             </div>
+            <div className="h-3 w-px bg-border"></div>
             <div className="flex items-center space-x-1.5">
-              <div className="w-1.5 h-1.5 bg-orange-500 rounded-full"></div>
-              <span className="text-steel">Mainnet: Q2 2026</span>
+              <div className="w-1.5 h-1.5 bg-accent rounded-full"></div>
+              <span className="text-steel">Mainnet: <span className="text-accent font-medium">Q2 2026</span></span>
             </div>
+            <div className="h-3 w-px bg-border"></div>
             <div className="flex items-center space-x-1.5">
-              <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-              <span className="text-steel">Security Review: Pending</span>
+              <div className="w-1.5 h-1.5 bg-purple rounded-full"></div>
+              <span className="text-steel">Compliance: <span className="text-purple font-medium">Review Phase</span></span>
             </div>
           </div>
         </div>

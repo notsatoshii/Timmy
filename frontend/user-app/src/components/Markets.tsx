@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { useMarketProbabilities } from '../hooks/useMarketProbabilities';
 import Skeleton from './Skeleton';
 import TestnetDisclaimer from './TestnetDisclaimer';
+import { LiveDataBadge } from './ConnectionStatus';
 
 interface Market {
   id: string;
@@ -95,10 +96,11 @@ const Markets: React.FC<MarketsProps> = ({ onTradeSelect, onMarketDetail }) => {
           </p>
         </div>
         <div className="flex items-center space-x-3">
+          <LiveDataBadge />
           <div className="flex items-center space-x-1.5">
-            <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${hasOracleData ? 'bg-accent' : 'bg-warning'}`}></div>
+            <div className={`w-1.5 h-1.5 rounded-full ${hasOracleData ? 'bg-accent' : 'bg-warning animate-pulse'}`}></div>
             <span className={`text-xs font-medium ${hasOracleData ? 'text-accent' : 'text-warning'}`}>
-              {hasOracleData ? 'Live Oracle' : 'Demo Fallback'}
+              {hasOracleData ? 'Oracle Active' : 'Fallback Data'}
             </span>
           </div>
           <button

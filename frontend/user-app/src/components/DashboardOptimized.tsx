@@ -11,6 +11,7 @@ import ErrorBoundary from './ErrorBoundary';
 import Skeleton from './Skeleton';
 import LeverLoader from './LeverLoader';
 import TestnetBanner from './TestnetBanner';
+import Footer from './Footer';
 
 // Lazy load heavy components
 const Trading = lazy(() => import('./Trading'));
@@ -213,6 +214,9 @@ const DashboardOptimized: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* Professional Footer */}
+      <Footer />
     </div>
   );
 };

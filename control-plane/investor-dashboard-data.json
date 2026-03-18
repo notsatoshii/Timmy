@@ -1,31 +1,31 @@
 {
-  "timestamp": "2026-03-17T09:07:42.700Z",
+  "timestamp": "2026-03-18T18:59:18.448Z",
   "status": "active",
   "health": "healthy",
   "metrics": {
     "tvl": {
       "name": "Total Value Locked",
-      "value": "$60,508,028",
-      "raw_value": 60508028.315742,
+      "value": "$68,521,959",
+      "raw_value": 68521959.20469,
       "description": "Total assets under management",
       "status": "live",
-      "last_updated": "2026-03-17T09:07:43.596Z"
+      "last_updated": "2026-03-18T18:59:19.241Z"
     },
     "global_oi": {
       "name": "Global Open Interest",
-      "value": "$224,223",
-      "raw_value": 224222.554735,
+      "value": "$14,120,723",
+      "raw_value": 14120722.554735,
       "description": "Total open interest across all markets",
       "status": "live",
-      "last_updated": "2026-03-17T09:07:44.412Z"
+      "last_updated": "2026-03-18T18:59:20.020Z"
     },
     "insurance_fund": {
       "name": "Insurance Fund",
-      "value": "$11,000",
-      "raw_value": 11000,
+      "value": "$5,011,000",
+      "raw_value": 5011000.000004999,
       "description": "Insurance fund balance",
       "status": "live",
-      "last_updated": "2026-03-17T09:07:45.208Z"
+      "last_updated": "2026-03-18T18:59:20.835Z"
     },
     "position_count": {
       "name": "Active Positions",
@@ -33,13 +33,13 @@
       "raw_value": 77,
       "description": "Number of active positions",
       "status": "live",
-      "last_updated": "2026-03-17T09:07:45.208Z"
+      "last_updated": "2026-03-18T18:59:20.836Z"
     }
   },
   "metadata": {
     "source": "LEVER Protocol",
     "chain": "Base Sepolia",
-    "last_updated": "2026-03-17T09:07:42.700Z",
+    "last_updated": "2026-03-18T18:59:18.448Z",
     "reliability": "high",
     "success_rate": "100%",
     "data_quality": "high"
