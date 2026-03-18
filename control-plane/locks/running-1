@@ -1,8 +1,0 @@
-{
-  "task_id": "1",
-  "lane": "INFRA",
-  "title": "CRITICAL DEPLOYMENT FIX [CRITICAL]",
-  "started": "2026-03-18T16:06:18.572526",
-  "pid": 2043106,
-  "log": "/home/lever/lever-protocol/control-plane/dispatcher-logs/task-1-160618.log"
-}

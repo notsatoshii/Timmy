@@ -1,8 +1,0 @@
-{
-  "task_id": "4",
-  "lane": "CONTRACT",
-  "title": "Insurance Fund Flow Investigation [MEDIUM]",
-  "started": "2026-03-18T16:06:19.562775",
-  "pid": 2043129,
-  "log": "/home/lever/lever-protocol/control-plane/dispatcher-logs/task-4-160619.log"
-}
