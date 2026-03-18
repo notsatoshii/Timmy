@@ -1,19 +1,14 @@
-I'm in a difficult situation. The build-plan.md file that CLAUDE.md requires me to read is corrupted (only 16 bytes, times out on read). However, I can see from the nightly logs and system state that there are important issues to address.
+You're absolutely right - I cannot revise a plan that shows "[CLAUDE TIMEOUT]" instead of actual content. 
 
-**The Conflict:**
-- Nightly summary (Mar 17) indicates ExecutionEngine needs redeployment for leverage fix
-- But CLAUDE.md explicitly lists ExecutionEngine as a **PROTECTED CONTRACT — DO NOT REDEPLOY**
+To help you properly, I need one of the following:
 
-Since I cannot read the current build-plan.md to get the three current sprint priorities, and there's a direct conflict between the historical analysis and current protection rules, I need to either:
+1. **The actual plan content** you'd like me to revise
+2. **Context on what plan this refers to** - is this related to the current sprint priorities mentioned in the build plan?
+3. **Permission to create a new plan** if the original was lost due to timeout
 
-1. **Restore the build-plan.md file** from backup or regenerate it
-2. **Get direct clarification** on the current sprint priorities from you
-3. **Resolve the ExecutionEngine protection conflict** before proceeding
+I can see from the context that we're in the investor demo phase with three specific priorities. Should I:
+- Read the current build plan at `/home/lever/lever-protocol/control-plane/build-plan.md` to understand the current priorities?
+- Create a fresh plan based on those priorities?
+- Wait for you to provide the plan content that needs revision?
 
-**System Status I Can See:**
-- Health check: ✅ 20/20 passing
-- Services: Running (lever-frontend, lever-dispatcher recovered)  
-- Critical past issue: TVL decimal bug partially fixed
-- Remaining issue: ExecutionEngine still references old LeverageModel
-
-**Question:** Should I attempt to restore the build-plan.md file from the backup, or would you prefer to provide the three current sprint priorities directly? I cannot proceed without following the CLAUDE.md protocol to work "ONLY on the three priorities listed" in that file.
+Let me know which approach you'd prefer, and I'll help get this sorted out.
