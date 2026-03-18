@@ -97,9 +97,10 @@ FRONTEND_EXIT_CODE=$?
 if [ $FRONTEND_EXIT_CODE -eq 0 ]; then
     # Extract score from the improved QA results
     if [ -f "/home/lever/lever-protocol/control-plane/dispatcher-logs/qa-report-latest.json" ]; then
-        QA_SCORE=$(cat /home/lever/lever-protocol/control-plane/dispatcher-logs/qa-report-latest.json | grep -o '"overall_score":[0-9]*' | cut -d: -f2)
-        TESTING_METHOD=$(cat /home/lever/lever-protocol/control-plane/dispatcher-logs/qa-report-latest.json | grep -o '"testing_method":"[^"]*"' | cut -d\" -f4)
-        check "frontend_react_spa" "PASS - React SPA score: ${QA_SCORE}/100 (${TESTING_METHOD})" ""
+        QA_SCORE=$(python3 -c "import json; data=json.load(open('/home/lever/lever-protocol/control-plane/dispatcher-logs/qa-report-latest.json')); print(data.get('overall_score', 0))" 2>/dev/null || echo "unknown")
+        TESTING_METHOD=$(python3 -c "import json; data=json.load(open('/home/lever/lever-protocol/control-plane/dispatcher-logs/qa-report-latest.json')); print(data.get('testing_method', 'unknown'))" 2>/dev/null || echo "unknown")
+        BROWSER_AUTOMATION=$(python3 -c "import json; data=json.load(open('/home/lever/lever-protocol/control-plane/dispatcher-logs/qa-report-latest.json')); print('✅' if data.get('browser_automation', False) else '⚠️')" 2>/dev/null || echo "?")
+        check "frontend_react_spa" "PASS - React SPA score: ${QA_SCORE}/100 (${TESTING_METHOD}) ${BROWSER_AUTOMATION}" ""
     else
         check "frontend_react_spa" "PASS - React SPA verified with improved scoring" ""
     fi

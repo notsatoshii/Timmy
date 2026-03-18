@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-18T21:20:43.514Z",
+  "timestamp": "2026-03-18T21:23:54.069Z",
   "testing_method": "intelligent_fallback",
   "browser_automation_available": false,
   "scores": {
@@ -16,7 +16,7 @@
       "score": 90,
       "details": {
         "status_code": 200,
-        "content_length": 3064,
+        "content_length": 5422,
         "has_react_markers": true
       }
     },
