@@ -1,26 +1,24 @@
 {
   "tasks": [
     {
-      "id": "1",
-      "lane": "FRONTEND",
+      "id": "2",
+      "lane": "INFRA",
       "depends_on": [],
-      "reason": "React app deployment failure requires fixing frontend build/deployment config, Vite config, or React routing - pure frontend issue blocking all demo functionality"
+      "reason": "Web server configuration involves nginx/server setup, not React source code changes. No dependencies as this is a foundational server config issue."
     },
     {
       "id": "3",
       "lane": "INFRA",
       "depends_on": [
-        "1"
+        "2"
       ],
-      "reason": "Verification involves running control-plane scripts and health checks (INFRA), but cannot properly verify frontend priorities until frontend deployment is fixed"
+      "reason": "Verification testing uses control-plane scripts and validation tools. Depends on task 2 because frontend functionality cannot be verified until web server properly serves the React SPA."
     },
     {
       "id": "5",
       "lane": "INFRA",
-      "depends_on": [
-        "1"
-      ],
-      "reason": "Oracle monitoring involves checking Python service status (INFRA), but since frontend repair is critical blocker for investor demo, should wait until that's resolved"
+      "depends_on": [],
+      "reason": "Oracle monitoring involves checking Python keeper scripts and operational status. Independent task with no data dependencies on other work."
     }
   ]
 }

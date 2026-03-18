@@ -1,8 +1,0 @@
-{
-  "task_id": "1",
-  "lane": "FRONTEND",
-  "title": "**CRITICAL FRONTEND REPAIR** [CRITICAL]",
-  "started": "2026-03-18T18:20:27.716698",
-  "pid": 2108617,
-  "log": "/home/lever/lever-protocol/control-plane/dispatcher-logs/task-1-182027.log"
-}
