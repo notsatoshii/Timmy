@@ -4,10 +4,8 @@ import { injected } from 'wagmi/connectors';
 
 // Multiple RPC endpoints for redundancy and rate limit handling
 const baseSepoliaRPCs = [
-  'https://sepolia.base.org', // Primary Base Sepolia RPC
-  'https://base-sepolia-rpc.publicnode.com', // Public node backup
-  'https://base-sepolia.blockpi.network/v1/rpc/public', // BlockPI backup
-  'https://sepolia.base.org/v1/rpc', // Alternative base endpoint
+  'https://base-sepolia-rpc.publicnode.com', // CORS-friendly, most reliable
+  'https://sepolia.base.org', // Base official fallback
 ];
 
 // Enhanced transport with fallback, reduced batch size, and aggressive 413 handling
