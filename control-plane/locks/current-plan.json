@@ -1,22 +1,22 @@
 {
   "tasks": [
     {
-      "id": "fix-server-config",
+      "id": "fix_server_configuration",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Server configuration, security headers, and health endpoints require changes to infra configs/scripts. No dependencies on other tasks."
+      "reason": "Server configuration, security headers, and health endpoints are infrastructure concerns. Changes nginx/express configs, adds monitoring endpoints. No dependency on other tasks."
     },
     {
-      "id": "fix-insurance-fund-display",
+      "id": "fix_insurance_fund_display",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Display formatting bug in React components. Frontend-only change for WAD/USDT conversion. Independent of other tasks."
+      "reason": "Display formatting bug in React dashboard showing $5.011e24 instead of $10K. Frontend formatting/display issue requiring changes to React components. Independent of server config and APY analysis."
     },
     {
-      "id": "validate-lp-apy",
+      "id": "validate_lp_apy_calculation",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Investigation and validation task requiring analysis scripts, documentation, and verification flows. Analytics work fits INFRA lane. No data dependencies on other fixes."
+      "reason": "Analysis and investigation work requiring contract state verification, fee flow analysis, and system behavior documentation. Uses scripts/analysis tools to verify FeeRouter\u2192RewardsDistributor flow. Different files than server config task."
     }
   ]
 }

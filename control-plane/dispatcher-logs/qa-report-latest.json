@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-18T23:24:39.970625+00:00",
+  "timestamp": "2026-03-18T23:38:37.617460+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,12 +11,12 @@
     },
     {
       "name": "Positions",
-      "value": "267",
+      "value": "268",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "14730722554735 [1.473e13]",
+      "value": "14780722554735 [1.478e13]",
       "status": "ok"
     },
     {
@@ -28,25 +28,35 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Cannot verify actual trading functionality or real-time data without browser interaction",
-    "Vision: Limited assessment scope - only static HTML analysis possible via curl",
-    "Vision: Noscript message could be more investor-reassuring about platform capabilities"
+    "Vision: Oracle price data is stale (last update 3243s ago) - critical for trading platform",
+    "Vision: Still running on Base Sepolia testnet instead of mainnet production",
+    "Vision: Browser automation/testing infrastructure failing (Puppeteer dependencies missing)",
+    "Vision: Development mode indicators still visible in production interface",
+    "Vision: No real-time price updates visible - static market data concerns",
+    "Vision: Health check shows 1 critical failure out of 20 system components"
   ],
   "functional_issues": [],
-  "score": 76,
+  "score": 52,
   "vision_review": {
-    "professional_score": 8,
-    "trust_score": 7,
+    "professional_score": 6,
+    "trust_score": 4,
     "issues": [
-      "Cannot verify actual trading functionality or real-time data without browser interaction",
-      "Limited assessment scope - only static HTML analysis possible via curl",
-      "Noscript message could be more investor-reassuring about platform capabilities"
+      "Oracle price data is stale (last update 3243s ago) - critical for trading platform",
+      "Still running on Base Sepolia testnet instead of mainnet production",
+      "Browser automation/testing infrastructure failing (Puppeteer dependencies missing)",
+      "Development mode indicators still visible in production interface",
+      "No real-time price updates visible - static market data concerns",
+      "Health check shows 1 critical failure out of 20 system components"
     ],
     "improvements": [
-      "Add server-side rendered preview of key metrics for SEO and confidence",
-      "Include testimonials or backers section in static HTML",
-      "Add regulatory compliance statements in metadata",
-      "Consider showing key platform stats (TVL, volume) in noscript fallback"
+      "Fix oracle price freshness - implement real-time price feeds",
+      "Complete mainnet deployment and remove testnet banners/indicators",
+      "Resolve browser testing infrastructure for reliable CI/CD",
+      "Implement live data updates and real-time market price streaming",
+      "Add production monitoring dashboard accessible to investors",
+      "Show clear uptime/reliability metrics on main interface",
+      "Add system status page showing all critical components health",
+      "Implement proper error handling for stale data scenarios"
     ]
   }
 }
