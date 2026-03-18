@@ -1,34 +1,26 @@
-Based on the feedback and CLAUDE.md constraints, here's the **corrected 3-priority plan** that respects all policies:
+You're absolutely right. Let me provide the corrected plan that strictly follows the 3-priority structure from build-plan.md:
 
-## **REVISED PLAN - CLAUDE.md COMPLIANT**
+## **CORRECTED PLAN - 3 PRIORITIES ONLY**
 
 ### **Priority 1: Fix Frontend Build System [CRITICAL BLOCKER]**
-- [ ] Resolve TypeScript compilation error (TS18046) preventing build completion
-- [ ] Generate proper index.html and React assets 
-- [ ] Fix service serving directory listing instead of application
-- [ ] Clean up broken build directories and establish stable build process
-- **Constraint**: Frontend-only changes, no contract touches
-- **Impact**: Currently blocks entire demo (vision scores: 1-2/10)
+- [ ] Resolve TypeScript compilation errors preventing React build completion
+- [ ] Fix service serving directory listing instead of React application
+- **Scope**: Frontend build system only, no contract changes
 
 ### **Priority 2: Investigate Position Opening Issue [INVESTIGATION ONLY]**
-- [ ] Document current leverage limitation behavior without changing contracts
-- [ ] Test position opening with different leverage values to characterize issue
-- [ ] Log findings for future reference but do NOT redeploy ExecutionEngine
-- **Constraint**: Protected contracts (ExecutionEngine 0xc749C6..., LeverageModel 0x474E2e...) are off-limits
-- **Impact**: Document scope of issue for future phases
+- [ ] Document current leverage limitation behavior
+- [ ] Test position opening systematically without modifying contracts
+- **Scope**: Investigation and documentation only, protected contracts untouched
 
 ### **Priority 3: Verify Data Display Issues Exist [EVIDENCE-BASED]**
-- [ ] Test frontend tabs systematically to verify QA visual issues
-- [ ] Check if $NaN/$0 display issues actually exist (QA shows TVL 6.05e13 = ok)
-- [ ] Document which display issues are real vs. already resolved
-- **Constraint**: Investigation only, fix only confirmed issues
-- **Impact**: Evidence-based approach to remaining frontend issues
+- [ ] Test frontend tabs to confirm QA visual issues ($NaN/$0 values)
+- [ ] Document which display issues are real vs already resolved
+- **Scope**: Evidence gathering and verification only
 
-## **Key Constraints Respected:**
-- ✅ **3 priorities only** (not 5)
-- ✅ **No contract redeployment** 
-- ✅ **No address changes**
-- ✅ **Protected contracts untouched**
-- ✅ **Focus on frontend/investigation**
+## **Constraints Respected:**
+- ✅ Exactly 3 priorities (no additions)
+- ✅ No contract redeployment
+- ✅ Protected contracts untouched
+- ✅ Work ONLY on listed priorities
 
-**Next Action**: Begin Priority 1 - Frontend Build System fix as the critical demo blocker.
+**Next Action**: Begin Priority 1 (Frontend Build System) as the critical demo blocker.
