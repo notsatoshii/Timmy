@@ -1,0 +1,36 @@
+{
+  "tasks": [
+    {
+      "id": "1",
+      "lane": "CONTRACT",
+      "depends_on": [],
+      "reason": "Root cause investigation focuses on FeeRouter fee distribution and InsuranceFund balance calculations in Solidity contracts. The corrupted value suggests contract-level calculation issues rather than just frontend display formatting."
+    },
+    {
+      "id": "2",
+      "lane": "INFRA",
+      "depends_on": [],
+      "reason": "Focuses on mockkeeper.py script, oracle pipeline infrastructure, and price feed stability - all infra-level components that don't require changes to contracts or frontend code."
+    },
+    {
+      "id": "3",
+      "lane": "CONTRACT",
+      "depends_on": [],
+      "reason": "Investigates fee flow through FeeRouter and RewardsDistributor contracts. APY calculation issues stem from contract-level fee distribution and accumulation logic."
+    },
+    {
+      "id": "4",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "Adds monitoring infrastructure to React application - error boundaries, user analytics, performance monitoring. Health check endpoint will be implemented as part of frontend app, not separate infra script."
+    },
+    {
+      "id": "5",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "1"
+      ],
+      "reason": "UX polish includes fixing $0.00/$NaN display issues across tabs. Task 1 fixes a specific corrupted Insurance Fund display value, which must be resolved before final UX verification can confirm clean rendering."
+    }
+  ]
+}

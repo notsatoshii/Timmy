@@ -1,4 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { errorMonitoring } from '../services/errorMonitoring';
 
 interface Props {
   children: ReactNode;
@@ -9,12 +10,13 @@ interface State {
   hasError: boolean;
   error: Error | null;
   errorInfo: ErrorInfo | null;
+  errorId: string | null;
 }
 
 class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false, error: null, errorInfo: null };
+    this.state = { hasError: false, error: null, errorInfo: null, errorId: null };
   }
 
   static getDerivedStateFromError(error: Error): Partial<State> {
@@ -25,14 +27,28 @@ class ErrorBoundary extends Component<Props, State> {
     console.error(`Error caught in ${this.props.panelName} panel:`, error);
     console.error('Error details:', errorInfo);
 
+    // Capture error in monitoring system
+    errorMonitoring.captureReactError(error, errorInfo, this.props.panelName);
+
+    const errorId = `${this.props.panelName}_${Date.now()}`;
+
     this.setState({
       error,
-      errorInfo
+      errorInfo,
+      errorId
     });
   }
 
   handleRetry = () => {
-    this.setState({ hasError: false, error: null, errorInfo: null });
+    console.log(`[ErrorBoundary] Retrying ${this.props.panelName} panel`);
+    this.setState({ hasError: false, error: null, errorInfo: null, errorId: null });
+  };
+
+  handleReportError = () => {
+    if (this.state.errorId) {
+      console.log(`[ErrorBoundary] User reported error: ${this.state.errorId}`);
+      // In production, this could open a support ticket or send feedback
+    }
   };
 
   render() {
@@ -54,6 +70,11 @@ class ErrorBoundary extends Component<Props, State> {
                 Something went wrong loading this panel. This could be due to network issues,
                 contract connectivity problems, or temporary service disruption.
               </p>
+              {this.state.errorId && (
+                <p className="text-xs text-gray-500 font-mono">
+                  Error ID: {this.state.errorId}
+                </p>
+              )}
             </div>
 
             {this.state.error && (
@@ -73,7 +94,7 @@ class ErrorBoundary extends Component<Props, State> {
               </div>
             )}
 
-            <div className="flex space-x-3">
+            <div className="flex flex-wrap gap-3 justify-center">
               <button
                 onClick={this.handleRetry}
                 className="px-4 py-2 bg-accent text-surface-0 rounded-md hover:bg-accent-dim transition-colors font-medium"
@@ -86,6 +107,14 @@ class ErrorBoundary extends Component<Props, State> {
               >
                 Refresh Page
               </button>
+              {this.state.errorId && (
+                <button
+                  onClick={this.handleReportError}
+                  className="px-4 py-2 bg-border text-gray-400 rounded-md hover:bg-border-light transition-colors font-medium text-sm"
+                >
+                  Report Error
+                </button>
+              )}
             </div>
           </div>
         </div>
