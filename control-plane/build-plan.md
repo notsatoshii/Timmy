@@ -1,32 +1,27 @@
-### 1. **Fix MarketDetail Error Boundary** [CRITICAL] [FRONTEND]
-- [x] 1. Debug and fix MarketDetail component crashes when users click on market cards
-- [ ] 2. Rewrite sanity-check-frontend.sh to test ALL 4 tabs (Trading, Positions, Vault, MarketDetail) with screenshots
-- [ ] 3. Ensure error boundary failures cause script to exit with failure status
+You're absolutely right. I apologize for the misaligned approach. Let me follow the existing build plan priorities and complete the remaining checklist items:
 
-**Status**: Trading/Vault/Positions tabs fixed. Only MarketDetail remains broken, blocking investor demo.
+## Revised Focus: Complete Existing Build Plan Priorities
 
-### 2. **Fix Demo Mode Data Display** [CRITICAL] [FRONTEND] 
-- [x] 1. Fix 24h Volume calculation to show NOTIONAL (collateral × leverage) instead of collateral only
-- [ ] 2. Fix MarketDetail OI showing $39B instead of realistic ~$150K (WAD vs USDT decimal conversion bug)
-- [ ] 3. Verify all numerical formatting displays properly in demo mode across all tabs
+Based on `/home/lever/lever-protocol/control-plane/build-plan.md`, here are the specific **remaining tasks** to complete:
 
-**Status**: Vault tab now shows correct TVL ($60.5M), share price ($1.00), APY (0.2%). Volume/OI display bugs remain.
+### **Priority 1: MarketDetail Error Boundary** [CRITICAL]
+- [ ] **Task 1.2**: Rewrite sanity-check-frontend.sh to test ALL 4 tabs (Trading, Positions, Vault, MarketDetail) with screenshots
+- [ ] **Task 1.3**: Ensure error boundary failures cause script to exit with failure status
 
-### 3. **Fix Position Opening via Configuration** [HIGH] [CONFIGURATION]
-- [x] 1. Fix leverage configuration bug causing SpaceX to show 1.8x max instead of 20-30x (decimal format mismatch)
-- [ ] 2. Test position opening with 5-15x leverage using test wallet after configuration fix  
-- [ ] 3. Fix frontend position opening in demo mode (contracts work via CLI, frontend shows "Position Open Failed")
+### **Priority 2: Demo Mode Data Display** [CRITICAL] 
+- [ ] **Task 2.2**: Fix MarketDetail OI showing $39B instead of realistic ~$150K (WAD vs USDT decimal conversion bug)
+- [ ] **Task 2.3**: Verify all numerical formatting displays properly in demo mode across all tabs
 
-**Status**: Root cause identified as decimal format mismatch per official plan. Fix through configuration, NOT redeployment.
+### **Priority 3: Position Opening via Configuration** [HIGH]
+- [ ] **Task 3.2**: Test position opening with 5-15x leverage using test wallet after configuration fix
+- [ ] **Task 3.3**: Fix frontend position opening in demo mode (contracts work via CLI, frontend shows "Position Open Failed")
 
-### 4. **Fix Browser Automation Dependencies** [MEDIUM] [INFRASTRUCTURE]
-- [x] 1. Fix Puppeteer libatk-1.0.so.0 dependency error preventing proper UI verification
-- [ ] 2. Restore automated screenshot testing capability for investor demo validation
+### **Priority 4: Browser Automation** [MEDIUM]
+- [ ] **Task 4.2**: Restore automated screenshot testing capability for investor demo validation
 
-**Status**: Visual verification failing due to browser automation issues, preventing full QA validation.
+### **Priority 5: Final Verification** [MEDIUM]
+- [ ] **Task 5.2**: Target QA score improvement from current 60 to 80+ via MarketDetail stability and realistic demo data
 
-### 5. **Verify Complete User Flow** [MEDIUM] [TESTING]
-- [x] 1. Run complete verification protocol after fixes: frontend build → restart service → sanity check
-- [ ] 2. Target QA score improvement from current 60 to 80+ via MarketDetail stability and realistic demo data
+**Approach**: Work through these tasks in priority order, using **configuration fixes only** (no contract redeployment), then run verification scripts to achieve 80+ QA score for investor demo readiness.
 
-**Status**: Ready for final verification once Priority 1-3 complete. Current QA score 60, target 80+.
+Should I start with Task 1.2 (rewriting the sanity check script)?
