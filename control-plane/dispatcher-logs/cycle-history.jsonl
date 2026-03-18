@@ -122,3 +122,4 @@
 {"cycle": 122, "qa_score": 100, "done": 0, "failed": 0, "duration_min": 10.5, "mode": "AUTO-IMPROVE", "sprint_checks": {}, "ts": "2026-03-18T09:14:59.375903+00:00"}
 {"cycle": 123, "qa_score": 60, "done": 0, "failed": 0, "duration_min": 10.5, "mode": "AUTO-IMPROVE", "sprint_checks": {}, "ts": "2026-03-18T09:29:29.759451+00:00"}
 {"cycle": 124, "qa_score": 100, "done": 2, "failed": 0, "duration_min": 6.7, "mode": "AUTO-IMPROVE", "sprint_checks": {}, "ts": "2026-03-18T09:39:33.292782+00:00"}
+{"cycle": 125, "qa_score": 52, "done": 1, "failed": 0, "duration_min": 4.2, "mode": "AUTO-IMPROVE", "sprint_checks": {}, "ts": "2026-03-18T09:48:17.006466+00:00"}

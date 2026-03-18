@@ -1,22 +1,22 @@
 {
   "tasks": [
     {
-      "id": "1",
+      "id": "marketdetail-tab-implementation",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Implementing missing React MarketDetail tab component. Pure frontend UI work with no dependencies on other tasks."
+      "reason": "Implementing React component, updating verification checklist, running JS testing script - all frontend files. No dependencies since this is creating new functionality independent of other fixes."
     },
     {
-      "id": "2",
+      "id": "fix-24h-volume-calculation",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Fixing frontend volume calculation logic to multiply collateral \u00d7 leverage. Pure frontend calculation fix independent of other tasks."
+      "reason": "Updating calculation logic in React/TypeScript display layer from collateral-only to notional value. Independent frontend calculation fix with no data dependencies on other tasks."
     },
     {
-      "id": "3",
+      "id": "insurance-fund-investigation",
       "lane": "CONTRACT",
       "depends_on": [],
-      "reason": "Investigating contract-level insurance fund value discrepancy (5.011e24 vs $10K). Requires examining contract state and FeeRouter logic. Independent of frontend tasks."
+      "reason": "Investigating contract-level value issue (5.011e24), verifying FeeRouter Solidity logic, potential overflow in contract math. Root cause is at Solidity level, not frontend display. Independent investigation."
     }
   ]
 }
