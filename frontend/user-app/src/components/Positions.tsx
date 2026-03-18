@@ -563,7 +563,7 @@ const Positions: React.FC = () => {
 
   const formatPnl = (value: bigint): string => {
     try {
-      const num = Number(value) / Number(WAD);
+      const num = Number(value) / 1e6;
       if (!isFinite(num) || isNaN(num)) {
         return '$0.00';
       }
@@ -729,13 +729,13 @@ const Positions: React.FC = () => {
               <div>
                 <span className="text-xs text-gray-500 uppercase tracking-wide">Account Balance</span>
                 <p className="text-lg font-bold font-mono text-gray-100">
-                  ${accountBalance ? formatWad(accountBalance as bigint) : '0.00'} USDT
+                  ${accountBalance ? formatUsdt(accountBalance as bigint) : '0.00'} USDT
                 </p>
               </div>
               <div>
                 <span className="text-xs text-gray-500 uppercase tracking-wide">Free Collateral</span>
                 <p className="text-lg font-bold font-mono text-gray-100">
-                  ${freeCollateral ? formatWad(freeCollateral as bigint) : '0.00'} USDT
+                  ${freeCollateral ? formatUsdt(freeCollateral as bigint) : '0.00'} USDT
                 </p>
               </div>
             </div>
@@ -985,7 +985,7 @@ const Positions: React.FC = () => {
 
                   <div className="mt-3 pt-3 border-t border-border">
                     <div className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-4 text-xs text-gray-500">
-                      <span>Borrow fees: <span className="font-mono text-danger">-${formatWad(position.borrowFees)}</span></span>
+                      <span>Borrow fees: <span className="font-mono text-danger">-${formatUsdt(position.borrowFees)}</span></span>
                       <span>Funding: <span className={`font-mono ${position.fundingAccrued >= BigInt(0) ? 'text-accent' : 'text-danger'}`}>
                         {formatPnl(position.fundingAccrued)}
                       </span></span>

@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-03-18T03:02:05.938Z",
+  "marketDetailTest": {
+    "structure": true,
+    "navigation": false,
+    "dataDisplay": true,
+    "errorHandling": true
+  },
+  "errors": [],
+  "warnings": [
+    "Navigation structure may have issues"
+  ],
+  "recommendations": [
+    "Test market card click navigation manually"
+  ]
+}

@@ -1,35 +1,33 @@
-Perfect! Now I can see the discrepancy. The build-plan.md shows a 36/100 QA score with critical issues, but your feedback indicates the system actually has 20/20 health passes. This confirms the build-plan.md is indeed stale.
+Based on the current QA status (60/100) and known issues, here are the prioritized tasks for the investor demo:
 
-## **REVISED PLAN** (Based on Corrected System State)
+### 1. Verify MarketDetail Tab Functionality [CRITICAL] [FRONTEND]
+- [ ] Complete end-to-end testing of MarketDetail tab navigation and display
+- [ ] Ensure realistic position/market data renders without errors  
+- [ ] Take verification screenshots to confirm demo readiness
+- [ ] Document any remaining display issues for quick fixes
 
-Since the health check shows excellent status (20/20), let me focus on **investor demo optimization** rather than crisis management:
+### 2. Fix 24h Volume Display (Notional vs Collateral) [CRITICAL] [FRONTEND] 
+- [ ] Update volume calculation to show notional value (collateral × leverage)
+- [ ] Verify volume displays consistently across all tabs
+- [ ] Ensure realistic demo-appropriate volume figures
+- [ ] Test edge cases (zero volume, high leverage positions)
 
-### **DEMO ENHANCEMENT PRIORITIES**
+### 3. Address Visual Demo Issues [HIGH] [FRONTEND]
+- [ ] Reduce prominence of "Demo Mode" and testnet indicators for investor presentation
+- [ ] Add sample realistic user balances for demo flow (no fake data, use test accounts)
+- [ ] Implement clean demo state that shows product maturity
+- [ ] Verify read-only mode banner doesn't overshadow functionality
 
-**Task 1** [FRONTEND]: **MarketDetail Tab Polish** 
-- Verify complete functionality and smooth navigation
-- Ensure realistic data displays (not the $39B bug mentioned in stale plan)
-- Take verification screenshots for demo confidence
+### 4. Insurance Fund Status Investigation [MEDIUM] [BACKEND]
+- [ ] Investigate if $5.011e24 display is WAD formatting issue vs actual stuck bootstrap
+- [ ] Verify FeeRouter fee flow to Insurance Fund without redeploying contracts
+- [ ] Document whether 0.017% capitalization ratio is acceptable for demo
+- [ ] Check if manual fee injection is needed for demo presentation
 
-**Task 2** [FRONTEND]: **24h Volume Display Accuracy**
-- Fix volume calculation to show notional (collateral × leverage) 
-- Ensure realistic demo-appropriate values
-- Consistent formatting across all monetary displays
+### 5. Oracle Keeper Health Monitoring [LOW] [INFRASTRUCTURE]
+- [ ] Verify mockkeeper.py is running and maintaining fresh price feeds
+- [ ] Monitor price staleness during demo preparation window  
+- [ ] Ensure backup oracle activation if needed for demo stability
+- [ ] Document oracle status for investor technical questions
 
-**Task 3** [QA]: **Complete Demo Verification Suite**
-- Run 4-tab screenshot verification 
-- Test full user journey: deposit → trade → positions → withdraw
-- Document stable demo flow for investor presentation
-
-**Task 4** [MONITORING]: **Oracle Status Validation**  
-- Verify keeper is maintaining fresh prices (health shows 22s freshness)
-- Confirm price feeds stable for demo period
-- Monitor-only task since health is good
-
-**Task 5** [INVESTIGATION]: **Insurance Fund Display**
-- Check if 5.011e24 value is WAD formatting issue vs actual problem
-- Low priority since core system is healthy
-
-**Working Priority:** Task 1 → Task 2 → Task 3 → Task 4 → Task 5
-
-Should I **start with Task 1** (MarketDetail verification) and update the stale build-plan.md to reflect current healthy status?
+**Focus Order:** Tasks 1-2 are critical blockers, Task 3 addresses investor perception, Tasks 4-5 are monitoring/investigation only.

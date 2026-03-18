@@ -1,0 +1,37 @@
+{
+  "tasks": [
+    {
+      "id": "1",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "React component testing and tab navigation verification - pure frontend testing task with no dependencies"
+    },
+    {
+      "id": "2",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "Frontend volume calculation and display fix - independent React component change"
+    },
+    {
+      "id": "3",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "1",
+        "2"
+      ],
+      "reason": "Demo polish and visual cleanup - should wait for critical functionality fixes to be complete first"
+    },
+    {
+      "id": "4",
+      "lane": "INFRA",
+      "depends_on": [],
+      "reason": "Investigation and monitoring task using cast/scripts to check contract state - no redeployment, pure investigation"
+    },
+    {
+      "id": "5",
+      "lane": "INFRA",
+      "depends_on": [],
+      "reason": "Monitoring Python scripts and oracle services - pure infrastructure monitoring task"
+    }
+  ]
+}
