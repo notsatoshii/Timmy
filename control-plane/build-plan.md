@@ -1,30 +1,27 @@
-You're completely correct. I violated the sprint lock and expanded beyond the specified scope. Let me correct my approach:
+Based on the build plan and current verification status, here are the **3 locked sprint priorities** that must be completed for investor demo readiness:
 
-## Corrected Approach: Fix Dependencies → Execute 3 Locked Priorities
-
-### **Prerequisite: Browser Dependencies Fix** (Infrastructure, not a separate priority)
-The QA report shows `libatk-1.0.so.0` missing, blocking Priority 1 execution. This must be resolved as infrastructure maintenance.
-
-### **Locked Sprint Priorities (Exactly 3)**
-
-#### Priority 1: MarketDetail Tab Verification [CRITICAL] [FRONTEND]
-- [ ] Complete manual verification checklist for MarketDetail tab specifically  
-- [ ] Run `node scripts/tab-sanity.js` and ensure MarketDetail passes all validation
-- [ ] Take screenshots and validate market data displays correctly
+### 1. MarketDetail Tab Implementation & Verification [CRITICAL] [FRONTEND]
+- [ ] 1. Implement missing MarketDetail tab component in frontend
+- [ ] 2. Add MarketDetail tab to manual verification checklist 
+- [ ] 3. Run full tab verification with `node scripts/tab-sanity.js`
+- [ ] 4. Take screenshots to validate market data displays correctly
+- **Status**: Missing from current verification checklist - needs implementation first
 - **Demo Impact**: Investors will navigate all tabs during presentation
 
-#### Priority 2: Volume Metrics Accuracy [CRITICAL] [FRONTEND]
-- [ ] Update 24h volume calculation to show notional (collateral × leverage)
-- [ ] Locate volume calculation logic and apply leverage multiplier
-- [ ] Verify volumes align with $60M TVL and 222 active positions  
+### 2. Fix 24h Volume to Show Notional Value [CRITICAL] [FRONTEND] 
+- [ ] 1. Locate volume calculation logic in frontend codebase
+- [ ] 2. Update calculation from collateral-only to notional (collateral × leverage)
+- [ ] 3. Verify volume metrics align with $60M TVL and 222 active positions
+- [ ] 4. Test with current market data to ensure accurate display
+- **Status**: Currently shows collateral only, missing leverage multiplier
 - **Demo Impact**: Volume is a key KPI investors will scrutinize
 
-#### Priority 3: Insurance Fund Growth Validation [CRITICAL] [CONTRACTS]
-- [ ] Verify FeeRouter properly routes 20% of all fees to InsuranceFund
-- [ ] Investigate why fund remains at $10K bootstrap vs growing
-- [ ] Document fee flow validation for demo presentation
-- **Demo Impact**: Shows protocol sustainability and fee generation
+### 3. Insurance Fund Growth Investigation [CRITICAL] [CONTRACTS]
+- [ ] 1. Verify FeeRouter contract properly routes 20% of fees to InsuranceFund
+- [ ] 2. Investigate why fund remains at $10K bootstrap instead of growing
+- [ ] 3. Check fee flow from trading activity to insurance fund
+- [ ] 4. Document findings for demo presentation on protocol sustainability
+- **Status**: Stuck at bootstrap value despite 222 active positions generating fees
+- **Demo Impact**: Shows protocol fee generation and sustainability model
 
-**Sprint Rules**: Work ONLY on these 3 priorities. ALL must pass to transition to Phase 2.
-
-Shall I start with fixing the browser dependencies to unblock Priority 1?
+**Sprint Rules**: Work ONLY on these 3 priorities. ALL must pass to transition to Phase 2. No additional features or improvements until these are resolved.

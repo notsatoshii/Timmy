@@ -67,7 +67,23 @@ const puppeteer = require("puppeteer");
     const page = await browser.newPage();
     await page.setViewport({ width: 1440, height: 900 });
     await page.goto("http://localhost:3000", { waitUntil: "networkidle2", timeout: 30000 });
-    await new Promise(r => setTimeout(r, 5000));
+    await new Promise(r => setTimeout(r, 3000));
+
+    // Click on the specific tab if not the default
+    const tabName = "${tabName}";
+    if (tabName === "Trading") {
+        await page.click("button:has-text(\"Trading\")");
+        await new Promise(r => setTimeout(r, 2000));
+    } else if (tabName === "Vault") {
+        await page.click("button:has-text(\"Vault\")");
+        await new Promise(r => setTimeout(r, 2000));
+    } else if (tabName === "Positions") {
+        await page.click("button:has-text(\"Positions\")");
+        await new Promise(r => setTimeout(r, 2000));
+    } else if (tabName === "MarketDetail") {
+        await page.click("button:has-text(\"Market Detail\")");
+        await new Promise(r => setTimeout(r, 3000));
+    }
 
     await page.screenshot({
         path: "../../${screenshotPath}",
@@ -359,7 +375,7 @@ Be strict but fair. Minor cosmetic issues are okay, but major layout problems, b
         console.log('=== TAB SANITY CHECK - COMPREHENSIVE VALIDATION ===\n');
 
         // Test tabs individually (as required)
-        const tabsToTest = ['Markets', 'Trading', 'Vault', 'Positions'];
+        const tabsToTest = ['Markets', 'Trading', 'Vault', 'Positions', 'MarketDetail'];
         const allScreenshots = [];
 
         for (const tabName of tabsToTest) {
@@ -370,24 +386,6 @@ Be strict but fair. Minor cosmetic issues are okay, but major layout problems, b
                 allScreenshots.push(result.screenshot);
             }
         }
-
-        // MarketDetail for SpaceX (as required)
-        console.log(`\n=== CHECKING MARKET DETAIL: SpaceX ===`);
-        const marketDetailResult = {
-            tab: 'MarketDetail-SpaceX',
-            data_pass: true, // Simplified check
-            visual_pass: false,
-            screenshot: path.join(SCREENSHOT_DIR, `marketdetail-spacex-${this.timestamp}.png`),
-            data_issues: [],
-            visual_issues: []
-        };
-
-        // Create placeholder for MarketDetail screenshot
-        const placeholderImage = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==', 'base64');
-        fs.writeFileSync(marketDetailResult.screenshot, placeholderImage);
-
-        this.results.tabs['MarketDetail-SpaceX'] = marketDetailResult;
-        allScreenshots.push(marketDetailResult.screenshot);
 
         // Run visual review with Claude (as required)
         const visionResults = this.runVisualReview(allScreenshots);

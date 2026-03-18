@@ -17,7 +17,7 @@ const Trading = lazy(() => import('./Trading'));
 const VaultOptimized = lazy(() => import('./VaultOptimized'));
 const Positions = lazy(() => import('./Positions'));
 
-type TabType = 'markets' | 'trading' | 'vault' | 'positions' | 'roadmap';
+type TabType = 'markets' | 'trading' | 'vault' | 'positions' | 'marketdetail' | 'roadmap';
 
 interface Market {
   id: string;
@@ -70,6 +70,7 @@ const DashboardOptimized: React.FC = () => {
     { id: 'trading' as TabType, label: 'Trading', description: 'Open/close positions' },
     { id: 'vault' as TabType, label: 'Vault', description: 'LP deposits & yields' },
     { id: 'positions' as TabType, label: 'Positions', description: 'Your active positions' },
+    { id: 'marketdetail' as TabType, label: 'Market Detail', description: 'SpaceX IPO market analysis' },
     { id: 'roadmap' as TabType, label: 'Roadmap', description: 'Mainnet deployment plan' },
   ];
 
@@ -122,6 +123,24 @@ const DashboardOptimized: React.FC = () => {
             <Suspense fallback={<ComponentLoader title="Your Positions" />}>
               <Positions />
             </Suspense>
+          </ErrorBoundary>
+        );
+      case 'marketdetail':
+        const spaceXMarket = {
+          id: 'demo-1',
+          description: 'Largest IPO by Market Cap 2026: SpaceX?',
+          price: 0.54,
+          resolutionTime: new Date('2026-12-30').getTime(),
+          category: 'Technology',
+          isLive: true,
+        };
+        return (
+          <ErrorBoundary panelName="MarketDetail">
+            <LazyMarketDetail
+              market={spaceXMarket}
+              onBack={() => setActiveTab('markets')}
+              onTradeSelect={handleTradeSelection}
+            />
           </ErrorBoundary>
         );
       case 'roadmap':
