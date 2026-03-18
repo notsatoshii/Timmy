@@ -1,0 +1,8 @@
+{
+  "task_id": "3",
+  "lane": "INFRA",
+  "title": "Update Known Issues Documentation [CRITICAL]",
+  "started": "2026-03-18T13:34:05.859633",
+  "pid": 1950820,
+  "log": "/home/lever/lever-protocol/control-plane/dispatcher-logs/task-3-133405.log"
+}

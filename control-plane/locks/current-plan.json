@@ -1,36 +1,16 @@
 {
   "tasks": [
     {
-      "id": "task1",
+      "id": "2",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Creating image assets and PWA icons requires updating frontend public folder and manifest files. No dependencies - standalone asset creation."
+      "reason": "Frontend display bug requiring changes to React components that format insurance fund values. No dependencies as this is an isolated formatting fix."
     },
     {
-      "id": "task2",
-      "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "Fixing WAD/USDT decimal conversion display bug requires updating React dashboard components. Independent of other tasks."
-    },
-    {
-      "id": "task3",
+      "id": "3",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Updating known-issues.md documentation file in control-plane. Marking items as resolved based on existing commits, no dependencies."
-    },
-    {
-      "id": "task4",
-      "lane": "INFRA",
-      "depends_on": [],
-      "reason": "Verifying Python service (mockkeeper.py) status and testing price feed systems. Independent operations verification task."
-    },
-    {
-      "id": "task5",
-      "lane": "FRONTEND",
-      "depends_on": [
-        "task2"
-      ],
-      "reason": "Updating dashboard status indicator text. Depends on task2 since both could touch same dashboard components - safer to run sequentially."
+      "reason": "Documentation update to known-issues.md file. Marks already-resolved issues from recent commits, independent of other tasks."
     }
   ]
 }
