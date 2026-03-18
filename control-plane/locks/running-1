@@ -1,8 +1,0 @@
-{
-  "task_id": "1",
-  "lane": "FRONTEND",
-  "title": "**Frontend Deployment Crisis** [CRITICAL]",
-  "started": "2026-03-18T18:00:33.105844",
-  "pid": 2093089,
-  "log": "/home/lever/lever-protocol/control-plane/dispatcher-logs/task-1-180033.log"
-}
