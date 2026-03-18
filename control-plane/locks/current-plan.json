@@ -1,24 +1,24 @@
 {
   "tasks": [
     {
-      "id": "2",
-      "lane": "INFRA",
+      "id": "1",
+      "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Web server configuration requires changing infrastructure config files (nginx, routing rules, service config) - not React code. No dependencies as this is the critical blocker that must be fixed first."
+      "reason": "React deployment fix requires frontend build config, Vite setup, and serving infrastructure changes. No dependencies - this is the root blocker."
     },
     {
       "id": "3",
       "lane": "INFRA",
       "depends_on": [
-        "2"
+        "1"
       ],
-      "reason": "Running verification scripts and testing infrastructure. Depends on Task 2 because verifying frontend priorities requires the web server to be properly serving the React SPA."
+      "reason": "Verification involves control-plane scripts and validation workflows. Depends on frontend repair since verifying priorities requires functional frontend for complete user flow testing."
     },
     {
       "id": "5",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Monitoring oracle keeper service status via Python scripts and operations tooling. Independent of web server issues - can run in parallel."
+      "reason": "Oracle monitoring involves Python script status and system service checks. Independent operational task with no data flow dependencies on frontend or verification."
     }
   ]
 }
