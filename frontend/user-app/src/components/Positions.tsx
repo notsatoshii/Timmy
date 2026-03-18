@@ -199,6 +199,7 @@ const Positions: React.FC = () => {
         // Update currentPI from on-chain oracle (same source as Markets tab)
         const mktId = (position.marketId as string).toLowerCase();
         console.log('[DEBUG] mktId:', mktId, 'oracle count:', oracleMarkets?.length, 'oracle ids:', oracleMarkets?.map((m: any) => m.id.substring(0,10)));
+        console.log('[DEBUG] mktId:', mktId, 'oracle count:', oracleMarkets?.length, 'oracle ids:', oracleMarkets?.map((m: any) => m.id.substring(0,10)));
         const oracleMatch = oracleMarkets?.find((m: any) => m.id.toLowerCase() === mktId);
         if (oracleMatch && oracleMatch.probability > 0 && oracleMatch.probability <= 1) {
           position.currentPI = BigInt(Math.round(oracleMatch.probability * Number(WAD)));
@@ -248,7 +249,7 @@ const Positions: React.FC = () => {
       }))
     );
     setPositions(posData);
-  }, [positionIds, address, oracleMarkets]);
+  }, [positionIds, address]);
 
   useEffect(() => {
     fetchPositionDetails();
@@ -544,7 +545,25 @@ const Positions: React.FC = () => {
   );
 
   // Show real positions if they exist, otherwise show demo positions when no wallet is connected
-  const displayPositions = positions.length > 0 ? positions : (!address ? demoPositions : []);
+  
+  // Recalculate PnL at render time using latest oracle prices
+  const displayPositions = React.useMemo(() => {
+    if (!positions || positions.length === 0) return positions;
+    return positions.map(pos => {
+      const mktId = (pos.marketId as string).toLowerCase();
+      const oracleMatch = oracleMarkets?.find((m: any) => m.id.toLowerCase() === mktId);
+      let currentPI = pos.entryPI;
+      if (oracleMatch && oracleMatch.probability > 0 && oracleMatch.probability <= 1) {
+        currentPI = BigInt(Math.round(oracleMatch.probability * Number(WAD)));
+      }
+      const priceDiff = Number(currentPI) - Number(pos.entryPI);
+      const direction = pos.isLong ? 1 : -1;
+      const pnl = BigInt(Math.round(direction * priceDiff * Number(pos.positionSize) / Number(WAD)));
+      const equity = pos.collateral + pnl - pos.borrowFees + pos.fundingAccrued;
+      return { ...pos, currentPI, pnl, equity };
+    });
+  }, [positions, oracleMarkets]);
+
 
   console.log('[Positions] Display positions logic:', {
     positionsCount: positions.length,
