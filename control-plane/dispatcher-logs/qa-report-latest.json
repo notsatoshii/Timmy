@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-18T19:49:53.752774+00:00",
+  "timestamp": "2026-03-18T20:03:09.968426+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,12 +11,12 @@
     },
     {
       "name": "Positions",
-      "value": "258",
+      "value": "260",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "14420722554735 [1.442e13]",
+      "value": "14490722554735 [1.449e13]",
       "status": "ok"
     },
     {
@@ -28,27 +28,33 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Cannot evaluate actual application functionality from HTML shell",
-    "Vision: No way to assess real-time data accuracy or trading interface quality",
-    "Vision: Unable to verify if charts, positions, and market data load properly",
-    "Vision: Cannot test user flows like connecting wallet or placing trades"
+    "Vision: Displays 'Base Sepolia Testnet' prominently - testnet status undermines investor confidence",
+    "Vision: Demo Fallback warning visible on interface reduces credibility",
+    "Vision: Read-only mode message creates friction for user engagement",
+    "Vision: Limited market selection appears artificial/demo-like",
+    "Vision: Testnet deployment means no real value or liquidity"
   ],
   "functional_issues": [],
-  "score": 68,
+  "score": 60,
   "vision_review": {
     "professional_score": 7,
-    "trust_score": 6,
+    "trust_score": 5,
     "issues": [
-      "Cannot evaluate actual application functionality from HTML shell",
-      "No way to assess real-time data accuracy or trading interface quality",
-      "Unable to verify if charts, positions, and market data load properly",
-      "Cannot test user flows like connecting wallet or placing trades"
+      "Displays 'Base Sepolia Testnet' prominently - testnet status undermines investor confidence",
+      "Demo Fallback warning visible on interface reduces credibility",
+      "Read-only mode message creates friction for user engagement",
+      "Limited market selection appears artificial/demo-like",
+      "Testnet deployment means no real value or liquidity"
     ],
     "improvements": [
-      "Need functional testing of actual React application beyond HTML shell",
-      "Verify real-time price feeds and market data are displaying correctly",
-      "Test complete user journey from wallet connection to trade execution",
-      "Ensure professional trading interface matches institutional branding promise"
+      "Deploy to Base mainnet for production credibility",
+      "Remove 'Demo Fallback' warnings and testnet indicators",
+      "Add more diverse, real prediction markets beyond test cases",
+      "Implement seamless wallet connection flow",
+      "Add TVL and volume numbers with real liquidity depth",
+      "Include institutional disclaimers and risk warnings",
+      "Add audit badges or security certifications",
+      "Implement proper loading states for all data"
     ]
   }
 }

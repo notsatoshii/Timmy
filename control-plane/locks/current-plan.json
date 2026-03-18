@@ -1,26 +1,26 @@
 {
   "tasks": [
     {
-      "id": "professional_ui_polish",
+      "id": "professional-ui-polish",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "FRONTEND lane - fixes React components, HTML shell issues, branding, and loading states. No dependencies as it's foundational UI work that other tasks build upon."
+      "reason": "Pure frontend task involving React components, branding, loading states, and UI polish. No dependencies as this is foundational work."
     },
     {
-      "id": "enhanced_market_analytics",
+      "id": "enhanced-market-analytics",
       "lane": "FRONTEND",
       "depends_on": [
-        "professional_ui_polish"
+        "professional-ui-polish"
       ],
-      "reason": "FRONTEND lane - improves React data visualization and testing. Depends on professional_ui_polish because it builds on the polished UI foundation and both work with real-time data display components that could conflict."
+      "reason": "Frontend task for data presentation and analytics. Depends on UI polish to ensure consistent professional branding and avoid conflicts in shared components like market displays."
     },
     {
-      "id": "advanced_lp_features",
+      "id": "advanced-lp-features",
       "lane": "FRONTEND",
       "depends_on": [
-        "professional_ui_polish"
+        "professional-ui-polish"
       ],
-      "reason": "FRONTEND lane - adds LP dashboard React components and vault interface improvements. Depends on professional_ui_polish because both involve loading states and professional UI components that could conflict if done simultaneously."
+      "reason": "Frontend task for LP interface components. Depends on UI polish to ensure consistent professional styling and branding across the vault interface."
     }
   ]
 }
