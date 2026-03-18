@@ -220,9 +220,9 @@ const Positions: React.FC = () => {
     console.log('[Positions] Final positions array:', posData.length, 'positions:',
       posData.map(p => ({
         id: p.id.toString(),
-        equity: formatWad(p.equity),
+        equity: formatUsdt(p.equity),
         pnl: formatPnl(p.pnl),
-        collateral: formatWad(p.collateral)
+        collateral: formatUsdt(p.collateral)
       }))
     );
     setPositions(posData);
@@ -267,14 +267,14 @@ const Positions: React.FC = () => {
       id: basePosition.id.toString(),
       marketName: basePosition.marketName,
       collateral: basePosition.collateral.toString(),
-      collateralFormatted: formatWad(basePosition.collateral),
+      collateralFormatted: formatUsdt(basePosition.collateral),
       positionSize: basePosition.positionSize.toString(),
-      positionSizeFormatted: formatWad(basePosition.positionSize),
+      positionSizeFormatted: formatUsdt(basePosition.positionSize),
       entryPI: basePosition.entryPI.toString(),
       borrowFees: basePosition.borrowFees.toString(),
-      borrowFeesFormatted: formatWad(basePosition.borrowFees),
+      borrowFeesFormatted: formatUsdt(basePosition.borrowFees),
       fundingAccrued: basePosition.fundingAccrued.toString(),
-      fundingAccruedFormatted: formatWad(basePosition.fundingAccrued)
+      fundingAccruedFormatted: formatUsdt(basePosition.fundingAccrued)
     });
 
     try {
@@ -310,7 +310,7 @@ const Positions: React.FC = () => {
           borrowFees: basePosition.borrowFees.toString(),
           fundingAccrued: basePosition.fundingAccrued.toString(),
           equity: equity.toString(),
-          equityFormatted: formatWad(equity)
+          equityFormatted: formatUsdt(equity)
         });
       } catch (error) {
         console.warn(`[createLivePosition] Error calculating equity for ${demoMarketId}:`, error);

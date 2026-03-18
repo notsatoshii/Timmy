@@ -1,20 +1,22 @@
-### LEVER Protocol — Priority Tasks for Investor Demo
+# LOCKED BUILD PLAN — DASHBOARD ONLY
+# DO NOT TOUCH frontend/user-app/ — those files are being manually managed
+# ONLY work on the Timmy dashboard at /home/lever/lever-protocol/control-plane/dashboard.py
 
-Based on QA score 60/100 with critical visual issues blocking investor credibility:
+### 1. Fix Dashboard Shows Idle [HIGH] [INFRA]
+- [ ] 1. Read loop-state.json to show current cycle, QA score, mode. Show Loop Active banner with stats even between dispatches. Add last 5 cycle scores as a mini trend. File: /home/lever/lever-protocol/control-plane/dashboard.py only.
+- [ ] 2. After changes: systemctl restart lever-dashboard
 
-### 1. Fix Zero-Value Display Bug [CRITICAL] [FRONTEND]
-- [x] 1. Debug why frontend shows $0 TVL/APY when contracts report $60.5M TVL - likely decimal conversion or data fetching issue in dashboard components
+### 2. Add Live Protocol Stats to Dashboard [HIGH] [INFRA]
+- [ ] 1. Add section showing TVL, OI, Utilization, Insurance Fund, Volume fetched via cast calls in the API endpoint. Show seeder status by reading last 10 lines of seeder.log. File: /home/lever/lever-protocol/control-plane/dashboard.py only.
+- [ ] 2. After changes: systemctl restart lever-dashboard
 
-### 2. Fix Positions Tab Navigation [CRITICAL] [FRONTEND] 
-- [ ] 2. Investigate routing issue where Positions tab shows trading interface instead of positions table - verify React Router configuration and component mapping
+### 3. Add Contract Protection Verification [MEDIUM] [INFRA]
+- [ ] 1. Show protected contract addresses and verify they match expected values. Read from protected-state.json. Highlight in red if any changed. File: /home/lever/lever-protocol/control-plane/dashboard.py only.
+- [ ] 2. After changes: systemctl restart lever-dashboard
 
-### 3. Verify MarketDetail Tab Functionality [CRITICAL] [FRONTEND]
-- [ ] 3. Complete verification of MarketDetail tab per known issues - ensure it renders without errors and shows proper market data/charts
-
-### 4. Fix Volume Calculation Display [HIGH] [FRONTEND]
-- [ ] 4. Update 24h Volume to show notional (collateral × leverage) instead of just collateral amounts - modify volume calculation logic
-
-### 5. Validate Demo Data Completeness [MEDIUM] [INTEGRATION]
-- [ ] 5. Ensure all 215 positions and trading activity display properly across all tabs to demonstrate protocol functionality for investors
-
-**Focus**: Frontend display bugs are making working protocol appear broken. Contract layer is healthy (all checks pass), but presentation layer failing investor demo requirements.
+## RULES
+- ONLY modify dashboard.py — nothing else
+- Do NOT touch frontend/user-app/ files
+- Do NOT modify lever-loop.py or dispatcher.py
+- Do NOT change contract addresses anywhere
+- Test: systemctl restart lever-dashboard then curl http://localhost:8080

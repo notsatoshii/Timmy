@@ -13,7 +13,7 @@ const Header: React.FC = () => {
             {/* Logo and Title */}
             <div className="flex items-center space-x-3">
               <div className="flex-shrink-0">
-                <h1 className="text-2xl font-bold text-accent tracking-tight">LEVER</h1>
+                <img src="/lever-logo.png" alt="LEVER" className="h-8" />
               </div>
               <div className="hidden sm:block">
                 <p className="text-sm text-gray-400">Synthetic Leveraged Perpetuals</p>

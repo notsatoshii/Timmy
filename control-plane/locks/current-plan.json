@@ -1,38 +1,36 @@
 {
   "tasks": [
     {
-      "id": "1",
-      "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "Frontend React component display bug - decimal conversion or data fetching issue in dashboard components. Independent frontend fix."
-    },
-    {
       "id": "2",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Frontend React Router configuration issue - navigation/routing problem with component mapping. Independent frontend fix."
+      "reason": "React Router configuration and component mapping changes for Positions tab navigation. No dependencies since this is the root navigation issue that must be fixed first."
     },
     {
       "id": "3",
       "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "Frontend React component verification - ensuring MarketDetail tab renders properly. Independent frontend validation."
+      "depends_on": [
+        "2"
+      ],
+      "reason": "MarketDetail tab verification requires working navigation to properly access and test the tab functionality. Depends on navigation fix."
     },
     {
       "id": "4",
       "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "Frontend calculation logic modification in React components - volume display calculation. Independent frontend fix."
+      "depends_on": [
+        "3"
+      ],
+      "reason": "Volume calculation display logic changes. Same lane as other frontend tasks, so sequenced for safety to avoid conflicts in shared components."
     },
     {
       "id": "5",
       "lane": "INFRA",
       "depends_on": [
-        "1",
         "2",
-        "3"
+        "3",
+        "4"
       ],
-      "reason": "System-wide testing/validation across all tabs and demo functionality. Depends on critical display bugs being fixed first (TVL display, positions navigation, market details) to ensure demo validation can succeed."
+      "reason": "System-wide validation across all tabs and demo data. This is final integration testing that requires all display and navigation fixes to be complete first."
     }
   ]
 }
