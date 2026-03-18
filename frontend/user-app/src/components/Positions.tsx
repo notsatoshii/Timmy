@@ -197,8 +197,8 @@ const Positions: React.FC = () => {
 
         // Calculate PnL with proper decimal scaling
         // Update currentPI from on-chain oracle (same source as Markets tab)
-        console.log(`[DEBUG] Position ${id} marketId: ${mktId}, oracleMarkets IDs:`, oracleMarkets?.map((m: any) => m.id.toLowerCase()));
         const mktId = (position.marketId as string).toLowerCase();
+        console.log('[DEBUG] mktId:', mktId, 'oracle count:', oracleMarkets?.length, 'oracle ids:', oracleMarkets?.map((m: any) => m.id.substring(0,10)));
         const oracleMatch = oracleMarkets?.find((m: any) => m.id.toLowerCase() === mktId);
         if (oracleMatch && oracleMatch.probability > 0 && oracleMatch.probability <= 1) {
           position.currentPI = BigInt(Math.round(oracleMatch.probability * Number(WAD)));
