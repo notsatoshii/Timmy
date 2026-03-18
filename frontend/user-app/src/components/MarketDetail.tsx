@@ -272,9 +272,9 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
       }
       const rateNum = Number(rateBigInt) / 1e18; // Convert from wei
       if (isNaN(rateNum) || !isFinite(rateNum)) return '0.00%';
-      const annualRate = rateNum * 8760 * 100; // Annual percentage
-      if (isNaN(annualRate) || !isFinite(annualRate)) return '0.00%';
-      return `${annualRate.toFixed(2)}%`;
+      const hourlyRate = rateNum * 100; // Hourly percentage
+      if (isNaN(hourlyRate) || !isFinite(hourlyRate)) return '0.0000%';
+      return `${hourlyRate.toFixed(4)}%`;
     } catch (error) {
       console.warn('Error formatting rate:', rate, error);
       return '0.00%';
@@ -708,14 +708,14 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
               <p className="text-xl font-bold text-purple font-mono">
                 {formatRate(fundingRate)}
               </p>
-              <p className="text-xs text-gray-600">Annual</p>
+              <p className="text-xs text-gray-600">Per Hour</p>
             </div>
             <div>
               <p className="text-gray-500 text-sm mb-1">Borrow Rate</p>
               <p className="text-xl font-bold text-warning font-mono">
                 {formatRate(borrowRate)}
               </p>
-              <p className="text-xs text-gray-600">Annual</p>
+              <p className="text-xs text-gray-600">Per Hour</p>
             </div>
           </div>
 
