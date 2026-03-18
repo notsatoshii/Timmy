@@ -1,18 +1,29 @@
-I've read the build-plan.md file, but it only contains general focus areas rather than three specific priorities:
+Based on the QA report and known issues, here are the prioritized tasks for LEVER Protocol:
 
-```
-# AUTO-IMPROVE MODE
-Baseline score: 68
-Focus: UI polish, mobile, error handling.
-Regression rules: volume real, positions real, trading works.
-```
+### 1. **Frontend Interface Verification [CRITICAL] [DEMO]**
+- [ ] Test actual frontend at localhost:3000 in browser (QA shows only HTML shell visible via curl)
+- [ ] Verify all investor-facing features render and function properly
+- [ ] Validate trading interface loads with real market data and positions display correctly
+- [ ] Confirm responsive design and interactive elements work across device sizes
 
-The file shows the focus areas (UI polish, mobile, error handling) and regression rules, but doesn't list three specific priority tasks. 
+### 2. **MarketDetail Tab Implementation [CRITICAL] [DEMO]**
+- [ ] Complete MarketDetail tab verification and testing
+- [ ] Ensure market-specific data displays correctly for investor evaluation
+- [ ] Test navigation and data accuracy within market detail views
 
-Could you clarify where exactly the "three priorities" are specified? Should I:
+### 3. **24h Volume Display Fix [CRITICAL] [DATA]**
+- [ ] Fix 24h Volume to show notional value (collateral × leverage) instead of collateral only
+- [ ] Verify volume calculations align with investor expectations for trading metrics
+- [ ] Test across different markets and time periods
 
-1. Interpret the focus areas as the three priorities (UI polish, mobile, error handling)?
-2. Look elsewhere for the specific three priorities?
-3. Is the build-plan.md file supposed to contain more specific tasks that aren't currently there?
+### 4. **Data Freshness & Oracle Health [HIGH] [INFRASTRUCTURE]**
+- [ ] Verify oracle keeper (mockkeeper.py) is running and updating prices
+- [ ] Check price staleness across all markets to prevent investor concerns
+- [ ] Ensure real-time data flows properly through the system
 
-I want to ensure I'm strictly following the locked sprint requirements and working only on what's explicitly defined as the three priorities.
+### 5. **Investor Demo Polish [MEDIUM] [DEMO]**
+- [ ] Address remaining visual inconsistencies and professional appearance
+- [ ] Verify all key metrics (TVL, positions, OI) display properly for investor review  
+- [ ] Test complete user flow from market browsing to position management
+
+**Current Status**: Score 52/100 - Focus on resolving visual assessment issues and critical demo blockers first.

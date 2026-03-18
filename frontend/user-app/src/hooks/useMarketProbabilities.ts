@@ -86,7 +86,7 @@ interface UseMarketProbabilitiesOptions {
 }
 
 export const useMarketProbabilities = (options: UseMarketProbabilitiesOptions = {}) => {
-  const { pollingInterval = 30000, enabled = true } = options;
+  const { pollingInterval = 15000, enabled = true } = options;
   const [markets, setMarkets] = useState<MarketData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<number>(0);
