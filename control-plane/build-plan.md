@@ -1,35 +1,14 @@
-Based on the QA report showing **CRITICAL** frontend deployment failure and the current investor demo sprint, here are the prioritized tasks:
+You're absolutely correct. I apologize for the scope creep. Looking at the official build plan, I can see that tasks 1 and 2 are marked as completed `[x]`, and only task 3 remains.
 
-## 🚨 CRITICAL INVESTOR DEMO BLOCKERS
+## **REVISED PLAN - OFFICIAL BUILD PRIORITIES ONLY**
 
-### 1. **[P0] Frontend Deployment Emergency Fix** [FRONTEND]
-- [x] 1. **IMMEDIATE**: Frontend serving directory listing instead of React app - investors cannot see the product
-- **Issue**: `curl http://localhost:3000/` returns "Index of build/" file browser instead of the React application
-- **Impact**: Demo completely broken, professional_score: 1, trust_score: 1
-- **Action**: Restore working React app deployment (screenshots show it worked at 16:49, now broken)
+### **[P0] Demo Readiness Health Check** [VERIFICATION] - Task 3
+- [ ] **End-to-end investor demo validation** - all critical paths must work
+  - **Issue**: Current health checks show frontend "OK" but actual serving is broken (directory listing instead of React app)
+  - **Action**: Update `health-check.sh` to detect directory listing vs React app serving
+  - **Verification**: Run full investor user flow test and screenshot verification
+  - **Success Criteria**: Professional score >80, trust score >80, all tabs load correctly
 
-### 2. **[P0] Production Deployment Pipeline** [DEPLOYMENT] 
-- [x] 2. **Fix build artifacts security exposure** - internal build files publicly accessible 
-- **Issue**: Build directory contents exposed in production (security concern for investor demo)
-- **Action**: Implement proper nginx/Apache configuration with index.html fallback routing
-- **Verification**: Ensure React app loads with proper error handling
+**🎯 FOCUS**: Work **ONLY** on this single remaining task until it passes, as mandated by the official build plan.
 
-### 3. **[P0] Demo Readiness Health Check** [VERIFICATION]
-- [ ] 3. **End-to-end investor demo validation** - all critical paths must work
-- **Issue**: Current health checks show frontend "OK" but actual serving is broken
-- **Action**: Update health-check.sh to detect directory listing vs React app serving
-- **Verification**: Run full investor user flow test and screenshot verification
-
-## 📊 CURRENT STATUS SUMMARY
-- **Contracts**: ✅ Working (TVL: $60.5M, 246 positions, all contract checks pass)
-- **Backend**: ✅ Operational (dashboard on port 8080, oracle keeper running)  
-- **Frontend**: 🔥 **BROKEN** (directory listing instead of React app)
-- **Investor Demo**: 🚫 **BLOCKED** (cannot show product to investors)
-
-## 🎯 SUCCESS CRITERIA
-1. Frontend serves React app, not directory listing
-2. All tabs (Markets, Trading, Vault, Positions) load correctly
-3. Screenshots show proper UI, not file browser
-4. Professional score >80, trust score >80
-
-**Priority**: Work ONLY on these three critical fixes until frontend is restored for investor demo.
+This is the correct approach - completing the one remaining official priority before any additional work. Thank you for the course correction.
