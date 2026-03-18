@@ -1,14 +1,19 @@
-You're absolutely right - I cannot revise a plan that shows "[CLAUDE TIMEOUT]" instead of actual content. 
+I can see the issue - the build-plan.md file contains a Claude timeout response instead of actual content. This confirms the file is corrupted as mentioned in the feedback.
 
-To help you properly, I need one of the following:
+Since CLAUDE.md mandates working ONLY on three specific priorities for the investor demo, but I can't see what those priorities are due to the corrupted file, I need to either:
 
-1. **The actual plan content** you'd like me to revise
-2. **Context on what plan this refers to** - is this related to the current sprint priorities mentioned in the build plan?
-3. **Permission to create a new plan** if the original was lost due to timeout
+1. **Restore the build-plan.md** with the actual three priorities
+2. **Get the priorities from you** directly
 
-I can see from the context that we're in the investor demo phase with three specific priorities. Should I:
-- Read the current build plan at `/home/lever/lever-protocol/control-plane/build-plan.md` to understand the current priorities?
-- Create a fresh plan based on those priorities?
-- Wait for you to provide the plan content that needs revision?
+Based on the feedback mentioning MarketDetail tabs, volume calculations, and QA score of 100, I suspect the three priorities for the investor demo might be:
 
-Let me know which approach you'd prefer, and I'll help get this sorted out.
+1. **MarketDetail Tab Functionality** (critical for demo)
+2. **24h Volume Display Fix** (visual accuracy for investors)  
+3. **Insurance Fund Fee Verification** (fund mechanics demonstration)
+
+**Should I:**
+- Create a new build-plan.md with these three focused priorities?
+- Wait for you to provide the actual three priorities?
+- Look elsewhere for the sprint requirements?
+
+The investor demo sprint discipline requires me to work ONLY on the mandated three priorities, so I need to get the correct list before proceeding with any plan revision.
