@@ -10,9 +10,11 @@ import MainnetRoadmap from './MainnetRoadmap';
 import ErrorBoundary from './ErrorBoundary';
 import Skeleton from './Skeleton';
 import LeverLoader from './LeverLoader';
+import ProfessionalLoader from './ProfessionalLoader';
 import TestnetBanner from './TestnetBanner';
 import Footer from './Footer';
 import InstitutionalHeader from './InstitutionalHeader';
+import ProfessionalStatusBar from './ProfessionalStatusBar';
 
 // Lazy load heavy components
 const Trading = lazy(() => import('./Trading'));
@@ -76,10 +78,60 @@ const DashboardOptimized: React.FC = () => {
     { id: 'roadmap' as TabType, label: 'Roadmap', description: 'Mainnet deployment plan' },
   ];
 
-  // Loading component with LEVER branding
-  const ComponentLoader: React.FC<{ title: string }> = ({ title }) => (
-    <LeverLoader message={`Loading ${title}...`} size="lg" />
-  );
+  // Enhanced Professional Loading Component
+  const ComponentLoader: React.FC<{
+    title: string;
+    variant?: 'default' | 'data' | 'blockchain' | 'trading';
+    showProgress?: boolean;
+  }> = ({ title, variant = 'default', showProgress = false }) => {
+    const getVariantAndSubtitle = () => {
+      switch (title) {
+        case 'Trading Interface':
+          return {
+            variant: 'trading' as const,
+            subtitle: 'Connecting to execution engine and price feeds',
+            showLiveIndicators: true,
+            progressSteps: ['Loading markets', 'Connecting wallet', 'Fetching prices', 'Ready to trade']
+          };
+        case 'Liquidity Vault':
+          return {
+            variant: 'data' as const,
+            subtitle: 'Loading LP positions and yield data',
+            showLiveIndicators: true,
+            progressSteps: ['Loading vault state', 'Fetching APY data', 'Calculating yields']
+          };
+        case 'Your Positions':
+          return {
+            variant: 'blockchain' as const,
+            subtitle: 'Fetching position data from smart contracts',
+            showLiveIndicators: true,
+            progressSteps: ['Querying positions', 'Calculating PnL', 'Loading history']
+          };
+        default:
+          return {
+            variant: variant,
+            subtitle: 'Please wait while we load the interface',
+            showLiveIndicators: false,
+            progressSteps: []
+          };
+      }
+    };
+
+    const config = getVariantAndSubtitle();
+
+    return (
+      <ProfessionalLoader
+        title={`Loading ${title}`}
+        subtitle={config.subtitle}
+        variant={config.variant}
+        size="lg"
+        showLiveIndicators={config.showLiveIndicators}
+        showProgress={showProgress}
+        progressSteps={config.progressSteps}
+        currentStep={1} // Simulate progress
+      />
+    );
+  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -220,6 +272,11 @@ const DashboardOptimized: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* Professional Status Bar */}
+      <ErrorBoundary panelName="ProfessionalStatusBar">
+        <ProfessionalStatusBar showDetailed={true} />
+      </ErrorBoundary>
 
       {/* Professional Footer */}
       <Footer />

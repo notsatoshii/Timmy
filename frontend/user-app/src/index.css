@@ -361,6 +361,118 @@
     filter: drop-shadow(0 0 24px rgba(230,255,43,0.4)) drop-shadow(0 0 48px rgba(230,255,43,0.15));
   }
 
+  /* Professional Components for Investor Demo */
+  .lever-card-professional {
+    @apply bg-surface-1 rounded-3xl border border-border/40 p-8;
+    box-shadow:
+      0 12px 40px rgba(0,0,0,0.5),
+      0 0 0 1px rgba(230,255,43,0.05),
+      inset 0 1px 0 rgba(255,255,255,0.03);
+    backdrop-filter: blur(20px);
+    position: relative;
+  }
+
+  .lever-card-professional::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 24px;
+    background: linear-gradient(135deg, rgba(230,255,43,0.02) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  /* Professional Button Styles */
+  .lever-btn-primary {
+    @apply px-6 py-3 bg-accent text-surface-0 rounded-xl font-semibold transition-all duration-300;
+    box-shadow:
+      0 4px 16px rgba(230,255,43,0.3),
+      0 0 0 1px rgba(230,255,43,0.8);
+  }
+
+  .lever-btn-primary:hover {
+    @apply bg-accent-dim;
+    transform: translateY(-1px);
+    box-shadow:
+      0 6px 20px rgba(230,255,43,0.4),
+      0 0 0 1px rgba(230,255,43,0.9);
+  }
+
+  .lever-btn-secondary {
+    @apply px-6 py-3 bg-surface-3 text-ivory rounded-xl font-medium transition-all duration-300;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .lever-btn-secondary:hover {
+    @apply bg-border-light text-ivory;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  }
+
+  .lever-btn-outline {
+    @apply px-6 py-3 bg-transparent text-steel rounded-xl font-medium transition-all duration-300;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+
+  .lever-btn-outline:hover {
+    @apply text-ivory;
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.25);
+  }
+
+  /* Professional Badge Styles */
+  .lever-badge-live {
+    @apply flex items-center space-x-2 px-3 py-1.5 rounded-full;
+    background: rgba(74, 222, 128, 0.1);
+    border: 1px solid rgba(74, 222, 128, 0.3);
+    backdrop-filter: blur(8px);
+  }
+
+  .lever-badge-security {
+    @apply flex items-center space-x-2 px-3 py-1.5 rounded-full;
+    background: rgba(230, 255, 43, 0.1);
+    border: 1px solid rgba(230, 255, 43, 0.3);
+    backdrop-filter: blur(8px);
+  }
+
+  .lever-badge-audit {
+    @apply flex items-center space-x-2 px-3 py-1.5 rounded-full;
+    background: rgba(251, 191, 36, 0.1);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    backdrop-filter: blur(8px);
+  }
+
+  .lever-badge-compliance {
+    @apply flex items-center space-x-2 px-3 py-1.5 rounded-full;
+    background: rgba(74, 222, 128, 0.1);
+    border: 1px solid rgba(74, 222, 128, 0.3);
+    backdrop-filter: blur(8px);
+  }
+
+  /* Enhanced Loading Animations */
+  .lever-loader-spinner {
+    @apply inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(230,255,43,0.3);
+    border-radius: 50%;
+    border-top-color: rgba(230,255,43,1);
+    animation: lever-spin 1s ease-in-out infinite;
+  }
+
+  @keyframes lever-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Professional Typography */
+  .lever-heading-sm {
+    @apply font-semibold text-lg tracking-tight;
+  }
+
+  .lever-caption {
+    @apply text-xs font-medium uppercase tracking-wider;
+  }
+
   /* Legacy compatibility */
   .card {
     @apply bg-surface-1 border border-border rounded-lg;

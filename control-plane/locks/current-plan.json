@@ -4,15 +4,13 @@
       "id": "1",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Root cause is creating new testing scripts and infrastructure (Playwright/Puppeteer). No dependencies since this is foundational testing methodology."
+      "reason": "INFRA lane because it creates new testing scripts (Playwright/Puppeteer) and modifies control-plane QA system. No dependencies as this is foundational testing infrastructure work."
     },
     {
       "id": "2",
       "lane": "FRONTEND",
-      "depends_on": [
-        "1"
-      ],
-      "reason": "Root cause is modifying React components, adding UI elements and error boundaries. Depends on task 1 because new testing methodology should validate these UI improvements."
+      "depends_on": [],
+      "reason": "FRONTEND lane because it modifies React components, adds UI elements, loading states, and error boundaries. No dependencies as UI improvements can be made independently."
     },
     {
       "id": "3",
@@ -21,22 +19,21 @@
         "1",
         "2"
       ],
-      "reason": "Root cause is writing documentation and control-plane configs. Depends on 1 and 2 since it documents their completion and results."
+      "reason": "INFRA lane because it creates control-plane documentation and system status summaries. Depends on tasks 1 and 2 since it documents the final sprint state after testing methodology and UI improvements are complete."
     },
     {
       "id": "4",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Root cause is system monitoring scripts and checks. No dependencies since this is ongoing monitoring independent of other changes."
+      "reason": "INFRA lane because it involves monitoring scripts and system service validation. No dependencies as it monitors existing live system functionality."
     },
     {
       "id": "5",
       "lane": "INFRA",
       "depends_on": [
-        "1",
-        "2"
+        "1"
       ],
-      "reason": "Root cause is creating browser automation and testing scripts. Depends on 1 (builds on testing foundation) and 2 (tests the improved UI components)."
+      "reason": "INFRA lane because it creates browser automation testing infrastructure. Depends on task 1 since it extends the browser testing methodology that task 1 establishes."
     }
   ]
 }

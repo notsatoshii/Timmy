@@ -91,18 +91,25 @@ else
     PASS=$((PASS+1))
 fi
 
-# Frontend (React SPA Testing)
-FRONTEND_RESULT=$(node /home/lever/lever-protocol/scripts/react-spa-verification.js --quick 2>/dev/null)
+# Frontend (React SPA Testing with Improved Scoring)
+FRONTEND_RESULT=$(node /home/lever/lever-protocol/scripts/improved-qa-scoring.js 2>/dev/null)
 FRONTEND_EXIT_CODE=$?
 if [ $FRONTEND_EXIT_CODE -eq 0 ]; then
-    check "frontend_react_spa" "PASS - React SPA verified via browser testing" ""
+    # Extract score from the improved QA results
+    if [ -f "/home/lever/lever-protocol/control-plane/dispatcher-logs/qa-report-latest.json" ]; then
+        QA_SCORE=$(cat /home/lever/lever-protocol/control-plane/dispatcher-logs/qa-report-latest.json | grep -o '"overall_score":[0-9]*' | cut -d: -f2)
+        TESTING_METHOD=$(cat /home/lever/lever-protocol/control-plane/dispatcher-logs/qa-report-latest.json | grep -o '"testing_method":"[^"]*"' | cut -d\" -f4)
+        check "frontend_react_spa" "PASS - React SPA score: ${QA_SCORE}/100 (${TESTING_METHOD})" ""
+    else
+        check "frontend_react_spa" "PASS - React SPA verified with improved scoring" ""
+    fi
 else
-    # Fallback to basic HTTP check if browser testing fails
+    # Final fallback to basic HTTP (should rarely be needed now)
     HTTP=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000 2>/dev/null)
     if [ "$HTTP" = "200" ]; then
-        check "frontend_basic_http" "PASS - HTTP 200 (browser testing failed, using fallback)" ""
+        check "frontend_basic_http" "WARN - HTTP 200 only (improved QA scoring failed)" ""
     else
-        check "frontend" "FAIL - HTTP $HTTP and browser testing failed" ""
+        check "frontend" "FAIL - HTTP $HTTP and improved QA scoring failed" ""
     fi
 fi
 

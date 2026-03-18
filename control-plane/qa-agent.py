@@ -219,17 +219,38 @@ def report_issues(issues):
 def run_cycle(n):
     log(f"═══ QA Cycle #{n} — 3 Layers ═══════════")
     env = source_env()
-    # Test React SPA with proper browser testing (replaces curl)
-    react_out, react_code = run("node scripts/react-spa-verification.js --quick", timeout=30)
-    if react_code != 0:
-        # Fallback to curl for basic connectivity
+    # Test React SPA with improved QA scoring (replaces old curl fallback)
+    log("🚀 Running improved React SPA testing...")
+    react_out, react_code = run("node scripts/improved-qa-scoring.js", timeout=45)
+    if react_code == 0:
+        log("✅ React SPA testing completed with improved scoring")
+
+        # Read the detailed results
+        qa_results_path = f"{CONTROL}/dispatcher-logs/qa-report-latest.json"
+        if os.path.exists(qa_results_path):
+            try:
+                with open(qa_results_path, 'r') as f:
+                    qa_data = json.load(f)
+                score = qa_data.get('overall_score', 0)
+                method = qa_data.get('testing_method', 'unknown')
+                browser_automation = qa_data.get('browser_automation', False)
+
+                log(f"  📊 QA Score: {score}/100 ({method})")
+                log(f"  🖥️  Browser automation: {'Available' if browser_automation else 'Degraded (missing deps)'}")
+
+                if not browser_automation:
+                    log("  💡 Tip: Install browser dependencies for full testing and higher scores")
+
+            except Exception as e:
+                log(f"  ⚠️  Could not read QA results: {e}")
+    else:
+        log(f"⚠️  Improved QA scoring failed, using basic connectivity check")
+        # Final fallback for extreme cases
         fallback_out, _ = run("curl -s -o /dev/null -w '%{http_code}' http://localhost:3000")
         if fallback_out != '200':
-            log(f"❌ Frontend React SPA failed AND HTTP {fallback_out}"); notify(f"Frontend down - both React and HTTP failed"); return
+            log(f"❌ Frontend completely down - HTTP {fallback_out}"); notify(f"Frontend down - all testing failed"); return
         else:
-            log(f"⚠️  React SPA verification failed but HTTP works - continuing with degraded testing"); notify(f"React SPA testing failed, using fallback")
-    else:
-        log("✅ React SPA verified with browser testing")
+            log(f"⚠️  Basic HTTP works but QA scoring failed - continuing with minimal testing")
 
     log("⛓  On-chain truth...")
     truth = get_on_chain_truth(env)

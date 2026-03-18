@@ -1,0 +1,105 @@
+{
+  "timestamp": "2026-03-18T21:20:43.514Z",
+  "testing_method": "intelligent_fallback",
+  "browser_automation_available": false,
+  "scores": {
+    "technical": 75,
+    "professional": 70,
+    "investor_ready": 65,
+    "overall": 71,
+    "note": "Scores are conservative due to fallback testing - install browser dependencies for full assessment"
+  },
+  "tests": [
+    {
+      "name": "HTTP Connectivity",
+      "passed": true,
+      "score": 90,
+      "details": {
+        "status_code": 200,
+        "content_length": 3064,
+        "has_react_markers": true
+      }
+    },
+    {
+      "name": "HTML Structure",
+      "passed": true,
+      "score": 55,
+      "details": {
+        "has_react_root": true,
+        "has_react_scripts": false,
+        "has_meta_tags": true,
+        "has_title": true,
+        "has_favicon": false,
+        "script_count": 1,
+        "link_count": 7
+      }
+    },
+    {
+      "name": "Asset Loading",
+      "passed": true,
+      "score": 80,
+      "details": {
+        "assets_tested": 4,
+        "successful": 4,
+        "results": [
+          {
+            "asset": "/static/js/",
+            "status": 200,
+            "success": true
+          },
+          {
+            "asset": "/static/css/",
+            "status": 200,
+            "success": true
+          },
+          {
+            "asset": "/deployments/core-deployment.json",
+            "status": 200,
+            "success": true
+          },
+          {
+            "asset": "/deployments/contract-metadata.json",
+            "status": 200,
+            "success": true
+          }
+        ]
+      },
+      "issues": []
+    },
+    {
+      "name": "API Endpoint Testing",
+      "passed": true,
+      "score": 70,
+      "details": {
+        "endpoints_tested": 3,
+        "results": [
+          {
+            "endpoint": "http://localhost:3000/api/health",
+            "status": 200,
+            "success": true,
+            "data": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"/><link rel=\"icon\" href=\"/lever-icon.png\" "
+          },
+          {
+            "endpoint": "http://localhost:3000/api/status",
+            "status": 200,
+            "success": true,
+            "data": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"/><link rel=\"icon\" href=\"/lever-icon.png\" "
+          },
+          {
+            "endpoint": "http://localhost:3000/health",
+            "status": 200,
+            "success": true,
+            "data": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"/><link rel=\"icon\" href=\"/lever-icon.png\" "
+          }
+        ]
+      },
+      "note": "Limited API testing in fallback mode"
+    }
+  ],
+  "issues": [],
+  "recommendations": [
+    "Install browser dependencies (libatk-1.0-0, libatk-bridge2.0-0, etc.) for full React SPA testing and higher scores",
+    "Current score is conservative due to inability to verify JavaScript-rendered content"
+  ],
+  "screenshots": 0
+}
