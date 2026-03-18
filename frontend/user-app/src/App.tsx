@@ -24,7 +24,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <DemoProvider>
           <NotificationProvider>
-            <div className="min-h-screen bg-gray-50">
+            <div className="min-h-screen bg-surface-0">
               <ErrorBoundary panelName="Application">
                 <DashboardOptimized />
               </ErrorBoundary>

@@ -6,6 +6,7 @@ import Header from './Header';
 import ProtocolStats from './ProtocolStats';
 import Markets from './Markets';
 import LazyMarketDetail from './LazyMarketDetail';
+import MainnetRoadmap from './MainnetRoadmap';
 import ErrorBoundary from './ErrorBoundary';
 import Skeleton from './Skeleton';
 
@@ -14,7 +15,7 @@ const Trading = lazy(() => import('./Trading'));
 const VaultOptimized = lazy(() => import('./VaultOptimized'));
 const Positions = lazy(() => import('./Positions'));
 
-type TabType = 'markets' | 'trading' | 'vault' | 'positions';
+type TabType = 'markets' | 'trading' | 'vault' | 'positions' | 'roadmap';
 
 interface Market {
   id: string;
@@ -67,6 +68,7 @@ const DashboardOptimized: React.FC = () => {
     { id: 'trading' as TabType, label: 'Trading', description: 'Open/close positions' },
     { id: 'vault' as TabType, label: 'Vault', description: 'LP deposits & yields' },
     { id: 'positions' as TabType, label: 'Positions', description: 'Your active positions' },
+    { id: 'roadmap' as TabType, label: 'Roadmap', description: 'Mainnet deployment plan' },
   ];
 
   // Loading skeleton for heavy components
@@ -132,6 +134,12 @@ const DashboardOptimized: React.FC = () => {
             <Suspense fallback={<ComponentSkeleton title="Your Positions" />}>
               <Positions />
             </Suspense>
+          </ErrorBoundary>
+        );
+      case 'roadmap':
+        return (
+          <ErrorBoundary panelName="Roadmap">
+            <MainnetRoadmap />
           </ErrorBoundary>
         );
       default:

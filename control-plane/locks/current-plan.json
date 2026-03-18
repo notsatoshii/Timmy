@@ -1,0 +1,18 @@
+{
+  "tasks": [
+    {
+      "id": "2",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "UI/UX changes to React components - adding banners, disclaimers, and visual indicators to address investor trust issues"
+    },
+    {
+      "id": "3",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "2"
+      ],
+      "reason": "Frontend stability verification should happen after testnet clarity changes are complete. Same lane dependency - must verify the complete frontend including new UI elements"
+    }
+  ]
+}

@@ -117,6 +117,24 @@ export const useMarketProbabilities = (options: UseMarketProbabilitiesOptions = 
   });
 
   // Function to fetch all market probabilities from OracleAdapter
+  
+  // Fetch from local prices.json (written by keeper, always available)
+  const fetchLocalPrices = useCallback(async (): Promise<Record<string, number> | null> => {
+    try {
+      const response = await fetch('/prices.json?t=' + Date.now());
+      if (!response.ok) return null;
+      const data = await response.json();
+      if (!data.prices || Date.now() / 1000 - data.lastUpdate > 120) return null; // stale > 2min
+      const probabilities: Record<string, number> = {};
+      for (const [marketId, info] of Object.entries(data.prices)) {
+        probabilities[marketId] = (info as any).probability;
+      }
+      return probabilities;
+    } catch {
+      return null;
+    }
+  }, []);
+
   const fetchOracleProbabilities = useCallback(async (): Promise<Record<string, number> | null> => {
     if (!CONTRACT_ADDRESSES.oracleAdapter || firstMarketError) {
       return null;
@@ -173,12 +191,20 @@ export const useMarketProbabilities = (options: UseMarketProbabilitiesOptions = 
 
     const updateOracleData = async () => {
       try {
-        const probabilities = await fetchOracleProbabilities();
-        if (probabilities !== null) {
-          setOracleProbabilities(probabilities);
+        // Try local prices.json first (instant, no RPC needed)
+        const localPrices = await fetchLocalPrices();
+        if (localPrices && Object.keys(localPrices).length >= 8) {
+          setOracleProbabilities(localPrices);
           setOracleError(null);
+        } else {
+          // Fallback to on-chain RPC
+          const probabilities = await fetchOracleProbabilities();
+          if (probabilities !== null) {
+            setOracleProbabilities(probabilities);
+            setOracleError(null);
+          }
         }
-        // If null (0 markets read), keep previous data
+        // If both fail, keep previous data
       } catch (error) {
         console.error('Error fetching oracle probabilities:', error);
         setOracleError(error instanceof Error ? error.message : 'Unknown error');

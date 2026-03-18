@@ -28,8 +28,23 @@ const DEMO_FALLBACK_VALUES = {
   borrowRate: BigInt("200000000000000"),
 };
 
+interface FallbackStatus {
+  tvlFallback: boolean;
+  oiFallback: boolean;
+  insuranceFallback: boolean;
+  volumeFallback: boolean;
+  apyFallback: boolean;
+}
+
 const ProtocolStats: React.FC = () => {
   const [stats, setStats] = useState<ProtocolStatsData | null>(null);
+  const [fallbackStatus, setFallbackStatus] = useState<FallbackStatus>({
+    tvlFallback: false,
+    oiFallback: false,
+    insuranceFallback: false,
+    volumeFallback: false,
+    apyFallback: false,
+  });
   const [addresses, setAddresses] = useState(getContractAddresses());
 
   useEffect(() => {
@@ -74,11 +89,17 @@ const ProtocolStats: React.FC = () => {
 
   useEffect(() => {
     try {
-      const safeTvl = tvlRaw && !tvlError ? tvlRaw : DEMO_FALLBACK_VALUES.tvl;
-      const safeTotalOI = totalOIRaw !== undefined && !oiError ? totalOIRaw : DEMO_FALLBACK_VALUES.totalOI;
-      const safeInsurance = insuranceRaw !== undefined && !insuranceError ? insuranceRaw : DEMO_FALLBACK_VALUES.insuranceFund;
-      const safeVolume = volume24h !== undefined ? volume24h : DEMO_FALLBACK_VALUES.volume24h;
-      const safeBorrowRate = currentBorrowRate && !borrowRateError && currentBorrowRate > BigInt(0) ? currentBorrowRate : DEMO_FALLBACK_VALUES.borrowRate;
+      const tvlFallback = !(tvlRaw && !tvlError);
+      const oiFallback = !(totalOIRaw !== undefined && !oiError);
+      const insuranceFallback = !(insuranceRaw !== undefined && !insuranceError);
+      const volumeFallback = !(volume24h !== undefined);
+      const borrowRateFallback = !(currentBorrowRate && !borrowRateError && currentBorrowRate > BigInt(0));
+
+      const safeTvl = tvlFallback ? DEMO_FALLBACK_VALUES.tvl : tvlRaw;
+      const safeTotalOI = oiFallback ? DEMO_FALLBACK_VALUES.totalOI : totalOIRaw;
+      const safeInsurance = insuranceFallback ? DEMO_FALLBACK_VALUES.insuranceFund : insuranceRaw;
+      const safeVolume = volumeFallback ? DEMO_FALLBACK_VALUES.volume24h : volume24h;
+      const safeBorrowRate = borrowRateFallback ? DEMO_FALLBACK_VALUES.borrowRate : currentBorrowRate;
 
       const hoursPerYear = BigInt(8760);
       const lpShare = BigInt(50);
@@ -90,6 +111,16 @@ const ProtocolStats: React.FC = () => {
       const apyBpsTimes100 = projectedAnnualRevenue * BigInt(10000) / tvlInWad;
       const utilizationBpsTimes100 = totalOIInWad * BigInt(10000) / tvlInWad;
 
+      const apyFallback = tvlFallback || oiFallback || borrowRateFallback;
+
+      setFallbackStatus({
+        tvlFallback,
+        oiFallback,
+        insuranceFallback,
+        volumeFallback,
+        apyFallback,
+      });
+
       setStats({
         tvl: `$${formatUsdt(safeTvl)}`,
         dailyVolume: `$${formatUsdt(safeVolume)}`,
@@ -100,24 +131,36 @@ const ProtocolStats: React.FC = () => {
       });
     } catch (error) {
       console.error('Error calculating protocol stats:', error);
+      setFallbackStatus({
+        tvlFallback: true,
+        oiFallback: true,
+        insuranceFallback: true,
+        volumeFallback: true,
+        apyFallback: true,
+      });
       setStats({
-        tvl: `$${formatUsdt(DEMO_FALLBACK_VALUES.tvl)}`,
-        dailyVolume: `$${formatUsdt(DEMO_FALLBACK_VALUES.volume24h)}`,
-        totalOI: `$${formatUsdt(DEMO_FALLBACK_VALUES.totalOI)}`,
-        lpApy: '15.43%',
-        utilizationRate: '60.00%',
-        insuranceFund: `$${formatWad(DEMO_FALLBACK_VALUES.insuranceFund)}`,
+        tvl: `$${formatUsdt(DEMO_FALLBACK_VALUES.tvl)} (Demo)`,
+        dailyVolume: `$${formatUsdt(DEMO_FALLBACK_VALUES.volume24h)} (Demo)`,
+        totalOI: `$${formatUsdt(DEMO_FALLBACK_VALUES.totalOI)} (Demo)`,
+        lpApy: '15.43% (Demo)',
+        utilizationRate: '60.00% (Demo)',
+        insuranceFund: `$${formatWad(DEMO_FALLBACK_VALUES.insuranceFund)} (Demo)`,
       });
     }
   }, [tvlRaw, totalOIRaw, insuranceRaw, currentBorrowRate, volume24h, tvlError, oiError, insuranceError, borrowRateError, addresses]);
 
   const isLoading = tvlLoading || oiLoading || insuranceLoading || volumeLoading;
 
-  const StatBox: React.FC<{ label: string; value: string | undefined; highlight?: boolean; isLoading: boolean }> = 
-    ({ label, value, highlight, isLoading: loading }) => (
+  const StatBox: React.FC<{ label: string; value: string | undefined; highlight?: boolean; isLoading: boolean; isFallback?: boolean }> =
+    ({ label, value, highlight, isLoading: loading, isFallback }) => (
     <div className="lever-inset text-center">
-      <div className="text-[10px] uppercase tracking-widest font-medium text-steel mb-2">
-        {label}
+      <div className="text-[10px] uppercase tracking-widest font-medium text-steel mb-2 flex items-center justify-center space-x-1">
+        <span>{label}</span>
+        {isFallback && (
+          <span className="bg-yellow-600/20 text-yellow-400 px-1 rounded text-[8px] border border-yellow-600/40">
+            DEMO
+          </span>
+        )}
       </div>
       {loading ? (
         <Skeleton variant="text" className="h-7 w-24 mx-auto" />
@@ -139,28 +182,46 @@ const ProtocolStats: React.FC = () => {
         {/* Stats Card */}
         <div className="lever-card">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 lg:gap-4">
-            <StatBox label="Total TVL" value={stats?.tvl} highlight={true} isLoading={isLoading} />
-            <StatBox label="Volume" value={stats?.dailyVolume} isLoading={isLoading} />
-            <StatBox label="Total OI" value={stats?.totalOI} isLoading={isLoading} />
-            <StatBox label="LP APY" value={stats?.lpApy} highlight={true} isLoading={isLoading} />
-            <StatBox label="Utilization" value={stats?.utilizationRate} isLoading={isLoading} />
-            <StatBox label="Insurance Fund" value={stats?.insuranceFund} isLoading={isLoading} />
+            <StatBox label="Total TVL" value={stats?.tvl} highlight={true} isLoading={isLoading} isFallback={fallbackStatus.tvlFallback} />
+            <StatBox label="Volume" value={stats?.dailyVolume} isLoading={isLoading} isFallback={fallbackStatus.volumeFallback} />
+            <StatBox label="Total OI" value={stats?.totalOI} isLoading={isLoading} isFallback={fallbackStatus.oiFallback} />
+            <StatBox label="LP APY" value={stats?.lpApy} highlight={true} isLoading={isLoading} isFallback={fallbackStatus.apyFallback} />
+            <StatBox label="Utilization" value={stats?.utilizationRate} isLoading={isLoading} isFallback={fallbackStatus.oiFallback || fallbackStatus.tvlFallback} />
+            <StatBox label="Insurance Fund" value={stats?.insuranceFund} isLoading={isLoading} isFallback={fallbackStatus.insuranceFallback} />
           </div>
         </div>
 
         {/* Status Indicators */}
-        <div className="mt-3 flex justify-center items-center space-x-6 text-xs">
-          <div className="flex items-center space-x-1.5">
-            <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse"></div>
-            <span className="text-steel">Live Prices</span>
+        <div className="mt-3 space-y-2">
+          <div className="flex justify-center items-center space-x-6 text-xs">
+            <div className="flex items-center space-x-1.5">
+              <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse"></div>
+              <span className="text-steel">Live Prices</span>
+            </div>
+            <div className="flex items-center space-x-1.5">
+              <div className="w-1.5 h-1.5 bg-teal rounded-full"></div>
+              <span className="text-steel">Base Sepolia</span>
+            </div>
+            <div className="flex items-center space-x-1.5">
+              <div className="w-1.5 h-1.5 bg-accent rounded-full"></div>
+              <span className="text-steel">Oracle Active</span>
+            </div>
           </div>
-          <div className="flex items-center space-x-1.5">
-            <div className="w-1.5 h-1.5 bg-teal rounded-full"></div>
-            <span className="text-steel">Base Sepolia</span>
-          </div>
-          <div className="flex items-center space-x-1.5">
-            <div className="w-1.5 h-1.5 bg-accent rounded-full"></div>
-            <span className="text-steel">Oracle Active</span>
+
+          {/* Audit & Deployment Status */}
+          <div className="flex justify-center items-center space-x-6 text-xs">
+            <div className="flex items-center space-x-1.5">
+              <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full"></div>
+              <span className="text-steel">Audit: In Progress</span>
+            </div>
+            <div className="flex items-center space-x-1.5">
+              <div className="w-1.5 h-1.5 bg-orange-500 rounded-full"></div>
+              <span className="text-steel">Mainnet: Q2 2026</span>
+            </div>
+            <div className="flex items-center space-x-1.5">
+              <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+              <span className="text-steel">Security Review: Pending</span>
+            </div>
           </div>
         </div>
       </div>

@@ -26,7 +26,7 @@ class MockOracleKeeper:
         self.rpc_url = os.getenv('RPC_URL', 'https://sepolia.base.org')
         self.private_key = os.getenv('KEEPER_KEY', '').strip()
         self.oracle_adapter = os.getenv('ORACLE_ADAPTER', '')
-        self.push_interval = int(os.getenv('PUSH_INTERVAL', '30'))
+        self.push_interval = int(os.getenv('PUSH_INTERVAL', '15'))
         self.dry_run = os.getenv('DRY_RUN', 'false').lower() == 'true'
 
         # Initialize web3
@@ -66,6 +66,27 @@ class MockOracleKeeper:
             address=Web3.to_checksum_address(self.oracle_adapter),
             abi=self.oracle_abi
         )
+
+    
+    def write_prices_json(self):
+        """Write current prices to static JSON file for frontend consumption"""
+        try:
+            prices = {}
+            for market_id, price in self.current_prices.items():
+                prices[market_id] = {
+                    "probability": round(float(price), 6),
+                    "timestamp": int(time.time()),
+                }
+            output = {
+                "prices": prices,
+                "lastUpdate": int(time.time()),
+                "source": "oracle_keeper"
+            }
+            json_path = "/home/lever/lever-protocol/frontend/user-app/public/prices.json"
+            with open(json_path, 'w') as f:
+                json.dump(output, f)
+        except Exception as e:
+            logging.warning(f"Failed to write prices.json: {e}")
 
     def load_markets(self) -> List[Dict]:
         """Load market configuration"""
@@ -191,7 +212,8 @@ class MockOracleKeeper:
                 cycle_time = time.time() - start_time
                 logging.info(f"Cycle complete in {cycle_time:.1f}s")
 
-                time.sleep(self.push_interval)
+                self.write_prices_json()
+            time.sleep(self.push_interval)
 
             except KeyboardInterrupt:
                 logging.info("Shutting down...")
