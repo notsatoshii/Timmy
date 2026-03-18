@@ -1,28 +1,32 @@
-Based on the QA report showing a score of 60 with critical frontend service configuration issues, here are the prioritized tasks:
+Looking at the QA report, there's a **CRITICAL** frontend deployment failure that's completely blocking the investor demo. The systemd service is serving a directory listing instead of the React application.
 
-### 1. Fix Frontend Service Port Configuration [CRITICAL] [FRONTEND]
-- [ ] Resolve systemd service binding to port 3000 instead of 39671
-- [ ] Stop development server (react-app-rewired) running alongside production 
-- [ ] Ensure lever-frontend service properly starts on intended port for investor demo
+## Priority Tasks
 
-### 2. Resolve Service Deployment Conflicts [HIGH] [DEVOPS]  
-- [ ] Kill conflicting development processes causing port conflicts
-- [ ] Fix systemd service configuration for stable port binding
-- [ ] Implement proper production deployment separation from dev environment
+### 1. CRITICAL DEPLOYMENT FIX [CRITICAL] [FRONTEND]
+- [ ] Fix systemd service configuration - it's serving directory listing instead of React app
+- [ ] Copy working build from `build.safe/` to correct location OR reconfigure service path
+- [ ] Verify React app loads properly at localhost:3000 with functional UI
+- [ ] Take screenshots to confirm investor demo readiness
 
-### 3. Investigate Insurance Fund Bootstrap Issue [MEDIUM] [CONTRACTS]
-- [ ] Verify why Insurance Fund remains at $10K bootstrap level
-- [ ] Check if fees are properly flowing through FeeRouter to InsuranceFund  
-- [ ] Confirm fee distribution pipeline is operational (50/30/20 split)
+### 2. Verify Core Demo Functionality [HIGH] [SYSTEM]
+- [ ] Test position opening flow (5x, 10x, 15x leverage confirmed working)
+- [ ] Verify all tabs render correctly (Trading, Positions, Vault, Markets)
+- [ ] Confirm live data displays (TVL $60.5M, 236 positions, OI $12.5M)
+- [ ] Run full health check and user flow tests
 
-### 4. Verify Oracle Keeper Stability [MEDIUM] [ORACLE]
-- [ ] Confirm mockkeeper.py is running and updating prices
-- [ ] Check for stale price data in OracleAdapter
-- [ ] Ensure price pipeline remains active for live demo
+### 3. Oracle Keeper Monitoring [MEDIUM] [BACKEND] 
+- [ ] Verify mockkeeper.py is running and updating prices
+- [ ] Check price freshness and oracle pipeline stability
+- [ ] Monitor for any stale price warnings
 
-### 5. Monitor System Health for Demo Readiness [LOW] [QA]
-- [ ] Track LP APY improvement as leverage utilization increases
-- [ ] Verify all tabs render correctly after port fixes
-- [ ] Confirm 234 positions and $60.5M TVL display properly in frontend
+### 4. Insurance Fund Flow Investigation [MEDIUM] [CONTRACTS]
+- [ ] Debug why Insurance Fund stuck at $10K bootstrap value  
+- [ ] Verify FeeRouter is properly directing fees to insurance fund
+- [ ] Check fee accumulation and distribution pipeline
 
-**Priority Focus**: Frontend service configuration is blocking professional demo appearance - tackle tasks 1-2 immediately.
+### 5. LP APY Analysis [LOW] [SYSTEM]
+- [ ] Investigate why LP APY is only 0.21% (expected to increase with higher OI)
+- [ ] Monitor APY changes as more leveraged positions are created
+- [ ] Document expected APY ranges for investor materials
+
+**CRITICAL**: Task #1 must be completed immediately - the frontend is completely broken and would show investors only a file browser instead of the trading application.

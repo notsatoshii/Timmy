@@ -1,22 +1,22 @@
 {
-  "timestamp": "2026-03-18T15:56:46.731891+00:00",
+  "timestamp": "2026-03-18T16:03:30.957925+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
   "contract_checks": [
     {
       "name": "TVL",
-      "value": "60501227994841 [6.05e13]",
+      "value": "60519059204690 [6.051e13]",
       "status": "ok"
     },
     {
       "name": "Positions",
-      "value": "234",
+      "value": "236",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "12468722554735 [1.246e13]",
+      "value": "12530722554735 [1.253e13]",
       "status": "ok"
     },
     {
@@ -28,30 +28,30 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Frontend service misconfigured - running on port 39671 instead of intended port 3000",
-    "Vision: Port conflict between development server and production build server",
-    "Vision: Service instability with multiple restarts visible in logs",
-    "Vision: Development environment running alongside production build suggests poor deployment practices",
-    "Vision: systemd service unable to bind to intended port, indicating configuration management issues"
+    "Vision: Frontend completely broken - serving directory listing instead of React application",
+    "Vision: No working product visible - investor would see only file browser with build artifacts",
+    "Vision: Built React app exists in build.safe/ but wrong directory being served by systemd service",
+    "Vision: Critical deployment failure - service misconfigured to serve incomplete build folder",
+    "Vision: Zero functionality demonstrated - no trading interface, no data, no user experience"
   ],
   "functional_issues": [],
   "score": 60,
   "vision_review": {
-    "professional_score": 6,
-    "trust_score": 5,
+    "professional_score": 1,
+    "trust_score": 1,
     "issues": [
-      "Frontend service misconfigured - running on port 39671 instead of intended port 3000",
-      "Port conflict between development server and production build server",
-      "Service instability with multiple restarts visible in logs",
-      "Development environment running alongside production build suggests poor deployment practices",
-      "systemd service unable to bind to intended port, indicating configuration management issues"
+      "Frontend completely broken - serving directory listing instead of React application",
+      "No working product visible - investor would see only file browser with build artifacts",
+      "Built React app exists in build.safe/ but wrong directory being served by systemd service",
+      "Critical deployment failure - service misconfigured to serve incomplete build folder",
+      "Zero functionality demonstrated - no trading interface, no data, no user experience"
     ],
     "improvements": [
-      "Fix systemd service configuration to properly bind to port 3000",
-      "Stop development server (react-app-rewired) and run only production build",
-      "Implement proper production deployment pipeline with environment separation",
-      "Add service monitoring and alerting for port conflicts and service failures",
-      "Resolve port binding issues and ensure consistent service startup"
+      "Fix deployment: copy working build from build.safe/ to build/ or reconfigure service path",
+      "Ensure systemd service serves properly built React application with index.html",
+      "Implement build process verification to prevent serving incomplete builds",
+      "Add health checks to detect when React app fails to load properly",
+      "Test full deployment pipeline before investor demos"
     ]
   }
 }

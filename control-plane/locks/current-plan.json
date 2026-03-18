@@ -4,7 +4,7 @@
       "id": "1",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Systemd service configuration and port binding issues require INFRA lane. No dependencies as this is the critical blocker."
+      "reason": "Root cause is systemd service misconfiguration, requires file system operations and service reconfiguration - classic INFRA work. No dependencies since it's the foundation fix."
     },
     {
       "id": "2",
@@ -12,28 +12,25 @@
       "depends_on": [
         "1"
       ],
-      "reason": "Service deployment conflicts and process management are INFRA tasks. Depends on task 1 since resolving conflicts comes after attempting the primary service fix."
+      "reason": "Root cause is need to run test scripts and verification workflows. Depends on Task 1 because frontend functionality testing requires the React app to be properly served first."
     },
     {
       "id": "3",
-      "lane": "CONTRACT",
+      "lane": "INFRA",
       "depends_on": [],
-      "reason": "Investigating fee flows through FeeRouter and InsuranceFund requires contract analysis and potentially Solidity fixes. Independent of service issues."
+      "reason": "Root cause is monitoring Python scripts and oracle pipeline stability - involves operational monitoring and potentially updating monitoring configs. Independent of frontend deployment."
     },
     {
       "id": "4",
-      "lane": "INFRA",
+      "lane": "CONTRACT",
       "depends_on": [],
-      "reason": "Monitoring mockkeeper.py script and oracle pipeline involves Python script management and system monitoring. Independent investigation."
+      "reason": "Root cause is contract logic debugging in FeeRouter and Insurance Fund - requires analyzing Solidity code and potentially contract interactions. Independent of other tasks."
     },
     {
       "id": "5",
       "lane": "INFRA",
-      "depends_on": [
-        "1",
-        "2"
-      ],
-      "reason": "System health monitoring and verification tasks span multiple systems. Depends on port fixes since it needs to verify tabs render correctly after those fixes are complete."
+      "depends_on": [],
+      "reason": "Root cause is APY calculation and monitoring analysis - involves backend data analysis scripts and monitoring configurations. Can be done independently of frontend or contract fixes."
     }
   ]
 }

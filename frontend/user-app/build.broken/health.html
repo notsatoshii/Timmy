@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LEVER Protocol Health Check</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #0a0a0a;
+            color: #e5e5e5;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .status {
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .healthy { background: #065f46; color: #10b981; }
+        .warning { background: #78350f; color: #f59e0b; }
+        .critical { background: #7f1d1d; color: #ef4444; }
+        .check {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .check-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .passing { background: #065f46; color: #10b981; }
+        .failing { background: #7f1d1d; color: #ef4444; }
+        pre {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 10px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>LEVER Protocol Health Check</h1>
+        <p>Real-time application health and monitoring status</p>
+
+        <div id="health-status">
+            Loading health status...
+        </div>
+
+        <div id="detailed-checks">
+            Loading detailed checks...
+        </div>
+
+        <div style="margin-top: 30px;">
+            <h3>Raw Health Data</h3>
+            <pre id="raw-data">Loading...</pre>
+        </div>
+
+        <div style="margin-top: 20px; text-align: center; color: #666; font-size: 12px;">
+            Auto-refresh every 30 seconds | Last updated: <span id="last-updated"></span>
+        </div>
+    </div>
+
+    <script>
+        let healthData = null;
+
+        function updateLastUpdated() {
+            document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
+        }
+
+        function getStatusClass(status) {
+            switch(status) {
+                case 'healthy':
+                case 'passing':
+                    return 'healthy';
+                case 'warning':
+                    return 'warning';
+                case 'critical':
+                case 'failing':
+                    return 'critical';
+                default:
+                    return 'warning';
+            }
+        }
+
+        function getStatusIcon(status) {
+            switch(status) {
+                case 'healthy':
+                case 'passing':
+                    return '✅';
+                case 'warning':
+                    return '⚠️';
+                case 'critical':
+                case 'failing':
+                    return '❌';
+                default:
+                    return '❓';
+            }
+        }
+
+        async function loadHealthData() {
+            try {
+                // Try to get health data from the React app if it's loaded
+                if (window.__LEVER_HEALTH_CHECK__) {
+                    healthData = await window.__LEVER_HEALTH_CHECK__();
+                } else {
+                    // Fallback: basic browser-only checks
+                    healthData = {
+                        status: 'warning',
+                        timestamp: Date.now(),
+                        version: '0.1.0',
+                        uptime: 0,
+                        checks: {
+                            frontend: {
+                                status: navigator.onLine ? 'passing' : 'failing',
+                                message: navigator.onLine ? 'Browser online' : 'Browser offline',
+                                timestamp: Date.now()
+                            }
+                        },
+                        summary: { totalChecks: 1, passing: navigator.onLine ? 1 : 0, warnings: 0, failures: navigator.onLine ? 0 : 1 }
+                    };
+                }
+
+                renderHealthStatus();
+                renderDetailedChecks();
+                renderRawData();
+                updateLastUpdated();
+
+            } catch (error) {
+                console.error('Failed to load health data:', error);
+                document.getElementById('health-status').innerHTML = `
+                    <div class="status critical">
+                        ❌ CRITICAL - Failed to load health data: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function renderHealthStatus() {
+            const statusHtml = `
+                <div class="status ${getStatusClass(healthData.status)}">
+                    ${getStatusIcon(healthData.status)} ${healthData.status.toUpperCase()}
+                </div>
+                <p>
+                    Version: ${healthData.version} |
+                    Uptime: ${Math.floor(healthData.uptime / 60000)}m |
+                    Checks: ${healthData.summary.passing}/${healthData.summary.totalChecks}
+                </p>
+            `;
+            document.getElementById('health-status').innerHTML = statusHtml;
+        }
+
+        function renderDetailedChecks() {
+            let checksHtml = '<h3>Detailed Checks</h3>';
+
+            if (healthData.checks) {
+                Object.entries(healthData.checks).forEach(([checkName, check]) => {
+                    checksHtml += `
+                        <div class="check">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <strong style="text-transform: capitalize;">${checkName}</strong>
+                                <span class="check-status ${getStatusClass(check.status)}">
+                                    ${getStatusIcon(check.status)} ${check.status.toUpperCase()}
+                                </span>
+                            </div>
+                            <p style="margin: 5px 0; color: #ccc;">${check.message}</p>
+                            ${check.responseTime ? `<small style="color: #888;">Response time: ${Math.round(check.responseTime)}ms</small>` : ''}
+                        </div>
+                    `;
+                });
+            }
+
+            document.getElementById('detailed-checks').innerHTML = checksHtml;
+        }
+
+        function renderRawData() {
+            document.getElementById('raw-data').textContent = JSON.stringify(healthData, null, 2);
+        }
+
+        // Initial load
+        loadHealthData();
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadHealthData, 30000);
+
+        // Simple HTTP endpoint simulation for external monitoring
+        // External systems can check: GET /health.html and parse the status
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'HEALTH_CHECK_REQUEST') {
+                event.source.postMessage({
+                    type: 'HEALTH_CHECK_RESPONSE',
+                    data: healthData
+                }, event.origin);
+            }
+        });
+    </script>
+</body>
+</html>
