@@ -2,33 +2,37 @@
   "tasks": [
     {
       "id": "1",
-      "lane": "FRONTEND",
+      "lane": "INFRA",
       "depends_on": [],
-      "reason": "Root cause is frontend copy and HTML metadata that needs updating to reflect actual 30x leverage capability. No dependencies on other tasks."
+      "reason": "Root cause is mockkeeper service (Python script) that needs restart/investigation. While it includes frontend UI timestamp, the critical path is the backend service infrastructure."
     },
     {
       "id": "2",
-      "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "Root cause is frontend presentation elements (indicators, links, metrics display). Independent UI enhancement work."
+      "lane": "INFRA",
+      "depends_on": [
+        "4"
+      ],
+      "reason": "Health monitoring involves control-plane scripts and API endpoints. Depends on Task 4 because both tasks mention puppeteer dependencies setup, and testing infrastructure should be established first."
     },
     {
       "id": "3",
-      "lane": "CONTRACT",
-      "depends_on": [],
-      "reason": "Root cause is investigating Solidity contract behavior around fee routing from FeeRouter to Insurance Fund. Independent contract investigation."
+      "lane": "FRONTEND",
+      "depends_on": [
+        "1"
+      ],
+      "reason": "Requires React component modifications to display feed status indicators. Depends on Task 1 because showing meaningful feed status requires the oracle feeds to be working properly first."
     },
     {
       "id": "4",
-      "lane": "FRONTEND",
+      "lane": "INFRA",
       "depends_on": [],
-      "reason": "Root cause is frontend yield calculation and display logic. While related to fee flows, this is investigating frontend display issues independently."
+      "reason": "Testing infrastructure setup involves puppeteer installation, screenshot verification scripts, and control-plane testing configs. Independent foundation task."
     },
     {
       "id": "5",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Root cause is service monitoring and operational stability of mockkeeper systemd service. Independent infrastructure work."
+      "reason": "Creating REST API endpoints and backend architecture involves new services/scripts since no existing backend API server is evident in project structure. Independent infrastructure work."
     }
   ]
 }

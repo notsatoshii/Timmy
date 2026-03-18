@@ -102,6 +102,11 @@ const Markets: React.FC<MarketsProps> = ({ onTradeSelect, onMarketDetail }) => {
             <span className={`text-xs font-medium ${hasOracleData ? 'text-accent' : 'text-warning'}`}>
               {hasOracleData ? 'Oracle Active' : 'Fallback Data'}
             </span>
+            {lastUpdate > 0 && (
+              <span className={`text-xs ${hasOracleData ? 'text-steel' : 'text-warning/70'} font-mono`}>
+                • {formatLastUpdateTime(lastUpdate)}
+              </span>
+            )}
           </div>
           <button
             onClick={refreshProbabilities}
@@ -121,7 +126,11 @@ const Markets: React.FC<MarketsProps> = ({ onTradeSelect, onMarketDetail }) => {
         {lastUpdate > 0 && (
           <>
             <span className="text-border-light">·</span>
-            <span>Updated {formatLastUpdateTime(lastUpdate)}</span>
+            <span>Last update: {formatLastUpdateTime(lastUpdate)}</span>
+            <span className="text-border-light">·</span>
+            <span className="font-mono text-steel/70">
+              {new Date(lastUpdate).toLocaleTimeString()}
+            </span>
           </>
         )}
       </div>
