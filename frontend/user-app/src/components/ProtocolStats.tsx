@@ -105,17 +105,26 @@ const ProtocolStats: React.FC = () => {
       if (insuranceFallback) {
         safeInsurance = DEMO_FALLBACK_VALUES.insuranceFund;
       } else {
-        // Check if insurance value is unreasonably large (> $1k in WAD format to catch malformed values)
-        const insuranceAsWad = Number(insuranceRaw) / Number(WAD);
-        const insuranceAsUsdt = Number(insuranceRaw) / Number(BigInt(1e6));
+        // The insurance fund should be in USDT format (6 decimals), not WAD format (18 decimals)
+        // Expected range: $10K-$100K, so raw value should be 10,000,000 to 100,000,000 (in USDT format)
+        const expectedMinUsdtRaw = BigInt(10_000_000_000); // $10K in USDT format
+        const expectedMaxUsdtRaw = BigInt(1_000_000_000_000); // $1M in USDT format
 
-        console.log('Insurance fund detection - WAD format:', insuranceAsWad, 'USDT format:', insuranceAsUsdt);
+        console.log('Insurance fund raw value:', insuranceRaw.toString());
+        console.log('Expected range:', expectedMinUsdtRaw.toString(), 'to', expectedMaxUsdtRaw.toString());
 
-        if (insuranceAsWad > 1000) {
-          // Value appears to be in wrong format, use fallback
-          console.warn('Insurance fund value appears malformed:', insuranceRaw.toString(), 'using $10K fallback');
+        // If value is suspiciously large (> 1e15), it's likely in wrong format
+        if (insuranceRaw > BigInt(1e15)) {
+          console.warn('Insurance fund value appears to be in WAD format instead of USDT:', insuranceRaw.toString());
+          // Convert from WAD to USDT format: divide by 1e12 (WAD has 18 decimals, USDT has 6)
+          safeInsurance = insuranceRaw / BigInt(1e12);
+          console.log('Converted to USDT format:', safeInsurance.toString());
+        } else if (insuranceRaw < expectedMinUsdtRaw || insuranceRaw > expectedMaxUsdtRaw) {
+          // Value is outside expected range, use fallback
+          console.warn('Insurance fund value outside expected range:', insuranceRaw.toString(), 'using $10K fallback');
           safeInsurance = DEMO_FALLBACK_VALUES.insuranceFund;
         } else {
+          // Value appears to be in correct USDT format
           safeInsurance = insuranceRaw;
         }
       }
