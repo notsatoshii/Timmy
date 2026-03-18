@@ -4,21 +4,33 @@
       "id": "1",
       "lane": "CONTRACT",
       "depends_on": [],
-      "reason": "Root cause is likely corrupted calculations in FeeRouter/InsuranceFund Solidity contracts given the $5.011e24 value suggests overflow/math error rather than display formatting issue"
+      "reason": "Root cause is fee router contract logic failure requiring Solidity fixes, no dependencies as this is the source of fee distribution problems"
     },
     {
       "id": "2",
-      "lane": "INFRA",
+      "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Pure infrastructure task - checking mockkeeper.py service status and oracle pipeline functionality, no Solidity or React changes needed"
+      "reason": "Scientific notation display bug (5.011e24) is pure frontend WAD formatting issue, independent of contract data"
     },
     {
       "id": "3",
+      "lane": "INFRA",
+      "depends_on": [],
+      "reason": "Chrome dependencies and screenshot automation are system-level infrastructure fixes, independent of contract or frontend changes"
+    },
+    {
+      "id": "4",
       "lane": "CONTRACT",
       "depends_on": [
         "1"
       ],
-      "reason": "Both tasks investigate fee flows through same Solidity contracts (FeeRouter, RewardsDistributor). Same lane + overlapping files requires sequential execution. Task 1 is CRITICAL priority."
+      "reason": "Low LP APY likely caused by broken fee router not distributing fees to RewardsDistributor, must fix fee routing first"
+    },
+    {
+      "id": "5",
+      "lane": "INFRA",
+      "depends_on": [],
+      "reason": "Oracle keeper service stability is independent Python/systemd service issue, no dependency on contract or frontend fixes"
     }
   ]
 }

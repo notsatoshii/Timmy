@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-18T15:11:58.024495+00:00",
+  "timestamp": "2026-03-18T15:23:25.272362+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,46 +11,48 @@
     },
     {
       "name": "Positions",
-      "value": "231",
+      "value": "233",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "12010722554735 [1.201e13]",
+      "value": "12168722554735 [1.216e13]",
       "status": "ok"
     },
     {
       "name": "Insurance Fund",
-      "value": "",
-      "status": "error"
+      "value": "5011000000005000000000000 [5.011e24]",
+      "status": "ok"
     }
   ],
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Running on localhost:3000 instead of production domain",
-    "Vision: Testnet environment may not inspire investor confidence",
-    "Vision: Cannot evaluate actual UI/UX without browser testing",
-    "Vision: No visible performance monitoring or error tracking"
+    "Vision: Fee router system failure (critical component)",
+    "Vision: Insurance Fund displays corrupted value $5.011e24 instead of expected ~$10K",
+    "Vision: Browser automation/screenshot system failing due to missing dependencies",
+    "Vision: LP APY appears unusually low (0.21%) despite $11.5M OI and 228 positions",
+    "Vision: Manual verification required - automated testing incomplete"
   ],
-  "functional_issues": [
-    "Contract check failed: Insurance Fund"
-  ],
-  "score": 56,
+  "functional_issues": [],
+  "score": 60,
   "vision_review": {
-    "professional_score": 8,
-    "trust_score": 7,
+    "professional_score": 6,
+    "trust_score": 5,
     "issues": [
-      "Running on localhost:3000 instead of production domain",
-      "Testnet environment may not inspire investor confidence",
-      "Cannot evaluate actual UI/UX without browser testing",
-      "No visible performance monitoring or error tracking"
+      "Fee router system failure (critical component)",
+      "Insurance Fund displays corrupted value $5.011e24 instead of expected ~$10K",
+      "Browser automation/screenshot system failing due to missing dependencies",
+      "LP APY appears unusually low (0.21%) despite $11.5M OI and 228 positions",
+      "Manual verification required - automated testing incomplete"
     ],
     "improvements": [
-      "Deploy to production domain with SSL/HTTPS",
-      "Add comprehensive error tracking and monitoring",
-      "Implement investor-focused landing page with clear value proposition",
-      "Add production environment with mainnet integration roadmap"
+      "Fix fee router component to restore full system health (19/20 \u2192 20/20)",
+      "Correct Insurance Fund display formatting to show proper $10K-$50K range",
+      "Install missing Chrome dependencies for automated testing",
+      "Investigate and fix LP yield distribution pipeline",
+      "Add comprehensive error handling and user feedback for failed transactions",
+      "Implement automated health monitoring with investor-facing status dashboard"
     ]
   }
 }

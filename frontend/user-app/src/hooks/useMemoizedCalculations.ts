@@ -66,8 +66,8 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
       });
 
       if (totalAssets && totalAssets > BigInt(0)) {
-        const tvlFormatted = formatUsdt(totalAssets);
-        tvl = parseFloat(tvlFormatted.replace(/,/g, '')); // Remove commas before parsing
+        // Compute TVL directly from BigInt (USDT 6 decimals)
+        tvl = Number(totalAssets) / 1e6;
 
         console.log('=== TVL FORMATTED ===', {
           totalAssets: totalAssets.toString(),
