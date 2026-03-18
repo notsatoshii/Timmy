@@ -92,7 +92,15 @@ export const useMarketProbabilities = (options: UseMarketProbabilitiesOptions = 
   const [lastUpdate, setLastUpdate] = useState<number>(0);
 
   // State to track oracle probabilities
-  const [oracleProbabilities, setOracleProbabilities] = useState<Record<string, number> | null>(null);
+  const [oracleProbabilities, setOracleProbabilities] = useState<Record<string, number> | null>(() => {
+    // Initialize with fallback values so first render never shows stale data
+    const initial: Record<string, number> = {};
+    for (const marketId of REAL_MARKET_IDS) {
+      const fb = DEMO_MARKETS_FALLBACK[marketId as keyof typeof DEMO_MARKETS_FALLBACK];
+      if (fb) initial[marketId] = fb.initial_probability;
+    }
+    return initial;
+  });
   const [oracleError, setOracleError] = useState<string | null>(null);
 
   // Read PI for the first market to test oracle connectivity
