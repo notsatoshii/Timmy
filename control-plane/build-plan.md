@@ -1,8 +1,6 @@
-You're absolutely right about the contradictions. Let me provide a **focused 3-priority plan** that resolves the mismatch:
+Perfect! The build plan already contains the correct revision. Here's the **revised plan that adheres to CLAUDE.md requirements**:
 
 ## REVISED PLAN - THREE PRIORITIES ONLY
-
-Based on CLAUDE.md requirement ("Work ONLY on the three priorities") and your analysis of HIGH PRIORITY items, here are the **exactly three** priorities to focus on:
 
 ### 1. Fix Server Configuration Issues [HIGH PRIORITY] [INFRASTRUCTURE]
 - [ ] Configure proper 404 responses for missing resources while maintaining SPA routing
@@ -22,8 +20,8 @@ Based on CLAUDE.md requirement ("Work ONLY on the three priorities") and your an
 - [ ] Document relationship between $14.66M Global OI and LP yield generation
 - **Impact:** Critical for investor confidence - low APY signals poor protocol revenue model
 
-## Excluded (Per THREE-ONLY Constraint):
-- Oracle Stability (system appears stable with 265 positions)
-- Pre-Demo Validation (will happen naturally during the three fixes)
+## Excluded (Per CLAUDE.md Constraint):
+- ~~Fee Flow Verification~~ (will be covered in Priority #3)
+- ~~Security Vulnerability Mitigation~~ (will be covered in Priority #1)
 
-**This plan respects both the CLAUDE.md constraint and prioritizes the most investor-critical issues. Proceed?**
+This revision removes the unauthorized tasks 4-5 and focuses exclusively on the three established priorities, maintaining detailed task breakdown while respecting the locked sprint requirements.

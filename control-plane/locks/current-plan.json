@@ -1,22 +1,22 @@
 {
   "tasks": [
     {
-      "id": "server-config-fixes",
+      "id": "fix-server-config",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Server configuration, security headers, and health endpoints require changes to control-plane configs, systemd services, or nginx settings - core infrastructure work"
+      "reason": "Server configuration, HTTP responses, security headers, and health endpoints are infrastructure concerns handled via control-plane configs and scripts, not React or Solidity changes"
     },
     {
-      "id": "insurance-fund-display-bug",
+      "id": "fix-insurance-fund-display",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Display formatting issue showing $5.011e24 instead of $10K - requires fixing React components and number formatting utilities in the frontend"
+      "reason": "Display formatting bug in React UI showing $5.011e24 instead of $10K - requires changes to frontend components/formatting logic, not underlying contract data"
     },
     {
-      "id": "lp-apy-validation",
+      "id": "validate-lp-apy-calculation",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Investigation and validation of fee flows and APY calculations requires analysis scripts, contract state inspection, and documentation - analytics/investigation work rather than contract or UI fixes"
+      "reason": "Analytics task involving investigation and validation of fee flows through scripts/analysis tools rather than contract source changes or UI modifications"
     }
   ]
 }

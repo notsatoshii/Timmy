@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-18T22:55:42.461413+00:00",
+  "timestamp": "2026-03-18T23:10:09.977656+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,12 +11,12 @@
     },
     {
       "name": "Positions",
-      "value": "265",
+      "value": "266",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "14660722554735 [1.466e13]",
+      "value": "14690722554735 [1.469e13]",
       "status": "ok"
     },
     {
@@ -28,33 +28,30 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Can only evaluate HTML shell, not actual React application interface",
-    "Vision: No visible trading interface or real-time data to assess functionality",
-    "Vision: Unable to verify if the application loads properly beyond static HTML",
-    "Vision: Contact email links to lever.finance domain but can't verify domain ownership",
-    "Vision: Documentation link provided but can't verify if it exists or is comprehensive"
+    "Vision: Insurance Fund displays $5.011e24 instead of $10K bootstrap value - catastrophic for investor confidence",
+    "Vision: LP APY at only 0.21% raises serious questions about protocol revenue model viability",
+    "Vision: Security vulnerability scanning attempts detected in logs indicating potential exploit vectors",
+    "Vision: Server configuration issues with improper 404 responses damaging technical credibility",
+    "Vision: Missing security headers (HSTS, X-Frame-Options) that professional investors expect"
   ],
   "functional_issues": [],
   "score": 60,
   "vision_review": {
-    "professional_score": 7,
-    "trust_score": 6,
+    "professional_score": 4,
+    "trust_score": 2,
     "issues": [
-      "Can only evaluate HTML shell, not actual React application interface",
-      "No visible trading interface or real-time data to assess functionality",
-      "Unable to verify if the application loads properly beyond static HTML",
-      "Contact email links to lever.finance domain but can't verify domain ownership",
-      "Documentation link provided but can't verify if it exists or is comprehensive"
+      "Insurance Fund displays $5.011e24 instead of $10K bootstrap value - catastrophic for investor confidence",
+      "LP APY at only 0.21% raises serious questions about protocol revenue model viability",
+      "Security vulnerability scanning attempts detected in logs indicating potential exploit vectors",
+      "Server configuration issues with improper 404 responses damaging technical credibility",
+      "Missing security headers (HSTS, X-Frame-Options) that professional investors expect"
     ],
     "improvements": [
-      "Ensure React application loads fully with visible trading interface",
-      "Display real-time market data and price feeds prominently",
-      "Add visible TVL, volume, and other key metrics investors expect",
-      "Include clear risk disclosures and regulatory compliance statements",
-      "Provide visible audit reports or security certifications",
-      "Add investor-specific sections like tokenomics, roadmap, or team information",
-      "Ensure responsive design works across all devices",
-      "Include live chat or support system for institutional inquiries"
+      "Fix WAD/USDT decimal conversion for Insurance Fund display immediately",
+      "Investigate and resolve LP APY calculation to show realistic DeFi returns",
+      "Implement proper security headers and vulnerability mitigation",
+      "Add /health endpoint and proper 404 handling for professional monitoring",
+      "Verify fee flow from FeeRouter to RewardsDistributor is functioning correctly"
     ]
   }
 }
