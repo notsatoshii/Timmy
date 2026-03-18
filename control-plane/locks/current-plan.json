@@ -1,0 +1,27 @@
+{
+  "tasks": [
+    {
+      "id": "fix-frontend-deployment",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "FRONTEND lane because root cause is React build/serve configuration and Vite setup. No dependencies because this is the foundational issue that must be fixed before any other frontend work can be tested or implemented."
+    },
+    {
+      "id": "complete-marketdetail-tab",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "fix-frontend-deployment"
+      ],
+      "reason": "FRONTEND lane because implementing React components and tab functionality. Depends on frontend deployment fix because you cannot implement or test React components when the app isn't serving properly."
+    },
+    {
+      "id": "fix-24h-volume-display",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "fix-frontend-deployment",
+        "complete-marketdetail-tab"
+      ],
+      "reason": "FRONTEND lane because updating volume calculation logic and display components. Depends on both prior tasks: needs app serving (task 1) and volume metrics may be displayed within market detail views (task 2). Sequential execution prevents file conflicts in critical demo work."
+    }
+  ]
+}
