@@ -4,7 +4,7 @@
       "id": "1",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Frontend task involving React components, styling, typography, and global UI elements. No dependencies as this establishes the visual foundation."
+      "reason": "Frontend lane - involves React components, styling, branding elements, typography. No dependencies as this establishes foundational branding and typography that other tasks will build upon."
     },
     {
       "id": "2",
@@ -12,7 +12,7 @@
       "depends_on": [
         "1"
       ],
-      "reason": "Frontend task for Markets page components and charts. Depends on task 1 to use established branding patterns and visual hierarchy."
+      "reason": "Frontend lane - involves React components for Markets page, charts, analytics displays. Depends on Task 1 because it builds on the professional branding and typography hierarchy established there."
     },
     {
       "id": "3",
@@ -20,7 +20,7 @@
       "depends_on": [
         "1"
       ],
-      "reason": "Frontend task for LP/Vault interface components and analytics. Depends on task 1 to use established branding patterns and design elements."
+      "reason": "Frontend lane - involves React components for Vault/LP dashboard, charts, performance metrics. Depends on Task 1 because it builds on the institutional branding and professional typography established there."
     }
   ]
 }

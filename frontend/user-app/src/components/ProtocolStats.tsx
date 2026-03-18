@@ -12,6 +12,7 @@ import { useRealAPY } from '../hooks/useRealAPY';
 import Skeleton from './Skeleton';
 import { useVolumeCalculation } from '../hooks/useVolumeCalculation';
 import { LiveDataBadge } from './ConnectionStatus';
+import LiveDataIndicator from './LiveDataIndicator';
 
 interface ProtocolStatsData {
   tvl: string;
@@ -210,55 +211,26 @@ const ProtocolStats: React.FC = () => {
   return (
     <div className="border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
-        {/* Stats Card */}
-        <div className="lever-card">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 lg:gap-4">
+        {/* Enhanced Professional Stats Card */}
+        <div className="lever-card-institutional">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 lg:gap-6">
             <StatBox label="Total TVL" value={stats?.tvl} highlight={true} isLoading={isLoading} isFallback={fallbackStatus.tvlFallback} />
-            <StatBox label="Volume" value={stats?.dailyVolume} isLoading={isLoading} isFallback={fallbackStatus.volumeFallback} />
+            <StatBox label="Volume 24h" value={stats?.dailyVolume} isLoading={isLoading} isFallback={fallbackStatus.volumeFallback} />
             <StatBox label="Total OI" value={stats?.totalOI} isLoading={isLoading} isFallback={fallbackStatus.oiFallback} />
             <StatBox label="LP APY" value={stats?.lpApy} highlight={true} isLoading={isLoading} isFallback={fallbackStatus.apyFallback} />
             <StatBox label="Utilization" value={stats?.utilizationRate} isLoading={isLoading} isFallback={fallbackStatus.oiFallback || fallbackStatus.tvlFallback} />
             <StatBox label="Insurance Fund" value={stats?.insuranceFund} isLoading={isLoading} isFallback={fallbackStatus.insuranceFallback} />
           </div>
-        </div>
 
-        {/* Professional Status Indicators */}
-        <div className="mt-4 space-y-3">
-          {/* Primary Status Row */}
-          <div className="flex justify-center items-center space-x-8 text-xs">
-            <LiveDataBadge className="text-xs" />
-            <div className="flex items-center space-x-1.5">
-              <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse"></div>
-              <span className="text-ivory font-medium">Live Prices</span>
-            </div>
-            <div className="flex items-center space-x-1.5">
-              <div className="w-1.5 h-1.5 bg-teal rounded-full"></div>
-              <span className="text-ivory font-medium">Base Sepolia</span>
-            </div>
-            <div className="flex items-center space-x-1.5">
-              <div className="w-1.5 h-1.5 bg-long rounded-full"></div>
-              <span className="text-ivory font-medium">Oracle Active</span>
-            </div>
-          </div>
-
-          {/* Institutional Compliance Row */}
-          <div className="flex justify-center items-center space-x-8 text-xs bg-surface-2/30 rounded-lg py-2 px-4">
-            <div className="flex items-center space-x-1.5">
-              <div className="w-1.5 h-1.5 bg-warning rounded-full"></div>
-              <span className="text-steel">Security Audit: <span className="text-warning font-medium">In Progress</span></span>
-            </div>
-            <div className="h-3 w-px bg-border"></div>
-            <div className="flex items-center space-x-1.5">
-              <div className="w-1.5 h-1.5 bg-accent rounded-full"></div>
-              <span className="text-steel">Mainnet: <span className="text-accent font-medium">Q2 2026</span></span>
-            </div>
-            <div className="h-3 w-px bg-border"></div>
-            <div className="flex items-center space-x-1.5">
-              <div className="w-1.5 h-1.5 bg-purple rounded-full"></div>
-              <span className="text-steel">Compliance: <span className="text-purple font-medium">Review Phase</span></span>
-            </div>
+          {/* Professional Status Row */}
+          <div className="flex justify-center items-center space-x-6 mt-6 pt-6 border-t border-border/30">
+            <LiveDataIndicator label="PRICES" value="LIVE" status="live" compact={true} />
+            <LiveDataIndicator label="ORACLE" value="ACTIVE" status="live" compact={true} />
+            <LiveDataIndicator label="NETWORK" value="BASE" status="live" compact={true} />
+            <LiveDataIndicator label="AUDIT" value="PENDING" status="stale" compact={true} />
           </div>
         </div>
+
       </div>
     </div>
   );

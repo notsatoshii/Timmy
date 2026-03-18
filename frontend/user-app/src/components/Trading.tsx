@@ -11,6 +11,8 @@ import { useMarketProbabilities } from '../hooks/useMarketProbabilities';
 import { useDemo } from '../contexts/DemoContext';
 import Skeleton from './Skeleton';
 import TestnetDisclaimer from './TestnetDisclaimer';
+import LiveDataIndicator from './LiveDataIndicator';
+import SecurityBadges from './SecurityBadges';
 
 interface TradeForm {
   marketId: string;
@@ -439,10 +441,13 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-100">Open Position</h2>
-        <p className="text-gray-500">
+        <h2 className="lever-heading-lg">Open Position</h2>
+        <p className="lever-subtitle mt-1">
           Take leveraged positions on binary prediction markets
         </p>
+        <div className="flex items-center space-x-4 mt-3">
+          <SecurityBadges />
+        </div>
       </div>
 
       {/* Testnet Notice */}
@@ -469,8 +474,24 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Trading Form */}
         <div className="lg:col-span-2">
-          <div className="bg-surface-1 rounded-lg border border-border p-6">
-            <h3 className="text-lg font-semibold text-gray-100 mb-4">Position Details</h3>
+          <div className="lever-trading-panel">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="lever-heading-md">Position Details</h3>
+              <div className="flex items-center space-x-3">
+                <LiveDataIndicator
+                  label="ORACLE"
+                  value="LIVE"
+                  status="live"
+                  compact={true}
+                />
+                <LiveDataIndicator
+                  label="DEPTH"
+                  value={maxLeverage ? `${maxLeverage.toFixed(1)}x` : "30x"}
+                  status="live"
+                  compact={true}
+                />
+              </div>
+            </div>
 
             <div className="space-y-4">
               {/* Market Selection */}
@@ -640,8 +661,25 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
 
         {/* Account Info */}
         <div className="space-y-6">
-          <div className="bg-surface-1 rounded-lg border border-border p-6">
-            <h3 className="text-lg font-semibold text-gray-100 mb-4">Account</h3>
+          {/* Live Account Metrics */}
+          <div className="space-y-3">
+            <h3 className="lever-heading-sm mb-4">Live Account Metrics</h3>
+            <LiveDataIndicator
+              label="USDT Balance"
+              value={loadingUsdtBalance ? "Loading..." : `${usdtBalance ? formatUsdt(usdtBalance) : '0'} USDT`}
+              status={loadingUsdtBalance ? "loading" : "live"}
+              sublabel="Wallet Balance"
+            />
+            <LiveDataIndicator
+              label="Available Collateral"
+              value={loadingAccountBalance ? "Loading..." : `${accountBalance ? formatUsdt(accountBalance) : '0'} USDT`}
+              status={loadingAccountBalance ? "loading" : "live"}
+              sublabel="Ready for Trading"
+            />
+          </div>
+
+          <div className="lever-metric-card">
+            <h3 className="lever-heading-sm mb-4">Account Details</h3>
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-500">USDT Balance:</span>

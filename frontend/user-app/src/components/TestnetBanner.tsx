@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import LiveDataIndicator from './LiveDataIndicator';
 
 const TestnetBanner: React.FC = () => {
   const [isDismissed, setIsDismissed] = useState(false);
@@ -24,15 +25,19 @@ const TestnetBanner: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-4">
-            <div className="hidden sm:flex items-center space-x-4 text-xs text-steel">
-              <span className="flex items-center space-x-1">
-                <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full"></div>
-                <span>Audit: In Progress</span>
-              </span>
-              <span className="flex items-center space-x-1">
-                <div className="w-1.5 h-1.5 bg-orange-500 rounded-full"></div>
-                <span>Mainnet: Q2 2026</span>
-              </span>
+            <div className="hidden sm:flex items-center space-x-3">
+              <LiveDataIndicator
+                label="AUDIT"
+                value="PENDING"
+                status="stale"
+                compact={true}
+              />
+              <LiveDataIndicator
+                label="MAINNET"
+                value="Q2 2026"
+                status="stale"
+                compact={true}
+              />
             </div>
 
             <button

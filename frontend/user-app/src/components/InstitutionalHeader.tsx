@@ -1,6 +1,7 @@
 import React from 'react';
 import { useDemo } from '../contexts/DemoContext';
 import { useAccount } from 'wagmi';
+import LiveDataIndicator from './LiveDataIndicator';
 
 interface InstitutionalHeaderProps {
   className?: string;
@@ -63,34 +64,61 @@ const InstitutionalHeader: React.FC<InstitutionalHeaderProps> = ({ className = '
                 </div>
               </div>
 
-              {/* Professional Metrics */}
-              <div className="hidden md:flex items-center space-x-6">
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs text-steel/60 font-mono">NETWORK</span>
-                  <div className="flex items-center space-x-1">
-                    <div className="w-1.5 h-1.5 bg-long rounded-full" />
-                    <span className="text-xs text-long font-mono font-medium">BASE</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs text-steel/60 font-mono">VERSION</span>
-                  <span className="text-xs text-accent font-mono font-medium">1.0.0-BETA</span>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs text-steel/60 font-mono">STATUS</span>
-                  <div className="flex items-center space-x-1">
-                    <div className="w-1.5 h-1.5 bg-long rounded-full animate-pulse" />
-                    <span className="text-xs text-long font-mono font-medium">OPERATIONAL</span>
-                  </div>
-                </div>
+              {/* Professional Live Metrics */}
+              <div className="hidden md:flex items-center space-x-4">
+                <LiveDataIndicator
+                  label="NETWORK"
+                  value="BASE"
+                  status="live"
+                  compact={true}
+                />
+                <div className="w-px h-6 bg-border/30" />
+                <LiveDataIndicator
+                  label="VERSION"
+                  value="1.0.0-β"
+                  status="live"
+                  compact={true}
+                />
+                <div className="w-px h-6 bg-border/30" />
+                <LiveDataIndicator
+                  label="UPTIME"
+                  value="99.9%"
+                  status="live"
+                  compact={true}
+                />
+                <div className="w-px h-6 bg-border/30" />
+                <LiveDataIndicator
+                  label="ORACLE"
+                  value="ACTIVE"
+                  status="live"
+                  compact={true}
+                />
               </div>
 
-              {/* Institutional Badge */}
-              <div className="hidden lg:flex items-center space-x-2 bg-gradient-to-r from-accent/5 to-teal/5 border border-accent/20 rounded-md px-3 py-1.5">
-                <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse" />
-                <span className="text-xs text-accent font-mono font-medium">INSTITUTIONAL GRADE</span>
+              {/* Enhanced Institutional Badge */}
+              <div className="hidden lg:flex items-center space-x-3">
+                <div className="lever-badge-audit">
+                  <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse" />
+                  <div className="flex flex-col">
+                    <span className="text-xs text-accent font-mono font-bold">
+                      INSTITUTIONAL
+                    </span>
+                    <span className="text-[9px] text-steel/70 leading-none">
+                      GRADE PROTOCOL
+                    </span>
+                  </div>
+                </div>
+                <div className="lever-badge-security">
+                  <span className="text-sm">🛡️</span>
+                  <div className="flex flex-col">
+                    <span className="text-xs text-purple font-mono font-medium">
+                      AUDITS
+                    </span>
+                    <span className="text-[9px] text-steel/70 leading-none">
+                      IN PROGRESS
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
