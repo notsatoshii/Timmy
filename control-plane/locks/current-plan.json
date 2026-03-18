@@ -4,19 +4,13 @@
       "id": "1",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Root cause is frontend display/formatting logic converting WAD to USDT incorrectly. Will modify React components and number formatting utilities. Independent of other tasks."
-    },
-    {
-      "id": "2",
-      "lane": "INFRA",
-      "depends_on": [],
-      "reason": "Root cause is process management and system stability. Will check/modify mockkeeper.py process monitoring and load testing scripts. Independent of other tasks."
+      "reason": "Root cause is frontend decimal conversion and display formatting. Fixes React components that show Insurance Fund balance."
     },
     {
       "id": "3",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Root cause is documentation accuracy verification. Will modify known-issues.md in control-plane/ and run verification tests. Independent of other tasks - checking existing features already marked resolved."
+      "reason": "Documentation verification and updates. Involves testing functionality and updating markdown files, which falls under INFRA."
     }
   ]
 }
