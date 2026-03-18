@@ -166,12 +166,15 @@ export const useMarketProbabilities = (options: UseMarketProbabilitiesOptions = 
     const updateOracleData = async () => {
       try {
         const probabilities = await fetchOracleProbabilities();
-        setOracleProbabilities(probabilities);
-        setOracleError(null);
+        if (probabilities !== null) {
+          setOracleProbabilities(probabilities);
+          setOracleError(null);
+        }
+        // If null (0 markets read), keep previous data
       } catch (error) {
         console.error('Error fetching oracle probabilities:', error);
         setOracleError(error instanceof Error ? error.message : 'Unknown error');
-        setOracleProbabilities(null);
+        // Keep last successful oracle data — never revert to hardcoded fallback
       }
     };
 
