@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-18T17:01:37.948344+00:00",
+  "timestamp": "2026-03-18T17:17:49.096877+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,12 +11,12 @@
     },
     {
       "name": "Positions",
-      "value": "244",
+      "value": "245",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "13440722554735 [1.344e13]",
+      "value": "13490722554735 [1.349e13]",
       "status": "ok"
     },
     {
@@ -28,33 +28,30 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Frontend not serving React app - shows directory listing instead of trading interface",
-    "Vision: Critical deployment failure - no actual application accessible",
-    "Vision: Build directory exposed publicly - major security concern",
-    "Vision: Complete absence of expected trading interface, portfolio views, or market data",
-    "Vision: No professional branding or UI visible - just raw file structure",
-    "Vision: Zero functionality available for investor evaluation"
+    "Vision: Frontend completely non-functional - serves file directory instead of React application",
+    "Vision: Critical build deployment failure - index.html and static assets missing from active build directory",
+    "Vision: No accessible user interface for investors to evaluate the product",
+    "Vision: Broken deployment pipeline despite claims of previous fixes",
+    "Vision: Multiple conflicting build directories (build vs build.safe) indicating deployment confusion"
   ],
   "functional_issues": [],
-  "score": 52,
+  "score": 60,
   "vision_review": {
-    "professional_score": 1,
+    "professional_score": 2,
     "trust_score": 1,
     "issues": [
-      "Frontend not serving React app - shows directory listing instead of trading interface",
-      "Critical deployment failure - no actual application accessible",
-      "Build directory exposed publicly - major security concern",
-      "Complete absence of expected trading interface, portfolio views, or market data",
-      "No professional branding or UI visible - just raw file structure",
-      "Zero functionality available for investor evaluation"
+      "Frontend completely non-functional - serves file directory instead of React application",
+      "Critical build deployment failure - index.html and static assets missing from active build directory",
+      "No accessible user interface for investors to evaluate the product",
+      "Broken deployment pipeline despite claims of previous fixes",
+      "Multiple conflicting build directories (build vs build.safe) indicating deployment confusion"
     ],
     "improvements": [
-      "Fix React app deployment - serve actual application instead of directory listing",
-      "Configure proper web server routing to serve index.html",
-      "Hide build directory from public access",
-      "Verify frontend service is running and properly configured",
-      "Test complete user journey from homepage through trading interface",
-      "Ensure professional UI loads with proper branding and functionality"
+      "Immediately restore working React build from build.safe/ to build/ directory",
+      "Fix deployment pipeline to ensure proper React app serving",
+      "Implement proper health checks to detect when frontend is broken",
+      "Add automated deployment verification to prevent directory listing issues",
+      "Establish clear build artifact management and deployment procedures"
     ]
   }
 }
