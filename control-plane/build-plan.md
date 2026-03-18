@@ -1,33 +1,29 @@
-Based on my verification, here's the current status of the three locked priorities:
+Based on the QA report (52/100 score) and critical blockers for the investor demo, here are the prioritized tasks:
 
-## **Priority Status Analysis**
+### 1. Verify MarketDetail Tab Functionality [CRITICAL] [FRONTEND]
+- [ ] Test and verify MarketDetail tab is working correctly for investor demo
+- [ ] Take screenshots to confirm proper rendering and data display
+- [ ] Ensure all market data (price, volume, positions) loads correctly
 
-### ✅ **Priority 1: Frontend Quality & Visual Verification** - COMPLETE
-- QA score: 100/100 (perfect)
-- No visual issues detected
-- No functional issues detected  
-- Frontend responding (HTTP 200)
+### 2. Fix 24h Volume Display Bug [CRITICAL] [FRONTEND] 
+- [ ] Correct volume calculation to show notional (collateral × leverage) instead of just collateral
+- [ ] This is blocking accurate metrics display for investors
+- [ ] Verify fix with screenshots showing proper volume numbers
 
-### ❌ **Priority 2: Infrastructure & Automation** - NEEDS WORK
-- Browser automation is **BROKEN**
-- `visual-verify.js` fails: "Cannot launch browser: Failed to launch the browser process"
-- Missing dependencies: `xdg-settings`, chromium browser issues
-- Screenshot automation non-functional
+### 3. Browser-Based UI/UX Verification [HIGH] [FRONTEND]
+- [ ] Run comprehensive browser testing with `node scripts/take-screenshots.js`
+- [ ] Test core trading flows end-to-end with real wallet interactions
+- [ ] Verify professional visual design quality that investors will see
+- [ ] Test wallet connectivity and transaction signing flows
 
-### ✅ **Priority 3: User Journey & Demo Polish** - COMPLETE  
-- User flow test: 9/9 passed
-- All contract interactions working
-- Demo-ready functionality verified
+### 4. Oracle Keeper System Check [HIGH] [INFRASTRUCTURE]
+- [ ] Verify mockkeeper.py is running and updating prices correctly
+- [ ] Check for stale price issues that could break demo trading
+- [ ] Ensure price feeds are updating in real-time for investor demonstration
 
-## **Recommendation**
+### 5. LP APY Investigation [MEDIUM] [DATA]
+- [ ] Analyze why LP APY is only 0.21% despite $60.5M TVL
+- [ ] Verify if this will improve when leverage usage increases
+- [ ] Document expected APY ranges for investor questions
 
-Since 2 out of 3 priorities are complete and the QA score is already 100 (exceeding the 85+ target), I should:
-
-**Focus on Priority 2 only** - fix the browser automation infrastructure so that:
-- `node scripts/visual-verify.js` works for screenshot generation
-- Investor demo screenshots can be taken automatically
-- Visual verification scripts pass consistently
-
-Once Priority 2 is complete, all three locked priorities will be done and we can transition to "Phase 2 (auto-improve mode)" as mentioned in CLAUDE.md.
-
-Should I proceed to fix the browser automation (Priority 2)?
+**Focus:** These tasks target the visual issues flagging "Cannot verify actual user interface quality" and the two critical blockers. No contract redeployments needed - purely frontend verification and bug fixes.

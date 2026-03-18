@@ -123,7 +123,7 @@ const ProtocolStats: React.FC = () => {
 
       setStats({
         tvl: `$${formatUsdt(safeTvl)}`,
-        dailyVolume: `$${formatUsdt(safeVolume)}`,
+        dailyVolume: `$${formatWad(safeVolume)}`,
         totalOI: `$${formatUsdt(safeTotalOI)}`,
         lpApy: `${(Number(apyBpsTimes100) / 100).toFixed(2)}%`,
         utilizationRate: `${(Number(utilizationBpsTimes100) / 100).toFixed(2)}%`,
@@ -140,7 +140,7 @@ const ProtocolStats: React.FC = () => {
       });
       setStats({
         tvl: `$${formatUsdt(DEMO_FALLBACK_VALUES.tvl)}`,
-        dailyVolume: `$${formatUsdt(DEMO_FALLBACK_VALUES.volume24h)}`,
+        dailyVolume: `$${formatWad(DEMO_FALLBACK_VALUES.volume24h)}`,
         totalOI: `$${formatUsdt(DEMO_FALLBACK_VALUES.totalOI)}`,
         lpApy: 'Demo Data',
         utilizationRate: '60.00%',
