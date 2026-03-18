@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-03-18T21-24-04-372Z",
+  "timestamp": "2026-03-18T21-25-36-792Z",
   "console_errors": [
     "Comprehensive verification detected issues"
   ],
   "screenshots": [
-    "visual-verification-2026-03-18T21-24-04-372Z.html"
+    "visual-verification-2026-03-18T21-25-36-792Z.html"
   ],
   "fallback_used": true,
-  "visual_verification": "/home/lever/lever-protocol/control-plane/screenshots/visual-verification-2026-03-18T21-24-04-372Z.html",
+  "visual_verification": "/home/lever/lever-protocol/control-plane/screenshots/visual-verification-2026-03-18T21-25-36-792Z.html",
   "frontend_check": "Frontend OK - 200, 5422 bytes, React: true",
   "detailed_checks": [
     "HTTP endpoint testing: FAILED",

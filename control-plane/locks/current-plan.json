@@ -1,39 +1,36 @@
 {
   "tasks": [
     {
-      "id": "1",
+      "id": "fix-react-spa-testing",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "INFRA lane because it creates new testing scripts (Playwright/Puppeteer) and modifies control-plane QA system. No dependencies as this is foundational testing infrastructure work."
+      "reason": "INFRA lane because it modifies testing scripts (take-screenshots.js), implements browser automation (Playwright/Puppeteer), and updates QA scoring methodology. No dependencies as this establishes the foundation for improved testing."
     },
     {
-      "id": "2",
+      "id": "enhance-demo-presentation",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "FRONTEND lane because it modifies React components, adds UI elements, loading states, and error boundaries. No dependencies as UI improvements can be made independently."
+      "reason": "FRONTEND lane because it adds React UI indicators, implements accessibility features, updates component displays, and adds loading states/error boundaries. No dependencies as this is purely UI enhancement work."
     },
     {
-      "id": "3",
-      "lane": "INFRA",
-      "depends_on": [
-        "1",
-        "2"
-      ],
-      "reason": "INFRA lane because it creates control-plane documentation and system status summaries. Depends on tasks 1 and 2 since it documents the final sprint state after testing methodology and UI improvements are complete."
-    },
-    {
-      "id": "4",
+      "id": "document-sprint-handoff",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "INFRA lane because it involves monitoring scripts and system service validation. No dependencies as it monitors existing live system functionality."
+      "reason": "INFRA lane because it creates documentation, updates control-plane configs, and prepares project management handoff materials. No dependencies as documentation can be done independently."
     },
     {
-      "id": "5",
+      "id": "monitor-system-stability",
+      "lane": "INFRA",
+      "depends_on": [],
+      "reason": "INFRA lane because it involves monitoring scripts, operational validation of keeper processes, and system metrics tracking. No dependencies as this is ongoing operational monitoring."
+    },
+    {
+      "id": "implement-browser-tests",
       "lane": "INFRA",
       "depends_on": [
-        "1"
+        "fix-react-spa-testing"
       ],
-      "reason": "INFRA lane because it creates browser automation testing infrastructure. Depends on task 1 since it extends the browser testing methodology that task 1 establishes."
+      "reason": "INFRA lane because it creates browser automation infrastructure and testing scripts. Depends on fix-react-spa-testing because both tasks work with browser automation and testing scripts - sequential execution prevents conflicts in the same infra area."
     }
   ]
 }
