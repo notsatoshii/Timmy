@@ -142,7 +142,7 @@ const ProtocolStats: React.FC = () => {
         tvl: `$${formatUsdt(DEMO_FALLBACK_VALUES.tvl)}`,
         dailyVolume: `$${formatUsdt(DEMO_FALLBACK_VALUES.volume24h)}`,
         totalOI: `$${formatUsdt(DEMO_FALLBACK_VALUES.totalOI)}`,
-        lpApy: '15.43%',
+        lpApy: 'Demo Data',
         utilizationRate: '60.00%',
         insuranceFund: `$${formatWad(DEMO_FALLBACK_VALUES.insuranceFund)}`,
       });

@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useMarketProbabilities } from '../hooks/useMarketProbabilities';
 import Skeleton from './Skeleton';
+import TestnetDisclaimer from './TestnetDisclaimer';
 
 interface Market {
   id: string;
@@ -108,6 +109,9 @@ const Markets: React.FC<MarketsProps> = ({ onTradeSelect, onMarketDetail }) => {
           </button>
         </div>
       </div>
+
+      {/* Testnet Notice */}
+      <TestnetDisclaimer compact={true} context="general" />
 
       {/* Subtitle info */}
       <div className="flex items-center space-x-4 text-xs text-steel">
