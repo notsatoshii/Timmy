@@ -2,33 +2,40 @@
   "tasks": [
     {
       "id": "1",
-      "lane": "INFRA",
+      "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "ROOT CAUSE is deployment infrastructure (systemd service, nginx config, static file serving) not React code itself. Must fix serving layer before any frontend testing."
+      "reason": "FRONTEND lane because it involves copying React build files and restarting frontend service. No dependencies as this is the critical blocker that must be fixed first."
     },
     {
       "id": "2",
-      "lane": "FRONTEND",
+      "lane": "INFRA",
       "depends_on": [
         "1"
       ],
-      "reason": "Testing React app functionality requires the app to be properly served first. Cannot verify frontend features while directory listing is showing."
+      "reason": "INFRA lane because it involves running health check scripts and testing functionality. Depends on Task 1 because you can't test the app functionality until the React app is actually serving."
     },
     {
       "id": "3",
-      "lane": "CONTRACT",
+      "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "ROOT CAUSE is contract-level fee routing and calculation logic. Independent of frontend deployment issues - can investigate contract behavior separately."
+      "reason": "FRONTEND lane because it involves investigating package.json, build config, and npm run build process. No dependencies as this investigates root cause and can run parallel to the immediate fix."
     },
     {
       "id": "4",
+      "lane": "CONTRACT",
+      "depends_on": [],
+      "reason": "CONTRACT lane because it involves Solidity contract behavior, fee calculations, oracle keeper, and on-chain state. No dependencies as this is independent of frontend issues."
+    },
+    {
+      "id": "5",
       "lane": "INFRA",
       "depends_on": [
         "1",
         "2",
-        "3"
+        "3",
+        "4"
       ],
-      "reason": "Final verification script execution that validates all systems. Must run after frontend is deployed (1), functionality verified (2), and contract issues addressed (3)."
+      "reason": "INFRA lane because it involves testing scripts, professional audit, and demo documentation. Depends on all other tasks as this is final polish that assumes all fixes are complete."
     }
   ]
 }
