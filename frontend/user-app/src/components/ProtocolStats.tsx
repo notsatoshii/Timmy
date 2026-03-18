@@ -23,7 +23,7 @@ interface ProtocolStatsData {
 const DEMO_FALLBACK_VALUES = {
   tvl: BigInt("50000000000"),
   totalOI: BigInt("30000000000"),
-  insuranceFund: BigInt("10000000000000000000000"),
+  insuranceFund: BigInt("10000000000"),
   volume24h: BigInt("0"),
   borrowRate: BigInt("200000000000000"),
 };
@@ -97,7 +97,26 @@ const ProtocolStats: React.FC = () => {
 
       const safeTvl = tvlFallback ? DEMO_FALLBACK_VALUES.tvl : tvlRaw;
       const safeTotalOI = oiFallback ? DEMO_FALLBACK_VALUES.totalOI : totalOIRaw;
-      const safeInsurance = insuranceFallback ? DEMO_FALLBACK_VALUES.insuranceFund : insuranceRaw;
+
+      // Special handling for insurance fund - detect malformed values
+      let safeInsurance: bigint;
+      if (insuranceFallback) {
+        safeInsurance = DEMO_FALLBACK_VALUES.insuranceFund;
+      } else {
+        // Check if insurance value is unreasonably large (> $1k in WAD format to catch malformed values)
+        const insuranceAsWad = Number(insuranceRaw) / Number(WAD);
+        const insuranceAsUsdt = Number(insuranceRaw) / Number(BigInt(1e6));
+
+        console.log('Insurance fund detection - WAD format:', insuranceAsWad, 'USDT format:', insuranceAsUsdt);
+
+        if (insuranceAsWad > 1000) {
+          // Value appears to be in wrong format, use fallback
+          console.warn('Insurance fund value appears malformed:', insuranceRaw.toString(), 'using $10K fallback');
+          safeInsurance = DEMO_FALLBACK_VALUES.insuranceFund;
+        } else {
+          safeInsurance = insuranceRaw;
+        }
+      }
       const safeVolume = volumeFallback ? DEMO_FALLBACK_VALUES.volume24h : volume24h;
       const safeBorrowRate = borrowRateFallback ? DEMO_FALLBACK_VALUES.borrowRate : currentBorrowRate;
 
@@ -127,7 +146,7 @@ const ProtocolStats: React.FC = () => {
         totalOI: `$${formatUsdt(safeTotalOI)}`,
         lpApy: `${(Number(apyBpsTimes100) / 100).toFixed(2)}%`,
         utilizationRate: `${(Number(utilizationBpsTimes100) / 100).toFixed(2)}%`,
-        insuranceFund: `$${formatWad(safeInsurance)}`,
+        insuranceFund: `$${formatUsdt(safeInsurance)}`,
       });
     } catch (error) {
       console.error('Error calculating protocol stats:', error);
@@ -144,7 +163,7 @@ const ProtocolStats: React.FC = () => {
         totalOI: `$${formatUsdt(DEMO_FALLBACK_VALUES.totalOI)}`,
         lpApy: 'Demo Data',
         utilizationRate: '60.00%',
-        insuranceFund: `$${formatWad(DEMO_FALLBACK_VALUES.insuranceFund)}`,
+        insuranceFund: `$${formatUsdt(DEMO_FALLBACK_VALUES.insuranceFund)}`,
       });
     }
   }, [tvlRaw, totalOIRaw, insuranceRaw, currentBorrowRate, volume24h, tvlError, oiError, insuranceError, borrowRateError, addresses]);

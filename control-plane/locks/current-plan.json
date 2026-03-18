@@ -1,22 +1,22 @@
 {
   "tasks": [
     {
-      "id": "fix-insurance-fund-display",
+      "id": "1",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "React component display formatting bug - needs frontend WAD/USDT conversion fixes. No dependencies since it's isolated display logic."
+      "reason": "Root cause is frontend display/formatting logic converting WAD to USDT incorrectly. Will modify React components and number formatting utilities. Independent of other tasks."
     },
     {
-      "id": "oracle-keeper-stability-check",
+      "id": "2",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Python service monitoring and operational stability check - involves mockkeeper.py script verification. Independent of display bugs and documentation."
+      "reason": "Root cause is process management and system stability. Will check/modify mockkeeper.py process monitoring and load testing scripts. Independent of other tasks."
     },
     {
-      "id": "fix-known-issues-docs",
+      "id": "3",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Documentation file updates in control-plane - updating known-issues.md markdown. Tasks appear to be verification of already-resolved items, no dependencies on other fixes."
+      "reason": "Root cause is documentation accuracy verification. Will modify known-issues.md in control-plane/ and run verification tests. Independent of other tasks - checking existing features already marked resolved."
     }
   ]
 }

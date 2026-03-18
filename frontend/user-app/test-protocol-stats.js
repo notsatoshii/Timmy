@@ -133,7 +133,8 @@ async function testProtocolStats() {
         functionName: 'getBalance'
       });
       console.log('  Raw Insurance:', insurance.toString());
-      console.log('  Formatted Insurance: $' + formatWad(insurance));
+      console.log('  Formatted Insurance (WAD): $' + formatWad(insurance));
+      console.log('  Formatted Insurance (USDT): $' + formatUsdt(insurance));
     } catch (error) {
       console.error('  Insurance Error:', error.message);
     }
