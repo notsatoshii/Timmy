@@ -1,24 +1,26 @@
 {
   "tasks": [
     {
-      "id": "2",
-      "lane": "INFRA",
+      "id": "1",
+      "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Web server routing configuration involves systemd services, nginx/server configs, and deployment scripts - pure infrastructure. No dependencies as this is the root blocker preventing frontend access."
+      "reason": "React app deployment failure requires fixing frontend build/deployment config, Vite config, or React routing - pure frontend issue blocking all demo functionality"
     },
     {
       "id": "3",
       "lane": "INFRA",
       "depends_on": [
-        "2"
+        "1"
       ],
-      "reason": "Sprint verification involves running control-plane validation scripts and testing workflows. Depends on task 2 because frontend priorities cannot be verified until the web server properly serves the React SPA."
+      "reason": "Verification involves running control-plane scripts and health checks (INFRA), but cannot properly verify frontend priorities until frontend deployment is fixed"
     },
     {
       "id": "5",
       "lane": "INFRA",
-      "depends_on": [],
-      "reason": "Oracle monitoring involves checking Python keeper scripts and operational status - pure infrastructure concern. Independent of web server issues since oracle feeds backend contracts directly."
+      "depends_on": [
+        "1"
+      ],
+      "reason": "Oracle monitoring involves checking Python service status (INFRA), but since frontend repair is critical blocker for investor demo, should wait until that's resolved"
     }
   ]
 }
