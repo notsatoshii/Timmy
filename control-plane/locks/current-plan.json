@@ -4,7 +4,7 @@
       "id": "1",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Root cause is React app build artifacts not serving correctly - requires fixing Vite build output or service configuration pointing to build directory"
+      "reason": "React app build/deployment issue - must fix React application build process and output"
     },
     {
       "id": "2",
@@ -12,7 +12,7 @@
       "depends_on": [
         "1"
       ],
-      "reason": "Updating health-check.sh bash script to detect directory listing vs React app - must wait for frontend to be fixed before updating validation logic"
+      "reason": "Web server configuration for SPA routing - needs React app properly built first before configuring server to serve it"
     },
     {
       "id": "3",
@@ -21,23 +21,7 @@
         "1",
         "2"
       ],
-      "reason": "Running investor user flow scripts and taking screenshots - needs working React app and accurate health check validation"
-    },
-    {
-      "id": "4",
-      "lane": "INFRA",
-      "depends_on": [
-        "3"
-      ],
-      "reason": "Executing user-flow-test.sh bash script for final verification - depends on successful demo validation completing first"
-    },
-    {
-      "id": "5",
-      "lane": "INFRA",
-      "depends_on": [
-        "4"
-      ],
-      "reason": "Documentation and git commits for handoff - requires all verification scripts to pass cleanly before marking sprint complete"
+      "reason": "Verification testing - requires both React app fixed and web server configured before validating functionality"
     }
   ]
 }
