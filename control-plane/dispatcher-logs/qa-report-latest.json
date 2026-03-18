@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-18T20:03:09.968426+00:00",
+  "timestamp": "2026-03-18T20:18:36.135118+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,12 +11,12 @@
     },
     {
       "name": "Positions",
-      "value": "260",
+      "value": "261",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "14490722554735 [1.449e13]",
+      "value": "14520722554735 [1.452e13]",
       "status": "ok"
     },
     {
@@ -28,33 +28,33 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Displays 'Base Sepolia Testnet' prominently - testnet status undermines investor confidence",
-    "Vision: Demo Fallback warning visible on interface reduces credibility",
-    "Vision: Read-only mode message creates friction for user engagement",
-    "Vision: Limited market selection appears artificial/demo-like",
-    "Vision: Testnet deployment means no real value or liquidity"
+    "Vision: Cannot assess actual app functionality - React SPA requires JavaScript evaluation",
+    "Vision: No visible loading states or error handling in static HTML",
+    "Vision: Unable to verify live data feeds or real-time functionality",
+    "Vision: Cannot validate trading interface or user experience",
+    "Vision: Missing structured data markup for better SEO"
   ],
   "functional_issues": [],
   "score": 60,
   "vision_review": {
-    "professional_score": 7,
-    "trust_score": 5,
+    "professional_score": 8,
+    "trust_score": 7,
     "issues": [
-      "Displays 'Base Sepolia Testnet' prominently - testnet status undermines investor confidence",
-      "Demo Fallback warning visible on interface reduces credibility",
-      "Read-only mode message creates friction for user engagement",
-      "Limited market selection appears artificial/demo-like",
-      "Testnet deployment means no real value or liquidity"
+      "Cannot assess actual app functionality - React SPA requires JavaScript evaluation",
+      "No visible loading states or error handling in static HTML",
+      "Unable to verify live data feeds or real-time functionality",
+      "Cannot validate trading interface or user experience",
+      "Missing structured data markup for better SEO"
     ],
     "improvements": [
-      "Deploy to Base mainnet for production credibility",
-      "Remove 'Demo Fallback' warnings and testnet indicators",
-      "Add more diverse, real prediction markets beyond test cases",
-      "Implement seamless wallet connection flow",
-      "Add TVL and volume numbers with real liquidity depth",
-      "Include institutional disclaimers and risk warnings",
-      "Add audit badges or security certifications",
-      "Implement proper loading states for all data"
+      "Add server-side rendering or static generation for better SEO",
+      "Include structured data markup (JSON-LD) for financial applications",
+      "Add preloader or skeleton screens visible in static HTML",
+      "Consider adding meta tag for financial license/regulatory compliance",
+      "Add meta tags for institutional verification (if applicable)",
+      "Include noscript fallback with basic information",
+      "Add security.txt file for responsible disclosure",
+      "Consider adding meta tag for audit reports or security certifications"
     ]
   }
 }
