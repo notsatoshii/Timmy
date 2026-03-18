@@ -4,19 +4,19 @@
       "id": "fix-server-config",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Server configuration, HTTP responses, security headers, and health endpoints are infrastructure concerns handled via control-plane configs and scripts, not React or Solidity changes"
+      "reason": "Server configuration, security headers, and health endpoints require changes to infra configs/scripts. No dependencies on other tasks."
     },
     {
       "id": "fix-insurance-fund-display",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Display formatting bug in React UI showing $5.011e24 instead of $10K - requires changes to frontend components/formatting logic, not underlying contract data"
+      "reason": "Display formatting bug in React components. Frontend-only change for WAD/USDT conversion. Independent of other tasks."
     },
     {
-      "id": "validate-lp-apy-calculation",
+      "id": "validate-lp-apy",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Analytics task involving investigation and validation of fee flows through scripts/analysis tools rather than contract source changes or UI modifications"
+      "reason": "Investigation and validation task requiring analysis scripts, documentation, and verification flows. Analytics work fits INFRA lane. No data dependencies on other fixes."
     }
   ]
 }

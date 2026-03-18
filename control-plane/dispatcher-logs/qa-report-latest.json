@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-18T23:10:09.977656+00:00",
+  "timestamp": "2026-03-18T23:24:39.970625+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,12 +11,12 @@
     },
     {
       "name": "Positions",
-      "value": "266",
+      "value": "267",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "14690722554735 [1.469e13]",
+      "value": "14730722554735 [1.473e13]",
       "status": "ok"
     },
     {
@@ -28,30 +28,25 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Insurance Fund displays $5.011e24 instead of $10K bootstrap value - catastrophic for investor confidence",
-    "Vision: LP APY at only 0.21% raises serious questions about protocol revenue model viability",
-    "Vision: Security vulnerability scanning attempts detected in logs indicating potential exploit vectors",
-    "Vision: Server configuration issues with improper 404 responses damaging technical credibility",
-    "Vision: Missing security headers (HSTS, X-Frame-Options) that professional investors expect"
+    "Vision: Cannot verify actual trading functionality or real-time data without browser interaction",
+    "Vision: Limited assessment scope - only static HTML analysis possible via curl",
+    "Vision: Noscript message could be more investor-reassuring about platform capabilities"
   ],
   "functional_issues": [],
-  "score": 60,
+  "score": 76,
   "vision_review": {
-    "professional_score": 4,
-    "trust_score": 2,
+    "professional_score": 8,
+    "trust_score": 7,
     "issues": [
-      "Insurance Fund displays $5.011e24 instead of $10K bootstrap value - catastrophic for investor confidence",
-      "LP APY at only 0.21% raises serious questions about protocol revenue model viability",
-      "Security vulnerability scanning attempts detected in logs indicating potential exploit vectors",
-      "Server configuration issues with improper 404 responses damaging technical credibility",
-      "Missing security headers (HSTS, X-Frame-Options) that professional investors expect"
+      "Cannot verify actual trading functionality or real-time data without browser interaction",
+      "Limited assessment scope - only static HTML analysis possible via curl",
+      "Noscript message could be more investor-reassuring about platform capabilities"
     ],
     "improvements": [
-      "Fix WAD/USDT decimal conversion for Insurance Fund display immediately",
-      "Investigate and resolve LP APY calculation to show realistic DeFi returns",
-      "Implement proper security headers and vulnerability mitigation",
-      "Add /health endpoint and proper 404 handling for professional monitoring",
-      "Verify fee flow from FeeRouter to RewardsDistributor is functioning correctly"
+      "Add server-side rendered preview of key metrics for SEO and confidence",
+      "Include testimonials or backers section in static HTML",
+      "Add regulatory compliance statements in metadata",
+      "Consider showing key platform stats (TVL, volume) in noscript fallback"
     ]
   }
 }
