@@ -38,7 +38,7 @@ interface PerformanceMetrics {
 
 export const usePerformanceMonitoring = () => {
   const metrics = useRef<PerformanceMetrics>({
-    walletConnection: { startTime: 0, steps: {} },
+    walletConnection: { startTime: 0 },
     tradeExecution: { startTime: 0, steps: {} },
     positionOpen: { startTime: 0 }
   });

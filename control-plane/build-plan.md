@@ -1,38 +1,18 @@
-Thank you for the feedback. You're absolutely right. I can see the critical issues now. Let me read the current state and create a proper plan that addresses all 5 priorities and resolves the logical inconsistency.
+Based on the QA report showing critical deployment failure with a score of 60/100, here are the prioritized tasks:
 
-## Revised Plan: Complete Locked Sprint (All 5 Priorities)
+### 1. Fix React Application Deployment [CRITICAL] [FRONTEND]
+- [ ] 1. **CRITICAL**: React app is completely down - showing directory listing instead of application at localhost:3000. This blocks the entire investor demo. Need to diagnose why recent deployment fix (commit 345e9497) failed and get the app running properly.
 
-### Prerequisites: Frontend Infrastructure Recovery
-**Critical Issue**: QA report shows frontend is "UP" but actually "serving directory listing instead of trading interface" with "no index.html, JavaScript, or CSS files present in build directory". Priority #2 (Insurance Fund display) is impossible without a functioning frontend.
+### 2. Implement Proper Web Server Configuration [CRITICAL] [INFRASTRUCTURE] 
+- [ ] 2. **CRITICAL**: Configure proper web server routing and remove public access to build directory listing (security vulnerability). Ensure React app serves correctly with error handling and health checks.
 
-**Immediate Action Required**:
-- [ ] **Fix frontend build process** - Resolve React build failures and permission errors
-- [ ] **Restore proper application serving** - Ensure frontend serves the actual trading interface, not directory listing
-- [ ] **Verify core application loads** - Confirm React app is accessible before attempting display fixes
+### 3. Verify System Health Post-Deployment [HIGH] [QA]
+- [ ] 3. **HIGH**: Once app is running, verify all contract integrations are working (TVL $60.5M, 234 positions, global OI showing correctly). Ensure investor demo flow works end-to-end.
 
-### Priority 1: Fix Fee Router System Failure [CRITICAL] [BACKEND]
-- [ ] **Investigate fee distribution pipeline** - Debug why 50/30/20 split (LP/Protocol/Insurance) isn't working
-- [ ] **Verify FeeRouter contract state** - Check fee routing logic and destinations
-- [ ] **Test end-to-end fee flow** - ExecutionEngine → FeeRouter → RewardsDistributor/Protocol/InsuranceFund
+### 4. Investigate Deployment Process Failure [HIGH] [DEVOPS]
+- [ ] 4. **HIGH**: Analyze why the recent "Frontend Application Deployment" fix (commit 345e9497) didn't resolve the issue. Check npm start/build processes, systemd service status, and deployment scripts.
 
-### Priority 2: Correct Insurance Fund Display Corruption [CRITICAL] [FRONTEND]
-- [ ] **Fix WAD conversion error** - Insurance Fund showing `5.011e24` instead of ~$10K
-- [ ] **Debug frontend display logic** - Locate and fix decimal formatting in display components
-- [ ] **Verify insurance fund value** - Confirm on-chain value is correct (display-only issue)
+### 5. Implement Application Monitoring [MEDIUM] [INFRASTRUCTURE]
+- [ ] 5. **MEDIUM**: Add uptime checks and proper error pages to prevent future deployment failures from going undetected before investor demos.
 
-### Priority 3: Restore Browser Automation Testing [HIGH] [INFRASTRUCTURE]
-- [ ] **Install Chrome dependencies** - Fix missing dependencies for screenshot system
-- [ ] **Test screenshot functionality** - Verify `scripts/take-screenshots.js` works
-- [ ] **Enable verification scripts** - Ensure health checks run with visual verification
-
-### Priority 4: Investigate Low LP APY Pipeline [MEDIUM] [BACKEND]
-- [ ] **Debug LP APY calculation** - Why only 0.21% despite $11.5M OI and 228 positions
-- [ ] **Check RewardsDistributor flow** - Verify fees reaching LP rewards properly
-- [ ] **Validate APY computation** - Ensure APY reflects actual fee generation
-
-### Priority 5: Stabilize Oracle Keeper Service [MEDIUM] [INFRASTRUCTURE]
-- [ ] **Verify mockkeeper.py service** - Check service stability and price freshness
-- [ ] **Test oracle data pipeline** - Ensure no stale data during investor demos
-- [ ] **Monitor price update frequency** - Verify continuous price feeds
-
-**Execution Order**: Prerequisites → Priority 1-5 → Verification → Sprint Complete
+**Current Status**: Application completely inaccessible with professional_score: 1, trust_score: 1. This is a demo-blocking failure that needs immediate resolution.
