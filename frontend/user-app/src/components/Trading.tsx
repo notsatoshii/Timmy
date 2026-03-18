@@ -10,6 +10,7 @@ import { useNotifications } from '../contexts/NotificationContext';
 import { useMarketProbabilities } from '../hooks/useMarketProbabilities';
 import { useDemo } from '../contexts/DemoContext';
 import Skeleton from './Skeleton';
+import TestnetDisclaimer from './TestnetDisclaimer';
 
 interface TradeForm {
   marketId: string;
@@ -442,6 +443,12 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
         <p className="text-gray-500">
           Take leveraged positions on binary prediction markets
         </p>
+      </div>
+
+      {/* Testnet Notice */}
+      <TestnetDisclaimer compact={true} context="trading" />
+
+      <div>
         {selectedTrade && (
           <div className="mt-2 p-3 bg-accent-muted border border-accent/20 rounded-lg">
             <p className="text-sm text-accent">

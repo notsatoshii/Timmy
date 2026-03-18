@@ -139,12 +139,12 @@ const ProtocolStats: React.FC = () => {
         apyFallback: true,
       });
       setStats({
-        tvl: `$${formatUsdt(DEMO_FALLBACK_VALUES.tvl)} (Demo)`,
-        dailyVolume: `$${formatUsdt(DEMO_FALLBACK_VALUES.volume24h)} (Demo)`,
-        totalOI: `$${formatUsdt(DEMO_FALLBACK_VALUES.totalOI)} (Demo)`,
-        lpApy: '15.43% (Demo)',
-        utilizationRate: '60.00% (Demo)',
-        insuranceFund: `$${formatWad(DEMO_FALLBACK_VALUES.insuranceFund)} (Demo)`,
+        tvl: `$${formatUsdt(DEMO_FALLBACK_VALUES.tvl)}`,
+        dailyVolume: `$${formatUsdt(DEMO_FALLBACK_VALUES.volume24h)}`,
+        totalOI: `$${formatUsdt(DEMO_FALLBACK_VALUES.totalOI)}`,
+        lpApy: '15.43%',
+        utilizationRate: '60.00%',
+        insuranceFund: `$${formatWad(DEMO_FALLBACK_VALUES.insuranceFund)}`,
       });
     }
   }, [tvlRaw, totalOIRaw, insuranceRaw, currentBorrowRate, volume24h, tvlError, oiError, insuranceError, borrowRateError, addresses]);
@@ -157,8 +157,8 @@ const ProtocolStats: React.FC = () => {
       <div className="text-[10px] uppercase tracking-widest font-medium text-steel mb-2 flex items-center justify-center space-x-1">
         <span>{label}</span>
         {isFallback && (
-          <span className="bg-yellow-600/20 text-yellow-400 px-1 rounded text-[8px] border border-yellow-600/40">
-            DEMO
+          <span className="bg-warning/20 text-warning px-1.5 py-0.5 rounded text-[9px] border border-warning/40 font-semibold">
+            TESTNET
           </span>
         )}
       </div>

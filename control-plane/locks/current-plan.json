@@ -4,7 +4,7 @@
       "id": "2",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "UI/UX changes to React components - adding banners, disclaimers, and visual indicators to address investor trust issues"
+      "reason": "Pure frontend work - adding UI banners, disclaimers, removing hardcoded values from React components. No dependencies since it's the first required task."
     },
     {
       "id": "3",
@@ -12,7 +12,7 @@
       "depends_on": [
         "2"
       ],
-      "reason": "Frontend stability verification should happen after testnet clarity changes are complete. Same lane dependency - must verify the complete frontend including new UI elements"
+      "reason": "Frontend verification and testing. Depends on task 2 because we need to verify stability after all testnet clarity improvements are implemented - testing should happen on the final UI state."
     }
   ]
 }

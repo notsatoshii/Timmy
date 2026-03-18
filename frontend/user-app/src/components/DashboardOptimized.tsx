@@ -9,6 +9,8 @@ import LazyMarketDetail from './LazyMarketDetail';
 import MainnetRoadmap from './MainnetRoadmap';
 import ErrorBoundary from './ErrorBoundary';
 import Skeleton from './Skeleton';
+import LeverLoader from './LeverLoader';
+import TestnetBanner from './TestnetBanner';
 
 // Lazy load heavy components
 const Trading = lazy(() => import('./Trading'));
@@ -39,7 +41,7 @@ const DashboardOptimized: React.FC = () => {
   // Dynamic page title based on current section
   const currentSection = selectedMarket ? 'market-detail' : activeTab;
   const customTitle = selectedMarket ? `${selectedMarket.description}` : undefined;
-  usePageTitle(currentSection, customTitle);
+  usePageTitle(currentSection as any, customTitle);
 
   const handleTradeSelection = useCallback((marketId: string, marketName: string, direction: 'long' | 'short') => {
     setSelectedTrade({ marketId, marketName, direction });
@@ -71,23 +73,9 @@ const DashboardOptimized: React.FC = () => {
     { id: 'roadmap' as TabType, label: 'Roadmap', description: 'Mainnet deployment plan' },
   ];
 
-  // Loading skeleton for heavy components
-  const ComponentSkeleton: React.FC<{ title: string }> = ({ title }) => (
-    <div className="space-y-6">
-      <div>
-        <Skeleton height="32px" width="200px" className="mb-2" />
-        <Skeleton height="20px" width="400px" />
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {[1, 2, 3].map((index) => (
-          <div key={index} className="bg-surface-1 rounded-lg border border-border p-6">
-            <Skeleton height="20px" width="120px" className="mb-3" />
-            <Skeleton height="28px" width="80px" className="mb-2" />
-            <Skeleton height="16px" width="200px" />
-          </div>
-        ))}
-      </div>
-    </div>
+  // Loading component with LEVER branding
+  const ComponentLoader: React.FC<{ title: string }> = ({ title }) => (
+    <LeverLoader message={`Loading ${title}...`} size="lg" />
   );
 
   const renderContent = () => {
@@ -115,7 +103,7 @@ const DashboardOptimized: React.FC = () => {
       case 'trading':
         return (
           <ErrorBoundary panelName="Trading">
-            <Suspense fallback={<ComponentSkeleton title="Trading Interface" />}>
+            <Suspense fallback={<ComponentLoader title="Trading Interface" />}>
               <Trading selectedTrade={selectedTrade} />
             </Suspense>
           </ErrorBoundary>
@@ -123,7 +111,7 @@ const DashboardOptimized: React.FC = () => {
       case 'vault':
         return (
           <ErrorBoundary panelName="Vault">
-            <Suspense fallback={<ComponentSkeleton title="Liquidity Vault" />}>
+            <Suspense fallback={<ComponentLoader title="Liquidity Vault" />}>
               <VaultOptimized />
             </Suspense>
           </ErrorBoundary>
@@ -131,7 +119,7 @@ const DashboardOptimized: React.FC = () => {
       case 'positions':
         return (
           <ErrorBoundary panelName="Positions">
-            <Suspense fallback={<ComponentSkeleton title="Your Positions" />}>
+            <Suspense fallback={<ComponentLoader title="Your Positions" />}>
               <Positions />
             </Suspense>
           </ErrorBoundary>
@@ -156,6 +144,11 @@ const DashboardOptimized: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-surface-0">
+      {/* Testnet Banner - Most prominent position */}
+      <ErrorBoundary panelName="TestnetBanner">
+        <TestnetBanner />
+      </ErrorBoundary>
+
       <ErrorBoundary panelName="Header">
         <Header />
       </ErrorBoundary>

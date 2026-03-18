@@ -1,44 +1,29 @@
-Based on the latest QA report (score: 68) and current system status, here's the **REVISED PLAN** for the investor demo sprint:
+Thank you for the correction. I completely misread the situation. Let me revise the plan based on the **actual locked priorities** from the build plan:
 
-## REVISED SPRINT PRIORITIES (LOCKED)
+## REVISED PLAN - INVESTOR DEMO SPRINT (LOCKED PRIORITIES)
 
 ### 1. **Fix Insurance Fund Display Bug** [CRITICAL] [CONTRACTS/FRONTEND]
-**Status**: Blocking investor confidence
-- [ ] Insurance Fund shows massive value (5.011e24) instead of $10K bootstrap
-- [ ] Investigate if this is a display bug or contract state issue  
-- [ ] Verify FeeRouter → Insurance Fund flow is correct
-- [ ] Insurance fund health is critical for investor evaluation
+**Issue**: Insurance Fund showing massive value (5.011e24) instead of expected $10K bootstrap
+- [ ] Investigate if this is a frontend display bug or contract state corruption
+- [ ] Check InsuranceFund contract balance vs frontend calculation
+- [ ] Verify FeeRouter → InsuranceFund routing is working correctly
+- [ ] This directly impacts investor confidence in fund safety mechanisms
 
-### 2. **Add Testnet/Mainnet Clarity** [CRITICAL] [FRONTEND] 
-**Status**: Major trust issue for investors
-- [ ] Add prominent "TESTNET ENVIRONMENT" banner/disclaimer
+### 2. **Add Testnet/Mainnet Clarity** [CRITICAL] [FRONTEND]
+**Issue**: Major trust issue - investors need to understand this is testnet environment
+- [ ] Add prominent "TESTNET ENVIRONMENT" banner across all pages
 - [ ] Remove or clearly label hardcoded fallback values (50M TVL, 15.43% APY)
-- [ ] Add mainnet deployment roadmap section
-- [ ] Include smart contract audit status indicators
-- [ ] Professional presentation score currently 8/10 due to this
+- [ ] Add professional disclaimers about testnet vs mainnet deployment
+- [ ] Include smart contract audit status and mainnet roadmap
+- [ ] Currently blocking professional presentation score
 
 ### 3. **Verify Frontend Stability** [HIGH] [FRONTEND]
-**Status**: No functional issues detected, but verification needed
-- [ ] Ensure all tabs load without errors (MarketDetail, Portfolio, etc.)
-- [ ] Test trading flow end-to-end
-- [ ] Verify data consistency across all pages
-- [ ] Frontend shows "UP" but needs investor-ready validation
+**Issue**: End-to-end validation needed for investor demo readiness
+- [ ] Test all major user flows (connect wallet, view markets, trading, portfolio)
+- [ ] Verify data consistency across MarketDetail, Portfolio, and Dashboard
+- [ ] Take screenshots for investor demo presentation
+- [ ] Ensure no React errors or loading failures during demo
 
-## WHAT CHANGED FROM ORIGINAL PLAN
+**Target**: Move from 68/100 overall score to investor-ready by addressing trust score (6/10) and professional presentation (8/10).
 
-**✅ RESOLVED**: 
-- 24h Volume calculation (no longer appears in critical issues)
-- MarketDetail tab functionality (no functional blockers detected)
-
-**🔄 NEW PRIORITY**: 
-- Insurance Fund bug is now #1 priority (was #4)
-- Testnet perception issues elevated to critical (affects trust score)
-
-**📊 CURRENT METRICS**:
-- Overall Score: 68/100 (was 68)
-- Professional Score: 8/10 
-- Trust Score: 6/10 (primary concern)
-- No critical blockers or functional issues
-
-## SUCCESS CRITERIA
-All three priorities must pass before transitioning to Phase 2 auto-improve mode. Focus on investor perception and trust rather than technical functionality.
+**Work ONLY on these three priorities until all pass, then transition to Phase 2.**

@@ -213,7 +213,7 @@ class MockOracleKeeper:
                 logging.info(f"Cycle complete in {cycle_time:.1f}s")
 
                 self.write_prices_json()
-            time.sleep(self.push_interval)
+                time.sleep(self.push_interval)
 
             except KeyboardInterrupt:
                 logging.info("Shutting down...")

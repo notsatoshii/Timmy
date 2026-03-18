@@ -62,9 +62,23 @@ const MainnetRoadmap: React.FC = () => {
     <div className="lever-card">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-ivory mb-2">Mainnet Deployment Roadmap</h2>
-        <p className="text-steel text-sm">
+        <p className="text-steel text-sm mb-4">
           Our path to mainnet launch prioritizes security, thorough testing, and community feedback.
         </p>
+
+        {/* Current Status Alert */}
+        <div className="bg-warning/10 border border-warning/30 rounded-lg p-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-3 h-3 bg-warning rounded-full animate-pulse flex-shrink-0"></div>
+            <div>
+              <h3 className="font-semibold text-warning text-sm">Currently in Testnet Phase</h3>
+              <p className="text-steel text-xs mt-1">
+                All functionality is operational on Base Sepolia testnet. No real funds are involved.
+                This demonstrates the full protocol capabilities in preparation for mainnet launch.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="space-y-6">
@@ -109,16 +123,75 @@ const MainnetRoadmap: React.FC = () => {
         ))}
       </div>
 
-      {/* Security Emphasis */}
-      <div className="mt-8 p-4 bg-blue-900/10 border border-blue-600/20 rounded-lg">
-        <div className="flex items-start space-x-3">
-          <div className="w-2 h-2 bg-blue-400 rounded-full mt-2"></div>
-          <div>
-            <h4 className="font-semibold text-blue-400 mb-1">Security First Approach</h4>
-            <p className="text-sm text-steel">
-              Every phase includes rigorous testing and security reviews. We will not launch on mainnet until
-              we are confident in the protocol's security and stability. Your funds' safety is our top priority.
-            </p>
+      {/* Security & Audit Information */}
+      <div className="mt-8 space-y-4">
+        {/* Security Emphasis */}
+        <div className="p-4 bg-blue-900/10 border border-blue-600/20 rounded-lg">
+          <div className="flex items-start space-x-3">
+            <div className="w-8 h-8 bg-blue-600/20 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <div>
+              <h4 className="font-semibold text-blue-400 mb-2">Security First Approach</h4>
+              <p className="text-sm text-steel mb-3">
+                Every phase includes rigorous testing and security reviews. We will not launch on mainnet until
+                we are confident in the protocol's security and stability. Your funds' safety is our top priority.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <h5 className="font-medium text-ivory text-xs mb-1">Smart Contract Audits</h5>
+                  <ul className="space-y-1">
+                    <li className="flex items-center space-x-2">
+                      <div className="w-1 h-1 bg-yellow-500 rounded-full"></div>
+                      <span className="text-xs text-steel">Lead security firms engaged</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <div className="w-1 h-1 bg-yellow-500 rounded-full"></div>
+                      <span className="text-xs text-steel">Formal verification planned</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <div className="w-1 h-1 bg-yellow-500 rounded-full"></div>
+                      <span className="text-xs text-steel">Public audit reports</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h5 className="font-medium text-ivory text-xs mb-1">Additional Safeguards</h5>
+                  <ul className="space-y-1">
+                    <li className="flex items-center space-x-2">
+                      <div className="w-1 h-1 bg-teal rounded-full"></div>
+                      <span className="text-xs text-steel">Bug bounty program ($100K+)</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <div className="w-1 h-1 bg-teal rounded-full"></div>
+                      <span className="text-xs text-steel">Gradual mainnet rollout</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <div className="w-1 h-1 bg-teal rounded-full"></div>
+                      <span className="text-xs text-steel">Insurance fund protection</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Testnet Benefits */}
+        <div className="p-4 bg-teal/10 border border-teal/20 rounded-lg">
+          <div className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-teal rounded-full mt-2"></div>
+            <div>
+              <h4 className="font-semibold text-teal mb-1">Why We're Starting on Testnet</h4>
+              <p className="text-sm text-steel">
+                This testnet deployment allows us to thoroughly test all protocol mechanics with real market conditions
+                but without financial risk. Community feedback during this phase directly improves mainnet security.
+              </p>
+            </div>
           </div>
         </div>
       </div>

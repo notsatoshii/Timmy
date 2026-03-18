@@ -7,6 +7,7 @@ import { useVaultMulticall } from '../hooks/useVaultMulticall';
 import { useMemoizedVaultCalculations } from '../hooks/useMemoizedCalculations';
 import Skeleton from './Skeleton';
 import VaultStats from './vault/VaultStats';
+import TestnetDisclaimer from './TestnetDisclaimer';
 
 const VaultOptimized: React.FC = () => {
   const { address } = useWallet();
@@ -224,6 +225,9 @@ const VaultOptimized: React.FC = () => {
           Deposit USDT to earn yield from trading fees, funding payments, and borrow fees
         </p>
       </div>
+
+      {/* Testnet Notice */}
+      <TestnetDisclaimer compact={true} context="vault" />
 
       {/* Vault Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

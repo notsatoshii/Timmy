@@ -1,13 +1,14 @@
 import { useEffect } from 'react';
 
-type PageSection = 'markets' | 'trading' | 'vault' | 'positions' | 'market-detail';
+type PageSection = 'markets' | 'trading' | 'vault' | 'positions' | 'market-detail' | 'roadmap';
 
 const PAGE_TITLES: Record<PageSection, string> = {
   markets: 'Markets - LEVER Protocol',
   trading: 'Trading - LEVER Protocol',
   vault: 'Liquidity Vault - LEVER Protocol',
   positions: 'My Positions - LEVER Protocol',
-  'market-detail': 'Market Details - LEVER Protocol'
+  'market-detail': 'Market Details - LEVER Protocol',
+  roadmap: 'Roadmap - LEVER Protocol'
 };
 
 /**
