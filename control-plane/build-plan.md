@@ -1,33 +1,33 @@
-Based on the QA report (score 60/100, trust score 6/10) and the current Phase 2 build plan, here are the prioritized tasks:
+Looking at the QA score of 60 and the visual issues indicating static HTML instead of a functioning React app, here are the prioritized tasks:
 
-### 1. **Fix React SPA Testing Methodology** [HIGH] [INFRASTRUCTURE]
-- [ ] Replace curl-based health checks with Playwright browser automation
-- [ ] Update `take-screenshots.js` to properly render React components instead of failing
-- [ ] Implement real DOM interaction testing for accurate frontend scoring
-- [ ] Adjust QA scoring methodology to properly assess React SPA vs static HTML
+### 1. Fix React App Loading [CRITICAL] [FRONTEND]
+- [ ] 1. Investigate why QA is seeing static HTML instead of the live React application - score dropped to 60 due to inability to verify actual functionality
+- [ ] 2. Ensure frontend service is properly running and accessible at port 3000
+- [ ] 3. Test wallet connectivity and smart contract integration flows
+- [ ] 4. Verify trading interface loads with real market data and positions
 
-### 2. **Enhance Professional Demo Presentation** [HIGH] [FRONTEND]  
-- [ ] Remove or redesign testnet banner to be less prominent while maintaining transparency
-- [ ] Add "LIVE DATA" indicators to distinguish real metrics from fallback values
-- [ ] Implement professional loading states and error boundaries throughout the UI
-- [ ] Update audit status display with progress timeline instead of just "PENDING"
+### 2. Verify Oracle Price Feeds [HIGH] [BACKEND]  
+- [ ] 1. Confirm mockkeeper.py oracle service is running and updating prices
+- [ ] 2. Check that prices.json is being updated regularly (currently shows as modified)
+- [ ] 3. Test that frontend displays live price updates, not stale data
+- [ ] 4. Ensure price staleness doesn't break trading during investor demo
 
-### 3. **Monitor Oracle & Fee System Stability** [MEDIUM] [MONITORING]
-- [ ] Verify mockkeeper.py is running consistently and updating prices every 30 seconds
-- [ ] Investigate Insurance Fund stuck at $10K bootstrap - confirm FeeRouter integration
-- [ ] Monitor LP APY progression (currently 0.21%) as leverage usage increases
-- [ ] Validate real-time fee flow from positions to Insurance Fund
+### 3. Test End-to-End Trading Flow [HIGH] [INTEGRATION]
+- [ ] 1. Open actual leveraged positions (5x, 10x, 15x) and verify they display correctly
+- [ ] 2. Test position management (partial closes, full closes) 
+- [ ] 3. Confirm real-time PnL updates and margin calculations
+- [ ] 4. Verify all trading features work with live wallet connections
 
-### 4. **Document Sprint Success & System Status** [MEDIUM] [DOCUMENTATION]
-- [ ] Archive sprint completion evidence (20 PASS / 0 FAIL health checks achieved)
-- [ ] Create investor-ready system metrics summary with current TVL ($68.5M) and OI ($14.6M)
-- [ ] Document Phase 2 transition status and optimization priorities
-- [ ] Prepare handoff documentation for continuous monitoring phase
+### 4. Fix Fee Flow Issues [MEDIUM] [BACKEND]
+- [ ] 1. Debug why Insurance Fund stuck at $10K bootstrap instead of receiving 20% fee share
+- [ ] 2. Investigate LP APY calculation showing only 0.21% 
+- [ ] 3. Verify FeeRouter is properly distributing fees (50/30/20 split)
+- [ ] 4. Test that trading activity increases Insurance Fund balance
 
-### 5. **Implement End-to-End Browser Testing** [LOW] [TESTING]
-- [ ] Create automated user journey tests (deposit → trade → monitor positions)
-- [ ] Add visual regression testing for consistent demo presentation
-- [ ] Set up screenshot comparison automation for UI stability validation
-- [ ] Build comprehensive integration test suite using real browser interactions
+### 5. Professional Demo Polish [MEDIUM] [FRONTEND]
+- [ ] 1. Ensure all tabs (Trading, Positions, Markets, Vault) display professional data
+- [ ] 2. Verify no $NaN, $0.00, or error boundary crashes visible
+- [ ] 3. Test responsive design and clean UI presentation
+- [ ] 4. Confirm key metrics (TVL $68.5M, 263 positions) display prominently
 
-**Priority Focus**: The main blocker is testing methodology - fixing React SPA evaluation will likely improve the score from 60 to 80+, while professional presentation improvements target the trust score increase from 6 to 8+.
+**Focus**: The React app loading issue is blocking proper QA verification. Once fixed, the score should improve significantly as actual functionality can be tested.

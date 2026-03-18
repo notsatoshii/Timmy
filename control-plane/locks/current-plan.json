@@ -1,36 +1,39 @@
 {
   "tasks": [
     {
-      "id": "1",
-      "lane": "INFRA",
-      "depends_on": [],
-      "reason": "Testing infrastructure changes - updating take-screenshots.js and implementing Playwright automation scripts, not React component changes"
-    },
-    {
-      "id": "2",
+      "id": "fix-react-loading",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "UI presentation changes - modifying React components, banners, loading states, and error boundaries in the frontend codebase"
+      "reason": "FRONTEND lane: React app loading issues require changes to React components, build config, or frontend service. No dependencies as this is the blocking issue."
     },
     {
-      "id": "3",
+      "id": "verify-oracle-feeds",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Monitoring and system verification - checking mockkeeper.py service, investigating fee routing integration, monitoring existing systems"
+      "reason": "INFRA lane: Oracle service (mockkeeper.py script) and price data infrastructure. Can be debugged independently of frontend issues."
     },
     {
-      "id": "4",
-      "lane": "INFRA",
-      "depends_on": [],
-      "reason": "Documentation and archiving - creating handoff docs and system status summaries, documenting current achievements rather than waiting for other fixes"
-    },
-    {
-      "id": "5",
+      "id": "test-trading-flow",
       "lane": "INFRA",
       "depends_on": [
-        "1"
+        "fix-react-loading",
+        "verify-oracle-feeds"
       ],
-      "reason": "Comprehensive testing automation builds on the fixed React SPA testing methodology from task 1, both involve browser testing infrastructure"
+      "reason": "INFRA lane: End-to-end testing requires test scripts and automation. Depends on React app working and oracle feeds providing data to test properly."
+    },
+    {
+      "id": "fix-fee-flows",
+      "lane": "INFRA",
+      "depends_on": [],
+      "reason": "INFRA lane: Debugging deployed contract state and fee distribution configuration. Can investigate backend fee issues independently."
+    },
+    {
+      "id": "demo-polish",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "fix-react-loading"
+      ],
+      "reason": "FRONTEND lane: UI polish and display improvements in React components. Must have working React app before polishing the interface."
     }
   ]
 }
