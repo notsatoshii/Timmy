@@ -1,9 +1,60 @@
 {
-  "timestamp": "2026-03-18T22:54:21.957Z",
-  "overall_score": 71,
-  "testing_method": "intelligent_fallback",
-  "browser_automation": false,
-  "screenshots": 0,
-  "passed_tests": 4,
-  "total_tests": 4
+  "timestamp": "2026-03-18T22:55:42.461413+00:00",
+  "frontend_status": "UP",
+  "tabs": {},
+  "data_checks": [],
+  "contract_checks": [
+    {
+      "name": "TVL",
+      "value": "68523959204690 [6.852e13]",
+      "status": "ok"
+    },
+    {
+      "name": "Positions",
+      "value": "265",
+      "status": "ok"
+    },
+    {
+      "name": "Global OI",
+      "value": "14660722554735 [1.466e13]",
+      "status": "ok"
+    },
+    {
+      "name": "Insurance Fund",
+      "value": "5011000000005000000000000 [5.011e24]",
+      "status": "ok"
+    }
+  ],
+  "sprint_checks": {},
+  "critical_blockers": [],
+  "visual_issues": [
+    "Vision: Can only evaluate HTML shell, not actual React application interface",
+    "Vision: No visible trading interface or real-time data to assess functionality",
+    "Vision: Unable to verify if the application loads properly beyond static HTML",
+    "Vision: Contact email links to lever.finance domain but can't verify domain ownership",
+    "Vision: Documentation link provided but can't verify if it exists or is comprehensive"
+  ],
+  "functional_issues": [],
+  "score": 60,
+  "vision_review": {
+    "professional_score": 7,
+    "trust_score": 6,
+    "issues": [
+      "Can only evaluate HTML shell, not actual React application interface",
+      "No visible trading interface or real-time data to assess functionality",
+      "Unable to verify if the application loads properly beyond static HTML",
+      "Contact email links to lever.finance domain but can't verify domain ownership",
+      "Documentation link provided but can't verify if it exists or is comprehensive"
+    ],
+    "improvements": [
+      "Ensure React application loads fully with visible trading interface",
+      "Display real-time market data and price feeds prominently",
+      "Add visible TVL, volume, and other key metrics investors expect",
+      "Include clear risk disclosures and regulatory compliance statements",
+      "Provide visible audit reports or security certifications",
+      "Add investor-specific sections like tokenomics, roadmap, or team information",
+      "Ensure responsive design works across all devices",
+      "Include live chat or support system for institutional inquiries"
+    ]
+  }
 }

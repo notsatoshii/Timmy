@@ -1,35 +1,29 @@
-Based on the QA report (score: 68) and known issues, here are the prioritized tasks for investor demo readiness:
+You're absolutely right about the contradictions. Let me provide a **focused 3-priority plan** that resolves the mismatch:
+
+## REVISED PLAN - THREE PRIORITIES ONLY
+
+Based on CLAUDE.md requirement ("Work ONLY on the three priorities") and your analysis of HIGH PRIORITY items, here are the **exactly three** priorities to focus on:
 
 ### 1. Fix Server Configuration Issues [HIGH PRIORITY] [INFRASTRUCTURE]
 - [ ] Configure proper 404 responses for missing resources while maintaining SPA routing
-- [ ] Implement security monitoring to detect vulnerability scanning attempts  
-- [ ] Add proper HTTP security headers (HSTS, X-Frame-Options, etc.)
-- [ ] Add /health endpoint for proper status monitoring
-- **Rationale:** Visual issues showing "misleading HTTP responses" and "vulnerability scanning detected" could damage investor confidence
+- [ ] Implement security headers (HSTS, X-Frame-Options) to address vulnerability scanning concerns  
+- [ ] Add /health endpoint for proper monitoring during demo
+- **Impact:** Addresses QA "misleading HTTP responses" and security vulnerabilities that damage investor credibility
 
-### 2. Investigate Insurance Fund Display Bug [HIGH PRIORITY] [FRONTEND]  
-- [ ] Verify Insurance Fund balance showing $5.011e24 (likely decimal formatting error)
-- [ ] Check if this is display issue vs actual contract state
-- [ ] Fix formatting to show proper $10K bootstrap value
-- **Rationale:** Massive incorrect value ($5 septillion) would confuse investors and suggest system instability
+### 2. Investigate Insurance Fund Display Bug [HIGH PRIORITY] [FRONTEND]
+- [ ] Fix Insurance Fund showing $5.011e24 instead of $10K bootstrap value
+- [ ] Verify if this is WAD/USDT decimal conversion issue (5.011e24 ÷ 1e18 ÷ 1e6 ≈ $5.011)
+- [ ] Implement proper formatting to display $10,000 for investor confidence
+- **Impact:** $5 septillion display is the most visually damaging issue for investors
 
-### 3. Validate LP APY Calculation [MEDIUM PRIORITY] [ANALYTICS]
-- [ ] Investigate why LP APY is only 0.21% (concerning for investors)
-- [ ] Verify fee flow through FeeRouter to RewardsDistributor
-- [ ] Confirm relationship between OI levels and LP yield generation
-- **Rationale:** Low APY could signal protocol isn't generating sufficient revenue
+### 3. Validate LP APY Calculation [MEDIUM PRIORITY] [ANALYTICS] 
+- [ ] Investigate why LP APY is only 0.21% (concerning return for investors)
+- [ ] Verify fee flow from FeeRouter→RewardsDistributor is working properly
+- [ ] Document relationship between $14.66M Global OI and LP yield generation
+- **Impact:** Critical for investor confidence - low APY signals poor protocol revenue model
 
-### 4. Ensure Oracle Stability [MEDIUM PRIORITY] [INFRASTRUCTURE] 
-- [ ] Verify mockkeeper.py service is running and stable
-- [ ] Monitor price feed updates every 15s as expected
-- [ ] Add alerts if price feeds go stale during demo period
-- **Rationale:** Price staleness would break core trading functionality during demo
+## Excluded (Per THREE-ONLY Constraint):
+- Oracle Stability (system appears stable with 265 positions)
+- Pre-Demo Validation (will happen naturally during the three fixes)
 
-### 5. Pre-Demo System Validation [MEDIUM PRIORITY] [QA]
-- [ ] Run complete user flow test with all verification scripts
-- [ ] Test position opening across different leverage levels (5x-15x)
-- [ ] Verify all tab functionality works smoothly
-- [ ] Document demo script/talking points for smooth presentation
-- **Rationale:** Ensure no surprises during live investor presentation
-
-**Current Status:** System functional with 265 active positions and $68.5M TVL, but presentation quality issues need immediate attention before investor demo.
+**This plan respects both the CLAUDE.md constraint and prioritizes the most investor-critical issues. Proceed?**
