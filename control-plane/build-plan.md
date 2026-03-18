@@ -1,18 +1,28 @@
-Based on the QA report showing critical deployment failure with a score of 60/100, here are the prioritized tasks:
+Based on the QA report showing a score of 60 with critical frontend service configuration issues, here are the prioritized tasks:
 
-### 1. Fix React Application Deployment [CRITICAL] [FRONTEND]
-- [x] 1. **CRITICAL**: React app is completely down - showing directory listing instead of application at localhost:3000. This blocks the entire investor demo. Need to diagnose why recent deployment fix (commit 345e9497) failed and get the app running properly.
+### 1. Fix Frontend Service Port Configuration [CRITICAL] [FRONTEND]
+- [ ] Resolve systemd service binding to port 3000 instead of 39671
+- [ ] Stop development server (react-app-rewired) running alongside production 
+- [ ] Ensure lever-frontend service properly starts on intended port for investor demo
 
-### 2. Implement Proper Web Server Configuration [CRITICAL] [INFRASTRUCTURE] 
-- [ ] 2. **CRITICAL**: Configure proper web server routing and remove public access to build directory listing (security vulnerability). Ensure React app serves correctly with error handling and health checks.
+### 2. Resolve Service Deployment Conflicts [HIGH] [DEVOPS]  
+- [ ] Kill conflicting development processes causing port conflicts
+- [ ] Fix systemd service configuration for stable port binding
+- [ ] Implement proper production deployment separation from dev environment
 
-### 3. Verify System Health Post-Deployment [HIGH] [QA]
-- [ ] 3. **HIGH**: Once app is running, verify all contract integrations are working (TVL $60.5M, 234 positions, global OI showing correctly). Ensure investor demo flow works end-to-end.
+### 3. Investigate Insurance Fund Bootstrap Issue [MEDIUM] [CONTRACTS]
+- [ ] Verify why Insurance Fund remains at $10K bootstrap level
+- [ ] Check if fees are properly flowing through FeeRouter to InsuranceFund  
+- [ ] Confirm fee distribution pipeline is operational (50/30/20 split)
 
-### 4. Investigate Deployment Process Failure [HIGH] [DEVOPS]
-- [ ] 4. **HIGH**: Analyze why the recent "Frontend Application Deployment" fix (commit 345e9497) didn't resolve the issue. Check npm start/build processes, systemd service status, and deployment scripts.
+### 4. Verify Oracle Keeper Stability [MEDIUM] [ORACLE]
+- [ ] Confirm mockkeeper.py is running and updating prices
+- [ ] Check for stale price data in OracleAdapter
+- [ ] Ensure price pipeline remains active for live demo
 
-### 5. Implement Application Monitoring [MEDIUM] [INFRASTRUCTURE]
-- [ ] 5. **MEDIUM**: Add uptime checks and proper error pages to prevent future deployment failures from going undetected before investor demos.
+### 5. Monitor System Health for Demo Readiness [LOW] [QA]
+- [ ] Track LP APY improvement as leverage utilization increases
+- [ ] Verify all tabs render correctly after port fixes
+- [ ] Confirm 234 positions and $60.5M TVL display properly in frontend
 
-**Current Status**: Application completely inaccessible with professional_score: 1, trust_score: 1. This is a demo-blocking failure that needs immediate resolution.
+**Priority Focus**: Frontend service configuration is blocking professional demo appearance - tackle tasks 1-2 immediately.

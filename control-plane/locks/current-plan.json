@@ -2,9 +2,9 @@
   "tasks": [
     {
       "id": "1",
-      "lane": "FRONTEND",
+      "lane": "INFRA",
       "depends_on": [],
-      "reason": "React app build/serving issue - root cause is in React/Vite configuration or build process"
+      "reason": "Systemd service configuration and port binding issues require INFRA lane. No dependencies as this is the critical blocker."
     },
     {
       "id": "2",
@@ -12,22 +12,19 @@
       "depends_on": [
         "1"
       ],
-      "reason": "Web server configuration and systemd service setup - depends on React app working first before configuring proper serving"
+      "reason": "Service deployment conflicts and process management are INFRA tasks. Depends on task 1 since resolving conflicts comes after attempting the primary service fix."
     },
     {
       "id": "3",
-      "lane": "INFRA",
-      "depends_on": [
-        "1",
-        "2"
-      ],
-      "reason": "Health check and validation scripts - requires app running and properly served before testing integrations"
+      "lane": "CONTRACT",
+      "depends_on": [],
+      "reason": "Investigating fee flows through FeeRouter and InsuranceFund requires contract analysis and potentially Solidity fixes. Independent of service issues."
     },
     {
       "id": "4",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Deployment process analysis - forensic investigation can run parallel to fix attempts, involves deployment scripts and systemd analysis"
+      "reason": "Monitoring mockkeeper.py script and oracle pipeline involves Python script management and system monitoring. Independent investigation."
     },
     {
       "id": "5",
@@ -36,7 +33,7 @@
         "1",
         "2"
       ],
-      "reason": "Monitoring infrastructure setup - requires app working and properly served before adding uptime checks"
+      "reason": "System health monitoring and verification tasks span multiple systems. Depends on port fixes since it needs to verify tabs render correctly after those fixes are complete."
     }
   ]
 }

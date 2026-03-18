@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-18T15:47:11.571796+00:00",
+  "timestamp": "2026-03-18T15:56:46.731891+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -28,30 +28,30 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Application not running - showing directory listing instead of actual app",
-    "Vision: No React app accessible at localhost:3000",
-    "Vision: Critical deployment failure - investor cannot access platform",
-    "Vision: No error handling or fallback page",
-    "Vision: Basic file browser exposed to public (security concern)"
+    "Vision: Frontend service misconfigured - running on port 39671 instead of intended port 3000",
+    "Vision: Port conflict between development server and production build server",
+    "Vision: Service instability with multiple restarts visible in logs",
+    "Vision: Development environment running alongside production build suggests poor deployment practices",
+    "Vision: systemd service unable to bind to intended port, indicating configuration management issues"
   ],
   "functional_issues": [],
   "score": 60,
   "vision_review": {
-    "professional_score": 1,
-    "trust_score": 1,
+    "professional_score": 6,
+    "trust_score": 5,
     "issues": [
-      "Application not running - showing directory listing instead of actual app",
-      "No React app accessible at localhost:3000",
-      "Critical deployment failure - investor cannot access platform",
-      "No error handling or fallback page",
-      "Basic file browser exposed to public (security concern)"
+      "Frontend service misconfigured - running on port 39671 instead of intended port 3000",
+      "Port conflict between development server and production build server",
+      "Service instability with multiple restarts visible in logs",
+      "Development environment running alongside production build suggests poor deployment practices",
+      "systemd service unable to bind to intended port, indicating configuration management issues"
     ],
     "improvements": [
-      "Fix React app deployment - ensure npm start/build is running correctly",
-      "Implement proper error pages and health checks",
-      "Configure proper web server routing",
-      "Add application monitoring and uptime checks",
-      "Remove public access to build directory listing"
+      "Fix systemd service configuration to properly bind to port 3000",
+      "Stop development server (react-app-rewired) and run only production build",
+      "Implement proper production deployment pipeline with environment separation",
+      "Add service monitoring and alerting for port conflicts and service failures",
+      "Resolve port binding issues and ensure consistent service startup"
     ]
   }
 }
