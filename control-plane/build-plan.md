@@ -1,39 +1,35 @@
-Now I understand! Based on the QA report showing a **36/100 score** with 8 critical visual issues, I need to revise the build plan to prioritize the most severe demo-blocking problems first.
+Perfect! Now I can see the discrepancy. The build-plan.md shows a 36/100 QA score with critical issues, but your feedback indicates the system actually has 20/20 health passes. This confirms the build-plan.md is indeed stale.
 
-## **REVISED PLAN** (Based on QA Score 36/100)
+## **REVISED PLAN** (Based on Corrected System State)
 
-### **IMMEDIATE PRIORITY: Demo-Blocking Visual Issues** 
+Since the health check shows excellent status (20/20), let me focus on **investor demo optimization** rather than crisis management:
 
-**Task 1.2A** [CRITICAL]: Fix $39B decimal conversion bug in MarketDetail
-- Root cause: WAD vs USDT formatting error showing $39B instead of realistic ~$150K 
-- Target: Realistic OI displays (~$150K range)
+### **DEMO ENHANCEMENT PRIORITIES**
 
-**Task 1.3A** [CRITICAL]: Restore frontend position opening 
-- Issue: CLI works but frontend fails with "Position Open Failed"
-- Test: 5-15x leverage position opening in demo mode
+**Task 1** [FRONTEND]: **MarketDetail Tab Polish** 
+- Verify complete functionality and smooth navigation
+- Ensure realistic data displays (not the $39B bug mentioned in stale plan)
+- Take verification screenshots for demo confidence
 
-**Task 1.4A** [CRITICAL]: Fix MarketDetail error boundary crashes
-- Root cause: Error boundaries failing and causing tab crashes
-- Target: Stable navigation across all 4 tabs
+**Task 2** [FRONTEND]: **24h Volume Display Accuracy**
+- Fix volume calculation to show notional (collateral × leverage) 
+- Ensure realistic demo-appropriate values
+- Consistent formatting across all monetary displays
 
-### **SECONDARY PRIORITY: Validation Infrastructure**
+**Task 3** [QA]: **Complete Demo Verification Suite**
+- Run 4-tab screenshot verification 
+- Test full user journey: deposit → trade → positions → withdraw
+- Document stable demo flow for investor presentation
 
-**Task 2.1B** [HIGH]: Fix browser automation dependencies  
-- Issue: Missing libatk preventing screenshot validation
-- Target: Automated investor demo verification working
+**Task 4** [MONITORING]: **Oracle Status Validation**  
+- Verify keeper is maintaining fresh prices (health shows 22s freshness)
+- Confirm price feeds stable for demo period
+- Monitor-only task since health is good
 
-**Task 2.2B** [HIGH]: Rewrite sanity-check-frontend.sh for all 4 tabs
-- Current: 3/4 tabs failing sanity checks  
-- Target: All tabs (Trading, Positions, Vault, MarketDetail) passing with screenshots
+**Task 5** [INVESTIGATION]: **Insurance Fund Display**
+- Check if 5.011e24 value is WAD formatting issue vs actual problem
+- Low priority since core system is healthy
 
-### **FINAL VERIFICATION**
+**Working Priority:** Task 1 → Task 2 → Task 3 → Task 4 → Task 5
 
-**Task 3.1C** [MEDIUM]: Complete QA score improvement
-- Current: 36/100 → Target: 80+
-- Focus: Realistic data display, stable navigation, working position opening
-
-**Revised Working Order:** 1.2A → 1.3A → 1.4A → 2.1B → 2.2B → 3.1C
-
-**Success Criteria:** All 8 visual issues resolved, functional investor demo, QA score >80
-
-Should I **start with Task 1.2A** (fixing the $39B decimal conversion bug)?
+Should I **start with Task 1** (MarketDetail verification) and update the stale build-plan.md to reflect current healthy status?
