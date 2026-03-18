@@ -1,16 +1,22 @@
 {
   "tasks": [
     {
-      "id": "2",
+      "id": "fix-missing-social-assets",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Frontend display bug requiring changes to React components that format insurance fund values. No dependencies as this is an isolated formatting fix."
+      "reason": "Creates image assets and tests social sharing functionality in React app - pure frontend work with PWA manifest and social media integration"
     },
     {
-      "id": "3",
+      "id": "fix-insurance-display-bug",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "Fixes display formatting bug in React dashboard components - frontend decimal conversion issue, not contract data problem"
+    },
+    {
+      "id": "update-known-issues-docs",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Documentation update to known-issues.md file. Marks already-resolved issues from recent commits, independent of other tasks."
+      "reason": "Updates control-plane documentation file (known-issues.md) - pure documentation task not touching React or Solidity"
     }
   ]
 }
