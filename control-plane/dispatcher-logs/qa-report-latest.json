@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-18T11:53:10.996276+00:00",
+  "timestamp": "2026-03-18T12:01:01.204518+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -28,33 +28,37 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Cannot verify actual user interface quality - only backend infrastructure tested",
-    "Vision: Unable to test trading functionality and core features",
-    "Vision: Cannot assess visual design quality that investors would see",
-    "Vision: Cannot verify data accuracy or real-time updates",
-    "Vision: Unable to test wallet connection and transaction flows",
-    "Vision: Cannot confirm all investor-facing features are working"
+    "Vision: Cannot verify actual UI rendering quality due to browser dependency issues (libatk-1.0.so.0 missing)",
+    "Vision: Known 24h volume display bug shows collateral instead of notional value",
+    "Vision: MarketDetail tab functionality unverified for investor demo",
+    "Vision: Low LP APY (0.21%) despite $60.5M TVL may concern investors",
+    "Vision: Browser-based visual verification incomplete - investors cannot see actual interface quality",
+    "Vision: Price data shows test market hashes instead of readable market names",
+    "Vision: No visual confirmation that trading interface displays professional quality"
   ],
   "functional_issues": [],
-  "score": 52,
+  "score": 44,
   "vision_review": {
     "professional_score": 6,
     "trust_score": 5,
     "issues": [
-      "Cannot verify actual user interface quality - only backend infrastructure tested",
-      "Unable to test trading functionality and core features",
-      "Cannot assess visual design quality that investors would see",
-      "Cannot verify data accuracy or real-time updates",
-      "Unable to test wallet connection and transaction flows",
-      "Cannot confirm all investor-facing features are working"
+      "Cannot verify actual UI rendering quality due to browser dependency issues (libatk-1.0.so.0 missing)",
+      "Known 24h volume display bug shows collateral instead of notional value",
+      "MarketDetail tab functionality unverified for investor demo",
+      "Low LP APY (0.21%) despite $60.5M TVL may concern investors",
+      "Browser-based visual verification incomplete - investors cannot see actual interface quality",
+      "Price data shows test market hashes instead of readable market names",
+      "No visual confirmation that trading interface displays professional quality"
     ],
     "improvements": [
-      "Need browser-based testing to verify UI/UX quality",
-      "Test core trading flows end-to-end with real interactions",
-      "Verify all data displays correctly and updates in real-time",
-      "Test wallet connectivity and transaction signing",
-      "Ensure professional visual design that inspires investor confidence",
-      "Validate error handling and edge cases in user flows"
+      "Install browser dependencies (libatk-1.0.so.0) to enable screenshot verification",
+      "Fix 24h volume calculation to show notional (collateral \u00d7 leverage) instead of collateral only",
+      "Verify MarketDetail tab renders properly with real market data",
+      "Test complete trading flow with wallet connections for investor demonstration",
+      "Document LP APY calculation and expected ranges for investor questions",
+      "Add readable market names/descriptions instead of technical hash identifiers",
+      "Complete comprehensive browser testing as outlined in build-plan.md",
+      "Ensure mobile responsiveness for professional presentation"
     ]
   }
 }

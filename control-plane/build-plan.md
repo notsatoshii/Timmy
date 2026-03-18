@@ -1,29 +1,35 @@
-Based on the QA report (52/100 score) and critical blockers for the investor demo, here are the prioritized tasks:
+Based on the feedback and the official build-plan.md, here's my **revised plan** that properly aligns with the locked sprint requirements:
 
-### 1. Verify MarketDetail Tab Functionality [CRITICAL] [FRONTEND]
-- [ ] Test and verify MarketDetail tab is working correctly for investor demo
+## **REVISED PLAN - INVESTOR DEMO SPRINT (LOCKED)**
+
+### **Task 1 [CRITICAL]**: Verify MarketDetail Tab Functionality [FRONTEND]
+- [ ] **HIGHEST PRIORITY**: Test MarketDetail tab renders properly with real market data for investor demo
 - [ ] Take screenshots to confirm proper rendering and data display
-- [ ] Ensure all market data (price, volume, positions) loads correctly
+- [ ] Verify tab navigation, position details, and market information display correctly  
+- [ ] Ensure all market data (price, volume, positions) loads correctly without crashes
 
-### 2. Fix 24h Volume Display Bug [CRITICAL] [FRONTEND] 
-- [ ] Correct volume calculation to show notional (collateral × leverage) instead of just collateral
-- [ ] This is blocking accurate metrics display for investors
-- [ ] Verify fix with screenshots showing proper volume numbers
+### **Task 2 [CRITICAL]**: Fix 24h Volume Display Bug [FRONTEND]
+- [ ] **HIGHEST PRIORITY**: Verify recent commit `a1b10234` actually fixed volume calculation
+- [ ] Confirm volume shows notional (collateral × leverage) instead of collateral only
+- [ ] Take screenshots showing proper volume numbers for investor metrics
+- [ ] Document verification results of this critical blocking issue
 
-### 3. Browser-Based UI/UX Verification [HIGH] [FRONTEND]
-- [ ] Run comprehensive browser testing with `node scripts/take-screenshots.js`
+### **Task 3 [HIGH]**: Browser-Based UI/UX Verification [FRONTEND]  
+- [ ] **HIGH PRIORITY**: Run comprehensive testing with `node scripts/take-screenshots.js`
+- [ ] Install missing browser dependencies (`libatk-1.0.so.0`) to enable screenshot system
 - [ ] Test core trading flows end-to-end with real wallet interactions
-- [ ] Verify professional visual design quality that investors will see
-- [ ] Test wallet connectivity and transaction signing flows
+- [ ] Verify professional visual design quality and wallet connectivity flows
 
-### 4. Oracle Keeper System Check [HIGH] [INFRASTRUCTURE]
-- [ ] Verify mockkeeper.py is running and updating prices correctly
-- [ ] Check for stale price issues that could break demo trading
-- [ ] Ensure price feeds are updating in real-time for investor demonstration
+### **Task 4 [HIGH]**: Oracle Keeper System Check [INFRASTRUCTURE]
+- [ ] **HIGH PRIORITY**: Verify `mockkeeper.py` is running and updating prices correctly
+- [ ] Check for stale price issues that could break demo trading functionality
+- [ ] Ensure price feeds updating in real-time for investor demonstration
+- [ ] Test oracle data flow through the system during live trading scenarios
 
-### 5. LP APY Investigation [MEDIUM] [DATA]
-- [ ] Analyze why LP APY is only 0.21% despite $60.5M TVL
-- [ ] Verify if this will improve when leverage usage increases
-- [ ] Document expected APY ranges for investor questions
+### **Task 5 [MEDIUM]**: LP APY Investigation [DATA]
+- [ ] **MEDIUM PRIORITY**: Analyze why LP APY is only 0.21% despite $60.5M TVL
+- [ ] Verify if APY will improve when leverage usage increases
+- [ ] Document expected APY ranges for potential investor questions
+- [ ] Check FeeRouter → RewardsDistributor flow is working properly
 
-**Focus:** These tasks target the visual issues flagging "Cannot verify actual user interface quality" and the two critical blockers. No contract redeployments needed - purely frontend verification and bug fixes.
+**Focus**: Complete tasks 1-2 (CRITICAL) immediately, then 3-4 (HIGH priority), finally 5 (MEDIUM). No contract redeployments needed - purely frontend verification, infrastructure checks, and data analysis as specified in the official build-plan.md.
