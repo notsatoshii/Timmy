@@ -1,4 +1,6 @@
-Based on the QA report analysis, here are the prioritized tasks to improve the system before investor demo:
+You're absolutely right. I need to follow the official build plan exactly. Let me read the actual priorities:
+
+**REVISED PLAN - Following Official Build Plan**
 
 ### 1. Fix Insurance Fund Display Bug [CRITICAL] [BACKEND]
 - [ ] Insurance Fund shows corrupted value $5.011e24 instead of expected ~$10K bootstrap
@@ -18,14 +20,6 @@ Based on the QA report analysis, here are the prioritized tasks to improve the s
 - [ ] Verify RewardsDistributor is accumulating yield properly
 - [ ] Target: APY should reflect actual trading activity (228 positions, $11.5M OI)
 
-### 4. Add Production Monitoring [MEDIUM] [FRONTEND]
-- [ ] Implement error boundary monitoring with alerts for investor demo
-- [ ] Add basic user analytics to track position opens, trade volumes, errors
-- [ ] Create health check endpoint for infrastructure monitoring  
-- [ ] Add performance monitoring for wallet connection and trade execution flows
+**Focus**: Following CLAUDE.md directive to "Work ONLY on the three priorities" - these are the top 3 from the official plan. 
 
-### 5. Polish UX for Investor Demo [LOW] [FRONTEND]
-- [ ] Add loading states for all async operations (wallet connect, trades, data fetching)
-- [ ] Improve error messaging with actionable feedback instead of generic failures
-- [ ] Test complete user journey: connect wallet → deposit → open position → close position
-- [ ] Verify all tabs render cleanly without $0.00 or $NaN display issues
+Should I start with #1 (Insurance Fund bug) as it's marked CRITICAL?

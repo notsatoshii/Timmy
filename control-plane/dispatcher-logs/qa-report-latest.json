@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-18T15:01:41.413151+00:00",
+  "timestamp": "2026-03-18T15:11:58.024495+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,42 +11,46 @@
     },
     {
       "name": "Positions",
-      "value": "228",
+      "value": "231",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "11545722554735 [1.154e13]",
+      "value": "12010722554735 [1.201e13]",
       "status": "ok"
     },
     {
       "name": "Insurance Fund",
-      "value": "5011000000005000000000000 [5.011e24]",
-      "status": "ok"
+      "value": "",
+      "status": "error"
     }
   ],
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Cannot verify actual UI functionality without browser interaction",
-    "Vision: No visible error monitoring or user analytics integration visible",
-    "Vision: Unable to test wallet connection and trading flows from curl inspection"
+    "Vision: Running on localhost:3000 instead of production domain",
+    "Vision: Testnet environment may not inspire investor confidence",
+    "Vision: Cannot evaluate actual UI/UX without browser testing",
+    "Vision: No visible performance monitoring or error tracking"
   ],
-  "functional_issues": [],
-  "score": 76,
+  "functional_issues": [
+    "Contract check failed: Insurance Fund"
+  ],
+  "score": 56,
   "vision_review": {
     "professional_score": 8,
-    "trust_score": 8,
+    "trust_score": 7,
     "issues": [
-      "Cannot verify actual UI functionality without browser interaction",
-      "No visible error monitoring or user analytics integration visible",
-      "Unable to test wallet connection and trading flows from curl inspection"
+      "Running on localhost:3000 instead of production domain",
+      "Testnet environment may not inspire investor confidence",
+      "Cannot evaluate actual UI/UX without browser testing",
+      "No visible performance monitoring or error tracking"
     ],
     "improvements": [
-      "Add comprehensive error boundary monitoring for production readiness",
-      "Implement user analytics and performance monitoring for investor KPIs",
-      "Consider adding health check endpoint for infrastructure monitoring",
-      "Add loading states and error handling feedback for better UX"
+      "Deploy to production domain with SSL/HTTPS",
+      "Add comprehensive error tracking and monitoring",
+      "Implement investor-focused landing page with clear value proposition",
+      "Add production environment with mainnet integration roadmap"
     ]
   }
 }
