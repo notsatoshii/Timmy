@@ -3,7 +3,7 @@
 Based on QA score 60/100 with critical visual issues blocking investor credibility:
 
 ### 1. Fix Zero-Value Display Bug [CRITICAL] [FRONTEND]
-- [ ] 1. Debug why frontend shows $0 TVL/APY when contracts report $60.5M TVL - likely decimal conversion or data fetching issue in dashboard components
+- [x] 1. Debug why frontend shows $0 TVL/APY when contracts report $60.5M TVL - likely decimal conversion or data fetching issue in dashboard components
 
 ### 2. Fix Positions Tab Navigation [CRITICAL] [FRONTEND] 
 - [ ] 2. Investigate routing issue where Positions tab shows trading interface instead of positions table - verify React Router configuration and component mapping
