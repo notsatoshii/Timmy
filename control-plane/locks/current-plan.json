@@ -1,24 +1,22 @@
 {
   "tasks": [
     {
-      "id": "1",
-      "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "React deployment fix requires frontend build config, Vite setup, and serving infrastructure changes. No dependencies - this is the root blocker."
-    },
-    {
       "id": "3",
       "lane": "INFRA",
-      "depends_on": [
-        "1"
-      ],
-      "reason": "Verification involves control-plane scripts and validation workflows. Depends on frontend repair since verifying priorities requires functional frontend for complete user flow testing."
+      "depends_on": [],
+      "reason": "Verification task using control-plane scripts and testing tools to validate system functionality despite frontend issues. No dependencies since checking existing state."
+    },
+    {
+      "id": "4",
+      "lane": "CONTRACT",
+      "depends_on": [],
+      "reason": "Contract investigation of FeeRouter and Insurance Fund fee flow logic. Independent Solidity debugging work with no dependencies on verification or oracle status."
     },
     {
       "id": "5",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Oracle monitoring involves Python script status and system service checks. Independent operational task with no data flow dependencies on frontend or verification."
+      "reason": "Operational monitoring of mockkeeper.py Python script status. Independent infrastructure monitoring work with no dependencies on other tasks."
     }
   ]
 }
