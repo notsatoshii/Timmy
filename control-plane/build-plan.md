@@ -1,18 +1,29 @@
-Based on the build-plan.md and current QA status, here are the 3 prioritized tasks for the investor demo:
+Based on the QA report (score 44/100) and known critical issues blocking the investor demo, here are the prioritized tasks:
 
-### 1. **Frontend Interface Verification [CRITICAL] [DEMO]**
-- [ ] Test actual frontend at localhost:3000 in browser (QA shows 100 score but need visual confirmation)
-- [ ] Verify all investor-facing features render and function properly 
-- [ ] Validate trading interface loads with real market data and positions display correctly
+### 1. **Fix Frontend Deployment [CRITICAL] [DEMO]**
+- [ ] Frontend serving directory listing instead of React app at localhost:3000
+- [ ] Fix React build/serve configuration to display actual trading platform
+- [ ] Verify professional UI loads with LEVER branding and trading interface
+- [ ] Test all tabs render properly (Trading, Positions, Vault, Markets)
 
-### 2. **MarketDetail Tab Implementation [CRITICAL] [DEMO]**
-- [ ] Complete MarketDetail tab verification and testing (known critical issue)
+### 2. **Complete MarketDetail Tab [CRITICAL] [DEMO]** 
+- [ ] Implement and verify MarketDetail tab functionality (known critical blocker)
 - [ ] Ensure market-specific data displays correctly for investor evaluation
-- [ ] Test navigation and data accuracy within market detail views
+- [ ] Test market navigation and data accuracy in detail views
 
-### 3. **24h Volume Display Fix [CRITICAL] [DATA]**
-- [ ] Fix 24h Volume to show notional value (collateral × leverage) instead of collateral only
-- [ ] Verify volume calculations align with investor expectations for trading metrics
-- [ ] Update frontend components to display proper trading volume metrics
+### 3. **Fix 24h Volume Display [CRITICAL] [DATA]**
+- [ ] Update volume calculation from collateral-only to notional (collateral × leverage) 
+- [ ] Correct trading metrics for investor-facing dashboard
+- [ ] Verify volume displays align with expected trading activity levels
 
-**Status**: QA reports 100/100 score but critical issues remain. Focus on these 3 demo blockers before Phase 2 transition.
+### 4. **Verify Oracle Price Updates [MEDIUM] [INFRA]**
+- [ ] Check mockkeeper.py oracle service status to prevent stale prices
+- [ ] Ensure live price feeds for investor demo markets  
+- [ ] Test price update frequency and market responsiveness
+
+### 5. **Insurance Fund Flow Verification [MEDIUM] [FINANCE]**
+- [ ] Investigate why Insurance Fund stuck at $10K bootstrap value
+- [ ] Verify FeeRouter properly directing 20% fees to Insurance Fund
+- [ ] Ensure fee distribution visible to investors
+
+**Priority**: Fix frontend deployment first (investor demo blocker), then MarketDetail tab and volume display. All must pass before Phase 2 transition.
