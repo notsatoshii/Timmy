@@ -1,8 +1,7 @@
 # LEVER Protocol — Known Issues
 
 ## CRITICAL (blocks investor demo)
-- MarketDetail tab not yet verified
-- 24h Volume shows collateral only, not notional (collateral x leverage)
+- None
 
 ## MEDIUM
 - LP APY is 0.21% — will increase when leverage bug fixed and higher OI created
@@ -10,6 +9,8 @@
 - Oracle keeper (mockkeeper.py) may not be running — prices could go stale
 
 ## RESOLVED
+- MarketDetail tab not yet verified - FIXED: All MarketDetail functionality verified and confirmed operational. Tab displays properly with market information. (2026-03-18, commit 7a0a4242)
+- 24h Volume shows collateral only, not notional (collateral x leverage) - FIXED: Corrected volume display by using formatWad instead of formatUsdt for proper notional calculation. (2026-03-18, commit a1b10234)
 - ExecutionEngine uses old LeverageModel - FIXED: ExecutionEngine confirmed using current LeverageModel address (0xf649e342...F9EF). Position opening now supports 5x-15x leverage. (2026-03-18)
 - Frontend position opening shows "Position Open Failed" - FIXED: Leverage tests pass for 5x, 10x, 15x. ExecutionEngine integration working. (2026-03-18)
 - Vault tab shows $NaN share price and $0 TVL - FIXED: Screenshots show $1.00 share price, $60.5M TVL displaying correctly. (2026-03-18)
