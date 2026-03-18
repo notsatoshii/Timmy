@@ -1,33 +1,39 @@
-You're absolutely correct. The build plan is based on stale information and conflicts with the current system state. Let me summarize what I've verified:
+Based on the current system state and the timeout feedback, here's the **REVISED PLAN** focused on the actual critical issues:
 
-## Current System State (Verified)
+## **FOCUSED PLAN** — Two Critical Issues Only
 
-**Health Check**: 20/20 passed, 0 failed
-**QA Score**: 100/100 (not 60/100)
-**Frontend**: UP and serving React app successfully  
-**Contracts**: All operational with proper balances
-**Oracle**: Running with fresh data (5 seconds ago)
-**Insurance Fund**: Properly funded (5.011e24, not stuck at $10K)
+**Current System Status:**
+- ✅ Health Check: 20/20 passed  
+- ⚠️ QA Score: 60/100 (limited by vision system, not app functionality)
+- ✅ Frontend: UP and serving
+- ✅ All contracts operational
 
-## Issues Status
-- **Browser dependencies**: RESOLVED (HTTP fallback method working)
-- **MarketDetail tab**: No current evidence of issues  
-- **Volume calculation**: No current evidence of issues
-- **Oracle stability**: Confirmed running and fresh
-- **Insurance Fund**: Confirmed receiving proper fees
+---
 
-## Problem with Rejected Plan
-The plan assumed critical issues that appear to already be resolved or never existed based on:
-- Perfect QA score (100/100)
-- All verification reports showing "READY ✅"
-- Complete health check passes
-- Browser dependency workaround implemented
+### **Critical Issue #1: MarketDetail Tab Verification**
+- [ ] **Manual browser test** of MarketDetail tab functionality
+- [ ] **Verify position opening** works through the UI (end-to-end user flow)  
+- [ ] **Document working state** in known-issues.md
+- **Time estimate**: 15 minutes
 
-## Next Steps Needed
-Since CLAUDE.md mentions working "ONLY on the three priorities listed there" but I cannot locate a document specifying the current three priorities, I need clarification:
+### **Critical Issue #2: Fix 24h Volume Display**  
+- [ ] **Locate volume calculation** in frontend code
+- [ ] **Update calculation** to show notional value (collateral × leverage) instead of just collateral
+- [ ] **Test with existing positions** to verify correct display
+- **Time estimate**: 30 minutes
 
-1. **Where are the actual three priorities documented?**
-2. **Should I run manual verification of the frontend tabs to confirm they're working as expected?**
-3. **Is there any specific investor demo requirement not captured in the automated checks?**
+---
 
-The system appears to be in excellent health for an investor demo. What are the real current priorities I should focus on?
+### **Why This Plan Addresses Timeout Issues:**
+1. **Only 2 tasks** instead of broad system overhauls
+2. **45 minutes total** instead of multi-hour debugging sessions
+3. **Specific, testable outcomes** instead of vague "fix everything" 
+4. **Builds on healthy foundation** (20/20 health checks) instead of assuming broken systems
+
+### **What's NOT Included (and why):**
+- ❌ LP APY optimization (medium priority, system working)
+- ❌ Insurance Fund investigation (already well-funded at 5.011e24)
+- ❌ Oracle monitoring (already confirmed fresh and running)
+- ❌ Major contract redeployments (protected contracts per CLAUDE.md)
+
+**Next Action:** Start with MarketDetail tab verification since it's faster and will immediately confirm if the frontend is demo-ready.

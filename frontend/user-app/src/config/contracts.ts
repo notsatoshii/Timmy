@@ -155,7 +155,7 @@ const FALLBACK_ADDRESSES: ContractAddresses = {
   feeRouter: "0x1d6e55260C6Dd2A20A5bb7Cb6331E6Ba2faB5b6F" as `0x${string}`,
 
   // Engine contracts
-  leverageModel: "0x474E2eE2911544a385eb017369e8516Ad6DcCAbd" as `0x${string}`,
+  leverageModel: "0xA7D95F94dA06E29fc8eFf948Bca3B4AF1d2585ed" as `0x${string}`,
   oiLimits: "0x5B9820B789785f62349bAE7e2B8A17a8e4A3E7cd" as `0x${string}`,
   borrowFeeEngine: "0x706578de003912C71e534949d8b8DDd5108950e1" as `0x${string}`,
   fundingRateEngine: "0x1C538eFA480C85D032c0ad45Dd87f9876c16Cbbe" as `0x${string}`,
