@@ -3,6 +3,11 @@ import { useMemo } from "react";
 import { getContractAddresses, WAD } from "../config/contracts";
 import { BORROW_FEE_ENGINE_ABI, OI_LIMITS_ABI } from "../config/abis";
 
+const ZERO = BigInt(0);
+const FIFTY = BigInt(50);
+const HUNDRED = BigInt(100);
+const TEN_THOUSAND = BigInt(10000);
+
 const MARKET_IDS = [
   "0x2841ef32b61fb3472aadbfc70d787a1bfaf5d0218c9601b87963af7bcca1bcf1",
   "0x9fe694e72b00a6aab573e11a17e2240b64d7aca455305b65289b77cc2f2d077a",
@@ -28,22 +33,22 @@ export function useRealAPY(tvl: bigint) {
     }
     return result;
   }, [contracts]);
-  const { data, isLoading } = useReadContracts({ contracts: calls, query: { enabled: tvl > 0n, retry: 2, refetchInterval: 30000 } });
+  const { data, isLoading } = useReadContracts({ contracts: calls, query: { enabled: tvl > ZERO, retry: 2, refetchInterval: 30000 } });
   return useMemo(() => {
-    if (data = sys.stdin.read().strip() || isLoading || tvl === 0n) return { apyPercent: 0, isLoading };
-    let totalWeightedRevenue = 0n;
+    if (!data || isLoading || tvl === ZERO) return { apyPercent: 0, isLoading: isLoading };
+    let totalWeightedRevenue = ZERO;
     for (let i = 0; i < MARKET_IDS.length; i++) {
       const b = i * 4;
       try {
-        const lr = BigInt((data[b]?.result as any) ?? 0n);
-        const sr = BigInt((data[b+1]?.result as any) ?? 0n);
-        const lo = BigInt((data[b+2]?.result as any) ?? 0n);
-        const so = BigInt((data[b+3]?.result as any) ?? 0n);
-        totalWeightedRevenue += (lr * lo / WAD) + (sr * so / WAD);
-      } catch { continue; }
+        const lr = BigInt((data[b]?.result as any) || "0");
+        const sr = BigInt((data[b + 1]?.result as any) || "0");
+        const lo = BigInt((data[b + 2]?.result as any) || "0");
+        const so = BigInt((data[b + 3]?.result as any) || "0");
+        totalWeightedRevenue = totalWeightedRevenue + (lr * lo / WAD) + (sr * so / WAD);
+      } catch (e) { continue; }
     }
-    const lpRevenue = totalWeightedRevenue * 50n / 100n;
-    const apyBps = tvl > 0n ? Number(lpRevenue * 10000n / tvl) : 0;
+    const lpRevenue = totalWeightedRevenue * FIFTY / HUNDRED;
+    const apyBps = tvl > ZERO ? Number(lpRevenue * TEN_THOUSAND / tvl) : 0;
     const apyPercent = apyBps / 100;
     return { apyPercent: isFinite(apyPercent) && apyPercent >= 0 ? apyPercent : 0, isLoading: false };
   }, [data, isLoading, tvl]);

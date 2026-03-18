@@ -1,25 +1,38 @@
 {
   "tasks": [
     {
-      "id": "insurance-fund-display-bug",
-      "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "Frontend formatting issue for display values in React components. No dependencies as this is isolated UI formatting."
-    },
-    {
-      "id": "oracle-keeper-stability",
+      "id": "1",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Python script reliability check (mockkeeper.py). INFRA lane handles scripts/ Python files. Independent of other tasks."
+      "reason": "Root cause is systemd service and deployment configuration issues, not React code issues. Requires fixing service management and web server setup."
     },
     {
-      "id": "known-issues-documentation",
+      "id": "2",
+      "lane": "CONTRACT",
+      "depends_on": [],
+      "reason": "Fee routing failure is a contract logic/configuration issue. Requires debugging FeeRouter behavior and fee distribution paths in Solidity contracts."
+    },
+    {
+      "id": "3",
+      "lane": "INFRA",
+      "depends_on": [],
+      "reason": "Oracle stability requires fixing Python service (mockkeeper.py), nonce management, and service monitoring - all infrastructure concerns."
+    },
+    {
+      "id": "4",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "1"
+      ],
+      "reason": "APY calculation/display issue requires investigating frontend components. Depends on Task 1 because need working frontend to see and debug the APY display."
+    },
+    {
+      "id": "5",
       "lane": "INFRA",
       "depends_on": [
-        "insurance-fund-display-bug",
-        "oracle-keeper-stability"
+        "1"
       ],
-      "reason": "Documentation accuracy verification in control-plane files. Depends on other fixes being completed to accurately confirm resolved items."
+      "reason": "QA testing and screenshot automation uses test scripts and puppeteer. Depends on Task 1 because demo walkthrough requires functional frontend interface."
     }
   ]
 }
