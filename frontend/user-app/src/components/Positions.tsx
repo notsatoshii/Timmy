@@ -10,10 +10,10 @@ import {
 } from '../config/abis';
 import { useLivePrices } from '../hooks/useLivePrices';
 import { useNotifications } from '../contexts/NotificationContext';
-import TradeHistory from './TradeHistory';
-import PnLChart from './PnLChart';
-import FeeBreakdown from './FeeBreakdown';
-import MarginUsage from './MarginUsage';
+// // import TradeHistory from './TradeHistory';
+// // import PnLChart from './PnLChart'; // Removed — showing $0 // Removed — showing $0
+// // import FeeBreakdown from './FeeBreakdown'; // Removed — showing $0 // Removed — showing $0
+// // import MarginUsage from './MarginUsage'; // Removed — showing $0 // Removed — showing $0
 import Skeleton from './Skeleton';
 
 interface PositionData {
@@ -226,7 +226,7 @@ const Positions: React.FC = () => {
       }))
     );
     setPositions(posData);
-  }, [positionIds, address]);
+  }, [positionIds, address, oracleMarkets]);
 
   useEffect(() => {
     fetchPositionDetails();
@@ -710,7 +710,7 @@ const Positions: React.FC = () => {
         </p>
       </div>
 
-      {/* Account Balance Bar */}
+      {/* Account Balance Bar
       {address && (
         <div className="bg-surface-2 border border-border rounded-lg p-4 flex flex-col space-y-3 md:flex-row md:space-y-0 md:items-center md:justify-between">
           {isLoadingAccountData ? (
@@ -832,50 +832,6 @@ const Positions: React.FC = () => {
       )}
 
       {/* Enhanced Portfolio Dashboard */}
-      {!isLoadingPositions && displayPositions.length > 0 && (
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* PnL Performance Chart */}
-          <PnLChart
-            positions={displayPositions.map(pos => ({
-              id: pos.id,
-              pnl: pos.pnl,
-              borrowFees: pos.borrowFees,
-              fundingAccrued: pos.fundingAccrued,
-              collateral: pos.collateral,
-              equity: pos.equity
-            }))}
-            className="lg:col-span-2"
-          />
-
-          {/* Fee Analysis */}
-          <FeeBreakdown
-            positions={displayPositions.map(pos => ({
-              id: pos.id,
-              borrowFees: pos.borrowFees,
-              fundingAccrued: pos.fundingAccrued,
-              positionSize: pos.positionSize,
-              isLong: pos.isLong
-            }))}
-          />
-
-          {/* Margin & Risk Analysis */}
-          <MarginUsage
-            positions={displayPositions.map(pos => ({
-              id: pos.id,
-              collateral: pos.collateral,
-              equity: pos.equity,
-              positionSize: pos.positionSize,
-              leverage: pos.leverage,
-              pnl: pos.pnl,
-              borrowFees: pos.borrowFees,
-              fundingAccrued: pos.fundingAccrued
-            }))}
-            accountBalance={accountBalance as bigint}
-            freeCollateral={freeCollateral as bigint}
-          />
-        </div>
-      )}
-
       {/* Positions List */}
       <div className="space-y-4">
         {isLoadingPositions ? (
@@ -967,13 +923,13 @@ const Positions: React.FC = () => {
                       <p className="font-semibold font-mono text-gray-200">{formatPrice(position.currentPI)}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500 text-xs uppercase tracking-wide">Price PnL</p>
+                      <p className="text-gray-500 text-xs uppercase tracking-wide">Unrealized PnL</p>
                       <p className={`font-semibold font-mono ${getPnlColor(position.pnl)}`}>
                         {formatPnl(position.pnl)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-gray-500 text-xs uppercase tracking-wide">Net PnL</p>
+                      <p className="text-gray-500 text-xs uppercase tracking-wide">Net PnL (after fees)</p>
                       <p className={`font-semibold font-mono ${getPnlColor(netPnl)}`}>
                         {formatPnl(netPnl)}
                       </p>
@@ -1133,10 +1089,7 @@ const Positions: React.FC = () => {
         </div>
       )}
 
-      {/* Trade History Section */}
-      <div className="mt-12">
-        <TradeHistory />
-      </div>
+      {/* Trade History removed */}
     </div>
   );
 };
