@@ -4,15 +4,15 @@
       "id": "2",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Pure frontend work - adding UI banners, disclaimers, removing hardcoded values from React components. No dependencies since it's the first required task."
+      "reason": "Pure React component work - adding banners, disclaimers, labeling hardcoded values across pages. No dependencies as this is standalone UI improvement."
     },
     {
       "id": "3",
-      "lane": "FRONTEND",
+      "lane": "INFRA",
       "depends_on": [
         "2"
       ],
-      "reason": "Frontend verification and testing. Depends on task 2 because we need to verify stability after all testnet clarity improvements are implemented - testing should happen on the final UI state."
+      "reason": "End-to-end validation using test scripts and screenshot tools. Depends on task 2 because it validates investor demo readiness after critical presentation fixes are complete."
     }
   ]
 }

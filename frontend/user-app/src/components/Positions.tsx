@@ -55,6 +55,7 @@ const Positions: React.FC = () => {
   const publicClient = usePublicClient();
   const { showTradeConfirmation, showErrorToast, showLiquidationWarning } = useNotifications();
   const [positions, setPositions] = useState<PositionData[]>([]);
+  const [isFetchingDetails, setIsFetchingDetails] = useState(false);
   const [selectedPositionId, setSelectedPositionId] = useState<bigint | null>(null);
   const [closeState, setCloseState] = useState<CloseState>('idle');
   const [closeError, setCloseError] = useState<string>('');
@@ -91,7 +92,7 @@ const Positions: React.FC = () => {
   });
 
   const isLoadingAccountData = address && (loadingAccountBalance || loadingFreeCollateral);
-  const isLoadingPositions = address && loadingPositionIds;
+  const isLoadingPositions = address && (loadingPositionIds || isFetchingDetails);
 
   const { markets: oracleMarkets } = useMarketProbabilities();
   useEffect(() => {
@@ -137,6 +138,7 @@ const Positions: React.FC = () => {
   }, [writeError, showErrorToast]);
 
   const fetchPositionDetails = useCallback(async () => {
+    setIsFetchingDetails(true);
     console.log('[Positions] fetchPositionDetails called', {
       address,
       positionIds: positionIds ? Array.from(positionIds as bigint[]).map(id => id.toString()) : null
@@ -145,6 +147,7 @@ const Positions: React.FC = () => {
     if (!positionIds || !Array.isArray(positionIds) || positionIds.length === 0) {
       console.log('[Positions] No position IDs found, setting empty array');
       setPositions([]);
+      setIsFetchingDetails(false);
       return;
     }
 
@@ -249,6 +252,7 @@ const Positions: React.FC = () => {
       }))
     );
     setPositions(posData);
+      setIsFetchingDetails(false);
   }, [positionIds, address]);
 
   useEffect(() => {
@@ -1069,7 +1073,7 @@ const Positions: React.FC = () => {
       </div>
 
       {/* Empty State */}
-      {displayPositions.length === 0 && (
+      {!isLoadingPositions && displayPositions.length === 0 && (
         <div className="space-y-8">
           {!address && (
             <div className="bg-surface-1 rounded-lg border border-border p-6">
