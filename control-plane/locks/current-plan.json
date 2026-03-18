@@ -4,33 +4,31 @@
       "id": "1",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Systemd service configuration fix - involves reconfiguring service paths or moving build files, which is infrastructure work rather than React development"
+      "reason": "ROOT CAUSE is deployment infrastructure (systemd service, nginx config, static file serving) not React code itself. Must fix serving layer before any frontend testing."
     },
     {
       "id": "2",
-      "lane": "INFRA",
+      "lane": "FRONTEND",
       "depends_on": [
         "1"
       ],
-      "reason": "Testing and verification scripts in control-plane/. Depends on task 1 because cannot test frontend functionality if React app is not properly deployed and serving"
+      "reason": "Testing React app functionality requires the app to be properly served first. Cannot verify frontend features while directory listing is showing."
     },
     {
       "id": "3",
-      "lane": "INFRA",
+      "lane": "CONTRACT",
       "depends_on": [],
-      "reason": "Monitoring Python scripts and oracle pipeline - involves checking running processes and system monitoring, which is infrastructure work"
+      "reason": "ROOT CAUSE is contract-level fee routing and calculation logic. Independent of frontend deployment issues - can investigate contract behavior separately."
     },
     {
       "id": "4",
-      "lane": "CONTRACT",
-      "depends_on": [],
-      "reason": "Debugging Solidity contract logic for fee routing between FeeRouter and InsuranceFund - involves contract state analysis and potential Solidity fixes"
-    },
-    {
-      "id": "5",
       "lane": "INFRA",
-      "depends_on": [],
-      "reason": "System performance analysis and monitoring APY calculations - involves data analysis and documentation rather than contract or frontend changes"
+      "depends_on": [
+        "1",
+        "2",
+        "3"
+      ],
+      "reason": "Final verification script execution that validates all systems. Must run after frontend is deployed (1), functionality verified (2), and contract issues addressed (3)."
     }
   ]
 }
