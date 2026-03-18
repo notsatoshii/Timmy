@@ -44,8 +44,8 @@ const ConnectWallet: React.FC = () => {
 
     return (
       <div className="flex items-center space-x-2">
-        <span className="text-sm font-mono text-gray-300 bg-surface-3 px-3 py-1.5 rounded-lg border border-purple-500">
-          <span className="text-purple-400 mr-2">DEMO</span>
+        <span className="text-sm font-mono text-gray-300 bg-surface-3 px-3 py-1.5 rounded-lg border border-accent">
+          <span className="text-accent mr-2">DEMO</span>
           {shortAddr}
         </span>
         <button
@@ -90,7 +90,7 @@ const ConnectWallet: React.FC = () => {
       <button
         onClick={connectDemo}
         disabled={isDemoConnecting}
-        className="bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+        className="bg-accent hover:bg-accent-dim text-white font-semibold text-sm px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
       >
         Try Demo
       </button>

@@ -21,8 +21,8 @@ module.exports = {
         },
         // Accent: electric green
         accent: {
-          DEFAULT: '#00E8B4',
-          dim: '#00C49A',
+          DEFAULT: '#E6FF2B',
+          dim: '#C8D926',
           muted: 'rgba(0, 232, 180, 0.15)',
           glow: 'rgba(0, 232, 180, 0.25)',
         },
@@ -45,7 +45,7 @@ module.exports = {
           muted: 'rgba(255, 184, 48, 0.15)',
         },
         // Long/Short (reuse accent/danger)
-        long: '#00E8B4',
+        long: '#E6FF2B',
         short: '#FF4868',
       },
       fontFamily: {

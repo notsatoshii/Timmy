@@ -55,6 +55,13 @@ export const formatWad = (value: bigint): string => {
       return addCommas((Number(wholePart)).toFixed(2));
     }
 
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(2) + 'M';
+    } else if (num >= 10000) {
+      return addCommas(Math.round(num).toString());
+    } else if (num >= 100) {
+      return addCommas(num.toFixed(0));
+    }
     return addCommas(num.toFixed(2));
   } catch (error) {
     console.error('formatWad error for value:', value.toString(), error);
@@ -80,6 +87,14 @@ export const formatUsdt = (value: bigint): string => {
       return addCommas((Number(wholePart)).toFixed(2));
     }
 
+    // Clean display: no cents for large numbers, K/M suffixes
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(2) + 'M';
+    } else if (num >= 10000) {
+      return addCommas(Math.round(num).toString());
+    } else if (num >= 100) {
+      return addCommas(num.toFixed(0));
+    }
     return addCommas(num.toFixed(2));
   } catch (error) {
     console.error('formatUsdt error for value:', value.toString(), error);

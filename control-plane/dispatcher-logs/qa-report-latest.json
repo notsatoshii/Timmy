@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-18T03:20:12.084658+00:00",
+  "timestamp": "2026-03-18T03:28:38.240728+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,12 +11,12 @@
     },
     {
       "name": "Positions",
-      "value": "215",
+      "value": "216",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "11229767554735 [1.122e13]",
+      "value": "11244767554735 [1.124e13]",
       "status": "ok"
     },
     {
@@ -28,30 +28,28 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Only HTML shell visible - cannot verify if React app actually renders content",
-    "Vision: No indication of real-time data loading or market connectivity",
-    "Vision: Cannot assess actual trading interface functionality from curl output",
-    "Vision: No way to verify if wallet connection and core features work",
-    "Vision: Meta description mentions lever.finance domain but testing localhost"
+    "Vision: Missing OG image (lever-og-image.png) - critical for social media sharing and professional appearance",
+    "Vision: Unable to verify actual UI rendering and functionality through curl testing",
+    "Vision: No verification of trading interface or core product features",
+    "Vision: Potential routing issues with static assets returning HTML instead of proper files"
   ],
   "functional_issues": [],
-  "score": 60,
+  "score": 68,
   "vision_review": {
     "professional_score": 6,
     "trust_score": 5,
     "issues": [
-      "Only HTML shell visible - cannot verify if React app actually renders content",
-      "No indication of real-time data loading or market connectivity",
-      "Cannot assess actual trading interface functionality from curl output",
-      "No way to verify if wallet connection and core features work",
-      "Meta description mentions lever.finance domain but testing localhost"
+      "Missing OG image (lever-og-image.png) - critical for social media sharing and professional appearance",
+      "Unable to verify actual UI rendering and functionality through curl testing",
+      "No verification of trading interface or core product features",
+      "Potential routing issues with static assets returning HTML instead of proper files"
     ],
     "improvements": [
-      "Verify React app fully renders and displays trading interface",
-      "Test wallet connection and position opening functionality",
-      "Ensure real market data is loading (not placeholder/fake data)",
-      "Validate all three investor demo priorities are working",
-      "Take browser screenshots to verify visual presentation"
+      "Fix OG image asset - ensure /lever-og-image.png returns actual PNG file",
+      "Verify all static assets load properly and don't fallback to index.html",
+      "Test actual trading interface functionality beyond basic HTML shell",
+      "Ensure proper error handling for missing assets",
+      "Add health check endpoint for monitoring"
     ]
   }
 }
