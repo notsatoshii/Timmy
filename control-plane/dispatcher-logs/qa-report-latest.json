@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-18T14:37:48.793940+00:00",
+  "timestamp": "2026-03-18T14:47:31.248159+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -27,37 +27,15 @@
   ],
   "sprint_checks": {},
   "critical_blockers": [],
-  "visual_issues": [
-    "Vision: Frontend application not running - showing directory listing instead of trading interface",
-    "Vision: No actual application visible at localhost:3000",
-    "Vision: Displaying raw build folder contents instead of React app",
-    "Vision: Complete absence of trading functionality",
-    "Vision: No branding or professional presentation",
-    "Vision: Technical deployment failure evident to investors",
-    "Vision: Missing core application - cannot evaluate any features"
-  ],
+  "visual_issues": [],
   "functional_issues": [],
-  "score": 44,
+  "score": 100,
   "vision_review": {
-    "professional_score": 1,
-    "trust_score": 1,
-    "issues": [
-      "Frontend application not running - showing directory listing instead of trading interface",
-      "No actual application visible at localhost:3000",
-      "Displaying raw build folder contents instead of React app",
-      "Complete absence of trading functionality",
-      "No branding or professional presentation",
-      "Technical deployment failure evident to investors",
-      "Missing core application - cannot evaluate any features"
-    ],
-    "improvements": [
-      "Fix React application deployment - ensure frontend service is properly started",
-      "Verify React dev server is running on port 3000",
-      "Check if build process completed successfully",
-      "Ensure proper routing configuration for React SPA",
-      "Investigate systemd service 'lever-frontend' status",
-      "Run 'npm start' or equivalent to serve the actual application",
-      "Verify package.json scripts and dependencies are correct"
-    ]
+    "type": "error",
+    "error": {
+      "type": "api_error",
+      "message": "Internal server error"
+    },
+    "request_id": "req_011CZAjFMp1EDdGR1qzEaVSS"
   }
 }

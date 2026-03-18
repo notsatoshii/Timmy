@@ -8,6 +8,7 @@ import {
   FEE_ROUTER_ABI,
   BORROW_FEE_ENGINE_ABI,
 } from '../config/abis';
+import { useRealAPY } from '../hooks/useRealAPY';
 import Skeleton from './Skeleton';
 import { useVolumeCalculation } from '../hooks/useVolumeCalculation';
 
@@ -87,6 +88,7 @@ const ProtocolStats: React.FC = () => {
 
   const { volume24h, isLoading: volumeLoading } = useVolumeCalculation(true);
 
+  const { apyPercent: realAPY } = useRealAPY(tvlRaw || BigInt(0));
   useEffect(() => {
     try {
       const tvlFallback = !(tvlRaw && !tvlError);
@@ -144,7 +146,7 @@ const ProtocolStats: React.FC = () => {
         tvl: `$${formatUsdt(safeTvl)}`,
         dailyVolume: `$${formatWad(safeVolume)}`,
         totalOI: `$${formatUsdt(safeTotalOI)}`,
-        lpApy: `${(Number(apyBpsTimes100) / 100).toFixed(2)}%`,
+        lpApy: realAPY > 0 ? `${realAPY.toFixed(2)}%` : `${(Number(apyBpsTimes100) / 100).toFixed(2)}%`,
         utilizationRate: `${(Number(utilizationBpsTimes100) / 100).toFixed(2)}%`,
         insuranceFund: `$${formatUsdt(safeInsurance)}`,
       });

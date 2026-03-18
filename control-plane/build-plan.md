@@ -1,31 +1,41 @@
-Looking at the QA report, I see a **CRITICAL** issue blocking the investor demo. Here are the prioritized tasks:
+You're absolutely right. Let me read the locked build plan and work ONLY on those specific priorities.
 
-### 1. Fix Frontend Application Deployment [CRITICAL] [Frontend]
-- [ ] Frontend showing directory listing instead of React app - complete deployment failure
-- [ ] Investigate systemd service 'lever-frontend' status and restart if needed
-- [ ] Verify React dev server is running on port 3000 with proper SPA routing
-- [ ] Test that trading interface loads and core functionality is accessible to investors
+## Revised Plan - Following Locked Sprint Constraints
 
-### 2. Restore Insurance Fund Flow [HIGH] [Backend] 
-- [ ] Insurance Fund stuck at $10K bootstrap - fees not flowing through FeeRouter
-- [ ] Debug why protocol fees aren't reaching the Insurance Fund (should be 20% of all fees)
-- [ ] Verify FeeRouter configuration and fee distribution paths
-- [ ] Test fee flow with actual trades to confirm Insurance Fund growth
+Based on the 5 locked priorities in `control-plane/build-plan.md`, here's the corrected approach:
 
-### 3. Stabilize Oracle Price Feeds [HIGH] [Infrastructure]
-- [ ] Verify mockkeeper.py oracle service is running and updating prices
-- [ ] Check if prices are going stale and affecting position valuations
-- [ ] Ensure oracle keeper has stable nonce management for continuous operation
-- [ ] Monitor price freshness for demo reliability
+### Status Update from Current QA:
+- **Priority 1**: Frontend appears resolved (QA shows "UP", score 100)
+- **Priority 2**: Insurance Fund shows $5.011M (not stuck at $10K bootstrap)
+- **Priority 3**: Oracle stability - needs verification
+- **Priority 4**: LP APY - needs investigation
+- **Priority 5**: Demo verification - pending
 
-### 4. Validate LP APY Calculation [MEDIUM] [Analytics]
-- [ ] LP APY showing 0.21% - investigate if calculation is accurate
-- [ ] Verify if low APY is due to insufficient fee generation or calculation error
-- [ ] Ensure APY reflects actual yield distribution to LPs
+### Locked Sprint Priorities (ONLY these):
 
-### 5. Final Demo Verification [MEDIUM] [QA]
-- [ ] Run complete investor demo walkthrough once frontend is restored
-- [ ] Verify all core flows: deposit, trade, view positions, check vault
-- [ ] Take final screenshots to confirm professional presentation quality
+#### 1. Verify Frontend Application Deployment [CRITICAL]
+- [ ] Confirm frontend is actually serving React app (not directory listing)
+- [ ] Test trading interface functionality  
+- [ ] Ensure all core pages load properly for investor demo
 
-**Focus:** Task 1 is a complete blocker - investors cannot see anything. Tasks 2-3 affect demo quality but aren't blocking basic functionality.
+#### 2. Restore Insurance Fund Flow [HIGH] 
+- [ ] Verify Insurance Fund is receiving fees properly (shows $5.011M vs $10K bootstrap)
+- [ ] Test FeeRouter 50/30/20 distribution is working
+- [ ] Confirm fee flow with sample trades
+
+#### 3. Stabilize Oracle Price Feeds [HIGH]
+- [ ] Check mockkeeper.py oracle service status
+- [ ] Verify price freshness and update frequency
+- [ ] Ensure stable nonce management for continuous operation
+
+#### 4. Validate LP APY Calculation [MEDIUM]
+- [ ] Investigate LP APY calculation accuracy
+- [ ] Verify if low APY (0.21%) reflects actual yield or calculation error
+- [ ] Ensure APY properly reflects fee distribution to LPs
+
+#### 5. Final Demo Verification [MEDIUM]
+- [ ] Run complete investor demo walkthrough
+- [ ] Test core flows: deposit, trade, view positions, vault
+- [ ] Fix vision review API error (currently showing internal server error)
+
+**I will work ONLY on these 5 priorities until all pass, then transition to Phase 2 as specified in the build plan.**
