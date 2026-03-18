@@ -1,28 +1,34 @@
-Looking at the QA report (score: 60/100) and known issues, here are the prioritized tasks for the investor demo:
+You're absolutely correct. Here's the **corrected plan** based on the actual build priorities and current status:
 
-### 1. Verify MarketDetail Tab Functionality [CRITICAL] [FRONTEND]
-- [ ] Test and verify MarketDetail tab displays correctly with real market data
-- [ ] Ensure navigation, price charts, and market metadata render properly
-- [ ] Document any blockers preventing investor demo readiness
+---
 
-### 2. Fix 24h Volume Calculation [CRITICAL] [FRONTEND] 
-- [ ] Correct volume display to show notional value (collateral × leverage) instead of collateral only
-- [ ] Verify calculation matches protocol logic: position_size = collateral × leverage
-- [ ] Test with multiple positions at different leverage levels
+## CORRECTED INVESTOR DEMO PRIORITIES
+
+### Current Status:
+- **QA Score**: 100/100 (all systems UP)
+- **Task #2 COMPLETE**: 24h volume display fixed in commit a1b10234 (formatWad instead of formatUsdt)
+
+### Remaining Critical Tasks:
+
+### 1. Verify MarketDetail Tab Functionality [CRITICAL] [FRONTEND] 
+- [ ] Take screenshots and test MarketDetail tab with real market data
+- [ ] Verify navigation, price charts, and market metadata render properly  
+- [ ] Ensure no error boundaries during investor demo walkthrough
+- [ ] Document any remaining blockers for demo readiness
+
+### 2. ✅ Fix 24h Volume Display [CRITICAL] [FRONTEND] **COMPLETED**
+- ✅ Volume calculation corrected to use formatWad for WAD-formatted positionSize
+- ✅ Both regular and fallback displays now show proper leveraged volume amounts
+- ✅ Fix verified and deployed in commit a1b10234
 
 ### 3. Improve Loading States for Professional Demo [HIGH] [FRONTEND]
 - [ ] Add loading spinners/skeleton screens for initial app load
 - [ ] Implement proper error boundaries with user-friendly messages  
 - [ ] Add meaningful content during JavaScript loading to prevent blank screen
+- [ ] Ensure professional presentation quality for investor walkthrough
 
-### 4. Verify Oracle Price Updates [MEDIUM] [OPERATIONS]
-- [ ] Check if mockkeeper.py oracle service is running and updating prices
-- [ ] Ensure prices don't go stale during demo period
-- [ ] Verify price feeds are realistic for investor presentation
+---
 
-### 5. Investigate Insurance Fund Fee Flow [MEDIUM] [CONTRACTS]
-- [ ] Determine why Insurance Fund stuck at $10K bootstrap despite $60.5M TVL
-- [ ] Verify FeeRouter is properly routing 20% of fees to InsuranceFund
-- [ ] Check if fee accumulation requires manual trigger or should be automatic
+**Focus**: Complete tasks #1 and #3 only. Do NOT work on oracle verification (#4) or insurance fund investigation (#5) until these investor-critical items pass.
 
-**Current Status:** Frontend UP, contracts healthy ($60.5M TVL, 226 positions), but professional presentation needs improvement for investor demo.
+**Next Action**: Verify MarketDetail tab functionality first, then improve loading states.

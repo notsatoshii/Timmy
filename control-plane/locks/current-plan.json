@@ -1,36 +1,18 @@
 {
   "tasks": [
     {
-      "id": "verify-marketdetail-tab",
+      "id": "1",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Frontend lane because this involves testing and potentially fixing React components in MarketDetail tab. No dependencies since this is verifying existing core functionality."
+      "reason": "Testing MarketDetail tab functionality requires React component testing, screenshot verification, and UI navigation testing - all frontend work"
     },
     {
-      "id": "fix-24h-volume-calculation",
-      "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "Frontend lane because the volume display calculation needs to be fixed in React components. Independent of other tasks since it's a specific math calculation issue."
-    },
-    {
-      "id": "improve-loading-states",
+      "id": "3",
       "lane": "FRONTEND",
       "depends_on": [
-        "verify-marketdetail-tab"
+        "1"
       ],
-      "reason": "Frontend lane because this involves adding loading spinners and error boundaries to React components. Depends on MarketDetail verification to ensure core functionality works before adding polish/UX improvements."
-    },
-    {
-      "id": "verify-oracle-price-updates",
-      "lane": "INFRA",
-      "depends_on": [],
-      "reason": "INFRA lane because this involves checking if mockkeeper.py service is running properly and monitoring operational status. Independent task focused on service operations."
-    },
-    {
-      "id": "investigate-insurance-fund-fee-flow",
-      "lane": "CONTRACT",
-      "depends_on": [],
-      "reason": "CONTRACT lane because this requires investigating Solidity contract fee routing logic in FeeRouter and InsuranceFund contracts. Independent investigation of contract-level fee accumulation mechanism."
+      "reason": "Adding loading states and error boundaries to React app. Depends on task 1 since both work on frontend components and we should verify current functionality before adding UI improvements"
     }
   ]
 }
