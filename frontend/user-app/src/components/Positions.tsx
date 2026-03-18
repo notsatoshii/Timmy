@@ -7,6 +7,8 @@ import {
   POSITION_MANAGER_ABI,
   EXECUTION_ENGINE_ABI,
   ACCOUNT_MANAGER_ABI,
+  BORROW_FEE_ENGINE_ABI,
+  FUNDING_RATE_ENGINE_ABI,
 } from '../config/abis';
 import { useLivePrices } from '../hooks/useLivePrices';
 import { useMarketProbabilities } from '../hooks/useMarketProbabilities';
@@ -191,13 +193,39 @@ const Positions: React.FC = () => {
           leverage: rawPos.leverage,
           currentPI: rawPos.entryPI,
           pnl: BigInt(0),
-          borrowFees: BigInt(0), // TODO: calculate from borrowIndex
-          fundingAccrued: BigInt(0), // TODO: calculate from fundingIndex
+          borrowFees: BigInt(0), // Will be fetched below
+          fundingAccrued: BigInt(0), // Will be fetched below
           equity: BigInt(0),
           isOpen: rawPos.isOpen,
         };
 
         console.log(`[Positions] Loaded real position ${id.toString()} from contract`);
+
+        // Read accrued borrow fees from BorrowFeeEngine
+        try {
+          const borrowFees = await publicClient.readContract({
+            address: CONTRACT_ADDRESSES.borrowFeeEngine,
+            abi: BORROW_FEE_ENGINE_ABI,
+            functionName: 'getAccruedFees',
+            args: [id],
+          }) as bigint;
+          position.borrowFees = borrowFees;
+        } catch (e) {
+          console.warn(`[Positions] Could not read borrow fees for ${id}:`, e);
+        }
+
+        // Read accrued funding from FundingRateEngine
+        try {
+          const fundingAccrued = await publicClient.readContract({
+            address: CONTRACT_ADDRESSES.fundingRateEngine,
+            abi: FUNDING_RATE_ENGINE_ABI,
+            functionName: 'getAccruedFunding',
+            args: [id],
+          }) as bigint;
+          position.fundingAccrued = fundingAccrued;
+        } catch (e) {
+          console.warn(`[Positions] Could not read funding for ${id}:`, e);
+        }
 
         // Calculate PnL with proper decimal scaling
         // Update currentPI from on-chain oracle (same source as Markets tab)

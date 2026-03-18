@@ -1,0 +1,34 @@
+{
+  "tasks": [
+    {
+      "id": "browser-deps",
+      "lane": "INFRA",
+      "depends_on": [],
+      "reason": "Installing system packages and fixing screenshot testing infrastructure - pure infra work with no dependencies on other tasks"
+    },
+    {
+      "id": "marketdetail-tab",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "Testing and fixing React component functionality - frontend work that can be tested independently without visual verification"
+    },
+    {
+      "id": "volume-calc",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "Updating display calculation logic in React components - pure frontend math fix with no dependencies"
+    },
+    {
+      "id": "oracle-keeper",
+      "lane": "INFRA",
+      "depends_on": [],
+      "reason": "Managing Python service and systemd daemon - infra work independent of other tasks"
+    },
+    {
+      "id": "insurance-fund",
+      "lane": "CONTRACT",
+      "depends_on": [],
+      "reason": "Investigating fee routing behavior in Solidity contracts (FeeRouter, InsuranceFund) - contract logic issue"
+    }
+  ]
+}
