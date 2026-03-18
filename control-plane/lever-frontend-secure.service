@@ -1,0 +1,24 @@
+[Unit]
+Description=LEVER Frontend Secure Server (port 3000)
+After=network.target
+
+[Service]
+Type=simple
+User=lever
+WorkingDirectory=/home/lever/lever-protocol/frontend/user-app
+ExecStart=/usr/bin/node /home/lever/lever-protocol/scripts/secure-spa-server.js 3000
+Restart=always
+RestartSec=5
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=BUILD_DIR=/home/lever/lever-protocol/frontend/user-app/build
+
+# Additional security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/home/lever/lever-protocol/control-plane/dispatcher-logs
+
+[Install]
+WantedBy=multi-user.target

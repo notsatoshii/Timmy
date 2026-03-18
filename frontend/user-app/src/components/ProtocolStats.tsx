@@ -115,13 +115,17 @@ const ProtocolStats: React.FC = () => {
         console.log('Insurance fund raw value:', insuranceRaw.toString());
         console.log('Expected range:', expectedMinUsdtRaw.toString(), 'to', expectedMaxUsdtRaw.toString());
 
-        // If value is suspiciously large (> 1e15), it's likely in wrong format
-        if (insuranceRaw > BigInt(1e15)) {
-          console.warn('Insurance fund value appears to be in WAD format instead of USDT:', insuranceRaw.toString());
-          // Convert from WAD to USDT format: divide by 1e12 (WAD has 18 decimals, USDT has 6)
-          safeInsurance = insuranceRaw / BigInt(1e12);
-          console.log('Converted to USDT format:', safeInsurance.toString());
-        } else if (insuranceRaw < expectedMinUsdtRaw || insuranceRaw > expectedMaxUsdtRaw) {
+        // Insurance fund returns WAD format (18 decimals), need to convert to USDT format (6 decimals)
+        // Since the contract always returns WAD format, we always need to convert
+        console.log('Insurance fund raw value (WAD format):', insuranceRaw.toString());
+
+        // Convert from WAD to USDT format: divide by 1e12 (18 decimals → 6 decimals)
+        const wadToUsdtDivisor = BigInt('1000000000000'); // 1e12
+        safeInsurance = insuranceRaw / wadToUsdtDivisor;
+        console.log('Converted to USDT format:', safeInsurance.toString());
+
+        // Sanity check - should be around $10K for bootstrap
+        if (safeInsurance < expectedMinUsdtRaw || safeInsurance > expectedMaxUsdtRaw) {
           // Value is outside expected range, use fallback
           console.warn('Insurance fund value outside expected range:', insuranceRaw.toString(), 'using $10K fallback');
           safeInsurance = DEMO_FALLBACK_VALUES.insuranceFund;

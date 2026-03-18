@@ -4,35 +4,36 @@
       "id": "1",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Root cause is mockkeeper service (Python script) that needs restart/investigation. While it includes frontend UI timestamp, the critical path is the backend service infrastructure."
+      "reason": "Server configuration, HTTP security headers, and health endpoints require modifying web server configs and control-plane infrastructure. No dependencies as this is standalone server setup."
     },
     {
       "id": "2",
-      "lane": "INFRA",
-      "depends_on": [
-        "4"
-      ],
-      "reason": "Health monitoring involves control-plane scripts and API endpoints. Depends on Task 4 because both tasks mention puppeteer dependencies setup, and testing infrastructure should be established first."
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "Display formatting bug showing $5.011e24 instead of $10K is a React component rendering issue. Standalone frontend fix with no dependencies on other tasks."
     },
     {
       "id": "3",
-      "lane": "FRONTEND",
-      "depends_on": [
-        "1"
-      ],
-      "reason": "Requires React component modifications to display feed status indicators. Depends on Task 1 because showing meaningful feed status requires the oracle feeds to be working properly first."
+      "lane": "INFRA",
+      "depends_on": [],
+      "reason": "APY investigation involves analytics scripts to verify fee flow and yield calculations rather than contract changes (per no-redeploy constraint). Standalone analysis task."
     },
     {
       "id": "4",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Testing infrastructure setup involves puppeteer installation, screenshot verification scripts, and control-plane testing configs. Independent foundation task."
+      "reason": "Oracle monitoring involves service management (mockkeeper.py), price feed monitoring, and alerting systems. Pure infrastructure task with no dependencies."
     },
     {
       "id": "5",
       "lane": "INFRA",
-      "depends_on": [],
-      "reason": "Creating REST API endpoints and backend architecture involves new services/scripts since no existing backend API server is evident in project structure. Independent infrastructure work."
+      "depends_on": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "reason": "Final system validation runs test scripts and verification procedures. Must run after all other fixes are complete to validate the fully corrected system before demo."
     }
   ]
 }
