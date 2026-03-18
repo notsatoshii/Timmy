@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-03-17T04-07-20-046Z",
+  "timestamp": "2026-03-18T11-40-45-710Z",
   "checks": [
     {
       "name": "browser_launch",
       "status": "FAIL",
-      "detail": "Failed to launch the browser process:  Code: 1\n\nstderr:\n/usr/bin/chromium-browser: 12: xdg-settings: not found\n/system.slice/lever-dispatcher.service is not a snap cgroup for tag snap.chromium.chromium\n\nTROUBLESHOOTING: https://pptr.dev/troubleshooting\n"
+      "detail": "Failed to launch the browser process:  Code: 1\n\nstderr:\n/usr/bin/chromium-browser: 12: xdg-settings: not found\n/system.slice/lever-loop.service is not a snap cgroup for tag snap.chromium.chromium\n\nTROUBLESHOOTING: https://pptr.dev/troubleshooting\n"
     }
   ],
   "pass": 0,

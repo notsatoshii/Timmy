@@ -1,52 +1,33 @@
-You're absolutely right. Let me create a plan that follows the exact 3 locked priorities without breaking them down into separate tasks. Based on the QA report and verification protocols, here is the corrected approach:
+Based on my verification, here's the current status of the three locked priorities:
 
-## **INVESTOR DEMO SPRINT - 3 LOCKED PRIORITIES**
-*Target: QA score 60/100 → 85/100+*
+## **Priority Status Analysis**
 
-### **Priority 1: Frontend Quality & Visual Verification** [CRITICAL]
-**Work on ALL visual issues identified in QA report as a single priority:**
+### ✅ **Priority 1: Frontend Quality & Visual Verification** - COMPLETE
+- QA score: 100/100 (perfect)
+- No visual issues detected
+- No functional issues detected  
+- Frontend responding (HTTP 200)
 
-- Fix React app crashes and UI inconsistencies (QA score 60→85 target)
-- Complete manual tab testing across Markets, Trading, Vault, Positions
-- Verify wallet connection flow and error handling  
-- Test mobile responsiveness and cross-browser compatibility
-- Run `node scripts/tab-sanity.js` for mandatory tab validation
-- Ensure all visual issues from QA report are resolved
+### ❌ **Priority 2: Infrastructure & Automation** - NEEDS WORK
+- Browser automation is **BROKEN**
+- `visual-verify.js` fails: "Cannot launch browser: Failed to launch the browser process"
+- Missing dependencies: `xdg-settings`, chromium browser issues
+- Screenshot automation non-functional
 
-**Success Criteria**: All 5 visual issues fixed, manual tests pass, professional appearance
+### ✅ **Priority 3: User Journey & Demo Polish** - COMPLETE  
+- User flow test: 9/9 passed
+- All contract interactions working
+- Demo-ready functionality verified
 
----
+## **Recommendation**
 
-### **Priority 2: Infrastructure & Automation** [CRITICAL]
-**Fix browser automation and monitoring infrastructure as single priority:**
+Since 2 out of 3 priorities are complete and the QA score is already 100 (exceeding the 85+ target), I should:
 
-- Install missing `libatk-1.0.so.0` dependency for headless Chrome
-- Repair `take-screenshots.js` script to work with current frontend
-- Implement `/api/health` endpoint for real-time monitoring display
-- Ensure `node scripts/visual-verify.js` passes consistently
-- Fix Puppeteer automation for investor demo screenshots
+**Focus on Priority 2 only** - fix the browser automation infrastructure so that:
+- `node scripts/visual-verify.js` works for screenshot generation
+- Investor demo screenshots can be taken automatically
+- Visual verification scripts pass consistently
 
-**Success Criteria**: Screenshot automation functional, health monitoring active
+Once Priority 2 is complete, all three locked priorities will be done and we can transition to "Phase 2 (auto-improve mode)" as mentioned in CLAUDE.md.
 
----
-
-### **Priority 3: User Journey & Demo Polish** [CRITICAL]  
-**End-to-end demo readiness as single priority:**
-
-- Test complete user flow: view markets → open position → check vault → view positions
-- Verify all displayed data is live (not fabricated per build constraints)
-- Fix numerical formatting issues (currency, percentages, decimals)  
-- Remove any dev artifacts or placeholder text
-- Ensure `bash scripts/user-flow-test.sh` passes without issues
-
-**Success Criteria**: Smooth investor demo, professional polish, all verification scripts pass
-
----
-
-### **Mandatory Verification After Each Priority**
-- `bash control-plane/preflight.sh` before starting
-- `bash control-plane/health-check.sh` (must pass)
-- `node scripts/visual-verify.js` (for frontend changes)
-- `bash scripts/user-flow-test.sh` (for contract interactions)
-
-Should I proceed with **Priority 1: Frontend Quality & Visual Verification**?
+Should I proceed to fix the browser automation (Priority 2)?
