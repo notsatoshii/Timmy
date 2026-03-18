@@ -12,6 +12,7 @@ import Skeleton from './Skeleton';
 import LeverLoader from './LeverLoader';
 import TestnetBanner from './TestnetBanner';
 import Footer from './Footer';
+import InstitutionalHeader from './InstitutionalHeader';
 
 // Lazy load heavy components
 const Trading = lazy(() => import('./Trading'));
@@ -171,6 +172,11 @@ const DashboardOptimized: React.FC = () => {
 
       <ErrorBoundary panelName="Header">
         <Header />
+      </ErrorBoundary>
+
+      {/* Institutional Status Header */}
+      <ErrorBoundary panelName="InstitutionalHeader">
+        <InstitutionalHeader />
       </ErrorBoundary>
 
       {/* Protocol Stats Banner - Always visible, minimal performance impact */}

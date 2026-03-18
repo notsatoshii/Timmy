@@ -1,26 +1,26 @@
 {
   "tasks": [
     {
-      "id": "professional-ui-polish",
+      "id": "1",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "React components, CSS styling, branding assets, and design system changes. No dependencies as this establishes the foundational design system."
+      "reason": "Frontend task involving React components, styling, typography, and global UI elements. No dependencies as this establishes the visual foundation."
     },
     {
-      "id": "enhanced-market-analytics",
+      "id": "2",
       "lane": "FRONTEND",
       "depends_on": [
-        "professional-ui-polish"
+        "1"
       ],
-      "reason": "React components for Markets page, charts, and trading interface. Depends on UI polish to ensure consistent design system and visual hierarchy are established first."
+      "reason": "Frontend task for Markets page components and charts. Depends on task 1 to use established branding patterns and visual hierarchy."
     },
     {
-      "id": "advanced-lp-features",
+      "id": "3",
       "lane": "FRONTEND",
       "depends_on": [
-        "enhanced-market-analytics"
+        "1"
       ],
-      "reason": "React components for Vault/LP section, charts, and dashboard features. Sequential after market analytics to avoid conflicts in shared components and styling systems."
+      "reason": "Frontend task for LP/Vault interface components and analytics. Depends on task 1 to use established branding patterns and design elements."
     }
   ]
 }

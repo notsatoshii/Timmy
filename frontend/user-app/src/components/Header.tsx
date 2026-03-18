@@ -43,22 +43,26 @@ const Header: React.FC = () => {
                 </div>
                 <div className="hidden sm:block">
                   <div className="flex items-center space-x-2">
-                    <h1 className="text-ivory font-display font-bold text-lg tracking-tight">
+                    <h1 className="lever-heading-md">
                       LEVER
                     </h1>
                     <span className="text-steel text-sm font-medium">Protocol</span>
                   </div>
-                  <p className="text-xs font-medium text-steel">
+                  <p className="text-xs font-medium text-steel/80 tracking-wide uppercase">
                     Synthetic Leveraged Perpetuals
                   </p>
                 </div>
               </div>
 
-              {/* Network & Connection Status */}
+              {/* Enhanced Network & Connection Status with Professional Styling */}
               <div className="hidden md:flex items-center space-x-4 pl-4 border-l border-border/50">
-                <ConnectionStatus className="text-xs" />
-                <div className="h-4 w-px bg-border" />
-                <NetworkIndicator />
+                <div className="lever-status-live">
+                  <ConnectionStatus className="text-xs" />
+                </div>
+                <div className="h-4 w-px bg-border/30" />
+                <div className="lever-status-readonly">
+                  <NetworkIndicator />
+                </div>
               </div>
             </div>
 

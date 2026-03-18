@@ -17,8 +17,12 @@ const Footer: React.FC = () => {
                 style={{ filter: 'drop-shadow(0 0 12px rgba(230,255,43,0.2))' }}
               />
               <div>
-                <h3 className="text-ivory font-display font-semibold text-lg">LEVER Protocol</h3>
-                <p className="text-steel text-sm">Synthetic Leveraged Perpetuals</p>
+                <h3 className="lever-heading-md">LEVER Protocol</h3>
+                <p className="text-steel/80 text-sm tracking-wide uppercase font-medium">Synthetic Leveraged Perpetuals</p>
+                <div className="flex items-center mt-2 space-x-2">
+                  <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse"></div>
+                  <span className="text-xs text-accent font-mono font-medium">Built on Base</span>
+                </div>
               </div>
             </div>
             <p className="text-steel text-sm leading-relaxed mb-4">
