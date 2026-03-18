@@ -86,7 +86,7 @@ const Header: React.FC = () => {
                   <div className="flex items-center space-x-3 justify-end mt-1">
                     <LiveDataIndicator
                       label="MAX LEV"
-                      value="12x"
+                      value="30x"
                       status="live"
                       compact={true}
                     />

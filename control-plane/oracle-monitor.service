@@ -1,0 +1,17 @@
+[Unit]
+Description=LEVER Oracle Monitor & Auto-Restart
+After=lever-oracle.service
+Requires=lever-oracle.service
+
+[Service]
+Type=simple
+User=lever
+WorkingDirectory=/home/lever/lever-protocol
+ExecStart=/bin/bash -c 'while true; do /home/lever/lever-protocol/control-plane/oracle-monitor.sh check; sleep 60; done'
+Restart=always
+RestartSec=10
+StandardOutput=append:/home/lever/lever-protocol/control-plane/oracle-monitor.log
+StandardError=append:/home/lever/lever-protocol/control-plane/oracle-monitor.log
+
+[Install]
+WantedBy=multi-user.target

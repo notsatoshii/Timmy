@@ -27,7 +27,7 @@ const Footer: React.FC = () => {
             </div>
             <p className="text-steel text-sm leading-relaxed mb-4">
               Next-generation synthetic leveraged perpetuals on prediction markets.
-              Trade binary outcomes with up to 12x leverage, backed by a unified liquidity pool.
+              Trade binary outcomes with up to 30x leverage, backed by a unified liquidity pool.
             </p>
             <div className="flex space-x-4">
               <a

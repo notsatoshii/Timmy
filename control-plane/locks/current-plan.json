@@ -1,0 +1,34 @@
+{
+  "tasks": [
+    {
+      "id": "1",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "Root cause is frontend copy and HTML metadata that needs updating to reflect actual 30x leverage capability. No dependencies on other tasks."
+    },
+    {
+      "id": "2",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "Root cause is frontend presentation elements (indicators, links, metrics display). Independent UI enhancement work."
+    },
+    {
+      "id": "3",
+      "lane": "CONTRACT",
+      "depends_on": [],
+      "reason": "Root cause is investigating Solidity contract behavior around fee routing from FeeRouter to Insurance Fund. Independent contract investigation."
+    },
+    {
+      "id": "4",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "Root cause is frontend yield calculation and display logic. While related to fee flows, this is investigating frontend display issues independently."
+    },
+    {
+      "id": "5",
+      "lane": "INFRA",
+      "depends_on": [],
+      "reason": "Root cause is service monitoring and operational stability of mockkeeper systemd service. Independent infrastructure work."
+    }
+  ]
+}

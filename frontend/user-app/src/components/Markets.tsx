@@ -92,7 +92,7 @@ const Markets: React.FC<MarketsProps> = ({ onTradeSelect, onMarketDetail }) => {
         <div>
           <h2 className="text-2xl font-bold font-display text-ivory">Prediction Markets</h2>
           <p className="text-sm text-steel mt-1">
-            Browse active binary outcome markets with up to <span className="text-accent font-semibold">12x</span> leverage
+            Browse active binary outcome markets with up to <span className="text-accent font-semibold">30x</span> leverage
           </p>
         </div>
         <div className="flex items-center space-x-3">
@@ -198,7 +198,7 @@ const Markets: React.FC<MarketsProps> = ({ onTradeSelect, onMarketDetail }) => {
               >
                 Short
               </button>
-              <span className="text-[10px] text-steel uppercase tracking-wider hidden sm:block">12x max</span>
+              <span className="text-[10px] text-steel uppercase tracking-wider hidden sm:block">30x max</span>
             </div>
           </div>
         ))}
