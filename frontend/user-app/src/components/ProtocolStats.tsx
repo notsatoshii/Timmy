@@ -20,30 +20,26 @@ interface ProtocolStatsData {
   insuranceFund: string;
 }
 
-// Demo fallback values to show when contract calls fail
 const DEMO_FALLBACK_VALUES = {
-  tvl: BigInt("50000000000"), // $50,000 in USDT (6 decimals)
-  totalOI: BigInt("30000000000"), // $30,000 in USDT (6 decimals)
-  insuranceFund: BigInt("10000000000000000000000"), // $10,000 in WAD (18 decimals)
-  volume24h: BigInt("0"), // $0 in USDT (6 decimals) - show zero not fake data
-  borrowRate: BigInt("200000000000000"), // 0.02% per hour in WAD
+  tvl: BigInt("50000000000"),
+  totalOI: BigInt("30000000000"),
+  insuranceFund: BigInt("10000000000000000000000"),
+  volume24h: BigInt("0"),
+  borrowRate: BigInt("200000000000000"),
 };
 
 const ProtocolStats: React.FC = () => {
   const [stats, setStats] = useState<ProtocolStatsData | null>(null);
   const [addresses, setAddresses] = useState(getContractAddresses());
 
-  // Load addresses from deployment files on component mount
   useEffect(() => {
     loadContractAddresses().then(loadedAddresses => {
       setAddresses(loadedAddresses);
-      console.log('ProtocolStats: Contract addresses loaded from deployment files');
     }).catch(error => {
-      console.warn('ProtocolStats: Failed to load addresses from deployment files, using fallback:', error);
+      console.warn('ProtocolStats: Failed to load addresses:', error);
     });
   }, []);
 
-  // Read TVL from LeverVault.totalAssets() with error handling
   const { data: tvlRaw, isLoading: tvlLoading, error: tvlError } = useReadContract({
     address: addresses.leverVault,
     abi: LEVER_VAULT_ABI,
@@ -51,7 +47,6 @@ const ProtocolStats: React.FC = () => {
     query: { enabled: !!addresses.leverVault }
   });
 
-  // Read total OI from OILimits.getGlobalOI() with error handling
   const { data: totalOIRaw, isLoading: oiLoading, error: oiError } = useReadContract({
     address: addresses.oiLimits,
     abi: OI_LIMITS_ABI,
@@ -59,7 +54,6 @@ const ProtocolStats: React.FC = () => {
     query: { enabled: !!addresses.oiLimits }
   });
 
-  // Read insurance fund balance from InsuranceFund.getBalance() with error handling
   const { data: insuranceRaw, isLoading: insuranceLoading, error: insuranceError } = useReadContract({
     address: addresses.insuranceFund,
     abi: INSURANCE_FUND_ABI,
@@ -67,104 +61,51 @@ const ProtocolStats: React.FC = () => {
     query: { enabled: !!addresses.insuranceFund }
   });
 
-  // Read current borrow rate for projected APY calculation with error handling
   const spacexMarketId = '0x2841ef32b61fb3472aadbfc70d787a1bfaf5d0218c9601b87963af7bcca1bcf1';
   const { data: currentBorrowRate, error: borrowRateError } = useReadContract({
     address: addresses.borrowFeeEngine,
     abi: BORROW_FEE_ENGINE_ABI,
     functionName: 'getCurrentBorrowRate',
-    args: [spacexMarketId, true], // Use long side for representative rate
+    args: [spacexMarketId, true],
     query: { enabled: !!addresses.borrowFeeEngine }
   });
 
-  // Calculate real 24h volume from position events
   const { volume24h, isLoading: volumeLoading } = useVolumeCalculation(true);
 
-  // Calculate derived stats with comprehensive error handling and fallbacks
   useEffect(() => {
     try {
-      // Debug logging for contract values
-      console.log('ProtocolStats Debug Values:');
-      console.log('- tvlRaw:', tvlRaw?.toString());
-      console.log('- tvlError:', tvlError);
-      console.log('- totalOIRaw:', totalOIRaw?.toString());
-      console.log('- oiError:', oiError);
-      console.log('- insuranceRaw:', insuranceRaw?.toString());
-      console.log('- insuranceError:', insuranceError);
-      console.log('- volume24h:', volume24h?.toString());
-      console.log('- currentBorrowRate:', currentBorrowRate?.toString());
-      console.log('- borrowRateError:', borrowRateError);
-
-      // Use actual data if available, otherwise use demo fallback values
       const safeTvl = tvlRaw && !tvlError ? tvlRaw : DEMO_FALLBACK_VALUES.tvl;
       const safeTotalOI = totalOIRaw !== undefined && !oiError ? totalOIRaw : DEMO_FALLBACK_VALUES.totalOI;
       const safeInsurance = insuranceRaw !== undefined && !insuranceError ? insuranceRaw : DEMO_FALLBACK_VALUES.insuranceFund;
       const safeVolume = volume24h !== undefined ? volume24h : DEMO_FALLBACK_VALUES.volume24h;
       const safeBorrowRate = currentBorrowRate && !borrowRateError && currentBorrowRate > BigInt(0) ? currentBorrowRate : DEMO_FALLBACK_VALUES.borrowRate;
 
-      // Log which values are using fallbacks for debugging
-      const fallbacksUsed = [];
-      if (!tvlRaw || tvlError) fallbacksUsed.push('TVL');
-      if (totalOIRaw === undefined || oiError) fallbacksUsed.push('Total OI');
-      if (insuranceRaw === undefined || insuranceError) fallbacksUsed.push('Insurance Fund');
-      if (volume24h === undefined) fallbacksUsed.push('Volume');
-      if (!currentBorrowRate || borrowRateError || currentBorrowRate <= BigInt(0)) fallbacksUsed.push('Borrow Rate');
-
-      if (fallbacksUsed.length > 0) {
-        console.warn('ProtocolStats using fallback values for:', fallbacksUsed.join(', '));
-        console.warn('Contract addresses being used:', addresses);
-        if (tvlError) console.error('TVL error:', tvlError);
-        if (oiError) console.error('OI error:', oiError);
-        if (insuranceError) console.error('Insurance error:', insuranceError);
-        if (borrowRateError) console.error('Borrow rate error:', borrowRateError);
-      } else {
-        console.log('ProtocolStats: All contract calls successful');
-      }
-
-      // Calculate projected LP APY: (base_borrow_rate × Total_OI × 8760_hours × 0.50_LP_share) / TVL
       const hoursPerYear = BigInt(8760);
-      const lpShare = BigInt(50); // 50% LP share
+      const lpShare = BigInt(50);
       const hundredPercent = BigInt(100);
-
-      // projected_annual_revenue = (borrow_rate × total_OI / WAD) × hours_per_year × LP_share / 100
-      // Must divide by WAD after multiplying two WAD-scale numbers to normalize
       const totalOIInWad = safeTotalOI * BigInt(1e12);
-      const revenuePerHour = safeBorrowRate * totalOIInWad / WAD; // WAD × WAD / WAD = WAD
+      const revenuePerHour = safeBorrowRate * totalOIInWad / WAD;
       const projectedAnnualRevenue = revenuePerHour * hoursPerYear * lpShare / hundredPercent;
-
-      // APY = projected_annual_revenue / TVL (multiply by 10000 for basis point precision in BigInt)
       const tvlInWad = safeTvl * BigInt(1e12);
       const apyBpsTimes100 = projectedAnnualRevenue * BigInt(10000) / tvlInWad;
-
-      // Calculate utilization rate: Total_OI / TVL * 100
       const utilizationBpsTimes100 = totalOIInWad * BigInt(10000) / tvlInWad;
 
-      const calculatedStats = {
+      setStats({
         tvl: `$${formatUsdt(safeTvl)}`,
         dailyVolume: `$${formatUsdt(safeVolume)}`,
         totalOI: `$${formatUsdt(safeTotalOI)}`,
         lpApy: `${(Number(apyBpsTimes100) / 100).toFixed(2)}%`,
         utilizationRate: `${(Number(utilizationBpsTimes100) / 100).toFixed(2)}%`,
-        insuranceFund: `$${formatWad(safeInsurance)}`, // InsuranceFund.getBalance() returns WAD values
-      };
-
-      console.log('ProtocolStats Final Calculated Values:');
-      console.log('- Final TVL:', calculatedStats.tvl);
-      console.log('- Final Total OI:', calculatedStats.totalOI);
-      console.log('- Final Insurance Fund:', calculatedStats.insuranceFund);
-      console.log('- Final LP APY:', calculatedStats.lpApy);
-
-      setStats(calculatedStats);
+        insuranceFund: `$${formatWad(safeInsurance)}`,
+      });
     } catch (error) {
       console.error('Error calculating protocol stats:', error);
-
-      // On any calculation error, use pure demo values
       setStats({
         tvl: `$${formatUsdt(DEMO_FALLBACK_VALUES.tvl)}`,
         dailyVolume: `$${formatUsdt(DEMO_FALLBACK_VALUES.volume24h)}`,
         totalOI: `$${formatUsdt(DEMO_FALLBACK_VALUES.totalOI)}`,
-        lpApy: '15.43%', // Demo APY value
-        utilizationRate: '60.00%', // Demo utilization
+        lpApy: '15.43%',
+        utilizationRate: '60.00%',
         insuranceFund: `$${formatWad(DEMO_FALLBACK_VALUES.insuranceFund)}`,
       });
     }
@@ -172,96 +113,54 @@ const ProtocolStats: React.FC = () => {
 
   const isLoading = tvlLoading || oiLoading || insuranceLoading || volumeLoading;
 
+  const StatBox: React.FC<{ label: string; value: string | undefined; highlight?: boolean; isLoading: boolean }> = 
+    ({ label, value, highlight, isLoading: loading }) => (
+    <div className="lever-inset text-center">
+      <div className="text-[10px] uppercase tracking-widest font-medium text-steel mb-2">
+        {label}
+      </div>
+      {loading ? (
+        <Skeleton variant="text" className="h-7 w-24 mx-auto" />
+      ) : (
+        <div className={`text-xl md:text-2xl font-semibold font-mono ${
+          highlight ? 'text-accent' : 'text-ivory'
+        }`}
+        style={highlight ? { textShadow: '0 0 20px rgba(230,255,43,0.25)' } : undefined}
+        >
+          {value || 'Loading...'}
+        </div>
+      )}
+    </div>
+  );
+
   return (
-    <div className="bg-gradient-to-r from-surface-1 via-surface-2 to-surface-1 border-b border-border">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 lg:gap-6">
-          {/* TVL */}
-          <div className="text-center">
-            <div className="text-sm font-medium text-gray-400 mb-1">Total TVL</div>
-            {isLoading ? (
-              <Skeleton variant="text" className="h-6 w-20 mx-auto" />
-            ) : (
-              <div className="text-xl md:text-2xl font-bold font-mono text-accent">
-                {stats?.tvl || 'Loading...'}
-              </div>
-            )}
-          </div>
-
-          {/* Volume */}
-          <div className="text-center">
-            <div className="text-sm font-medium text-gray-400 mb-1">Volume</div>
-            {isLoading ? (
-              <Skeleton variant="text" className="h-6 w-20 mx-auto" />
-            ) : (
-              <div className="text-xl md:text-2xl font-bold font-mono text-gray-100">
-                {stats?.dailyVolume || 'Loading...'}
-              </div>
-            )}
-          </div>
-
-          {/* Total Open Interest */}
-          <div className="text-center">
-            <div className="text-sm font-medium text-gray-400 mb-1">Total OI</div>
-            {isLoading ? (
-              <Skeleton variant="text" className="h-6 w-20 mx-auto" />
-            ) : (
-              <div className="text-xl md:text-2xl font-bold font-mono text-gray-100">
-                {stats?.totalOI || 'Loading...'}
-              </div>
-            )}
-          </div>
-
-          {/* LP APY */}
-          <div className="text-center">
-            <div className="text-sm font-medium text-gray-400 mb-1">LP APY</div>
-            {isLoading ? (
-              <Skeleton variant="text" className="h-6 w-20 mx-auto" />
-            ) : (
-              <div className="text-xl md:text-2xl font-bold font-mono text-accent">
-                {stats?.lpApy || 'Loading...'}
-              </div>
-            )}
-          </div>
-
-          {/* Utilization Rate */}
-          <div className="text-center">
-            <div className="text-sm font-medium text-gray-400 mb-1">Utilization</div>
-            {isLoading ? (
-              <Skeleton variant="text" className="h-6 w-20 mx-auto" />
-            ) : (
-              <div className="text-xl md:text-2xl font-bold font-mono text-gray-100">
-                {stats?.utilizationRate || 'Loading...'}
-              </div>
-            )}
-          </div>
-
-          {/* Insurance Fund */}
-          <div className="text-center">
-            <div className="text-sm font-medium text-gray-400 mb-1">Insurance Fund</div>
-            {isLoading ? (
-              <Skeleton variant="text" className="h-6 w-20 mx-auto" />
-            ) : (
-              <div className="text-xl md:text-2xl font-bold font-mono text-accent-secondary">
-                {stats?.insuranceFund || 'Loading...'}
-              </div>
-            )}
+    <div className="border-b border-border">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+        {/* Stats Card */}
+        <div className="lever-card">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 lg:gap-4">
+            <StatBox label="Total TVL" value={stats?.tvl} highlight={true} isLoading={isLoading} />
+            <StatBox label="Volume" value={stats?.dailyVolume} isLoading={isLoading} />
+            <StatBox label="Total OI" value={stats?.totalOI} isLoading={isLoading} />
+            <StatBox label="LP APY" value={stats?.lpApy} highlight={true} isLoading={isLoading} />
+            <StatBox label="Utilization" value={stats?.utilizationRate} isLoading={isLoading} />
+            <StatBox label="Insurance Fund" value={stats?.insuranceFund} isLoading={isLoading} />
           </div>
         </div>
 
-        {/* Protocol Health Indicators */}
-        <div className="mt-4 flex justify-center items-center space-x-6 text-sm">
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-accent rounded-full animate-pulse"></div>
-            <span className="text-gray-400">Live Prices</span>
+        {/* Status Indicators */}
+        <div className="mt-3 flex justify-center items-center space-x-6 text-xs">
+          <div className="flex items-center space-x-1.5">
+            <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse"></div>
+            <span className="text-steel">Live Prices</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-accent-secondary rounded-full"></div>
-            <span className="text-gray-400">Base Sepolia</span>
+          <div className="flex items-center space-x-1.5">
+            <div className="w-1.5 h-1.5 bg-teal rounded-full"></div>
+            <span className="text-steel">Base Sepolia</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-accent rounded-full"></div>
-            <span className="text-gray-400">Oracle Active</span>
+          <div className="flex items-center space-x-1.5">
+            <div className="w-1.5 h-1.5 bg-accent rounded-full"></div>
+            <span className="text-steel">Oracle Active</span>
           </div>
         </div>
       </div>

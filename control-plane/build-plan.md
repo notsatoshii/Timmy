@@ -1,27 +1,23 @@
-## REVISED PLAN — INVESTOR DEMO SPRINT (LOCKED)
+You're absolutely right. I violated the locked sprint constraint by adding scope creep. Let me revise to include ONLY the three mandated priorities:
 
-Based on the restored build-plan.md, here is the focused plan addressing **ONLY** the three mandated priorities:
+### INVESTOR DEMO SPRINT - THREE PRIORITIES ONLY
 
-### Priority 1: Fix Visual Verification Infrastructure [CRITICAL BLOCKER]
-- [ ] Install missing browser automation dependencies (libatk-1.0.so.0) 
-- [ ] Fix frontend service configuration to prevent manual restart requirements
-- [ ] Restore automated screenshot-based UI verification functionality
-- [ ] Achieve QA Score ≥90/100 (currently 52/100)
+### 1. Fix Browser Automation Dependencies [PRIORITY 1] [INFRASTRUCTURE] 
+- [ ] Install missing libatk-1.0.so.0 and related Chrome/Puppeteer dependencies to restore visual verification
+- [ ] Test automated screenshot functionality with `node scripts/take-screenshots.js`
+- [ ] Ensure QA visual verification can run without manual intervention
+- [ ] **BLOCKER:** This prevents verification of Priorities 2 and 3
 
-### Priority 2: Verify MarketDetail Tab Functionality [CRITICAL]
-- [ ] Manual inspection of MarketDetail tab since automation is broken
-- [ ] Confirm market data loads, charts render, trading controls work
-- [ ] Document any issues preventing investor demo readiness
-- [ ] Resolve known-issues.md CRITICAL blocker
+### 2. Verify MarketDetail Tab Functionality [PRIORITY 2] [FRONTEND]
+- [ ] Manually inspect MarketDetail tab since automation is broken (navigate to a market, test interactions)  
+- [ ] Confirm market data loads correctly, charts render, and trading controls are functional
+- [ ] Document any bugs or missing functionality that would block investor demo
+- [ ] **CRITICAL:** Must resolve known-issues.md blocker before demo
 
-### Priority 3: Fix 24h Volume Display Bug [CRITICAL]
-- [ ] Correct volume calculation to show notional (collateral × leverage) instead of collateral only
-- [ ] Verify volume displays reflect actual trading activity accurately  
-- [ ] Test that volume metrics update properly with new positions
-- [ ] Resolve known-issues.md CRITICAL blocker
+### 3. Fix 24h Volume Display Bug [PRIORITY 3] [FRONTEND]
+- [ ] Locate volume calculation logic in frontend code (likely in market stats or dashboard components)
+- [ ] Change calculation from collateral-only to notional (collateral × leverage)  
+- [ ] Verify volume displays accurately reflect trading activity across all UI locations
+- [ ] **CRITICAL:** Must resolve known-issues.md blocker before demo
 
-**Sprint Discipline:** Work exclusively on these three priorities. No contract redeployment, no fake data, no scope creep. Priority 1 is the current blocker preventing verification of Priorities 2 and 3.
-
-**Success Criteria:** All three priorities must pass before transitioning to Phase 2 (auto-improve mode).
-
-This revised plan now aligns with the locked investor demo sprint requirements and focuses exclusively on the three mandated priorities.
+**Sprint Discipline:** Work exclusively on these three priorities in order. Priority 1 must complete before 2-3 can be verified. No contract redeployment, no fake data, no scope creep. All other tasks wait for Phase 2 auto-improve mode.

@@ -1,0 +1,26 @@
+{
+  "tasks": [
+    {
+      "id": "fix_browser_automation_dependencies",
+      "lane": "INFRA",
+      "depends_on": [],
+      "reason": "Installing system dependencies (libatk-1.0.so.0), fixing puppeteer/Chrome setup, and testing automation scripts - pure infrastructure work with no dependencies on other tasks"
+    },
+    {
+      "id": "verify_marketdetail_tab_functionality",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "fix_browser_automation_dependencies"
+      ],
+      "reason": "React component inspection and UI functionality verification. Depends on automation fix because Task 1 is marked as blocker that 'prevents verification of Priorities 2 and 3'"
+    },
+    {
+      "id": "fix_24h_volume_display_bug",
+      "lane": "FRONTEND",
+      "depends_on": [
+        "fix_browser_automation_dependencies"
+      ],
+      "reason": "Frontend calculation logic fix in React components. Depends on automation fix because Task 1 is marked as blocker that 'prevents verification of Priorities 2 and 3'. No dependency on Task 2 since they touch different UI areas"
+    }
+  ]
+}

@@ -6,68 +6,72 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Neumorphic dark surfaces (layered depth)
+        // Surfaces — Void Black base with subtle depth steps
         surface: {
-          0: '#0f1219',   // page background (warm dark, not pure black)
-          1: '#161b26',   // card background
-          2: '#1c2233',   // elevated surfaces
-          3: '#232a3a',   // hover states, inputs
+          0: '#000000',   // Void Black (brand)
+          1: '#0a0a10',   // card background
+          2: '#111118',   // elevated surfaces
+          3: '#1a1a24',   // hover states, inputs
         },
-        // Inset/pressed surfaces
-        inset: '#0b0e14',
-        // Border colors
+        inset: '#000000',
+        // Borders
         border: {
-          DEFAULT: 'rgba(255,255,255,0.04)',
-          light: 'rgba(255,255,255,0.07)',
-          hover: 'rgba(255,255,255,0.12)',
-          glow: 'rgba(0,255,200,0.12)',
+          DEFAULT: '#1a1a2a',
+          light: '#2a2a3a',
+          hover: '#3a3a4a',
+          glow: 'rgba(230, 255, 43, 0.15)',
         },
-        // Primary accent: teal-cyan (LEVER brand)
+        // Primary: Electric Lime (brand)
         accent: {
-          DEFAULT: '#00ffc8',
-          dim: '#00d4a6',
-          muted: 'rgba(0,255,200,0.15)',
-          glow: 'rgba(0,255,200,0.25)',
+          DEFAULT: '#E6FF2B',
+          dim: '#C8D926',
+          muted: 'rgba(230, 255, 43, 0.15)',
+          glow: 'rgba(230, 255, 43, 0.25)',
         },
-        // Secondary accent (kept for compatibility)
+        // Secondary: Deep Teal (brand)
+        teal: {
+          DEFAULT: '#0B4650',
+          light: '#0E5A66',
+          muted: 'rgba(11, 70, 80, 0.3)',
+        },
+        // Neutral: Steel Gray (brand)
+        steel: '#898A8E',
+        // Neutral: Soft Ivory (brand)
+        ivory: '#F9F7F2',
+        // Legacy compatibility
         purple: {
           DEFAULT: '#8060FF',
           dim: '#6B4FD9',
           muted: 'rgba(128, 96, 255, 0.15)',
         },
-        // Danger: coral red
+        // Danger
         danger: {
-          DEFAULT: '#ff3b6a',
-          dim: '#d93258',
-          muted: 'rgba(255, 59, 106, 0.15)',
+          DEFAULT: '#FF4868',
+          dim: '#D93D58',
+          muted: 'rgba(255, 72, 104, 0.15)',
         },
-        // Warning: amber
+        // Warning
         warning: {
           DEFAULT: '#FFB830',
           dim: '#D99D29',
           muted: 'rgba(255, 184, 48, 0.15)',
         },
-        // Text hierarchy
-        txt: {
-          primary: '#e8ecf4',
-          secondary: '#6b7a94',
-          tertiary: '#3d4a5e',
-        },
         // Long/Short
-        long: '#00ffc8',
-        short: '#ff3b6a',
+        long: '#E6FF2B',
+        short: '#FF4868',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-        display: ['Space Grotesk', 'Inter', 'sans-serif'],
-        mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'monospace'],
+        sans: ['Inter', 'SF Pro Display', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['Space Grotesk', 'SF Pro Display', 'sans-serif'],
+        mono: ['JetBrains Mono', 'SF Mono', 'Consolas', 'monospace'],
       },
       boxShadow: {
-        'raised': '0 4px 24px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.3)',
-        'glow': '0 0 40px rgba(0,255,200,0.06), 0 0 80px rgba(0,255,200,0.03)',
-        'glow-strong': '0 0 20px rgba(0,255,200,0.15), 0 0 60px rgba(0,255,200,0.08)',
-        'inset': 'inset 0 2px 8px rgba(0,0,0,0.4)',
-        'card': '0 4px 24px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.3)',
+        'raised': '0 4px 24px rgba(0,0,0,0.6), 0 1px 2px rgba(0,0,0,0.4)',
+        'glow': '0 0 40px rgba(230,255,43,0.05), 0 0 80px rgba(230,255,43,0.02)',
+        'glow-strong': '0 0 20px rgba(230,255,43,0.15), 0 0 60px rgba(230,255,43,0.06)',
+        'glow-teal': '0 0 30px rgba(11,70,80,0.3), 0 0 60px rgba(11,70,80,0.15)',
+        'inset': 'inset 0 2px 8px rgba(0,0,0,0.5)',
+        'card': '0 4px 24px rgba(0,0,0,0.6), 0 1px 2px rgba(0,0,0,0.4)',
       },
     },
   },

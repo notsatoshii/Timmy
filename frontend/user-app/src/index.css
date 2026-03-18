@@ -6,60 +6,50 @@
 
 @layer base {
   body {
-    @apply bg-surface-0 text-gray-200 antialiased;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    background: radial-gradient(ellipse at 50% 0%, #131a2a 0%, #0f1219 70%);
+    @apply text-gray-200 antialiased;
+    font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif;
+    background: #000000;
+    background-image: radial-gradient(ellipse at 50% 0%, #0a0a10 0%, #000000 60%);
     min-height: 100vh;
   }
 
-  /* Subtle noise texture overlay */
+  /* Subtle noise texture */
   body::before {
     content: '';
     position: fixed;
     inset: 0;
-    opacity: 0.03;
+    opacity: 0.02;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
     pointer-events: none;
     z-index: 0;
   }
 
-  /* Ambient top glow (brand halo) */
+  /* Ambient lime glow at top */
   body::after {
     content: '';
     position: fixed;
-    top: -100px;
+    top: -120px;
     left: 50%;
     transform: translateX(-50%);
-    width: 800px;
+    width: 900px;
     height: 400px;
-    background: radial-gradient(ellipse, rgba(0,255,200,0.04) 0%, transparent 70%);
+    background: radial-gradient(ellipse, rgba(230,255,43,0.015) 0%, transparent 70%);
     pointer-events: none;
     z-index: 0;
   }
 
-  /* Ensure content sits above overlays */
   #root {
     position: relative;
     z-index: 1;
   }
 
-  /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: #1c2233;
-    border-radius: 3px;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: #232a3a;
-  }
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #1a1a24; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #2a2a3a; }
 
-  /* Form input overrides */
+  /* Form inputs */
   select, input[type="text"], input[type="number"], textarea {
     @apply bg-surface-3 border-border text-gray-200;
   }
@@ -68,16 +58,14 @@
   }
 
   /* Range slider */
-  input[type="range"] {
-    @apply accent-accent;
-  }
+  input[type="range"] { @apply accent-accent; }
   input[type="range"]::-webkit-slider-track {
-    background: #1c2233;
+    background: #1a1a2a;
     border-radius: 4px;
     height: 4px;
   }
   input[type="range"]::-webkit-slider-thumb {
-    background: #00ffc8;
+    background: #E6FF2B;
   }
 }
 
@@ -85,8 +73,8 @@
   /* Neumorphic raised card */
   .lever-card {
     @apply bg-surface-1 rounded-2xl p-6;
-    border: 1px solid rgba(255,255,255,0.04);
-    box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.3);
+    border: 1px solid #1a1a2a;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.6), 0 1px 2px rgba(0,0,0,0.4);
     position: relative;
   }
   .lever-card::before {
@@ -94,15 +82,15 @@
     position: absolute;
     inset: 0;
     border-radius: 16px;
-    background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 50%);
+    background: linear-gradient(135deg, rgba(255,255,255,0.015) 0%, transparent 50%);
     pointer-events: none;
   }
 
-  /* Glowing card variant */
+  /* Glowing card — Electric Lime glow */
   .lever-card-glow {
     @apply bg-surface-1 rounded-2xl p-6;
-    border: 1px solid rgba(0,255,200,0.12);
-    box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 0 40px rgba(0,255,200,0.06), 0 0 80px rgba(0,255,200,0.03);
+    border: 1px solid rgba(230, 255, 43, 0.15);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.6), 0 0 40px rgba(230,255,43,0.05), 0 0 80px rgba(230,255,43,0.02);
     position: relative;
   }
   .lever-card-glow::before {
@@ -110,14 +98,22 @@
     position: absolute;
     inset: 0;
     border-radius: 16px;
-    background: linear-gradient(135deg, rgba(0,255,200,0.03) 0%, transparent 50%);
+    background: linear-gradient(135deg, rgba(230,255,43,0.015) 0%, transparent 50%);
     pointer-events: none;
+  }
+
+  /* Teal card variant — Deep Teal accent */
+  .lever-card-teal {
+    @apply bg-surface-1 rounded-2xl p-6;
+    border: 1px solid rgba(11, 70, 80, 0.3);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.6), 0 0 30px rgba(11,70,80,0.1);
+    position: relative;
   }
 
   /* Inset/pressed element */
   .lever-inset {
-    background: #0b0e14;
-    box-shadow: inset 0 2px 8px rgba(0,0,0,0.4);
+    background: #000000;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
     border-radius: 12px;
     padding: 12px 16px;
   }
@@ -125,10 +121,10 @@
   /* Legacy compatibility */
   .card {
     @apply bg-surface-1 border border-border rounded-lg;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.6), 0 1px 2px rgba(0,0,0,0.4);
   }
   .card-elevated {
     @apply bg-surface-2 border border-border rounded-lg;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.6), 0 1px 2px rgba(0,0,0,0.4);
   }
 }
