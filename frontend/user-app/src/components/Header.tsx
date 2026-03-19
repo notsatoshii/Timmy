@@ -2,8 +2,6 @@ import React from 'react';
 import { useWallet } from '../hooks/useWallet';
 import ConnectWallet from './ConnectWallet';
 import ConnectionStatus, { NetworkIndicator } from './ConnectionStatus';
-import SecurityBadges from './SecurityBadges';
-import LiveDataIndicator from './LiveDataIndicator';
 
 const Header: React.FC = () => {
   const { isConnected } = useWallet();
@@ -38,63 +36,46 @@ const Header: React.FC = () => {
                   <img
                     src="/lever-logo.svg"
                     alt="LEVER Protocol"
-                    className="h-12 lever-logo-glow"
+                    className="h-10"
+                    style={{ filter: 'drop-shadow(0 0 16px rgba(230,255,43,0.25))' }}
                   />
-                  <div className="absolute -inset-2 bg-gradient-to-r from-accent/10 to-teal/5 rounded-xl blur opacity-40" />
+                  <div className="absolute -inset-1 bg-gradient-to-r from-accent/20 to-teal/10 rounded-lg blur opacity-30" />
                 </div>
                 <div className="hidden sm:block">
-                  <div className="flex items-center space-x-3">
-                    <h1 className="lever-heading-lg font-display font-bold">
+                  <div className="flex items-center space-x-2">
+                    <h1 className="text-ivory font-display font-bold text-lg tracking-tight">
                       LEVER
                     </h1>
-                    <span className="lever-caption text-accent bg-accent/10 px-2 py-0.5 rounded-md">
-                      Protocol
-                    </span>
+                    <span className="text-steel text-sm font-medium">Protocol</span>
                   </div>
-                  <p className="lever-caption text-steel/90 mt-0.5">
+                  <p className="text-xs font-medium text-steel">
                     Synthetic Leveraged Perpetuals
                   </p>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <div className="w-1 h-1 bg-accent rounded-full animate-pulse" />
-                    <span className="text-[10px] text-accent font-mono font-semibold">
-                      INSTITUTIONAL GRADE
-                    </span>
-                  </div>
                 </div>
               </div>
 
-              {/* Enhanced Network & Connection Status with Professional Styling */}
+              {/* Network & Connection Status */}
               <div className="hidden md:flex items-center space-x-4 pl-4 border-l border-border/50">
-                <div className="lever-status-live">
-                  <ConnectionStatus className="text-xs" />
-                </div>
-                <div className="h-4 w-px bg-border/30" />
-                <div className="lever-status-readonly">
-                  <NetworkIndicator />
-                </div>
+                <ConnectionStatus className="text-xs" />
+                <div className="h-4 w-px bg-border" />
+                <NetworkIndicator />
               </div>
             </div>
 
             {/* Right side - Enhanced with status indicators */}
             <div className="flex items-center space-x-4">
-              {/* Enhanced Product Highlights */}
-              <div className="hidden xl:flex xl:flex-col xl:items-end xl:space-y-2">
-                <div className="text-right">
-                  <p className="lever-subtitle text-ivory">
-                    Prediction Market Leverage
+              {/* Product highlights */}
+              <div className="hidden xl:block text-right">
+                <p className="text-sm font-semibold text-ivory">
+                  Prediction Market Leverage
+                </p>
+                <div className="flex items-center space-x-2 justify-end">
+                  <p className="text-xs text-steel">
+                    Binary outcomes · Up to <span className="text-accent font-bold">12x</span> leverage
                   </p>
-                  <div className="flex items-center space-x-3 justify-end mt-1">
-                    <LiveDataIndicator
-                      label="MAX LEV"
-                      value="30x"
-                      status="live"
-                      compact={true}
-                    />
-                    <div className="w-px h-4 bg-border/50" />
-                    <span className="lever-caption text-steel">v1.0.0-beta</span>
-                  </div>
+                  <div className="w-1 h-1 bg-accent rounded-full opacity-75" />
+                  <span className="text-xs text-steel font-mono">v1.0.0-beta</span>
                 </div>
-                <SecurityBadges className="justify-end" />
               </div>
 
               {/* Wallet Connection */}

@@ -217,10 +217,6 @@ const DashboardOptimized: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-surface-0">
-      {/* Testnet Banner - Most prominent position */}
-      <ErrorBoundary panelName="TestnetBanner">
-        <TestnetBanner />
-      </ErrorBoundary>
 
       <ErrorBoundary panelName="Header">
         <Header />
@@ -274,7 +270,7 @@ const DashboardOptimized: React.FC = () => {
       </ErrorBoundary>
 
       {/* Professional Footer */}
-      <Footer />
+      {/* removed */}
     </div>
   );
 };

@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-19T03:21:02.401115+00:00",
+  "timestamp": "2026-03-19T03:35:01.368326+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,12 +11,12 @@
     },
     {
       "name": "Positions",
-      "value": "271",
+      "value": "272",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "14965722554735 [1.496e13]",
+      "value": "15040722554735 [1.504e13]",
       "status": "ok"
     },
     {
@@ -28,33 +28,37 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Cannot assess actual UI/UX quality - only HTML shell visible",
-    "Vision: Trading functionality not verifiable from static HTML",
-    "Vision: Wallet connection and blockchain interactions not testable",
-    "Vision: Empty business contact metadata fields in Open Graph tags",
-    "Vision: No visible performance metrics or user activity indicators",
-    "Vision: Cannot verify if React app loads properly in browser"
+    "Vision: Complete JavaScript dependency makes app inaccessible without JS",
+    "Vision: Cannot evaluate actual trading functionality or user interface",
+    "Vision: Security audit and professional infrastructure claims cannot be verified",
+    "Vision: No server-side rendering leads to poor SEO for dynamic content",
+    "Vision: No progressive enhancement or fallback functionality",
+    "Vision: Heavy client-side rendering affects initial load performance",
+    "Vision: No visible version numbers or build transparency indicators"
   ],
   "functional_issues": [],
-  "score": 52,
+  "score": 44,
   "vision_review": {
-    "professional_score": 8,
-    "trust_score": 7,
+    "professional_score": 7,
+    "trust_score": 6,
     "issues": [
-      "Cannot assess actual UI/UX quality - only HTML shell visible",
-      "Trading functionality not verifiable from static HTML",
-      "Wallet connection and blockchain interactions not testable",
-      "Empty business contact metadata fields in Open Graph tags",
-      "No visible performance metrics or user activity indicators",
-      "Cannot verify if React app loads properly in browser"
+      "Complete JavaScript dependency makes app inaccessible without JS",
+      "Cannot evaluate actual trading functionality or user interface",
+      "Security audit and professional infrastructure claims cannot be verified",
+      "No server-side rendering leads to poor SEO for dynamic content",
+      "No progressive enhancement or fallback functionality",
+      "Heavy client-side rendering affects initial load performance",
+      "No visible version numbers or build transparency indicators"
     ],
     "improvements": [
-      "Add server-side rendering for better investor preview capability",
-      "Include basic functionality indicators in initial HTML",
-      "Complete business contact metadata in Open Graph tags",
-      "Add public API endpoints for key metrics (TVL, active positions, etc.)",
-      "Implement health check endpoint that validates full app functionality",
-      "Add loading indicators or app status in noscript fallback"
+      "Implement server-side rendering for better SEO and performance",
+      "Add progressive enhancement with basic functionality for non-JS users",
+      "Include verifiable security audit certificates or reports",
+      "Add visible loading indicators and error handling for initial page load",
+      "Provide demo mode or read-only access without wallet connection",
+      "Include version numbers and build information for transparency",
+      "Add more detailed inline documentation or help sections",
+      "Implement better error boundaries and fallback UI components"
     ]
   }
 }
