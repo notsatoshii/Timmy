@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-19T02:00:32.087Z",
+  "timestamp": "2026-03-19T02:10:35.188Z",
   "testing_method": "intelligent_fallback",
   "browser_automation_available": false,
   "scores": {
@@ -37,10 +37,10 @@
     {
       "name": "Asset Loading",
       "passed": true,
-      "score": 40,
+      "score": 60,
       "details": {
         "assets_tested": 4,
-        "successful": 2,
+        "successful": 3,
         "results": [
           {
             "asset": "/static/js/",
@@ -54,8 +54,8 @@
           },
           {
             "asset": "/deployments/core-deployment.json",
-            "status": 404,
-            "success": false
+            "status": 200,
+            "success": true
           },
           {
             "asset": "/deployments/contract-metadata.json",
@@ -65,7 +65,6 @@
         ]
       },
       "issues": [
-        "/deployments/core-deployment.json: 404",
         "/deployments/contract-metadata.json: 404"
       ]
     },
@@ -80,7 +79,7 @@
             "endpoint": "http://localhost:3000/api/health",
             "status": 200,
             "success": true,
-            "data": "{\n  \"status\": \"healthy\",\n  \"timestamp\": \"2026-03-19T02:00:32.605Z\",\n  \"service\": \"lever-frontend\",\n "
+            "data": "{\n  \"status\": \"healthy\",\n  \"timestamp\": \"2026-03-19T02:10:35.707Z\",\n  \"service\": \"lever-frontend\",\n "
           },
           {
             "endpoint": "http://localhost:3000/api/status",
@@ -92,7 +91,7 @@
             "endpoint": "http://localhost:3000/health",
             "status": 200,
             "success": true,
-            "data": "{\n  \"status\": \"healthy\",\n  \"timestamp\": \"2026-03-19T02:00:32.606Z\",\n  \"service\": \"lever-frontend\",\n "
+            "data": "{\n  \"status\": \"healthy\",\n  \"timestamp\": \"2026-03-19T02:10:35.708Z\",\n  \"service\": \"lever-frontend\",\n "
           }
         ]
       },
