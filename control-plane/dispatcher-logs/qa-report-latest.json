@@ -1,9 +1,33 @@
 {
-  "timestamp": "2026-03-19T02:10:35.188Z",
-  "overall_score": 71,
-  "testing_method": "intelligent_fallback",
-  "browser_automation": false,
-  "screenshots": 0,
-  "passed_tests": 4,
-  "total_tests": 4
+  "timestamp": "2026-03-19T02:23:07.029405+00:00",
+  "frontend_status": "UP",
+  "tabs": {},
+  "data_checks": [],
+  "contract_checks": [
+    {
+      "name": "TVL",
+      "value": "68523959204690 [6.852e13]",
+      "status": "ok"
+    },
+    {
+      "name": "Positions",
+      "value": "270",
+      "status": "ok"
+    },
+    {
+      "name": "Global OI",
+      "value": "14935722554735 [1.493e13]",
+      "status": "ok"
+    },
+    {
+      "name": "Insurance Fund",
+      "value": "5011000000005000000000000 [5.011e24]",
+      "status": "ok"
+    }
+  ],
+  "sprint_checks": {},
+  "critical_blockers": [],
+  "visual_issues": [],
+  "functional_issues": [],
+  "score": 100
 }

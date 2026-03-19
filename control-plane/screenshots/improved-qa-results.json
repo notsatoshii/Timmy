@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-19T02:10:35.188Z",
+  "timestamp": "2026-03-19T02:24:36.055Z",
   "testing_method": "intelligent_fallback",
   "browser_automation_available": false,
   "scores": {
@@ -79,7 +79,7 @@
             "endpoint": "http://localhost:3000/api/health",
             "status": 200,
             "success": true,
-            "data": "{\n  \"status\": \"healthy\",\n  \"timestamp\": \"2026-03-19T02:10:35.707Z\",\n  \"service\": \"lever-frontend\",\n "
+            "data": "{\n  \"status\": \"healthy\",\n  \"timestamp\": \"2026-03-19T02:24:36.592Z\",\n  \"service\": \"lever-frontend\",\n "
           },
           {
             "endpoint": "http://localhost:3000/api/status",
@@ -91,7 +91,7 @@
             "endpoint": "http://localhost:3000/health",
             "status": 200,
             "success": true,
-            "data": "{\n  \"status\": \"healthy\",\n  \"timestamp\": \"2026-03-19T02:10:35.708Z\",\n  \"service\": \"lever-frontend\",\n "
+            "data": "{\n  \"status\": \"healthy\",\n  \"timestamp\": \"2026-03-19T02:24:36.592Z\",\n  \"service\": \"lever-frontend\",\n "
           }
         ]
       },
