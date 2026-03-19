@@ -129,7 +129,7 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
 
         if (totalSupply && totalSupply > BigInt(0) && totalAssets && totalAssets > BigInt(0)) {
           const assetsFloat = parseFloat(formatUsdt(totalAssets)); // USDT format (6 decimals)
-          const supplyFloat = parseFloat(formatWad(totalSupply));   // WAD format (18 decimals)
+          const supplyFloat = parseFloat(formatUsdt(totalSupply));   // USDT format (6 decimals, matching vault)
 
           console.log('=== CALCULATED SHARE PRICE INPUTS ===', {
             assetsFloat,
