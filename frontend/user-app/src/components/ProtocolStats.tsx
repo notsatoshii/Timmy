@@ -112,17 +112,16 @@ const ProtocolStats: React.FC = () => {
         const expectedMinUsdtRaw = BigInt(10_000_000_000); // $10K in USDT format
         const expectedMaxUsdtRaw = BigInt(1_000_000_000_000); // $1M in USDT format
 
-        console.log('Insurance fund raw value:', insuranceRaw.toString());
-        console.log('Expected range:', expectedMinUsdtRaw.toString(), 'to', expectedMaxUsdtRaw.toString());
-
-        // Insurance fund returns WAD format (18 decimals), need to convert to USDT format (6 decimals)
-        // Since the contract always returns WAD format, we always need to convert
-        console.log('Insurance fund raw value (WAD format):', insuranceRaw.toString());
+        console.log('=== INSURANCE FUND DEBUG ===');
+        console.log('Raw value from contract (WAD):', insuranceRaw.toString());
+        console.log('Raw value length:', insuranceRaw.toString().length);
+        console.log('Expected $10K in WAD would be:', (BigInt(10000) * WAD).toString());
 
         // Convert from WAD to USDT format: divide by 1e12 (18 decimals → 6 decimals)
         const wadToUsdtDivisor = BigInt('1000000000000'); // 1e12
         safeInsurance = insuranceRaw / wadToUsdtDivisor;
-        console.log('Converted to USDT format:', safeInsurance.toString());
+        console.log('After conversion to USDT format:', safeInsurance.toString());
+        console.log('Expected $10K in USDT format would be:', BigInt(10000000000).toString());
 
         // Sanity check - should be around $10K for bootstrap
         if (safeInsurance < BigInt(10_000_000) || safeInsurance > BigInt(1_000_000_000)) {
