@@ -16,7 +16,7 @@ import LiveDataIndicator from './LiveDataIndicator';
 
 interface ProtocolStatsData {
   tvl: string;
-  dailyVolume: string;
+  totalVolume: string;
   totalOI: string;
   lpApy: string;
   utilizationRate: string;
@@ -124,7 +124,7 @@ const ProtocolStats: React.FC = () => {
         console.log('Expected $10K in USDT format would be:', BigInt(10000000000).toString());
 
         // Sanity check - should be around $10K for bootstrap
-        if (safeInsurance < BigInt(10_000_000) || safeInsurance > BigInt(1_000_000_000)) {
+        if (safeInsurance < BigInt(1_000_000) || safeInsurance > BigInt(100_000_000_000_000)) {
           // Value is outside expected range (adjusted for converted USDT format), use fallback
           console.warn('Insurance fund value outside expected range:', safeInsurance.toString(), 'using $10K fallback');
           safeInsurance = DEMO_FALLBACK_VALUES.insuranceFund;
@@ -156,7 +156,7 @@ const ProtocolStats: React.FC = () => {
 
       setStats({
         tvl: `$${formatUsdt(safeTvl)}`,
-        dailyVolume: `$${formatWad(safeVolume)}`,
+        totalVolume: `$${formatWad(safeVolume)}`,
         totalOI: `$${formatUsdt(safeTotalOI)}`,
         lpApy: realAPY > 0 ? `${realAPY.toFixed(2)}%` : `${(Number(apyBpsTimes100) / 100).toFixed(2)}%`,
         utilizationRate: `${(Number(utilizationBpsTimes100) / 100).toFixed(2)}%`,
@@ -173,7 +173,7 @@ const ProtocolStats: React.FC = () => {
       });
       setStats({
         tvl: `$${formatUsdt(DEMO_FALLBACK_VALUES.tvl)}`,
-        dailyVolume: `$${formatWad(DEMO_FALLBACK_VALUES.volume24h)}`,
+        totalVolume: `$${formatWad(DEMO_FALLBACK_VALUES.volume24h)}`,
         totalOI: `$${formatUsdt(DEMO_FALLBACK_VALUES.totalOI)}`,
         lpApy: 'Demo Data',
         utilizationRate: '60.00%',
@@ -221,7 +221,7 @@ const ProtocolStats: React.FC = () => {
         <div className="lever-card-institutional">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 lg:gap-6">
             <StatBox label="Total TVL" value={stats?.tvl} highlight={true} isLoading={isLoading} isFallback={fallbackStatus.tvlFallback} />
-            <StatBox label="Volume 24h" value={stats?.dailyVolume} isLoading={isLoading} isFallback={fallbackStatus.volumeFallback} />
+            <StatBox label="Volume 24h" value={stats?.totalVolume} isLoading={isLoading} isFallback={fallbackStatus.volumeFallback} />
             <StatBox label="Total OI" value={stats?.totalOI} isLoading={isLoading} isFallback={fallbackStatus.oiFallback} />
             <StatBox label="LP APY" value={stats?.lpApy} highlight={true} isLoading={isLoading} isFallback={fallbackStatus.apyFallback} />
             <StatBox label="Utilization" value={stats?.utilizationRate} isLoading={isLoading} isFallback={fallbackStatus.oiFallback || fallbackStatus.tvlFallback} />

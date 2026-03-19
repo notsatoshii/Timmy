@@ -22,7 +22,7 @@ export const useVolumeCalculation = (enabled: boolean = true) => {
         const currentBlock = await publicClient.getBlockNumber();
 
         // Fetch all historical events from block 0
-        const fromBlock = currentBlock > BigInt(10000) ? currentBlock - BigInt(10000) : BigInt(0);
+        const fromBlock = BigInt(0);
 
         const addresses = getContractAddresses();
 
