@@ -1,55 +1,9 @@
 {
-  "timestamp": "2026-03-19T00:42:49.395755+00:00",
-  "frontend_status": "UP",
-  "tabs": {},
-  "data_checks": [],
-  "contract_checks": [
-    {
-      "name": "TVL",
-      "value": "68523959204690 [6.852e13]",
-      "status": "ok"
-    },
-    {
-      "name": "Positions",
-      "value": "269",
-      "status": "ok"
-    },
-    {
-      "name": "Global OI",
-      "value": "14905722554735 [1.49e13]",
-      "status": "ok"
-    },
-    {
-      "name": "Insurance Fund",
-      "value": "5011000000005000000000000 [5.011e24]",
-      "status": "ok"
-    }
-  ],
-  "sprint_checks": {},
-  "critical_blockers": [],
-  "visual_issues": [
-    "Vision: Cannot verify JavaScript app functionality - only static HTML shell accessible via curl",
-    "Vision: Unable to confirm trading interface loads without errors",
-    "Vision: Cannot validate market data display or real-time updates",
-    "Vision: No verification of user interaction flows or error handling"
-  ],
-  "functional_issues": [],
-  "score": 68,
-  "vision_review": {
-    "professional_score": 8,
-    "trust_score": 8,
-    "issues": [
-      "Cannot verify JavaScript app functionality - only static HTML shell accessible via curl",
-      "Unable to confirm trading interface loads without errors",
-      "Cannot validate market data display or real-time updates",
-      "No verification of user interaction flows or error handling"
-    ],
-    "improvements": [
-      "Verify JavaScript application loads successfully in browser",
-      "Test market data loading and display functionality",
-      "Confirm trading interface responds to user interactions",
-      "Validate error handling and user feedback systems",
-      "Check mobile responsiveness and cross-browser compatibility"
-    ]
-  }
+  "timestamp": "2026-03-19T01:02:40.044Z",
+  "overall_score": 71,
+  "testing_method": "intelligent_fallback",
+  "browser_automation": false,
+  "screenshots": 0,
+  "passed_tests": 4,
+  "total_tests": 4
 }
