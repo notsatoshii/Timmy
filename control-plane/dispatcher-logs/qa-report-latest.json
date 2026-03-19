@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-19T02:53:02.987423+00:00",
+  "timestamp": "2026-03-19T03:07:13.915528+00:00",
   "frontend_status": "UP",
   "tabs": {},
   "data_checks": [],
@@ -11,12 +11,12 @@
     },
     {
       "name": "Positions",
-      "value": "270",
+      "value": "271",
       "status": "ok"
     },
     {
       "name": "Global OI",
-      "value": "14935722554735 [1.493e13]",
+      "value": "14965722554735 [1.496e13]",
       "status": "ok"
     },
     {
@@ -28,12 +28,12 @@
   "sprint_checks": {},
   "critical_blockers": [],
   "visual_issues": [
-    "Vision: Cannot evaluate actual trading interface functionality via static HTML",
-    "Vision: Unable to verify real-time data accuracy or price feeds",
-    "Vision: Cannot test critical user flows (wallet connection, position management)",
-    "Vision: No way to assess visual design quality or user experience",
-    "Vision: Cannot verify contract integration or transaction handling",
-    "Vision: Missing ability to evaluate performance under load or error handling"
+    "Vision: Cannot verify actual trading functionality - only HTML shell visible",
+    "Vision: No visible security audit badges or trust indicators in accessible content",
+    "Vision: Unable to assess core user experience (wallet connection, trading interface, data accuracy)",
+    "Vision: No way to verify if real market data is displayed correctly",
+    "Vision: Cannot confirm if key features like position management and leverage controls work",
+    "Vision: Missing investor-critical elements like TVL, volume, or protocol metrics in accessible content"
   ],
   "functional_issues": [],
   "score": 52,
@@ -41,20 +41,20 @@
     "professional_score": 6,
     "trust_score": 5,
     "issues": [
-      "Cannot evaluate actual trading interface functionality via static HTML",
-      "Unable to verify real-time data accuracy or price feeds",
-      "Cannot test critical user flows (wallet connection, position management)",
-      "No way to assess visual design quality or user experience",
-      "Cannot verify contract integration or transaction handling",
-      "Missing ability to evaluate performance under load or error handling"
+      "Cannot verify actual trading functionality - only HTML shell visible",
+      "No visible security audit badges or trust indicators in accessible content",
+      "Unable to assess core user experience (wallet connection, trading interface, data accuracy)",
+      "No way to verify if real market data is displayed correctly",
+      "Cannot confirm if key features like position management and leverage controls work",
+      "Missing investor-critical elements like TVL, volume, or protocol metrics in accessible content"
     ],
     "improvements": [
-      "Implement server-side rendering for better crawlability and initial content visibility",
-      "Add health check endpoints that provide application status without requiring full JS execution",
-      "Include static fallback content showing key metrics or recent activity",
-      "Add API endpoints for basic protocol stats accessible via curl for monitoring",
-      "Consider adding a simple status page showing protocol health and key metrics",
-      "Implement proper error boundaries with informative fallback content"
+      "Add security audit badges and trust indicators to meta tags or noscript content",
+      "Include key protocol metrics (TVL, active positions, volume) in server-side rendered content",
+      "Add more detailed technical specifications and risk disclosures in accessible HTML",
+      "Include links to audit reports and security documentation in meta tags",
+      "Provide fallback content showing protocol status and basic functionality when JS fails",
+      "Add regulatory compliance indicators and terms of service links in static content"
     ]
   }
 }

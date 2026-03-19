@@ -1,0 +1,24 @@
+{
+  "tasks": [
+    {
+      "id": "verify_core_trading_flow",
+      "lane": "INFRA",
+      "depends_on": [],
+      "reason": "Executing bash test script (user-flow-test.sh) and documenting results in control-plane files. Pure testing/verification workflow."
+    },
+    {
+      "id": "complete_frontend_visual_verification",
+      "lane": "INFRA",
+      "depends_on": [
+        "achieve_target_health_score"
+      ],
+      "reason": "Running puppeteer screenshot script and performing QA verification. Should capture screenshots after display issues are fixed."
+    },
+    {
+      "id": "achieve_target_health_score",
+      "lane": "FRONTEND",
+      "depends_on": [],
+      "reason": "Fixing Insurance Fund display ($5e24\u2192$10K) and visual formatting issues in React components. Root cause is frontend number formatting/display logic."
+    }
+  ]
+}
