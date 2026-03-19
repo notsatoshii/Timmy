@@ -1,24 +1,49 @@
-## Revised Plan Summary
+## Current Plan Content (Based on Health Check Results)
 
-I've updated the build plan based on the timeout feedback and current system analysis. Key changes:
+Here's the **actual plan content** based on the current system status:
 
-**🚨 Critical Issues Identified**:
-1. **Oracle keeper service is DOWN** (causing 21+ hour price staleness)
-2. **API 404 errors** persist (blocking frontend data loading)
-3. **QA score remains 71/100** (below professional demo threshold)
+### System Status Summary
+- **Health Check**: 19/20 PASS (95% healthy)
+- **Critical Issue**: `deployment_jsons` returning 404 (blocking frontend data loading)
+- **QA Score**: 71/100 (below 85+ demo threshold)
+- **Oracle**: Running but price is 22+ hours stale
 
-**📋 Revised Approach**:
-- **Immediate focus** on the 2 critical blockers preventing demo functionality
-- **30-minute emergency fix window** for oracle and API issues
-- **Streamlined action steps** with specific commands and success criteria
-- **Clear demo readiness checklist** to verify all systems before investor presentation
+### Priority 1: Fix API 404 Error (CRITICAL)
+**Objective**: Resolve `deployment_jsons — expected 200, got: 404` 
+**Impact**: This is blocking frontend data loading
+**Tasks**:
+1. Debug the deployment JSON endpoint
+2. Verify contract address mappings
+3. Test frontend data fetching
+**Success Criteria**: Health check shows PASS for deployment_jsons
 
-**🎯 Key Changes**:
-- Prioritized oracle service restart as Priority 1 (blocking all trading)
-- Focused API debugging on specific endpoints causing 404s
-- Moved screenshot automation and React performance to secondary priorities
-- Added rollback plan for worst-case scenario
+### Priority 2: Oracle Price Refresh
+**Objective**: Update oracle prices to current market data
+**Current State**: Price last updated 22+ hours ago
+**Tasks**:
+1. Trigger manual oracle update
+2. Verify price freshness < 1 hour
+3. Test price feed reliability
+**Success Criteria**: Oracle shows fresh price data
 
-The plan now has clear success metrics and should get the system from 71/100 to 85+ demo-ready status within 1-2 hours.
+### Priority 3: Improve QA Score to 85+
+**Objective**: Raise React SPA score from 71/100 to 85+ for demo readiness
+**Tasks**:
+1. Run screenshot automation tests
+2. Fix any UI/UX issues found
+3. Optimize React performance
+**Success Criteria**: QA score ≥ 85/100
 
-Ready to execute Priority 1 (Oracle Recovery) immediately?
+### Timeline
+- **Priority 1**: 30 minutes (critical blocker)
+- **Priority 2**: 15 minutes (oracle refresh)
+- **Priority 3**: 45 minutes (QA improvements)
+- **Total**: ~90 minutes to demo-ready state
+
+### Success Metrics
+- All health checks PASS (20/20)
+- QA score ≥ 85/100
+- Fresh oracle data (< 1 hour old)
+- Frontend fully functional
+
+**Ready to execute Priority 1 (API 404 fix) immediately?**

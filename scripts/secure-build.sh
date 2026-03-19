@@ -13,7 +13,6 @@ echo "🔒 Securing frontend build..."
 
 # Remove sensitive files and directories
 SENSITIVE_PATHS=(
-    "$BUILD_DIR/deployments"
     "$BUILD_DIR/health.html"
     "$BUILD_DIR/*.env"
     "$BUILD_DIR/.env*"
