@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-18T23:39:12.537Z",
+  "timestamp": "2026-03-19T00:13:59.001Z",
   "testing_method": "intelligent_fallback",
   "browser_automation_available": false,
   "scores": {
@@ -37,10 +37,10 @@
     {
       "name": "Asset Loading",
       "passed": true,
-      "score": 80,
+      "score": 40,
       "details": {
         "assets_tested": 4,
-        "successful": 4,
+        "successful": 2,
         "results": [
           {
             "asset": "/static/js/",
@@ -54,17 +54,20 @@
           },
           {
             "asset": "/deployments/core-deployment.json",
-            "status": 200,
-            "success": true
+            "status": 404,
+            "success": false
           },
           {
             "asset": "/deployments/contract-metadata.json",
-            "status": 200,
-            "success": true
+            "status": 404,
+            "success": false
           }
         ]
       },
-      "issues": []
+      "issues": [
+        "/deployments/core-deployment.json: 404",
+        "/deployments/contract-metadata.json: 404"
+      ]
     },
     {
       "name": "API Endpoint Testing",
@@ -77,7 +80,7 @@
             "endpoint": "http://localhost:3000/api/health",
             "status": 200,
             "success": true,
-            "data": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"/><link rel=\"icon\" href=\"/lever-icon.png\" "
+            "data": "{\n  \"status\": \"healthy\",\n  \"timestamp\": \"2026-03-19T00:13:59.507Z\",\n  \"service\": \"lever-frontend\",\n "
           },
           {
             "endpoint": "http://localhost:3000/api/status",
@@ -89,7 +92,7 @@
             "endpoint": "http://localhost:3000/health",
             "status": 200,
             "success": true,
-            "data": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"/><link rel=\"icon\" href=\"/lever-icon.png\" "
+            "data": "{\n  \"status\": \"healthy\",\n  \"timestamp\": \"2026-03-19T00:13:59.508Z\",\n  \"service\": \"lever-frontend\",\n "
           }
         ]
       },

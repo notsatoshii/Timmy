@@ -1,22 +1,22 @@
 {
   "tasks": [
     {
-      "id": "server_config_fixes",
+      "id": "1",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Server configuration, security headers, and health endpoints are infrastructure concerns. No dependencies as this is independent server setup."
+      "reason": "Server configuration changes (404 handling, security headers, health endpoint) require modifying infrastructure configs and systemd services. No dependencies as this is independent infrastructure work."
     },
     {
-      "id": "insurance_fund_display_bug",
+      "id": "2",
       "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Display formatting issue in React frontend showing wrong Insurance Fund value. No dependencies as this is a frontend number formatting problem, not a data source issue."
+      "reason": "Display formatting bug in React dashboard requires fixing frontend number formatting logic. Independent of other tasks as it's purely a UI display issue."
     },
     {
-      "id": "lp_apy_validation",
+      "id": "3",
       "lane": "INFRA",
       "depends_on": [],
-      "reason": "Analytics task involving investigation scripts, fee flow verification, and documentation. INFRA lane because it's analysis/verification work rather than contract or frontend code changes. No dependencies as APY analysis is independent of other tasks."
+      "reason": "Analytics validation requires investigation scripts to verify fee flows and APY calculations. Independent analysis work that doesn't modify contracts or frontend components."
     }
   ]
 }

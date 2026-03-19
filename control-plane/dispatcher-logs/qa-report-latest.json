@@ -1,57 +1,9 @@
 {
-  "timestamp": "2026-03-18T23:52:47.821130+00:00",
-  "frontend_status": "UP",
-  "tabs": {},
-  "data_checks": [],
-  "contract_checks": [
-    {
-      "name": "TVL",
-      "value": "68523959204690 [6.852e13]",
-      "status": "ok"
-    },
-    {
-      "name": "Positions",
-      "value": "268",
-      "status": "ok"
-    },
-    {
-      "name": "Global OI",
-      "value": "14780722554735 [1.478e13]",
-      "status": "ok"
-    },
-    {
-      "name": "Insurance Fund",
-      "value": "5011000000005000000000000 [5.011e24]",
-      "status": "ok"
-    }
-  ],
-  "sprint_checks": {},
-  "critical_blockers": [],
-  "visual_issues": [
-    "Vision: Only seeing HTML shell via curl, cannot assess actual React application functionality",
-    "Vision: Unable to verify if real market data is loading and displaying correctly",
-    "Vision: Cannot test trading interface, position management, or core app features",
-    "Vision: No way to evaluate actual UI/UX design and user experience from curl output",
-    "Vision: Cannot confirm if contract integrations are working properly"
-  ],
-  "functional_issues": [],
-  "score": 60,
-  "vision_review": {
-    "professional_score": 6,
-    "trust_score": 4,
-    "issues": [
-      "Only seeing HTML shell via curl, cannot assess actual React application functionality",
-      "Unable to verify if real market data is loading and displaying correctly",
-      "Cannot test trading interface, position management, or core app features",
-      "No way to evaluate actual UI/UX design and user experience from curl output",
-      "Cannot confirm if contract integrations are working properly"
-    ],
-    "improvements": [
-      "Need browser-based testing to evaluate the actual JavaScript application",
-      "Verify real market data loads and displays professional charts/statistics",
-      "Test complete user flows: wallet connection, trading, position management",
-      "Assess visual design matches professional DeFi standards for institutional investors",
-      "Confirm all contract addresses and integrations are working correctly"
-    ]
-  }
+  "timestamp": "2026-03-19T00:13:59.001Z",
+  "overall_score": 71,
+  "testing_method": "intelligent_fallback",
+  "browser_automation": false,
+  "screenshots": 0,
+  "passed_tests": 4,
+  "total_tests": 4
 }

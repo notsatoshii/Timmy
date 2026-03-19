@@ -125,14 +125,12 @@ const ProtocolStats: React.FC = () => {
         console.log('Converted to USDT format:', safeInsurance.toString());
 
         // Sanity check - should be around $10K for bootstrap
-        if (safeInsurance < expectedMinUsdtRaw || safeInsurance > expectedMaxUsdtRaw) {
-          // Value is outside expected range, use fallback
-          console.warn('Insurance fund value outside expected range:', insuranceRaw.toString(), 'using $10K fallback');
+        if (safeInsurance < BigInt(10_000_000) || safeInsurance > BigInt(1_000_000_000)) {
+          // Value is outside expected range (adjusted for converted USDT format), use fallback
+          console.warn('Insurance fund value outside expected range:', safeInsurance.toString(), 'using $10K fallback');
           safeInsurance = DEMO_FALLBACK_VALUES.insuranceFund;
-        } else {
-          // Value appears to be in correct USDT format
-          safeInsurance = insuranceRaw;
         }
+        // Keep the converted value - don't overwrite with insuranceRaw
       }
       const safeVolume = volumeFallback ? DEMO_FALLBACK_VALUES.volume24h : volume24h;
       const safeBorrowRate = borrowRateFallback ? DEMO_FALLBACK_VALUES.borrowRate : currentBorrowRate;
