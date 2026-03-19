@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useWriteContract } from 'wagmi';
 import { useWallet } from '../hooks/useWallet';
+import { useDemoWallet } from '../hooks/useDemoWallet';
 import { CONTRACT_ADDRESSES, formatUsdt, formatWad, parseUsdt, WAD, getContractAddresses } from '../config/contracts';
 import { LEVER_VAULT_ABI, USDT_ABI, FEE_ROUTER_ABI, OI_LIMITS_ABI } from '../config/abis';
 import { useRealAPY } from '../hooks/useRealAPY';
@@ -11,7 +12,8 @@ import VaultStats from './vault/VaultStats';
 import TestnetDisclaimer from './TestnetDisclaimer';
 
 const VaultOptimized: React.FC = () => {
-  const { address } = useWallet();
+  const { address, isDemoMode } = useWallet();
+  const { sendTransaction: demoSend } = useDemoWallet();
   const [depositAmount, setDepositAmount] = useState('');
   const [withdrawShares, setWithdrawShares] = useState('');
 
@@ -163,48 +165,75 @@ const VaultOptimized: React.FC = () => {
 
     try {
       const amount = parseUsdt(depositAmount);
-      await approveUsdt({
-        address: CONTRACT_ADDRESSES.usdt,
-        abi: USDT_ABI,
-        functionName: 'approve',
-        args: [CONTRACT_ADDRESSES.leverVault, amount],
-      });
+      if (isDemoMode) {
+        await demoSend({
+          address: CONTRACT_ADDRESSES.usdt,
+          abi: USDT_ABI,
+          functionName: 'approve',
+          args: [CONTRACT_ADDRESSES.leverVault, amount],
+        });
+      } else {
+        await approveUsdt({
+          address: CONTRACT_ADDRESSES.usdt,
+          abi: USDT_ABI,
+          functionName: 'approve',
+          args: [CONTRACT_ADDRESSES.leverVault, amount],
+        });
+      }
     } catch (error) {
       console.error('Approval failed:', error);
     }
-  }, [depositAmount, approveUsdt]);
+  }, [depositAmount, approveUsdt, isDemoMode, demoSend]);
 
   const handleDeposit = useCallback(async () => {
     if (!depositAmount || !address) return;
 
     try {
       const assets = parseUsdt(depositAmount);
-      await depositToVault({
-        address: CONTRACT_ADDRESSES.leverVault,
-        abi: LEVER_VAULT_ABI,
-        functionName: 'deposit',
-        args: [assets, address],
-      });
+      if (isDemoMode) {
+        await demoSend({
+          address: CONTRACT_ADDRESSES.leverVault,
+          abi: LEVER_VAULT_ABI,
+          functionName: 'deposit',
+          args: [assets, address],
+        });
+      } else {
+        await depositToVault({
+          address: CONTRACT_ADDRESSES.leverVault,
+          abi: LEVER_VAULT_ABI,
+          functionName: 'deposit',
+          args: [assets, address],
+        });
+      }
     } catch (error) {
       console.error('Deposit failed:', error);
     }
-  }, [depositAmount, address, depositToVault]);
+  }, [depositAmount, address, depositToVault, isDemoMode, demoSend]);
 
   const handleRequestWithdrawal = useCallback(async () => {
     if (!withdrawShares) return;
 
     try {
-      const shares = BigInt(Math.floor(parseFloat(withdrawShares) * 1e18));
-      await requestWithdrawal({
-        address: CONTRACT_ADDRESSES.leverVault,
-        abi: LEVER_VAULT_ABI,
-        functionName: 'requestWithdrawal',
-        args: [shares],
-      });
+      const shares = BigInt(Math.floor(parseFloat(withdrawShares) * 1e6));
+      if (isDemoMode) {
+        await demoSend({
+          address: CONTRACT_ADDRESSES.leverVault,
+          abi: LEVER_VAULT_ABI,
+          functionName: 'requestWithdrawal',
+          args: [shares],
+        });
+      } else {
+        await requestWithdrawal({
+          address: CONTRACT_ADDRESSES.leverVault,
+          abi: LEVER_VAULT_ABI,
+          functionName: 'requestWithdrawal',
+          args: [shares],
+        });
+      }
     } catch (error) {
       console.error('Withdrawal request failed:', error);
     }
-  }, [withdrawShares, requestWithdrawal]);
+  }, [withdrawShares, requestWithdrawal, isDemoMode, demoSend]);
 
   // Memoized max deposit/withdraw helpers
   const setMaxDeposit = useCallback(() => {
@@ -215,7 +244,7 @@ const VaultOptimized: React.FC = () => {
 
   const setMaxWithdraw = useCallback(() => {
     if (safeVaultData.userShares) {
-      setWithdrawShares(formatWad(safeVaultData.userShares));
+      setWithdrawShares(formatUsdt(safeVaultData.userShares));
     }
   }, [safeVaultData.userShares]);
 

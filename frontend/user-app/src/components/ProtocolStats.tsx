@@ -221,7 +221,7 @@ const ProtocolStats: React.FC = () => {
         <div className="lever-card-institutional">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 lg:gap-6">
             <StatBox label="Total TVL" value={stats?.tvl} highlight={true} isLoading={isLoading} isFallback={fallbackStatus.tvlFallback} />
-            <StatBox label="Volume 24h" value={stats?.totalVolume} isLoading={isLoading} isFallback={fallbackStatus.volumeFallback} />
+            <StatBox label="Total Volume" value={stats?.totalVolume} isLoading={isLoading} isFallback={fallbackStatus.volumeFallback} />
             <StatBox label="Total OI" value={stats?.totalOI} isLoading={isLoading} isFallback={fallbackStatus.oiFallback} />
             <StatBox label="LP APY" value={stats?.lpApy} highlight={true} isLoading={isLoading} isFallback={fallbackStatus.apyFallback} />
             <StatBox label="Utilization" value={stats?.utilizationRate} isLoading={isLoading} isFallback={fallbackStatus.oiFallback || fallbackStatus.tvlFallback} />

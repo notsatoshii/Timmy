@@ -171,7 +171,7 @@ const VaultStatsInner: React.FC<VaultStatsProps> = ({
         <p className="text-3xl font-bold font-mono text-accent">
           {formatAPY()}
         </p>
-        <p className="text-xs text-gray-600 mt-1">From trading fees</p>
+        <p className="text-xs text-gray-600 mt-1">From protocol fees</p>
       </div>
 
       <div className="bg-surface-1 rounded-lg border border-border p-6">

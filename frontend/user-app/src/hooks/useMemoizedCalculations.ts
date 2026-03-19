@@ -47,7 +47,7 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
 
     // Enhanced safety: ensure all values are valid BigInt or use safe fallbacks
     const totalAssets = (data.totalAssets && typeof data.totalAssets === 'bigint') ? data.totalAssets : BigInt(250000000000); // $250k fallback
-    const totalSupply = (data.totalSupply && typeof data.totalSupply === 'bigint') ? data.totalSupply : BigInt(250000000000000000000000); // 250k shares fallback
+    const totalSupply = (data.totalSupply && typeof data.totalSupply === 'bigint') ? data.totalSupply : BigInt(250000000000); // 250k shares fallback (6 decimals)
     const borrowFees = (data.borrowFees && typeof data.borrowFees === 'bigint') ? data.borrowFees : BigInt(0);
     const transactionFees = (data.transactionFees && typeof data.transactionFees === 'bigint') ? data.transactionFees : BigInt(0);
     const liquidationFees = (data.liquidationFees && typeof data.liquidationFees === 'bigint') ? data.liquidationFees : BigInt(0);
@@ -235,12 +235,12 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
       dailyYield = 0;
     }
 
-    // User position calculations (userShares is WAD format - 18 decimals)
-    const userSharesFloat = userShares ? parseFloat(formatWad(userShares)) : 0;
+    // User position calculations (userShares is USDT format - 6 decimals, matching vault decimals)
+    const userSharesFloat = userShares ? parseFloat(formatUsdt(userShares)) : 0;
     const userPosition = {
       shares: userSharesFloat,
       value: userSharesFloat * sharePrice,
-      percentage: totalSupply > BigInt(0) ? (userSharesFloat / parseFloat(formatWad(totalSupply))) * 100 : 0,
+      percentage: totalSupply > BigInt(0) ? (userSharesFloat / parseFloat(formatUsdt(totalSupply))) * 100 : 0,
     };
 
     // User balance calculations (usdtBalance is USDT format from USDT.balanceOf())
