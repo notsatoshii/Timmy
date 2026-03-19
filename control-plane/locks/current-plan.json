@@ -1,25 +1,27 @@
 {
   "tasks": [
     {
-      "id": "1",
+      "id": "fix-marketdetail-error-boundary",
       "lane": "FRONTEND",
-      "depends_on": [],
-      "reason": "React component crashes require frontend code changes. Independent task fixing rendering issues."
+      "depends_on": [
+        "fix-leverage-model-bug"
+      ],
+      "reason": "Frontend crashes could be caused by malformed data from LeverageModel contract returning 1.8x instead of expected 20-30x values. Fix contract data source first to eliminate potential root cause."
     },
     {
-      "id": "2",
+      "id": "fix-leverage-model-bug",
       "lane": "CONTRACT",
       "depends_on": [],
-      "reason": "LeverageModel contract bug requires Solidity fixes and potential redeployment. Independent backend logic fix."
+      "reason": "Pure contract math issue in LeverageModel.sol. No dependencies - can be fixed independently by debugging tau units and R(tau) calculations."
     },
     {
-      "id": "3",
+      "id": "rewrite-frontend-sanity-check",
       "lane": "INFRA",
       "depends_on": [
-        "1",
-        "2"
+        "fix-marketdetail-error-boundary",
+        "fix-leverage-model-bug"
       ],
-      "reason": "Rewriting bash test script that validates frontend tabs. Depends on both frontend crash fix and contract data fix since it tests the complete system end-to-end."
+      "reason": "Testing script that validates all 4 tabs render without error boundaries. Must run after both frontend crashes and contract data bugs are resolved to provide meaningful validation."
     }
   ]
 }
