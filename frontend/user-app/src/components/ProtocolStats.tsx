@@ -228,45 +228,6 @@ const ProtocolStats: React.FC = () => {
             <StatBox label="Insurance Fund" value={stats?.insuranceFund} isLoading={isLoading} isFallback={fallbackStatus.insuranceFallback} />
           </div>
 
-          {/* Professional Status Row with Live/Demo Data Indicators */}
-          <div className="flex justify-center items-center space-x-6 mt-6 pt-6 border-t border-border/30">
-            <LiveDataIndicator
-              label="TVL"
-              value={fallbackStatus.tvlFallback ? "DEMO" : "LIVE"}
-              status={fallbackStatus.tvlFallback ? "stale" : "live"}
-              compact={true}
-            />
-            <LiveDataIndicator
-              label="PRICES"
-              value="LIVE FEED"
-              status="live"
-              compact={true}
-            />
-            <LiveDataIndicator
-              label="ORACLE"
-              value="POLYMARKET"
-              status="live"
-              compact={true}
-            />
-            <LiveDataIndicator
-              label="VOLUME"
-              value={fallbackStatus.volumeFallback ? "DEMO" : "LIVE"}
-              status={fallbackStatus.volumeFallback ? "stale" : "live"}
-              compact={true}
-            />
-            <LiveDataIndicator
-              label="NETWORK"
-              value="BASE SEPOLIA"
-              status="live"
-              compact={true}
-            />
-            <LiveDataIndicator
-              label="AUDIT"
-              value="60% COMPLETE"
-              status="loading"
-              compact={true}
-            />
-          </div>
         </div>
 
       </div>

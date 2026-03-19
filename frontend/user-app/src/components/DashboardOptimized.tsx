@@ -226,11 +226,6 @@ const DashboardOptimized: React.FC = () => {
         <Header />
       </ErrorBoundary>
 
-      {/* Institutional Status Header */}
-      <ErrorBoundary panelName="InstitutionalHeader">
-        <InstitutionalHeader />
-      </ErrorBoundary>
-
       {/* Protocol Stats Banner - Always visible, minimal performance impact */}
       <ErrorBoundary panelName="ProtocolStats">
         <ProtocolStats />
