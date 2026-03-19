@@ -1,4 +1,6 @@
-Based on the current QA report (score: 52) and the locked sprint priorities in `build-plan.md`, here are the 3 prioritized tasks for the investor demo:
+## REVISED PLAN - Official Sprint Priorities
+
+Based on the official requirements in `control-plane/build-plan.md`, here are the exact 3 priorities I must work on:
 
 ### 1. Fix Server Configuration Issues [HIGH PRIORITY] [INFRASTRUCTURE]
 - [ ] Configure proper 404 responses for missing resources while maintaining SPA routing
@@ -18,4 +20,10 @@ Based on the current QA report (score: 52) and the locked sprint priorities in `
 - [ ] Document relationship between $14.66M Global OI and LP yield generation
 - [ ] Analyze: $68.5K TVL vs $14.7K Global OI ratio for LP returns
 
-**Sprint Status:** Working ONLY on these 3 priorities. Do NOT redeploy contracts. Do NOT change addresses. All tasks must pass verification before transitioning to Phase 2 auto-improve mode.
+**Sprint Constraints:**
+- Work ONLY on these 3 priorities
+- Do NOT redeploy contracts or change addresses  
+- All 3 tasks must pass verification before Phase 2
+- Focus on investor demo readiness
+
+This revised plan now aligns exactly with the official sprint requirements defined in the build plan.
