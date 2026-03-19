@@ -1,9 +1,60 @@
 {
-  "timestamp": "2026-03-19T00:13:59.001Z",
-  "overall_score": 71,
-  "testing_method": "intelligent_fallback",
-  "browser_automation": false,
-  "screenshots": 0,
-  "passed_tests": 4,
-  "total_tests": 4
+  "timestamp": "2026-03-19T00:16:10.217295+00:00",
+  "frontend_status": "UP",
+  "tabs": {},
+  "data_checks": [],
+  "contract_checks": [
+    {
+      "name": "TVL",
+      "value": "68523959204690 [6.852e13]",
+      "status": "ok"
+    },
+    {
+      "name": "Positions",
+      "value": "269",
+      "status": "ok"
+    },
+    {
+      "name": "Global OI",
+      "value": "14905722554735 [1.49e13]",
+      "status": "ok"
+    },
+    {
+      "name": "Insurance Fund",
+      "value": "5011000000005000000000000 [5.011e24]",
+      "status": "ok"
+    }
+  ],
+  "sprint_checks": {},
+  "critical_blockers": [],
+  "visual_issues": [
+    "Vision: Cannot evaluate actual application functionality from static HTML only",
+    "Vision: No visible security audit information or regulatory compliance mentions",
+    "Vision: Heavy JavaScript dependency reduces accessibility",
+    "Vision: Documentation and support links not verified as functional",
+    "Vision: No visible TVL, trading volume, or traction metrics",
+    "Vision: Missing risk disclaimers or regulatory warnings for leveraged trading"
+  ],
+  "functional_issues": [],
+  "score": 52,
+  "vision_review": {
+    "professional_score": 7,
+    "trust_score": 6,
+    "issues": [
+      "Cannot evaluate actual application functionality from static HTML only",
+      "No visible security audit information or regulatory compliance mentions",
+      "Heavy JavaScript dependency reduces accessibility",
+      "Documentation and support links not verified as functional",
+      "No visible TVL, trading volume, or traction metrics",
+      "Missing risk disclaimers or regulatory warnings for leveraged trading"
+    ],
+    "improvements": [
+      "Add security audit badges or compliance information in meta tags",
+      "Include basic market statistics or traction indicators in static content",
+      "Add progressive enhancement for basic functionality without JavaScript",
+      "Include regulatory disclaimers for leveraged derivatives trading",
+      "Add testnet/mainnet indicators to avoid user confusion",
+      "Include links to team, investors, or governance information"
+    ]
+  }
 }

@@ -72,7 +72,7 @@ class ErrorBoundary extends Component<Props, State> {
             <div className="text-center space-y-3">
               <div className="space-y-1">
                 <h3 className="text-xl font-semibold text-ivory font-display">
-                  System Component Error
+                  Panel Error
                 </h3>
                 <div className="text-sm font-mono text-danger bg-danger/10 px-3 py-1 rounded-full border border-danger/20">
                   {this.props.panelName} Module

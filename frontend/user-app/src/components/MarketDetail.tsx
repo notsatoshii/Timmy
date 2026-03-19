@@ -75,7 +75,17 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
   const currentPrice = currentMarketData ? currentMarketData.probability : market.price;
 
   // Convert market ID to bytes32 format for contract calls (already in correct format)
-  const marketBytes32 = market.id as `0x${string}`;
+  const marketBytes32 = React.useMemo(() => {
+    try {
+      if (!market?.id || typeof market.id !== 'string') {
+        throw new Error('Invalid market ID');
+      }
+      return market.id as `0x${string}`;
+    } catch (error) {
+      console.error('Error converting market ID to bytes32:', error);
+      return '0x0000000000000000000000000000000000000000000000000000000000000000' as `0x${string}`;
+    }
+  }, [market?.id]);
 
   // Get OI data with error handling
   const { data: longOI = 0, error: longOIError, isLoading: longOILoading } = useReadContract({
@@ -84,7 +94,7 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
     functionName: 'getSideOI',
     args: [marketBytes32, true], // true for long
     query: {
-      enabled: !!market.id && !!CONTRACT_ADDRESSES.oiLimits,
+      enabled: !!market?.id && !!CONTRACT_ADDRESSES.oiLimits && marketBytes32 !== '0x0000000000000000000000000000000000000000000000000000000000000000',
     },
   });
 
@@ -94,7 +104,7 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
     functionName: 'getSideOI',
     args: [marketBytes32, false], // false for short
     query: {
-      enabled: !!market.id && !!CONTRACT_ADDRESSES.oiLimits,
+      enabled: !!market?.id && !!CONTRACT_ADDRESSES.oiLimits && marketBytes32 !== '0x0000000000000000000000000000000000000000000000000000000000000000',
     },
   });
 
@@ -105,7 +115,7 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
     functionName: 'getCurrentBorrowRate',
     args: [marketBytes32, true], // true for long side
     query: {
-      enabled: !!market.id && !!CONTRACT_ADDRESSES.borrowFeeEngine,
+      enabled: !!market?.id && !!CONTRACT_ADDRESSES.borrowFeeEngine && marketBytes32 !== '0x0000000000000000000000000000000000000000000000000000000000000000',
     },
   });
 
@@ -115,45 +125,46 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
     functionName: 'getCurrentFundingRate',
     args: [marketBytes32],
     query: {
-      enabled: !!market.id && !!CONTRACT_ADDRESSES.fundingRateEngine,
+      enabled: !!market?.id && !!CONTRACT_ADDRESSES.fundingRateEngine && marketBytes32 !== '0x0000000000000000000000000000000000000000000000000000000000000000',
     },
   });
 
   // Generate demo candlestick data for chart
   useEffect(() => {
     const generateCandlestickData = (): CandlestickData[] => {
-      const data: CandlestickData[] = [];
-      const now = Date.now();
+      try {
+        const data: CandlestickData[] = [];
+        const now = Date.now();
 
-      // Timeframe intervals in milliseconds
-      const intervals: Record<TimeFrame, number> = {
-        '1m': 60 * 1000,
-        '5m': 5 * 60 * 1000,
-        '15m': 15 * 60 * 1000,
-        '1h': 60 * 60 * 1000,
-        '4h': 4 * 60 * 60 * 1000,
-        '1D': 24 * 60 * 60 * 1000,
-      };
+        // Timeframe intervals in milliseconds
+        const intervals: Record<TimeFrame, number> = {
+          '1m': 60 * 1000,
+          '5m': 5 * 60 * 1000,
+          '15m': 15 * 60 * 1000,
+          '1h': 60 * 60 * 1000,
+          '4h': 4 * 60 * 60 * 1000,
+          '1D': 24 * 60 * 60 * 1000,
+        };
 
-      // Number of candles to generate
-      const candleCount: Record<TimeFrame, number> = {
-        '1m': 60, // Last hour
-        '5m': 72, // Last 6 hours
-        '15m': 96, // Last 24 hours
-        '1h': 168, // Last week
-        '4h': 168, // Last 4 weeks
-        '1D': 30, // Last month
-      };
+        // Number of candles to generate
+        const candleCount: Record<TimeFrame, number> = {
+          '1m': 60, // Last hour
+          '5m': 72, // Last 6 hours
+          '15m': 96, // Last 24 hours
+          '1h': 168, // Last week
+          '4h': 168, // Last 4 weeks
+          '1D': 30, // Last month
+        };
 
-      const interval = intervals[selectedTimeframe];
-      const count = candleCount[selectedTimeframe];
-      const volatility = 0.015; // 1.5% volatility per candle
+        const interval = intervals[selectedTimeframe];
+        const count = candleCount[selectedTimeframe];
+        const volatility = 0.015; // 1.5% volatility per candle
 
-      // Ensure currentPrice is valid, fallback to market.price or 0.5
-      let price = currentPrice;
-      if (typeof price !== 'number' || isNaN(price) || price <= 0) {
-        price = typeof market.price === 'number' && !isNaN(market.price) ? market.price : 0.5;
-      }
+        // Ensure currentPrice is valid, fallback to market.price or 0.5
+        let price = currentPrice;
+        if (typeof price !== 'number' || isNaN(price) || price <= 0) {
+          price = typeof market?.price === 'number' && !isNaN(market.price) ? market.price : 0.5;
+        }
 
       for (let i = count; i >= 0; i--) {
         const timestamp = now - (i * interval);
@@ -191,21 +202,26 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
       }
 
       return data;
+      } catch (error) {
+        console.error('Error generating candlestick data:', error);
+        return [];
+      }
     };
 
     setCandlestickData(generateCandlestickData());
-  }, [market.id, market.price, currentPrice, selectedTimeframe]);
+  }, [market?.id, market?.price, currentPrice, selectedTimeframe]);
 
   // Generate demo recent positions
   useEffect(() => {
     const generateRecentPositions = (): PositionData[] => {
-      const positions = [];
-      const now = Date.now();
+      try {
+        const positions = [];
+        const now = Date.now();
 
-      // Ensure currentPrice is valid
-      const validCurrentPrice = typeof currentPrice === 'number' && !isNaN(currentPrice) && currentPrice > 0
-        ? currentPrice
-        : (typeof market.price === 'number' && !isNaN(market.price) ? market.price : 0.5);
+        // Ensure currentPrice is valid
+        const validCurrentPrice = typeof currentPrice === 'number' && !isNaN(currentPrice) && currentPrice > 0
+          ? currentPrice
+          : (typeof market?.price === 'number' && !isNaN(market.price) ? market.price : 0.5);
 
       for (let i = 0; i < 8; i++) {
         const direction: 'long' | 'short' = Math.random() > 0.5 ? 'long' : 'short';
@@ -236,10 +252,14 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
       }
 
       return positions;
+      } catch (error) {
+        console.error('Error generating recent positions:', error);
+        return [];
+      }
     };
 
     setRecentPositions(generateRecentPositions());
-  }, [market.id, market.price, currentPrice]);
+  }, [market?.id, market?.price, currentPrice]);
 
   const formatTimeToResolution = (timestamp: number): string => {
     const now = new Date().getTime();
@@ -320,56 +340,77 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
 
   // Custom candlestick renderer
   const CandlestickBar = (props: any) => {
-    const { payload, x, y, width, height } = props;
-    if (!payload) return null;
+    try {
+      const { payload, x, y, width, height } = props;
+      if (!payload || !payload.open || !payload.high || !payload.low || !payload.close) {
+        return null;
+      }
 
-    const { open, high, low, close } = payload;
-    const isGreen = close >= open;
-    const color = isGreen ? '#00E8B4' : '#FF4868'; // accent vs danger colors
+      const { open, high, low, close } = payload;
 
-    // Calculate candle body
-    const bodyTop = Math.min(open, close) * height;
-    const bodyHeight = Math.abs(close - open) * height;
+      // Validate numeric values
+      if ([open, high, low, close, x, y, width, height].some(val => typeof val !== 'number' || isNaN(val) || !isFinite(val))) {
+        return null;
+      }
 
-    // Calculate wick positions
-    const highY = high * height;
-    const lowY = low * height;
-    const wickX = x + width / 2;
+      const isGreen = close >= open;
+      const color = isGreen ? '#00E8B4' : '#FF4868'; // accent vs danger colors
 
-    return (
-      <g>
-        {/* High-Low Wick */}
-        <line
-          x1={wickX}
-          y1={y + height - highY}
-          x2={wickX}
-          y2={y + height - lowY}
-          stroke={color}
-          strokeWidth={1}
-        />
-        {/* Candle Body */}
-        <rect
-          x={x + width * 0.2}
-          y={y + height - bodyTop - bodyHeight}
-          width={width * 0.6}
-          height={Math.max(bodyHeight, 1)}
-          fill={isGreen ? color : 'transparent'}
-          stroke={color}
-          strokeWidth={isGreen ? 0 : 1}
-        />
-      </g>
-    );
+      // Calculate candle body
+      const bodyTop = Math.min(open, close) * height;
+      const bodyHeight = Math.abs(close - open) * height;
+
+      // Calculate wick positions
+      const highY = high * height;
+      const lowY = low * height;
+      const wickX = x + width / 2;
+
+      return (
+        <g>
+          {/* High-Low Wick */}
+          <line
+            x1={wickX}
+            y1={y + height - highY}
+            x2={wickX}
+            y2={y + height - lowY}
+            stroke={color}
+            strokeWidth={1}
+          />
+          {/* Candle Body */}
+          <rect
+            x={x + width * 0.2}
+            y={y + height - bodyTop - bodyHeight}
+            width={width * 0.6}
+            height={Math.max(bodyHeight, 1)}
+            fill={isGreen ? color : 'transparent'}
+            stroke={color}
+            strokeWidth={isGreen ? 0 : 1}
+          />
+        </g>
+      );
+    } catch (error) {
+      console.warn('Error rendering candlestick bar:', error);
+      return null;
+    }
   };
 
   // Custom tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
+    try {
+      if (!active || !payload || !payload.length) {
+        return null;
+      }
+
+      const data = payload[0]?.payload;
+      if (!data || typeof data.open !== 'number' || typeof data.close !== 'number') {
+        return null;
+      }
+
       const isGreen = data.close >= data.open;
 
       return (
         <div className="bg-surface-1 border border-border rounded-lg p-3 shadow-lg">
-          <p className="text-gray-400 text-xs mb-2">{data.timestamp}</p>
+          <p className="text-gray-400 text-xs mb-2">{data.timestamp || 'Unknown'}</p>
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div>
               <span className="text-gray-500">O: </span>
@@ -392,8 +433,10 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
           </div>
         </div>
       );
+    } catch (error) {
+      console.warn('Error rendering chart tooltip:', error);
+      return null;
     }
-    return null;
   };
 
   // Safe BigInt to Number conversion for OI values (USDT format - 6 decimals, divide by 1e6)
@@ -439,34 +482,21 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
   const longPercentage = totalOI > 0 ? (longOINum / totalOI) * 100 : 50;
   const shortPercentage = totalOI > 0 ? (shortOINum / totalOI) * 100 : 50;
 
-  // Validate market data after all hooks are called
-  if (!market) {
-    return (
-      <div className="bg-surface-1 border border-danger/30 rounded-lg p-8 text-center">
-        <div className="text-danger mb-4">
-          <h3 className="text-lg font-semibold">Invalid Market Data</h3>
-          <p className="text-sm text-gray-400">Market data is missing or invalid.</p>
-        </div>
-        <button
-          onClick={onBack}
-          className="px-4 py-2 bg-accent text-surface-0 rounded-md hover:bg-accent-dim transition-colors"
-        >
-          Back to Markets
-        </button>
-      </div>
-    );
-  }
-
-  if (!market.id || typeof market.price !== 'number' || isNaN(market.price)) {
+  // Validation after all hooks are called (React Hooks rules compliance)
+  if (!market || !market.id || typeof market.price !== 'number' || isNaN(market.price)) {
     console.error('Invalid market data:', market);
     return (
       <div className="bg-surface-1 border border-danger/30 rounded-lg p-8 text-center">
         <div className="text-danger mb-4">
           <h3 className="text-lg font-semibold">Invalid Market Data</h3>
-          <p className="text-sm text-gray-400">Market ID or price data is invalid.</p>
-          <p className="text-xs text-gray-500 mt-2 font-mono">
-            ID: {market?.id || 'missing'}, Price: {typeof market?.price === 'number' ? market.price : 'invalid'}
+          <p className="text-sm text-gray-400">
+            {!market ? 'Market data is missing.' : 'Market ID or price data is invalid.'}
           </p>
+          {market && (
+            <p className="text-xs text-gray-500 mt-2 font-mono">
+              ID: {market?.id || 'missing'}, Price: {typeof market?.price === 'number' ? market.price : 'invalid'}
+            </p>
+          )}
         </div>
         <button
           onClick={onBack}
@@ -599,45 +629,51 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
           </div>
 
           <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart
-                data={candlestickData}
-                margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="#374151"
-                  opacity={0.3}
-                />
-                <XAxis
-                  dataKey="timestamp"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 10, fill: '#9CA3AF' }}
-                  interval="preserveStartEnd"
-                />
-                <YAxis
-                  domain={['dataMin - 0.01', 'dataMax + 0.01']}
-                  tickFormatter={(value) => `${(value * 100).toFixed(0)}¢`}
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 10, fill: '#9CA3AF' }}
-                  width={40}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar
-                  dataKey={(entry: CandlestickData) => [entry.low, entry.high]}
-                  shape={<CandlestickBar />}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="close"
-                  stroke="transparent"
-                  dot={false}
-                  strokeWidth={0}
-                />
-              </ComposedChart>
-            </ResponsiveContainer>
+            {candlestickData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart
+                  data={candlestickData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="#374151"
+                    opacity={0.3}
+                  />
+                  <XAxis
+                    dataKey="timestamp"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10, fill: '#9CA3AF' }}
+                    interval="preserveStartEnd"
+                  />
+                  <YAxis
+                    domain={['dataMin - 0.01', 'dataMax + 0.01']}
+                    tickFormatter={(value) => `${(value * 100).toFixed(0)}¢`}
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10, fill: '#9CA3AF' }}
+                    width={40}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar
+                    dataKey={(entry: CandlestickData) => [entry.low, entry.high]}
+                    shape={<CandlestickBar />}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="close"
+                    stroke="transparent"
+                    dot={false}
+                    strokeWidth={0}
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-gray-500">Loading chart data...</div>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-between items-center text-xs text-gray-500 mt-2">

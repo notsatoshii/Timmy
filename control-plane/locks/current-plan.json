@@ -2,21 +2,24 @@
   "tasks": [
     {
       "id": "1",
-      "lane": "INFRA",
+      "lane": "FRONTEND",
       "depends_on": [],
-      "reason": "Server configuration changes (404 handling, security headers, health endpoint) require modifying infrastructure configs and systemd services. No dependencies as this is independent infrastructure work."
+      "reason": "React component crashes require frontend code changes. Independent task fixing rendering issues."
     },
     {
       "id": "2",
-      "lane": "FRONTEND",
+      "lane": "CONTRACT",
       "depends_on": [],
-      "reason": "Display formatting bug in React dashboard requires fixing frontend number formatting logic. Independent of other tasks as it's purely a UI display issue."
+      "reason": "LeverageModel contract bug requires Solidity fixes and potential redeployment. Independent backend logic fix."
     },
     {
       "id": "3",
       "lane": "INFRA",
-      "depends_on": [],
-      "reason": "Analytics validation requires investigation scripts to verify fee flows and APY calculations. Independent analysis work that doesn't modify contracts or frontend components."
+      "depends_on": [
+        "1",
+        "2"
+      ],
+      "reason": "Rewriting bash test script that validates frontend tabs. Depends on both frontend crash fix and contract data fix since it tests the complete system end-to-end."
     }
   ]
 }
