@@ -99,7 +99,7 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
         args,
         account,
         chain: baseSepolia,
-        gas: 800000n,
+        gas: 2000000n,
       });
       console.log('Demo transaction sent:', hash);
       return hash;

@@ -149,7 +149,7 @@ const FALLBACK_ADDRESSES: ContractAddresses = {
   positionManager: "0x25ba54a7b2fBac753B601Da05e3661F2E959510b" as `0x${string}`,
 
   // Pool contracts
-  leverVault: "0x84a1Eb3b1eFD60b193b271DCfaB2711cE1c41921" as `0x${string}`,
+  leverVault: "0x1b623D8671c417fe5151cCDb38ec7cAB64332836" as `0x${string}`,
   rewardsDistributor: "0xab8DFA8cF72b054c356961026F8648dB7D860Cb0" as `0x${string}`,
   insuranceFund: "0x39Aca7F8CbB4b054C2f6aaD637a61942898B1Ae8" as `0x${string}`,
   feeRouter: "0x1d6e55260C6Dd2A20A5bb7Cb6331E6Ba2faB5b6F" as `0x${string}`,
@@ -160,9 +160,9 @@ const FALLBACK_ADDRESSES: ContractAddresses = {
   borrowFeeEngine: "0x706578de003912C71e534949d8b8DDd5108950e1" as `0x${string}`,
   fundingRateEngine: "0x1C538eFA480C85D032c0ad45Dd87f9876c16Cbbe" as `0x${string}`,
   marginEngine: "0xd4e840487bFE3Ca7448BcdB41a7972DfA29B6fce" as `0x${string}`,
-  executionEngine: "0xc749C6aAe8a5ACBDD924DF7f833Dd3115307a60D" as `0x${string}`,
-  liquidationEngine: "0x2A42Ef441CAbF34D3Ff9B9867CAf4Ae087FEC42E" as `0x${string}`,
-  settlementEngine: "0x9c7E9496A25Bf06f163A4483e5702ac350e8e9aD" as `0x${string}`
+  executionEngine: "0xafEA713Dc2d6ebec15B21aB92bd15bC733D5B786" as `0x${string}`,
+  liquidationEngine: "0x0374edd7DCd819548C9dBf53c36f15880FaD69eD" as `0x${string}`,
+  settlementEngine: "0xdfB429809e0862e01Dcc73A6621b8729325F5691" as `0x${string}`
 };
 
 /**

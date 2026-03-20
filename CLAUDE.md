@@ -295,10 +295,12 @@ Primary references: lever-concept.png (trading), space-portfolio.png (positions)
 
 ## PROTECTED CONTRACTS — DO NOT REDEPLOY
 These contracts are correctly deployed and configured. Do NOT redeploy, replace, or change their addresses:
-- ExecutionEngine: 0xc749C6aAe8a5ACBDD924DF7f833Dd3115307a60D
+- ExecutionEngine: 0xafEA713Dc2d6ebec15B21aB92bd15bC733D5B786
 - LeverageModel: 0x474E2eE2911544a385eb017369e8516Ad6DcCAbd
-- LeverVault: 0x84a1Eb3b1eFD60b193b271DCfaB2711cE1c41921
+- LeverVault: 0x1b623D8671c417fe5151cCDb38ec7cAB64332836
 - PositionManager: 0x25ba54a7b2fBac753B601Da05e3661F2E959510b
+- SettlementEngine: 0xdfB429809e0862e01Dcc73A6621b8729325F5691
+- LiquidationEngine: 0x0374edd7DCd819548C9dBf53c36f15880FaD69eD
 If you think a contract needs redeployment, STOP and log the issue instead of deploying.
 
 ## ========================================

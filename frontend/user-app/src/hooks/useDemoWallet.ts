@@ -38,7 +38,7 @@ export const useDemoWallet = () => {
       args: params.args,
       account,
       chain: baseSepolia,
-      gas: 800000n,
+      gas: 2000000n,
       nonce,
     });
 
