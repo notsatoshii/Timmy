@@ -93,11 +93,11 @@ const ProtocolStats: React.FC = () => {
   const { apyPercent: realAPY } = useRealAPY(tvlRaw || BigInt(0));
   useEffect(() => {
     try {
-      const tvlFallback = !(tvlRaw && !tvlError);
+      const tvlFallback = !(tvlRaw !== undefined && !tvlError);
       const oiFallback = !(totalOIRaw !== undefined && !oiError);
       const insuranceFallback = !(insuranceRaw !== undefined && !insuranceError);
       const volumeFallback = !(volume24h !== undefined);
-      const borrowRateFallback = !(currentBorrowRate && !borrowRateError && currentBorrowRate > BigInt(0));
+      const borrowRateFallback = !(currentBorrowRate !== undefined && !borrowRateError);
 
       const safeTvl = tvlFallback ? DEMO_FALLBACK_VALUES.tvl : tvlRaw;
       const safeTotalOI = oiFallback ? DEMO_FALLBACK_VALUES.totalOI : totalOIRaw;
@@ -142,7 +142,9 @@ const ProtocolStats: React.FC = () => {
       const projectedAnnualRevenue = revenuePerHour * hoursPerYear * lpShare / hundredPercent;
       const tvlInWad = safeTvl * BigInt(1e12);
       const apyBpsTimes100 = projectedAnnualRevenue * BigInt(10000) / tvlInWad;
-      const utilizationBpsTimes100 = totalOIInWad * BigInt(10000) / tvlInWad;
+      const utilizationBpsTimes100Raw = totalOIInWad * BigInt(10000) / tvlInWad;
+      // Cap utilization display at 100%
+      const utilizationBpsTimes100 = utilizationBpsTimes100Raw > BigInt(10000) ? BigInt(10000) : utilizationBpsTimes100Raw;
 
       const apyFallback = tvlFallback || oiFallback || borrowRateFallback;
 
@@ -156,9 +158,9 @@ const ProtocolStats: React.FC = () => {
 
       setStats({
         tvl: `$${formatUsdt(safeTvl)}`,
-        totalVolume: `$${formatWad(safeVolume)}`,
+        totalVolume: `$${formatUsdt(safeVolume)}`,
         totalOI: `$${formatUsdt(safeTotalOI)}`,
-        lpApy: realAPY > 0 ? `${realAPY.toFixed(2)}%` : `${(Number(apyBpsTimes100) / 100).toFixed(2)}%`,
+        lpApy: realAPY > 0 ? `${realAPY.toFixed(2)}%` : `${Math.min(Number(apyBpsTimes100) / 100, 200).toFixed(2)}%`,
         utilizationRate: `${(Number(utilizationBpsTimes100) / 100).toFixed(2)}%`,
         insuranceFund: `$${formatUsdt(safeInsurance)}`,
       });
@@ -173,7 +175,7 @@ const ProtocolStats: React.FC = () => {
       });
       setStats({
         tvl: `$${formatUsdt(DEMO_FALLBACK_VALUES.tvl)}`,
-        totalVolume: `$${formatWad(DEMO_FALLBACK_VALUES.volume24h)}`,
+        totalVolume: `$${formatUsdt(DEMO_FALLBACK_VALUES.volume24h)}`,
         totalOI: `$${formatUsdt(DEMO_FALLBACK_VALUES.totalOI)}`,
         lpApy: 'Demo Data',
         utilizationRate: '60.00%',

@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { useWriteContract } from 'wagmi';
+import { useWriteContract, useReadContract } from 'wagmi';
 import { useWallet } from '../hooks/useWallet';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useDemoWallet } from '../hooks/useDemoWallet';
@@ -22,6 +22,17 @@ const VaultOptimized: React.FC = () => {
   const { writeContract: depositToVault } = useWriteContract();
   const { writeContract: approveUsdt } = useWriteContract();
   const { writeContract: requestWithdrawal } = useWriteContract();
+  const { writeContract: claimRewards } = useWriteContract();
+  const { writeContract: compoundRewards } = useWriteContract();
+
+  // Read pending yield for the connected user
+  const { data: pendingYieldRaw } = useReadContract({
+    address: CONTRACT_ADDRESSES.leverVault,
+    abi: LEVER_VAULT_ABI,
+    functionName: 'pendingYield',
+    args: address ? [address] : undefined,
+    query: { enabled: !!address, refetchInterval: 15000 },
+  });
 
   // Vault multicall hook with fallback values for failed RPC calls
   const vaultData = useVaultMulticall(address);
@@ -59,7 +70,7 @@ const VaultOptimized: React.FC = () => {
       isLoading: safeVaultData?.isLoadingVaultData,
       hasError: safeVaultData?.hasError,
       errors: safeVaultData?.errors?.map(e => e.message),
-      contractAddress: "0x84a1Eb3b1eFD60b193b271DCfaB2711cE1c41921",
+      contractAddress: "0x1b623D8671c417fe5151cCDb38ec7cAB64332836",
       usingFallbacks: safeVaultData?.totalAssets?.toString() === "250000000000"
     });
   }
@@ -241,6 +252,54 @@ const VaultOptimized: React.FC = () => {
       showErrorToast('Withdrawal Failed', error?.shortMessage || error?.message || 'Unknown error');
     }
   }, [withdrawShares, requestWithdrawal, isDemoMode, demoSend]);
+
+  const handleClaimRewards = useCallback(async () => {
+    try {
+      if (isDemoMode) {
+        await demoSend({
+          address: CONTRACT_ADDRESSES.leverVault,
+          abi: LEVER_VAULT_ABI,
+          functionName: 'claim',
+          args: [],
+        });
+        showSuccessToast('Rewards Claimed', 'Your pending yield has been claimed.');
+      } else {
+        await claimRewards({
+          address: CONTRACT_ADDRESSES.leverVault,
+          abi: LEVER_VAULT_ABI,
+          functionName: 'claim',
+          args: [],
+        });
+      }
+    } catch (error: any) {
+      console.error('Claim failed:', error);
+      showErrorToast('Claim Failed', error?.shortMessage || error?.message || 'Unknown error');
+    }
+  }, [claimRewards, isDemoMode, demoSend]);
+
+  const handleCompound = useCallback(async () => {
+    try {
+      if (isDemoMode) {
+        await demoSend({
+          address: CONTRACT_ADDRESSES.leverVault,
+          abi: LEVER_VAULT_ABI,
+          functionName: 'compound',
+          args: [],
+        });
+        showSuccessToast('Rewards Compounded', 'Your yield has been reinvested into vault shares.');
+      } else {
+        await compoundRewards({
+          address: CONTRACT_ADDRESSES.leverVault,
+          abi: LEVER_VAULT_ABI,
+          functionName: 'compound',
+          args: [],
+        });
+      }
+    } catch (error: any) {
+      console.error('Compound failed:', error);
+      showErrorToast('Compound Failed', error?.shortMessage || error?.message || 'Unknown error');
+    }
+  }, [compoundRewards, isDemoMode, demoSend]);
 
   // Memoized max deposit/withdraw helpers
   const setMaxDeposit = useCallback(() => {
@@ -451,6 +510,37 @@ const VaultOptimized: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Rewards */}
+      {address && (
+        <div className="bg-surface-1 rounded-lg border border-border p-6">
+          <h3 className="text-lg font-semibold text-gray-100 mb-4">Rewards</h3>
+          <div className="space-y-4">
+            <div>
+              <p className="text-xs text-gray-500 uppercase tracking-wide">Pending Yield</p>
+              <p className="text-xl font-bold font-mono text-accent">
+                ${pendingYieldRaw ? formatUsdt(pendingYieldRaw as bigint) : '0.00'} USDT
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                onClick={handleClaimRewards}
+                disabled={!pendingYieldRaw || (pendingYieldRaw as bigint) === BigInt(0)}
+                className="w-full bg-accent text-surface-0 py-2.5 px-4 rounded-md font-semibold hover:bg-accent-dim disabled:opacity-30 transition-colors"
+              >
+                Claim Rewards
+              </button>
+              <button
+                onClick={handleCompound}
+                disabled={!pendingYieldRaw || (pendingYieldRaw as bigint) === BigInt(0)}
+                className="w-full bg-purple text-white py-2.5 px-4 rounded-md font-semibold hover:bg-purple-dim disabled:opacity-30 transition-colors"
+              >
+                Compound
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Error/Info Display */}
       {safeVaultData.hasError && (

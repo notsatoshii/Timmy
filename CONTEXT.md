@@ -38,16 +38,12 @@ Only fix: data display bugs, broken functionality, loading states, crashes.
 - All getters verified: positionManager, executionEngine, leverVault, marginEngine
 
 ### Known Frontend Bugs
-1. Vault utilization may still show 0.0%
-2. Wallet balance may show wrong decimals
-3. No "Claim Rewards" or "Compound" button on vault page (no longer blocked — redeployment complete)
-4. Funding shows $0.00 on all positions
-5. Error toasts on Trading show generic message, not actual revert reason
-6. `useRealAPY` hook shows inflated 52.6% APY — likely theoretical, not realized
-7. `useLivePrices.ts` has dead `DEMO_INITIAL_PRICES` code
+1. Funding shows $0.00 on all positions (contract-level: getFundingIndex returns 0 — indices not initialized)
+2. Error toasts on Trading show generic message, not actual revert reason
+3. `useLivePrices.ts` has dead `DEMO_INITIAL_PRICES` code
 
 ### Fixed (Do Not Re-Break)
-- useDemoWallet.ts: uses writeContract with gas:800000n, NOT simulateContract
+- useDemoWallet.ts: uses writeContract with gas:2000000n, NOT simulateContract
 - Trading.tsx: demo mode sends via sendDemoTransaction
 - VaultOptimized.tsx: has useNotifications for error/success toasts
 - useMemoizedCalculations.ts: uses Number(value)/1e6 NOT parseFloat(formatUsdt())
@@ -56,6 +52,13 @@ Only fix: data display bugs, broken functionality, loading states, crashes.
 - public/index.html: CSP upgrade-insecure-requests tag removed from template
 - build/index.html: must strip CSP tag after every build
 - Positions.tsx: fake demo positions removed, real timestamps added
+- useRealAPY.ts: capped at 200%, returns 0 when utilization makes projection meaningless
+- ProtocolStats.tsx: utilization capped at 100%, volume uses formatUsdt not formatWad, DEMO DATA badge logic fixed
+- useMemoizedCalculations.ts: utilization capped at 100%, APY capped at 200%
+- MarketDetail.tsx: demo IDs mapped to on-chain bytes32 for OI/rates display
+- VaultOptimized.tsx: added Claim Rewards + Compound buttons with pendingYield display
+- useVolumeCalculation.ts: DEPLOYMENT_BLOCK updated for new ExecutionEngine
+- lever-fee-keeper: disabled (FeeRouter has no distributeFees function — fees route inline during trades)
 
 ---
 

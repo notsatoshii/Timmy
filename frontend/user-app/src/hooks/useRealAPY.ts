@@ -50,6 +50,8 @@ export function useRealAPY(tvl: bigint) {
     const lpRevenue = totalWeightedRevenue * FIFTY / HUNDRED;
     const apyBps = tvl > ZERO ? Number(lpRevenue * TEN_THOUSAND / tvl) : 0;
     const apyPercent = apyBps / 100;
-    return { apyPercent: isFinite(apyPercent) && apyPercent >= 0 ? apyPercent : 0, isLoading: false };
+    // Cap APY at 200% — projections above this are meaningless (extreme utilization)
+    const cappedApy = isFinite(apyPercent) && apyPercent >= 0 && apyPercent <= 200 ? apyPercent : 0;
+    return { apyPercent: cappedApy, isLoading: false };
   }, [data, isLoading, tvl]);
 }

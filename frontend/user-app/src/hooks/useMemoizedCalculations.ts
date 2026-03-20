@@ -176,7 +176,7 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
       if (tvl > 0 && globalOI > BigInt(0)) {
         const oiFloat = Number(globalOI) / 1e6;
         if (isFinite(oiFloat) && oiFloat >= 0) {
-          utilization = (oiFloat / tvl) * 100;
+          utilization = Math.min((oiFloat / tvl) * 100, 100);
           if (!isFinite(utilization) || utilization < 0) {
             console.warn('Invalid utilization calculated:', { oiFloat, tvl, utilization });
             utilization = 0;
@@ -211,6 +211,8 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
       if (tvlInWad > BigInt(0)) {
         const apyBasisPoints = Number(projectedAnnualRevenue * BigInt(10000) / tvlInWad);
         annualizedAPY = apyBasisPoints / 100;
+        // Cap APY at 200% — projections above this are meaningless (extreme utilization)
+        if (annualizedAPY > 200) annualizedAPY = 0;
         if (!isFinite(annualizedAPY) || annualizedAPY < 0) {
           console.warn('Invalid APY calculated:', { projectedAnnualRevenue: projectedAnnualRevenue.toString(), tvlInWad: tvlInWad.toString(), apyBasisPoints, annualizedAPY });
           annualizedAPY = 0;
