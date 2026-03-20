@@ -10,7 +10,7 @@ const Header: React.FC = () => {
     const measureLatency = async () => {
       try {
         const start = performance.now();
-        await fetch('https://sepolia.base.org', { method: 'HEAD', mode: 'no-cors' });
+        await fetch('https://base-sepolia-rpc.publicnode.com', { method: 'HEAD', mode: 'no-cors' });
         const ms = Math.round(performance.now() - start);
         setLatency(ms);
       } catch {

@@ -50,6 +50,7 @@ interface PositionData {
   fundingAccrued: bigint;
   equity: bigint;
   isOpen: boolean;
+  openTimestamp?: bigint;
 }
 
 type CloseState = 'idle' | 'confirming' | 'pending' | 'success' | 'error';
@@ -114,9 +115,7 @@ const Positions: React.FC = () => {
       refetchFreeCollateral();
 
       // Find the closed position for notification
-      const allPositions = positions.length > 0 ? positions : (address ? baseDemoPositions.map((basePos, index) =>
-        createLivePosition(basePos, demoMarketIds[index])
-      ) : []);
+      const allPositions = positions;
       const closedPosition = allPositions.find(pos => pos.id === selectedPositionId);
       if (closedPosition && txHash) {
         showTradeConfirmation('close', closedPosition.marketName, txHash);
@@ -199,6 +198,7 @@ const Positions: React.FC = () => {
           fundingAccrued: BigInt(0), // Will be fetched below
           equity: BigInt(0),
           isOpen: rawPos.isOpen,
+          openTimestamp: rawPos.openTimestamp ?? BigInt(0),
         };
 
         console.log(`[Positions] Loaded real position ${id.toString()} from contract`);
@@ -290,11 +290,10 @@ const Positions: React.FC = () => {
     fetchPositionDetails();
   }, [fetchPositionDetails]);
 
-  const demoMarketIds = ['demo-1', 'demo-2', 'demo-3', 'demo-4', 'demo-5', 'demo-6', 'demo-7', 'demo-8', 'demo-9', 'demo-10', 'demo-11', 'demo-12'];
   const { prices: livePrices, lastUpdate: priceLastUpdate } = useLivePrices({
-    marketIds: demoMarketIds,
+    marketIds: positions.map(p => p.marketId),
     pollingInterval: 30000,
-    enabled: true
+    enabled: positions.length > 0
   });
 
   const calculatePnL = (isLong: boolean, entryPI: bigint, currentPI: bigint, positionSize: bigint): bigint => {
@@ -320,264 +319,8 @@ const Positions: React.FC = () => {
     }
   };
 
-  const createLivePosition = (basePosition: Omit<PositionData, 'currentPI' | 'pnl' | 'equity'>, demoMarketId: string): PositionData => {
-    console.log(`[createLivePosition] Processing ${demoMarketId}:`, {
-      id: basePosition.id.toString(),
-      marketName: basePosition.marketName,
-      collateral: basePosition.collateral.toString(),
-      collateralFormatted: formatUsdt(basePosition.collateral),
-      positionSize: basePosition.positionSize.toString(),
-      positionSizeFormatted: formatUsdt(basePosition.positionSize),
-      entryPI: basePosition.entryPI.toString(),
-      borrowFees: basePosition.borrowFees.toString(),
-      borrowFeesFormatted: formatUsdt(basePosition.borrowFees),
-      fundingAccrued: basePosition.fundingAccrued.toString(),
-      fundingAccruedFormatted: formatUsdt(basePosition.fundingAccrued)
-    });
 
-    try {
-      const livePrice = livePrices?.[demoMarketId];
-      let currentPI = basePosition.entryPI;
 
-      console.log(`[createLivePosition] Live price data for ${demoMarketId}:`, livePrice);
-
-      if (livePrice && typeof livePrice.pi === 'number' && livePrice.pi > 0 && livePrice.pi <= 1) {
-        currentPI = BigInt(Math.round(livePrice.pi * Number(WAD)));
-        console.log(`[createLivePosition] Updated currentPI from live price:`, {
-          livePi: livePrice.pi,
-          currentPI: currentPI.toString()
-        });
-      } else {
-        console.log(`[createLivePosition] Using entry PI as current PI:`, currentPI.toString());
-      }
-
-      const pnl = calculatePnL(basePosition.isLong, basePosition.entryPI, currentPI, basePosition.positionSize);
-
-      console.log(`[createLivePosition] PnL calculation for ${demoMarketId}:`, {
-        pnl: pnl.toString(),
-        pnlFormatted: formatPnl(pnl)
-      });
-
-      // Safely calculate equity with proper error handling
-      let equity = BigInt(0);
-      try {
-        equity = basePosition.collateral + pnl - basePosition.borrowFees + basePosition.fundingAccrued;
-        console.log(`[createLivePosition] Equity calculation for ${demoMarketId}:`, {
-          collateral: basePosition.collateral.toString(),
-          pnl: pnl.toString(),
-          borrowFees: basePosition.borrowFees.toString(),
-          fundingAccrued: basePosition.fundingAccrued.toString(),
-          equity: equity.toString(),
-          equityFormatted: formatUsdt(equity)
-        });
-      } catch (error) {
-        console.warn(`[createLivePosition] Error calculating equity for ${demoMarketId}:`, error);
-        equity = basePosition.collateral; // Fallback to collateral only
-      }
-
-      const finalPosition = {
-        ...basePosition,
-        currentPI,
-        pnl,
-        equity
-      };
-
-      console.log(`[createLivePosition] Final position for ${demoMarketId}:`, {
-        id: finalPosition.id.toString(),
-        marketName: finalPosition.marketName,
-        equity: formatWad(finalPosition.equity),
-        pnl: formatPnl(finalPosition.pnl),
-        collateral: formatWad(finalPosition.collateral)
-      });
-
-      return finalPosition;
-    } catch (error) {
-      console.error(`[createLivePosition] Error creating live position for ${demoMarketId}:`, error);
-      // Return a safe fallback position
-      return {
-        ...basePosition,
-        currentPI: basePosition.entryPI,
-        pnl: BigInt(0),
-        equity: basePosition.collateral
-      };
-    }
-  };
-
-  const baseDemoPositions = [
-    {
-      id: BigInt(1),
-      marketId: 'demo-1' as `0x${string}`,
-      marketName: 'SpaceX IPO by Dec 2026',
-      isLong: true,
-      collateral: BigInt(1000) * WAD, // 1000 USDT
-      positionSize: BigInt(5000) * WAD, // 5000 notional
-      entryPI: BigInt(350) * WAD / BigInt(1000), // 0.35 PI
-      entryPrice: BigInt(355) * WAD / BigInt(1000), // 0.355 entry price
-      leverage: BigInt(5) * WAD, // 5x leverage
-      borrowFees: BigInt(12) * WAD, // 12 USDT borrow fees
-      fundingAccrued: BigInt(-3) * WAD, // -3 USDT funding
-      isOpen: true,
-    },
-    {
-      id: BigInt(2),
-      marketId: 'demo-2' as `0x${string}`,
-      marketName: 'US-Iran Ceasefire by Sep 2025',
-      isLong: false,
-      collateral: BigInt(500) * WAD, // 500 USDT
-      positionSize: BigInt(1500) * WAD, // 1500 notional
-      entryPI: BigInt(280) * WAD / BigInt(1000), // 0.28 PI
-      entryPrice: BigInt(275) * WAD / BigInt(1000), // 0.275 entry price
-      leverage: BigInt(3) * WAD, // 3x leverage
-      borrowFees: BigInt(5) * WAD, // 5 USDT borrow fees
-      fundingAccrued: BigInt(2) * WAD, // +2 USDT funding
-      isOpen: true,
-    },
-    // Add more demo positions to reach at least 10 for testing
-    {
-      id: BigInt(3),
-      marketId: 'demo-3' as `0x${string}`,
-      marketName: 'Bitcoin at $100k by 2025',
-      isLong: true,
-      collateral: BigInt(2000) * WAD,
-      positionSize: BigInt(10000) * WAD,
-      entryPI: BigInt(450) * WAD / BigInt(1000), // 0.45 PI
-      entryPrice: BigInt(455) * WAD / BigInt(1000), // 0.455 entry price
-      leverage: BigInt(5) * WAD,
-      borrowFees: BigInt(25) * WAD,
-      fundingAccrued: BigInt(8) * WAD,
-      isOpen: true,
-    },
-    {
-      id: BigInt(4),
-      marketId: 'demo-4' as `0x${string}`,
-      marketName: 'Apple $200 by June 2025',
-      isLong: false,
-      collateral: BigInt(750) * WAD,
-      positionSize: BigInt(3750) * WAD,
-      entryPI: BigInt(600) * WAD / BigInt(1000), // 0.6 PI
-      entryPrice: BigInt(595) * WAD / BigInt(1000), // 0.595 entry price
-      leverage: BigInt(5) * WAD,
-      borrowFees: BigInt(18) * WAD,
-      fundingAccrued: BigInt(-2) * WAD,
-      isOpen: true,
-    },
-    {
-      id: BigInt(5),
-      marketId: 'demo-5' as `0x${string}`,
-      marketName: 'Tesla FSD by end of 2024',
-      isLong: true,
-      collateral: BigInt(300) * WAD,
-      positionSize: BigInt(1200) * WAD,
-      entryPI: BigInt(200) * WAD / BigInt(1000), // 0.2 PI
-      entryPrice: BigInt(205) * WAD / BigInt(1000), // 0.205 entry price
-      leverage: BigInt(4) * WAD,
-      borrowFees: BigInt(8) * WAD,
-      fundingAccrued: BigInt(1) * WAD,
-      isOpen: true,
-    },
-    {
-      id: BigInt(6),
-      marketId: 'demo-6' as `0x${string}`,
-      marketName: 'Meta VR Adoption 20%',
-      isLong: false,
-      collateral: BigInt(1200) * WAD,
-      positionSize: BigInt(2400) * WAD,
-      entryPI: BigInt(750) * WAD / BigInt(1000), // 0.75 PI
-      entryPrice: BigInt(745) * WAD / BigInt(1000), // 0.745 entry price
-      leverage: BigInt(2) * WAD,
-      borrowFees: BigInt(15) * WAD,
-      fundingAccrued: BigInt(-5) * WAD,
-      isOpen: true,
-    },
-    {
-      id: BigInt(7),
-      marketId: 'demo-7' as `0x${string}`,
-      marketName: 'AI Chip War Resolution',
-      isLong: true,
-      collateral: BigInt(850) * WAD,
-      positionSize: BigInt(5100) * WAD,
-      entryPI: BigInt(400) * WAD / BigInt(1000), // 0.4 PI
-      entryPrice: BigInt(405) * WAD / BigInt(1000), // 0.405 entry price
-      leverage: BigInt(6) * WAD,
-      borrowFees: BigInt(22) * WAD,
-      fundingAccrued: BigInt(3) * WAD,
-      isOpen: true,
-    },
-    {
-      id: BigInt(8),
-      marketId: 'demo-8' as `0x${string}`,
-      marketName: 'Climate Bill Passage 2025',
-      isLong: false,
-      collateral: BigInt(600) * WAD,
-      positionSize: BigInt(1800) * WAD,
-      entryPI: BigInt(550) * WAD / BigInt(1000), // 0.55 PI
-      entryPrice: BigInt(545) * WAD / BigInt(1000), // 0.545 entry price
-      leverage: BigInt(3) * WAD,
-      borrowFees: BigInt(9) * WAD,
-      fundingAccrued: BigInt(-1) * WAD,
-      isOpen: true,
-    },
-    {
-      id: BigInt(9),
-      marketId: 'demo-9' as `0x${string}`,
-      marketName: 'Fed Rate Cut by March',
-      isLong: true,
-      collateral: BigInt(1500) * WAD,
-      positionSize: BigInt(7500) * WAD,
-      entryPI: BigInt(350) * WAD / BigInt(1000), // 0.35 PI
-      entryPrice: BigInt(355) * WAD / BigInt(1000), // 0.355 entry price
-      leverage: BigInt(5) * WAD,
-      borrowFees: BigInt(30) * WAD,
-      fundingAccrued: BigInt(12) * WAD,
-      isOpen: true,
-    },
-    {
-      id: BigInt(10),
-      marketId: 'demo-10' as `0x${string}`,
-      marketName: 'Energy Independence 2026',
-      isLong: false,
-      collateral: BigInt(950) * WAD,
-      positionSize: BigInt(3800) * WAD,
-      entryPI: BigInt(650) * WAD / BigInt(1000), // 0.65 PI
-      entryPrice: BigInt(645) * WAD / BigInt(1000), // 0.645 entry price
-      leverage: BigInt(4) * WAD,
-      borrowFees: BigInt(20) * WAD,
-      fundingAccrued: BigInt(-7) * WAD,
-      isOpen: true,
-    },
-    {
-      id: BigInt(11),
-      marketId: 'demo-11' as `0x${string}`,
-      marketName: 'Quantum Computing Breakthrough',
-      isLong: true,
-      collateral: BigInt(400) * WAD,
-      positionSize: BigInt(2800) * WAD,
-      entryPI: BigInt(150) * WAD / BigInt(1000), // 0.15 PI
-      entryPrice: BigInt(155) * WAD / BigInt(1000), // 0.155 entry price
-      leverage: BigInt(7) * WAD,
-      borrowFees: BigInt(14) * WAD,
-      fundingAccrued: BigInt(2) * WAD,
-      isOpen: true,
-    },
-    {
-      id: BigInt(12),
-      marketId: 'demo-12' as `0x${string}`,
-      marketName: 'Space Tourism $1B Revenue',
-      isLong: false,
-      collateral: BigInt(1100) * WAD,
-      positionSize: BigInt(3300) * WAD,
-      entryPI: BigInt(800) * WAD / BigInt(1000), // 0.8 PI
-      entryPrice: BigInt(795) * WAD / BigInt(1000), // 0.795 entry price
-      leverage: BigInt(3) * WAD,
-      borrowFees: BigInt(16) * WAD,
-      fundingAccrued: BigInt(-4) * WAD,
-      isOpen: true,
-    },
-  ];
-
-  const demoPositions: PositionData[] = baseDemoPositions.map((basePos, index) =>
-    createLivePosition(basePos, demoMarketIds[index])
-  );
 
   // Show real positions if they exist, otherwise show demo positions when no wallet is connected
   
@@ -600,13 +343,7 @@ const Positions: React.FC = () => {
   }, [positions, oracleMarkets]);
 
 
-  console.log('[Positions] Display positions logic:', {
-    positionsCount: positions.length,
-    address: address || 'null',
-    demoPositionsCount: demoPositions.length,
-    displayPositionsCount: displayPositions.length,
-    displayPositionsSource: positions.length > 0 ? 'real' : 'demo'
-  });
+  console.log('[Positions] Display positions:', positions.length);
 
   const handleCloseClick = (positionId: bigint) => {
     setSelectedPositionId(positionId);
@@ -1048,6 +785,7 @@ const Positions: React.FC = () => {
 
                   <div className="mt-3 pt-3 border-t border-border">
                     <div className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-4 text-xs text-gray-500">
+                      <span>Opened: <span className="font-mono text-gray-300">{position.openTimestamp && position.openTimestamp && position.openTimestamp > BigInt(0) ? new Date(Number(position.openTimestamp) * 1000).toLocaleString() : "N/A"}</span></span>
                       <span>Borrow fees: <span className="font-mono text-danger">-${formatUsdt(position.borrowFees)}</span></span>
                       <span>Funding: <span className={`font-mono ${position.fundingAccrued >= BigInt(0) ? 'text-accent' : 'text-danger'}`}>
                         {formatPnl(position.fundingAccrued)}

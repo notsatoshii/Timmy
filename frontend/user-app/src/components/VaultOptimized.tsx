@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useWriteContract } from 'wagmi';
 import { useWallet } from '../hooks/useWallet';
+import { useNotifications } from '../contexts/NotificationContext';
 import { useDemoWallet } from '../hooks/useDemoWallet';
 import { CONTRACT_ADDRESSES, formatUsdt, formatWad, parseUsdt, WAD, getContractAddresses } from '../config/contracts';
 import { LEVER_VAULT_ABI, USDT_ABI, FEE_ROUTER_ABI, OI_LIMITS_ABI } from '../config/abis';
@@ -13,6 +14,7 @@ import TestnetDisclaimer from './TestnetDisclaimer';
 
 const VaultOptimized: React.FC = () => {
   const { address, isDemoMode } = useWallet();
+  const { showErrorToast, showSuccessToast } = useNotifications();
   const { sendTransaction: demoSend } = useDemoWallet();
   const [depositAmount, setDepositAmount] = useState('');
   const [withdrawShares, setWithdrawShares] = useState('');
@@ -172,6 +174,7 @@ const VaultOptimized: React.FC = () => {
           functionName: 'approve',
           args: [CONTRACT_ADDRESSES.leverVault, amount],
         });
+        showSuccessToast('USDT Approved', 'You can now deposit into the vault.');
       } else {
         await approveUsdt({
           address: CONTRACT_ADDRESSES.usdt,
@@ -180,8 +183,9 @@ const VaultOptimized: React.FC = () => {
           args: [CONTRACT_ADDRESSES.leverVault, amount],
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Approval failed:', error);
+      showErrorToast('Approve Failed', error?.shortMessage || error?.message || 'Unknown error');
     }
   }, [depositAmount, approveUsdt, isDemoMode, demoSend]);
 
@@ -197,6 +201,7 @@ const VaultOptimized: React.FC = () => {
           functionName: 'deposit',
           args: [assets, address],
         });
+        showSuccessToast('Deposit Successful', `Deposited ${depositAmount} USDT into the vault.`);
       } else {
         await depositToVault({
           address: CONTRACT_ADDRESSES.leverVault,
@@ -205,8 +210,9 @@ const VaultOptimized: React.FC = () => {
           args: [assets, address],
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Deposit failed:', error);
+      showErrorToast('Deposit Failed', error?.shortMessage || error?.message || 'Unknown error');
     }
   }, [depositAmount, address, depositToVault, isDemoMode, demoSend]);
 
@@ -230,8 +236,9 @@ const VaultOptimized: React.FC = () => {
           args: [shares],
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Withdrawal request failed:', error);
+      showErrorToast('Withdrawal Failed', error?.shortMessage || error?.message || 'Unknown error');
     }
   }, [withdrawShares, requestWithdrawal, isDemoMode, demoSend]);
 

@@ -128,8 +128,8 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
         console.log('Calculating share price from totalAssets / totalSupply');
 
         if (totalSupply && totalSupply > BigInt(0) && totalAssets && totalAssets > BigInt(0)) {
-          const assetsFloat = parseFloat(formatUsdt(totalAssets)); // USDT format (6 decimals)
-          const supplyFloat = parseFloat(formatUsdt(totalSupply));   // USDT format (6 decimals, matching vault)
+          const assetsFloat = (Number(totalAssets) / 1e6); // USDT format (6 decimals)
+          const supplyFloat = (Number(totalSupply) / 1e6);   // USDT format (6 decimals, matching vault)
 
           console.log('=== CALCULATED SHARE PRICE INPUTS ===', {
             assetsFloat,
@@ -174,8 +174,7 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
     let utilization = 0;
     try {
       if (tvl > 0 && globalOI > BigInt(0)) {
-        const oiFormatted = formatUsdt(globalOI);
-        const oiFloat = parseFloat(oiFormatted);
+        const oiFloat = Number(globalOI) / 1e6;
         if (isFinite(oiFloat) && oiFloat >= 0) {
           utilization = (oiFloat / tvl) * 100;
           if (!isFinite(utilization) || utilization < 0) {
@@ -183,7 +182,7 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
             utilization = 0;
           }
         } else {
-          console.warn('Invalid OI float:', oiFormatted, oiFloat);
+          console.warn('Invalid OI float:', oiFloat);
         }
       }
     } catch (error) {
@@ -236,15 +235,15 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
     }
 
     // User position calculations (userShares is USDT format - 6 decimals, matching vault decimals)
-    const userSharesFloat = userShares ? parseFloat(formatUsdt(userShares)) : 0;
+    const userSharesFloat = userShares ? Number(userShares) / 1e6 : 0;
     const userPosition = {
       shares: userSharesFloat,
       value: userSharesFloat * sharePrice,
-      percentage: totalSupply > BigInt(0) ? (userSharesFloat / parseFloat(formatUsdt(totalSupply))) * 100 : 0,
+      percentage: totalSupply > BigInt(0) ? (userSharesFloat / (Number(totalSupply) / 1e6)) * 100 : 0,
     };
 
     // User balance calculations (usdtBalance is USDT format from USDT.balanceOf())
-    const usdtFloat = usdtBalance ? parseFloat(formatUsdt(usdtBalance)) : 0;
+    const usdtFloat = usdtBalance ? Number(usdtBalance) / 1e6 : 0;
     const userBalance = {
       usdt: usdtFloat,
       formatted: usdtFloat.toLocaleString('en-US', {
