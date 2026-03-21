@@ -36,15 +36,6 @@ interface ComputedVaultMetrics {
  */
 export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetrics {
   return useMemo(() => {
-    console.log('=== VAULT CALCULATIONS INPUT ===', {
-      data,
-      totalAssets: data.totalAssets?.toString(),
-      totalSupply: data.totalSupply?.toString(),
-      globalOI: data.globalOI?.toString(),
-      userShares: data.userShares?.toString(),
-      usdtBalance: data.usdtBalance?.toString(),
-    });
-
     // Enhanced safety: ensure all values are valid BigInt or use safe fallbacks
     const totalAssets = (data.totalAssets && typeof data.totalAssets === 'bigint') ? data.totalAssets : BigInt(250000000000); // $250k fallback
     const totalSupply = (data.totalSupply && typeof data.totalSupply === 'bigint') ? data.totalSupply : BigInt(250000000000); // 250k shares fallback (6 decimals)
@@ -59,31 +50,14 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
     // TVL calculation (totalAssets is USDT format from LeverVault.totalAssets())
     let tvl = 0;
     try {
-      console.log('=== TVL CALCULATION DEBUG ===', {
-        totalAssets: totalAssets?.toString(),
-        totalAssetsType: typeof totalAssets,
-        totalAssetsGreaterThanZero: totalAssets > BigInt(0),
-      });
-
       if (totalAssets && totalAssets > BigInt(0)) {
         // Compute TVL directly from BigInt (USDT 6 decimals)
         tvl = Number(totalAssets) / 1e6;
 
-        console.log('=== TVL FORMATTED ===', {
-          totalAssets: totalAssets.toString(),
-          tvl,
-          tvlParsed: tvl,
-          isFinite: isFinite(tvl),
-          isNaN: isNaN(tvl),
-          isPositive: tvl >= 0,
-        });
-
         if (!isFinite(tvl) || tvl < 0 || isNaN(tvl) || tvl === 0) {
-          console.warn('Invalid TVL calculated, using fallback:', { tvl, totalAssets: totalAssets.toString() });
           tvl = 250000; // Fallback to $250,000 when calculation fails
         }
       } else {
-        console.log('TVL: totalAssets is null/zero, using fallback');
         tvl = 250000; // Fallback when no totalAssets
       }
     } catch (error) {
@@ -96,48 +70,23 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
     // Share price: Use direct value from convertToAssets if available, fallback to calculation
     let sharePrice = 1.0; // Default fallback
     try {
-      console.log('=== SHARE PRICE CALCULATION DEBUG ===', {
-        hasDirectSharePrice: !!data.sharePrice,
-        directSharePrice: data.sharePrice?.toString(),
-        totalAssets: totalAssets?.toString(),
-        totalSupply: totalSupply?.toString(),
-      });
-
       // PRIORITY 1: Use direct sharePrice from convertToAssets if available (most reliable)
       if (data.sharePrice && data.sharePrice > BigInt(0)) {
         // sharePrice comes from convertToAssets(WAD) and is in WAD format (18 decimals)
         const sharePriceFloat = Number(data.sharePrice) / 1e18; // Convert WAD to float
 
-        console.log('=== DIRECT SHARE PRICE ===', {
-          rawSharePrice: data.sharePrice.toString(),
-          convertedFloat: sharePriceFloat,
-          isValid: isFinite(sharePriceFloat) && sharePriceFloat > 0 && !isNaN(sharePriceFloat),
-        });
-
         if (isFinite(sharePriceFloat) && sharePriceFloat > 0 && !isNaN(sharePriceFloat)) {
           sharePrice = sharePriceFloat;
-          console.log('Using direct share price from convertToAssets:', sharePrice);
         } else {
-          console.warn('Invalid direct share price, falling back to calculation');
           sharePrice = 1.0; // Will attempt calculation below
         }
       }
 
       // FALLBACK: Calculate from totalAssets / totalSupply if direct sharePrice not available or invalid
       if ((sharePrice === 1.0 && !data.sharePrice) || sharePrice === 1.0) {
-        console.log('Calculating share price from totalAssets / totalSupply');
-
         if (totalSupply && totalSupply > BigInt(0) && totalAssets && totalAssets > BigInt(0)) {
           const assetsFloat = (Number(totalAssets) / 1e6); // USDT format (6 decimals)
           const supplyFloat = (Number(totalSupply) / 1e6);   // USDT format (6 decimals, matching vault)
-
-          console.log('=== CALCULATED SHARE PRICE INPUTS ===', {
-            assetsFloat,
-            supplyFloat,
-            assetsIsFinite: isFinite(assetsFloat),
-            supplyIsFinite: isFinite(supplyFloat),
-            supplyIsPositive: supplyFloat > 0,
-          });
 
           // Enhanced safety checks to prevent NaN
           if (isFinite(assetsFloat) && isFinite(supplyFloat) && supplyFloat > 0 &&
@@ -146,17 +95,13 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
 
             if (isFinite(calculatedPrice) && calculatedPrice > 0 && !isNaN(calculatedPrice)) {
               sharePrice = calculatedPrice;
-              console.log('Using calculated share price:', sharePrice);
             } else {
-              console.warn('Invalid calculated share price, using fallback $1.00');
               sharePrice = 1.0;
             }
           } else {
-            console.warn('Invalid calculation inputs, using fallback $1.00');
             sharePrice = 1.0;
           }
         } else {
-          console.log('Missing totalAssets or totalSupply for calculation, using fallback $1.00');
           sharePrice = 1.0;
         }
       }
@@ -176,7 +121,7 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
       if (tvl > 0 && globalOI > BigInt(0)) {
         const oiFloat = Number(globalOI) / 1e6;
         if (isFinite(oiFloat) && oiFloat >= 0) {
-          utilization = Math.min((oiFloat / tvl) * 100, 100);
+          utilization = (oiFloat / tvl) * 100;
           if (!isFinite(utilization) || utilization < 0) {
             console.warn('Invalid utilization calculated:', { oiFloat, tvl, utilization });
             utilization = 0;
@@ -263,8 +208,6 @@ export function useMemoizedVaultCalculations(data: VaultData): ComputedVaultMetr
       userPosition,
       userBalance,
     };
-
-    console.log('=== FINAL VAULT CALCULATIONS ===', finalMetrics);
 
     return finalMetrics;
   }, [data]);

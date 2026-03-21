@@ -283,27 +283,64 @@ else
     exit 1
 fi
 
-# 7. Summary
+# 7. Data Display Validation (the actual important part)
+echo ""
+echo "=== STEP 7: Data Display Validation ==="
+echo "Running on-chain data validation..."
+
+DATA_VALIDATION_RESULT=0
+if [ -f "/home/lever/lever-protocol/scripts/validate-display-data.sh" ]; then
+    bash /home/lever/lever-protocol/scripts/validate-display-data.sh 2>&1
+    DATA_VALIDATION_RESULT=$?
+    if [ $DATA_VALIDATION_RESULT -eq 0 ]; then
+        echo "PASS: Data display values validated against on-chain state"
+        DATA_CHECK="PASSED"
+    else
+        echo "FAIL: Data display validation found issues (see above)"
+        DATA_CHECK="FAILED"
+    fi
+else
+    echo "WARN: validate-display-data.sh not found, skipping data checks"
+    DATA_CHECK="SKIPPED"
+fi
+
+# 8. Summary — honest reporting
 echo ""
 echo "=== SUMMARY ==="
-echo "✅ Frontend Health: PASSED"
-echo "✅ MarketDetail Component: PASSED"
-echo "✅ All 4 Tabs Structure: PASSED"
-echo "✅ Error Boundaries: PASSED"
-echo "✅ Build Validation: PASSED"
-echo "✅ Screenshot System: WORKING"
+echo "Frontend Health: PASSED"
+echo "MarketDetail Component: PASSED"
+echo "Tab Structure: PASSED"
+echo "Error Boundaries: PASSED"
+echo "Build Validation: PASSED"
+echo "Data Display: $DATA_CHECK"
+echo "Browser Screenshots: NOT AVAILABLE (missing Chrome deps)"
 
-# Create success marker
+OVERALL_PASS=true
+if [ "$DATA_CHECK" == "FAILED" ]; then
+    OVERALL_PASS=false
+fi
+
+# Create result marker with honest status
+DATA_RESULT=$(cat /home/lever/lever-protocol/control-plane/data-validation-result.json 2>/dev/null || echo '{}')
 echo "{
   \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
   \"all_tabs_tested\": [\"Trading\", \"Positions\", \"Vault\", \"MarketDetail\"],
-  \"all_checks_passed\": true,
+  \"structure_checks_passed\": true,
   \"error_boundaries_configured\": true,
   \"frontend_builds_successfully\": true,
-  \"ready_for_investor_demo\": true
+  \"data_validation\": \"$DATA_CHECK\",
+  \"browser_screenshots\": false,
+  \"ready_for_investor_demo\": $OVERALL_PASS,
+  \"data_details\": $DATA_RESULT
 }" > /home/lever/lever-protocol/control-plane/screenshots/all-tabs-sanity-check.json
 
-echo ""
-echo "=== ALL 4 TABS SANITY CHECK PASSED ==="
-echo "Frontend is ready for investor demo"
-exit 0
+if [ "$OVERALL_PASS" == "true" ]; then
+    echo ""
+    echo "=== SANITY CHECK PASSED ==="
+    exit 0
+else
+    echo ""
+    echo "=== SANITY CHECK FAILED — DATA ISSUES FOUND ==="
+    echo "Fix the data issues above before marking frontend as demo-ready."
+    exit 1
+fi

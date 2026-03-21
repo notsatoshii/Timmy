@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-03-21T10:12:33Z",
+  "pass": 14,
+  "warn": 1,
+  "fail": 0,
+  "tvl_dollars": 502003.36,
+  "oi_dollars": 4300.00,
+  "share_price": 1.000006,
+  "insurance_dollars": 5010999.99,
+  "borrow_rate_pct": .040000,
+  "price_count": 10,
+  "price_age_seconds": 12,
+  "all_passed": true
+}

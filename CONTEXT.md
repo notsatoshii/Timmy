@@ -20,12 +20,15 @@ Only fix: data display bugs, broken functionality, loading states, crashes.
 ## KNOWN STATE
 
 ### Working
-- Positions open via demo wallet (Trading.tsx + useDemoWallet with gas: 800000n)
+- Positions open via demo wallet (Trading.tsx + useDemoWallet with gas: 2000000n)
 - Positions close via demo wallet (Positions.tsx)
 - Vault deposit/withdraw via demo wallet (VaultOptimized.tsx)
 - Borrow indices accruing every 60s (lever-accrue-keeper service)
 - 10 markets registered and active with live oracle prices
 - Frontend builds and serves on port 3000
+- 8 demo positions across 4 markets (SpaceX, Iran, FIFA, FedRate)
+- Data validation: 14/14 checks pass (validate-display-data.sh)
+- TVL: $502K, OI: $4.3K, utilization: 0.85%, APY: 1.5%, share price: $1.00
 
 ### FIXED — Redeployed March 20, 2026
 
@@ -38,9 +41,9 @@ Only fix: data display bugs, broken functionality, loading states, crashes.
 - All getters verified: positionManager, executionEngine, leverVault, marginEngine
 
 ### Known Frontend Bugs
-1. Funding shows $0.00 on all positions (contract-level: getFundingIndex returns 0 — indices not initialized)
+1. Funding shows $0.00 on all positions (contract-level: getFundingIndex reverts — indices not initialized)
 2. Error toasts on Trading show generic message, not actual revert reason
-3. `useLivePrices.ts` has dead `DEMO_INITIAL_PRICES` code
+3. openPosition requires ~826K gas — 800K limit fails silently. Use gas:2000000n.
 
 ### Fixed (Do Not Re-Break)
 - useDemoWallet.ts: uses writeContract with gas:2000000n, NOT simulateContract

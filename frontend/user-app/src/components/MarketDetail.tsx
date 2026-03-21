@@ -496,8 +496,11 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
   }, [longOIError, shortOIError, borrowRateError, fundingRateError]);
 
   const totalOI = longOINum + shortOINum;
-  const longPercentage = totalOI > 0 ? (longOINum / totalOI) * 100 : 50;
-  const shortPercentage = totalOI > 0 ? (shortOINum / totalOI) * 100 : 50;
+  const longPercentageRaw = totalOI > 0 ? (longOINum / totalOI) * 100 : 50;
+  const shortPercentageRaw = totalOI > 0 ? (shortOINum / totalOI) * 100 : 50;
+  // Ensure minimum 2% display width so both sides are always visible
+  const longPercentage = totalOI > 0 && longOINum > 0 ? Math.max(longPercentageRaw, 2) : longPercentageRaw;
+  const shortPercentage = totalOI > 0 && shortOINum > 0 ? Math.max(shortPercentageRaw, 2) : shortPercentageRaw;
 
   // Validation after all hooks are called (React Hooks rules compliance)
   if (!market || !market.id || typeof market.price !== 'number' || isNaN(market.price)) {
@@ -721,13 +724,13 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
                 className="bg-accent flex items-center justify-center text-xs font-medium text-surface-0"
                 style={{ width: `${longPercentage}%` }}
               >
-                Long {longPercentage.toFixed(0)}%
+                {longPercentage >= 5 ? `Long ${longPercentageRaw > 0 && longPercentageRaw < 1 ? '<1' : Math.round(longPercentageRaw)}%` : ''}
               </div>
               <div
                 className="bg-danger flex items-center justify-center text-xs font-medium text-surface-0"
                 style={{ width: `${shortPercentage}%` }}
               >
-                Short {shortPercentage.toFixed(0)}%
+                {shortPercentage >= 5 ? `Short ${shortPercentageRaw > 0 && shortPercentageRaw < 1 ? '<1' : Math.round(shortPercentageRaw)}%` : ''}
               </div>
             </div>
 

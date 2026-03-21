@@ -37,7 +37,7 @@ function updateCircuitBreakerState(state: CircuitBreakerState) {
 }
 
 // Debug mode for detailed logging (set to false to reduce console noise)
-const VAULT_DEBUG_MODE = true;
+const VAULT_DEBUG_MODE = false;
 
 /**
  * Enhanced vault multicall hook with 413 error handling, exponential backoff, and circuit breaker
@@ -245,7 +245,7 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
           leverVault: addresses.leverVault,
           oiLimits: addresses.oiLimits,
           usdt: addresses.usdt,
-          matchesExpected: addresses.leverVault === "0x84a1Eb3b1eFD60b193b271DCfaB2711cE1c41921"
+          matchesExpected: addresses.leverVault === "0x1b623D8671c417fe5151cCDb38ec7cAB64332836"
         });
       }
     }).catch(err => {
@@ -420,16 +420,6 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
       }
     };
 
-    // Enhanced debugging for data extraction
-    console.log('=== VAULT DATA EXTRACTION ===', {
-      coreDataArray: coreData,
-      coreDataLength: coreData?.length,
-      coreDataValues: coreData?.map((val, idx) => ({ index: idx, value: val, type: typeof val })),
-      userDataArray: userData,
-      userDataLength: userData?.length,
-      userDataValues: userData?.map((val, idx) => ({ index: idx, value: val, type: typeof val })),
-    });
-
     const safeValues = {
       // Core vault data from batch 1 with enhanced debugging
       totalAssets: safeBigIntValue(coreData[0], fallbackValues.totalAssets, 'totalAssets', 0),
@@ -440,15 +430,6 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
       userShares: userAddress ? safeBigIntValue(userData[0], fallbackValues.userShares, 'userShares', 0) : fallbackValues.userShares,
       usdtBalance: userAddress ? safeBigIntValue(userData[1], fallbackValues.usdtBalance, 'usdtBalance', 1) : fallbackValues.usdtBalance,
     };
-
-    console.log('=== SAFE VALUES EXTRACTED ===', {
-      totalAssets: safeValues.totalAssets.toString(),
-      totalSupply: safeValues.totalSupply.toString(),
-      sharePrice: safeValues.sharePrice.toString(),
-      globalOI: safeValues.globalOI.toString(),
-      userShares: safeValues.userShares.toString(),
-      usdtBalance: safeValues.usdtBalance.toString(),
-    });
 
     // Loading states - both batches must complete for vault data, user data depends on user batch only
     const isLoadingVaultData = (coreMulticallResult?.isLoading || false) && (isCircuitBreakerDisabled || !circuitBreaker.isOpen);

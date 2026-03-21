@@ -191,7 +191,8 @@ contract LiquidationExecutionTest is IntegrationBase {
     function test_batchLiquidate_multiplePositions() public {
         // Open two positions
         uint256 posId1 = _openPosition(alice, true, 1000e18, 3e18);
-        uint256 posId2 = _openPosition(bob, true, 800e18, 3e18);
+        // Use lower leverage for second position due to utilization impact
+        uint256 posId2 = _openPosition(bob, true, 800e18, 2.9e18);
 
         // Push PI down
         _pushPIDown(30e16);

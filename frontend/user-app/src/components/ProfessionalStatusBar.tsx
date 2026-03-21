@@ -16,26 +16,31 @@ const ProfessionalStatusBar: React.FC<ProfessionalStatusBarProps> = ({
   const [contractStatus, setContractStatus] = useState<'operational' | 'degraded' | 'offline'>('operational');
 
   useEffect(() => {
-    // Simulate real-time monitoring
-    const interval = setInterval(() => {
-      // Simulate network latency measurement
-      const latency = Math.random() * 100 + 50; // 50-150ms
-      setNetworkLatency(latency);
+    const checkHealth = async () => {
+      try {
+        // Real latency measurement via RPC
+        const start = performance.now();
+        const res = await fetch('https://sepolia.base.org', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_blockNumber', params: [], id: 1 }),
+        });
+        const latency = performance.now() - start;
+        setNetworkLatency(latency);
+        setLastBlockTime(new Date());
 
-      // Simulate block time updates
-      setLastBlockTime(new Date());
-
-      // Simulate contract status monitoring
-      const rand = Math.random();
-      if (rand > 0.95) {
+        if (res.ok) {
+          setContractStatus('operational');
+        } else {
+          setContractStatus('degraded');
+        }
+      } catch {
         setContractStatus('degraded');
-      } else if (rand > 0.98) {
-        setContractStatus('offline');
-      } else {
-        setContractStatus('operational');
       }
-    }, 5000);
+    };
 
+    checkHealth();
+    const interval = setInterval(checkHealth, 15000);
     return () => clearInterval(interval);
   }, []);
 

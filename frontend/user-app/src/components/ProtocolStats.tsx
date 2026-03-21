@@ -112,21 +112,12 @@ const ProtocolStats: React.FC = () => {
         const expectedMinUsdtRaw = BigInt(10_000_000_000); // $10K in USDT format
         const expectedMaxUsdtRaw = BigInt(1_000_000_000_000); // $1M in USDT format
 
-        console.log('=== INSURANCE FUND DEBUG ===');
-        console.log('Raw value from contract (WAD):', insuranceRaw.toString());
-        console.log('Raw value length:', insuranceRaw.toString().length);
-        console.log('Expected $10K in WAD would be:', (BigInt(10000) * WAD).toString());
-
-        // Convert from WAD to USDT format: divide by 1e12 (18 decimals → 6 decimals)
+        // Convert from WAD to USDT format: divide by 1e12 (18 decimals -> 6 decimals)
         const wadToUsdtDivisor = BigInt('1000000000000'); // 1e12
         safeInsurance = insuranceRaw / wadToUsdtDivisor;
-        console.log('After conversion to USDT format:', safeInsurance.toString());
-        console.log('Expected $10K in USDT format would be:', BigInt(10000000000).toString());
 
         // Sanity check - should be around $10K for bootstrap
         if (safeInsurance < BigInt(1_000_000) || safeInsurance > BigInt(100_000_000_000_000)) {
-          // Value is outside expected range (adjusted for converted USDT format), use fallback
-          console.warn('Insurance fund value outside expected range:', safeInsurance.toString(), 'using $10K fallback');
           safeInsurance = DEMO_FALLBACK_VALUES.insuranceFund;
         }
         // Keep the converted value - don't overwrite with insuranceRaw
@@ -142,9 +133,7 @@ const ProtocolStats: React.FC = () => {
       const projectedAnnualRevenue = revenuePerHour * hoursPerYear * lpShare / hundredPercent;
       const tvlInWad = safeTvl * BigInt(1e12);
       const apyBpsTimes100 = projectedAnnualRevenue * BigInt(10000) / tvlInWad;
-      const utilizationBpsTimes100Raw = totalOIInWad * BigInt(10000) / tvlInWad;
-      // Cap utilization display at 100%
-      const utilizationBpsTimes100 = utilizationBpsTimes100Raw > BigInt(10000) ? BigInt(10000) : utilizationBpsTimes100Raw;
+      const utilizationBpsTimes100 = totalOIInWad * BigInt(10000) / tvlInWad;
 
       const apyFallback = tvlFallback || oiFallback || borrowRateFallback;
 
@@ -158,9 +147,9 @@ const ProtocolStats: React.FC = () => {
 
       setStats({
         tvl: `$${formatUsdt(safeTvl)}`,
-        totalVolume: `$${formatUsdt(safeVolume)}`,
+        totalVolume: safeVolume > BigInt(0) ? `$${formatUsdt(safeVolume)}` : '—',
         totalOI: `$${formatUsdt(safeTotalOI)}`,
-        lpApy: realAPY > 0 ? `${realAPY.toFixed(2)}%` : `${Math.min(Number(apyBpsTimes100) / 100, 200).toFixed(2)}%`,
+        lpApy: `${realAPY.toFixed(2)}%`,
         utilizationRate: `${(Number(utilizationBpsTimes100) / 100).toFixed(2)}%`,
         insuranceFund: `$${formatUsdt(safeInsurance)}`,
       });

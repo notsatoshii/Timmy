@@ -12,19 +12,6 @@ interface UseLivePricesOptions {
   enabled?: boolean;
 }
 
-// Demo market initial prices
-const DEMO_INITIAL_PRICES: Record<string, number> = {
-  'demo-1': 0.88,
-  'demo-2': 0.35,
-  'demo-3': 0.42,
-  'demo-4': 0.22,
-  'demo-5': 0.55,
-  'demo-6': 0.30,
-  'demo-7': 0.60,
-  'demo-8': 0.45,
-  'demo-9': 0.40,
-  'demo-10': 0.65,
-};
 
 export const useLivePrices = (options: UseLivePricesOptions) => {
   const { marketIds, pollingInterval = 30000, enabled = true } = options;
@@ -45,7 +32,7 @@ export const useLivePrices = (options: UseLivePricesOptions) => {
     marketIds.forEach(marketId => {
       initialPrices[marketId] = {
         marketId,
-        pi: DEMO_INITIAL_PRICES[marketId] || 0.5,
+        pi: 0.5,
         lastUpdated: Date.now(),
       };
     });
@@ -60,7 +47,7 @@ export const useLivePrices = (options: UseLivePricesOptions) => {
     const updated: Record<string, LivePrice> = {};
 
     marketIds.forEach(marketId => {
-      const currentPrice = current[marketId]?.pi || DEMO_INITIAL_PRICES[marketId] || 0.5;
+      const currentPrice = current[marketId]?.pi || 0.5;
       const volatility = 0.02;
       const randomChange = (Math.random() - 0.5) * 2 * volatility;
       const newPrice = Math.max(0.01, Math.min(0.99, currentPrice + randomChange));

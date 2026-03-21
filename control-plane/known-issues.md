@@ -3,12 +3,24 @@
 ## CRITICAL (blocks investor demo)
 - None
 
+## HIGH
+- Browser automation (puppeteer) cannot run — missing Chrome system dependencies (libatk, libgbm, etc). Need sudo to install. (2026-03-21)
+- Funding rate returns 0 everywhere — getFundingIndex/getFundingRate revert. Contract-level: indices not initialized. (2026-03-21)
+
 ## MEDIUM
-- LP APY is 0.21% — will increase when leverage bug fixed and higher OI created
-- Insurance Fund stuck at $10K bootstrap — fees not flowing through FeeRouter yet
-- Oracle keeper (mockkeeper.py) may not be running — prices could go stale
+- Test failure: test_batchLiquidate_multiplePositions() failing with leverage exceeds max error (2026-03-21)
+- Dashboard service not responding on port 8080 (non-critical monitoring tool) (2026-03-21)
+- openPosition requires ~826K gas (800K limit fails silently). Frontend useDemoWallet uses gas:2000000n which is correct. (2026-03-21)
 
 ## RESOLVED
+- OI/TVL mismatch (441% utilization) — FIXED: Force-closed 36 orphaned positions from pre-redeployment vault. Zeroed all stale OI via decreaseOI. Current: TVL=$502K, OI=$4.3K, utilization=0.85%. (2026-03-21)
+- QA scripts false PASSED — FIXED: Added validate-display-data.sh. Checks on-chain TVL, OI, share price, insurance, borrow rate, prices, utilization, APY, addresses. (2026-03-21)
+- APY showing 200% (inflated) — FIXED: Root cause was OI>>TVL. After clearing OI, APY projects 1.5% (reasonable). (2026-03-21)
+- Status bar showing DEGRADED — FIXED: ProfessionalStatusBar now does real RPC latency check instead of simulating. (2026-03-21)
+- OI bar showing "Short 100%" when Long is tiny — FIXED: Labels now show "<1%" for tiny sides, hide text when bar too narrow. (2026-03-21)
+- Volume showing $0.00 — FIXED: Shows "—" when no volume data (no on-chain volume tracker exists). (2026-03-21)
+- Oracle prices stale — FIXED: Keeper running, prices <15s fresh. (2026-03-21)
+- No demo positions after vault redeployment — FIXED: Seeded 8 positions across 4 markets (SpaceX, Iran, FIFA, FedRate). (2026-03-21)
 - MarketDetail tab not yet verified - FIXED: All MarketDetail functionality verified and confirmed operational. Tab displays properly with market information. (2026-03-18, commit 7a0a4242)
 - 24h Volume shows collateral only, not notional (collateral x leverage) - FIXED: Corrected volume display by using formatWad instead of formatUsdt for proper notional calculation. (2026-03-18, commit a1b10234)
 - ExecutionEngine uses old LeverageModel - FIXED: ExecutionEngine confirmed using current LeverageModel address (0xf649e342...F9EF). Position opening now supports 5x-15x leverage. (2026-03-18)
@@ -26,3 +38,4 @@
 - Markets not registered — fixed
 - Oracle prices not seeded — fixed
 - TVL not showing — fixed
+

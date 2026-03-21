@@ -104,10 +104,7 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
       console.log('Demo transaction sent:', hash);
       return hash;
     } catch (error: any) {
-      console.error('Demo transaction failed - full error:', error);
-      console.error('Demo transaction error message:', error?.message);
-      console.error('Demo transaction error cause:', error?.cause);
-      console.error('Demo transaction error shortMessage:', error?.shortMessage);
+      console.error('Demo transaction failed:', error?.shortMessage || error?.message);
       throw error;
     }
   };
@@ -137,14 +134,6 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
     if (openError) {
       let errorMessage = 'There was an error opening your position. Please try again.';
 
-      console.error('Position opening error - full details:', openError);
-      console.error('Error name:', openError.name);
-      console.error('Error message:', openError.message);
-      console.error('Error shortMessage:', (openError as any).shortMessage);
-      console.error('Error details:', (openError as any).details);
-      console.error('Error metaMessages:', (openError as any).metaMessages);
-      console.error('Error cause:', openError.cause);
-
       // Try to extract meaningful error from multiple possible locations
       const fullErrorText = [
         openError.message,
@@ -153,10 +142,7 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
         (openError as any).reason,
         (openError as any).data?.message,
         (openError as any).cause?.reason,
-        JSON.stringify((openError as any).metaMessages || [])
       ].filter(Boolean).join(' | ');
-
-      console.log('Combined error text for parsing:', fullErrorText);
 
       // Check for specific error patterns
       if (fullErrorText.includes('LeverageExceedsMax') || fullErrorText.includes('ExceedsMaxLeverage')) {
@@ -402,28 +388,13 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
         leverage: '5',
       });
     } catch (error: any) {
-      console.error('Error opening position - full error:', error);
-      console.error('Error message:', error?.message);
-      console.error('Error cause:', error?.cause);
-      console.error('Error stack:', error?.stack);
+      console.error('Error opening position:', error);
 
-      // Try to extract revert reason from different error structures
-      let revertReason = '';
-      if (error?.shortMessage) {
-        revertReason = error.shortMessage;
-      } else if (error?.message) {
-        revertReason = error.message;
-      } else if (error?.reason) {
-        revertReason = error.reason;
-      } else if (error?.data?.message) {
-        revertReason = error.data.message;
-      }
-
-      console.log('Extracted revert reason:', revertReason);
+      const reason = error?.shortMessage || error?.cause?.shortMessage || error?.message || 'Transaction failed';
 
       showErrorToast(
         'Position Open Failed',
-        'There was an error opening your position. Please check console for details.'
+        reason
       );
     }
   };

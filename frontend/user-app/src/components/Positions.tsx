@@ -143,13 +143,8 @@ const Positions: React.FC = () => {
 
   const fetchPositionDetails = useCallback(async () => {
     setIsFetchingDetails(true);
-    console.log('[Positions] fetchPositionDetails called', {
-      address,
-      positionIds: positionIds ? Array.from(positionIds as bigint[]).map(id => id.toString()) : null
-    });
 
     if (!positionIds || !Array.isArray(positionIds) || positionIds.length === 0) {
-      console.log('[Positions] No position IDs found, setting empty array');
       setPositions([]);
       setIsFetchingDetails(false);
       return;
@@ -161,11 +156,8 @@ const Positions: React.FC = () => {
 
     for (const id of positionIds as bigint[]) {
       try {
-        console.log(`[Positions] Processing position ID: ${id.toString()}`);
-
         // Read real position data from contract
         if (!publicClient) {
-          console.warn('[Positions] No publicClient available, skipping position', id.toString());
           continue;
         }
 
@@ -178,7 +170,6 @@ const Positions: React.FC = () => {
 
         // Skip closed positions
         if (rawPos.isOpen === false) {
-          console.log(`[Positions] Position ${id.toString()} is closed, skipping`);
           continue;
         }
 
@@ -201,8 +192,6 @@ const Positions: React.FC = () => {
           openTimestamp: rawPos.openTimestamp ?? BigInt(0),
         };
 
-        console.log(`[Positions] Loaded real position ${id.toString()} from contract`);
-
         // Read accrued borrow fees from BorrowFeeEngine
         try {
           const borrowFees = await publicClient.readContract({
@@ -213,7 +202,7 @@ const Positions: React.FC = () => {
           }) as bigint;
           position.borrowFees = borrowFees;
         } catch (e) {
-          console.warn(`[Positions] Could not read borrow fees for ${id}:`, e);
+          // Borrow fees unavailable, default to 0
         }
 
         // Read accrued funding from FundingRateEngine
@@ -226,14 +215,12 @@ const Positions: React.FC = () => {
           }) as bigint;
           position.fundingAccrued = fundingAccrued;
         } catch (e) {
-          console.warn(`[Positions] Could not read funding for ${id}:`, e);
+          // Funding data unavailable, default to 0
         }
 
         // Calculate PnL with proper decimal scaling
         // Update currentPI from on-chain oracle (same source as Markets tab)
         const mktId = (position.marketId as string).toLowerCase();
-        console.log('[DEBUG] mktId:', mktId, 'oracle count:', oracleMarkets?.length, 'oracle ids:', oracleMarkets?.map((m: any) => m.id.substring(0,10)));
-        console.log('[DEBUG] mktId:', mktId, 'oracle count:', oracleMarkets?.length, 'oracle ids:', oracleMarkets?.map((m: any) => m.id.substring(0,10)));
         const oracleMatch = oracleMarkets?.find((m: any) => m.id.toLowerCase() === mktId);
         if (oracleMatch && oracleMatch.probability > 0 && oracleMatch.probability <= 1) {
           position.currentPI = BigInt(Math.round(oracleMatch.probability * Number(WAD)));
@@ -243,30 +230,6 @@ const Positions: React.FC = () => {
         const pnlValue = direction * priceDiff * Number(position.positionSize) / Number(WAD);
         position.pnl = BigInt(Math.round(pnlValue));
 
-        console.log(`[Positions] Position ${id} PnL calculation:`, {
-          entryPI: position.entryPI.toString(),
-          currentPI: position.currentPI.toString(),
-          priceDiff,
-          direction,
-          positionSizeNumber: Number(position.positionSize),
-          WADNumber: Number(WAD),
-          pnlValue,
-          pnlBigInt: position.pnl.toString(),
-          pnlFormatted: formatPnl(position.pnl)
-        });
-
-        // Calculate equity: collateral + PnL - borrow fees + funding
-        // equity calculated in displayPositions useMemo
-
-        console.log(`[Positions] Position ${id} equity calculation:`, {
-          collateral: position.collateral.toString(),
-          pnl: position.pnl.toString(),
-          borrowFees: position.borrowFees.toString(),
-          fundingAccrued: position.fundingAccrued.toString(),
-          equity: position.equity.toString(),
-          equityFormatted: formatUsdt(position.equity)
-        });
-
         posData.push(position);
       } catch (error) {
         console.error(`[Positions] Error creating position ${id}:`, error);
@@ -274,14 +237,6 @@ const Positions: React.FC = () => {
       }
     }
 
-    console.log('[Positions] Final positions array:', posData.length, 'positions:',
-      posData.map(p => ({
-        id: p.id.toString(),
-        equity: formatUsdt(p.equity),
-        pnl: formatPnl(p.pnl),
-        collateral: formatUsdt(p.collateral)
-      }))
-    );
     setPositions(posData);
       setIsFetchingDetails(false);
   }, [positionIds, address]);
@@ -343,8 +298,6 @@ const Positions: React.FC = () => {
   }, [positions, oracleMarkets]);
 
 
-  console.log('[Positions] Display positions:', positions.length);
-
   const handleCloseClick = (positionId: bigint) => {
     setSelectedPositionId(positionId);
     setCloseState('confirming');
@@ -365,7 +318,6 @@ const Positions: React.FC = () => {
           functionName: 'closePosition',
           args: [position.id],
         });
-        console.log('[Positions] Demo close tx:', result.hash);
         setCloseState('success');
         setTimeout(() => {
           refetchPositionIds();
