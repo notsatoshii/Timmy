@@ -12,59 +12,59 @@ interface UseLivePricesOptions {
   enabled?: boolean;
 }
 
-
 export const useLivePrices = (options: UseLivePricesOptions) => {
-  const { marketIds, pollingInterval = 30000, enabled = true } = options;
+  const { marketIds, pollingInterval = 15000, enabled = true } = options;
   const [prices, setPrices] = useState<Record<string, LivePrice>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<number>(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  // Ref to read current prices without creating callback dependency
-  const pricesRef = useRef(prices);
-  pricesRef.current = prices;
-
-  // Stable market IDs string for dependency comparison
   const marketIdsKey = marketIds.join(',');
 
-  // Initialize prices once
+  const fetchPrices = useCallback(async () => {
+    try {
+      const response = await fetch('/prices.json?t=' + Date.now());
+      if (!response.ok) return;
+
+      const data = await response.json();
+      const pricesData = data.prices || data;
+      const updated: Record<string, LivePrice> = {};
+
+      marketIds.forEach(marketId => {
+        const entry = pricesData[marketId];
+        if (entry && typeof entry.probability === 'number') {
+          updated[marketId] = {
+            marketId,
+            pi: entry.probability,
+            lastUpdated: (entry.timestamp || data.lastUpdate || 0) * 1000,
+          };
+        } else {
+          // Keep existing price or use 0.5 default
+          updated[marketId] = {
+            marketId,
+            pi: prices[marketId]?.pi || 0.5,
+            lastUpdated: Date.now(),
+          };
+        }
+      });
+
+      setPrices(prev => ({ ...prev, ...updated }));
+      setLastUpdate(Date.now());
+      setIsLoading(false);
+    } catch (e) {
+      console.warn('Failed to fetch prices.json:', e);
+      setIsLoading(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [marketIdsKey]);
+
+  // Initial fetch
   useEffect(() => {
-    const initialPrices: Record<string, LivePrice> = {};
-    marketIds.forEach(marketId => {
-      initialPrices[marketId] = {
-        marketId,
-        pi: 0.5,
-        lastUpdated: Date.now(),
-      };
-    });
-    setPrices(initialPrices);
-    setIsLoading(false);
+    if (!enabled || marketIds.length === 0) return;
+    fetchPrices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [marketIdsKey]);
+  }, [enabled, marketIdsKey]);
 
-  // Simulate price movements — reads from ref, no circular dep
-  const simulatePriceUpdate = useCallback(() => {
-    const current = pricesRef.current;
-    const updated: Record<string, LivePrice> = {};
-
-    marketIds.forEach(marketId => {
-      const currentPrice = current[marketId]?.pi || 0.5;
-      const volatility = 0.02;
-      const randomChange = (Math.random() - 0.5) * 2 * volatility;
-      const newPrice = Math.max(0.01, Math.min(0.99, currentPrice + randomChange));
-
-      updated[marketId] = {
-        marketId,
-        pi: newPrice,
-        lastUpdated: Date.now(),
-      };
-    });
-
-    setPrices(prev => ({ ...prev, ...updated }));
-    setLastUpdate(Date.now());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [marketIdsKey]);
-
-  // Polling on a stable interval — no dependency on prices
+  // Polling
   useEffect(() => {
     if (!enabled || marketIds.length === 0) return;
 
@@ -72,7 +72,7 @@ export const useLivePrices = (options: UseLivePricesOptions) => {
       clearInterval(intervalRef.current);
     }
 
-    intervalRef.current = setInterval(simulatePriceUpdate, pollingInterval);
+    intervalRef.current = setInterval(fetchPrices, pollingInterval);
 
     return () => {
       if (intervalRef.current) {
@@ -81,17 +81,13 @@ export const useLivePrices = (options: UseLivePricesOptions) => {
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, marketIdsKey, pollingInterval, simulatePriceUpdate]);
-
-  const refreshPrices = useCallback(() => {
-    simulatePriceUpdate();
-  }, [simulatePriceUpdate]);
+  }, [enabled, marketIdsKey, pollingInterval, fetchPrices]);
 
   return {
     prices,
     isLoading,
     lastUpdate,
-    refreshPrices,
+    refreshPrices: fetchPrices,
   };
 };
 

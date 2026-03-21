@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-19T02:24:36.055Z",
+  "timestamp": "2026-03-21T02:08:08.645Z",
   "testing_method": "intelligent_fallback",
   "browser_automation_available": false,
   "scores": {
@@ -16,7 +16,7 @@
       "score": 90,
       "details": {
         "status_code": 200,
-        "content_length": 5422,
+        "content_length": 5342,
         "has_react_markers": true
       }
     },
@@ -37,10 +37,10 @@
     {
       "name": "Asset Loading",
       "passed": true,
-      "score": 60,
+      "score": 80,
       "details": {
         "assets_tested": 4,
-        "successful": 3,
+        "successful": 4,
         "results": [
           {
             "asset": "/static/js/",
@@ -59,14 +59,12 @@
           },
           {
             "asset": "/deployments/contract-metadata.json",
-            "status": 404,
-            "success": false
+            "status": 200,
+            "success": true
           }
         ]
       },
-      "issues": [
-        "/deployments/contract-metadata.json: 404"
-      ]
+      "issues": []
     },
     {
       "name": "API Endpoint Testing",
@@ -79,7 +77,7 @@
             "endpoint": "http://localhost:3000/api/health",
             "status": 200,
             "success": true,
-            "data": "{\n  \"status\": \"healthy\",\n  \"timestamp\": \"2026-03-19T02:24:36.592Z\",\n  \"service\": \"lever-frontend\",\n "
+            "data": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"/><link rel=\"icon\" href=\"/lever-icon.png\" "
           },
           {
             "endpoint": "http://localhost:3000/api/status",
@@ -91,7 +89,7 @@
             "endpoint": "http://localhost:3000/health",
             "status": 200,
             "success": true,
-            "data": "{\n  \"status\": \"healthy\",\n  \"timestamp\": \"2026-03-19T02:24:36.592Z\",\n  \"service\": \"lever-frontend\",\n "
+            "data": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"/><link rel=\"icon\" href=\"/lever-icon.png\" "
           }
         ]
       },

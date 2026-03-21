@@ -245,7 +245,7 @@ export function useVaultMulticall(userAddress?: `0x${string}`) {
           leverVault: addresses.leverVault,
           oiLimits: addresses.oiLimits,
           usdt: addresses.usdt,
-          matchesExpected: addresses.leverVault === "0x84a1Eb3b1eFD60b193b271DCfaB2711cE1c41921"
+          matchesExpected: addresses.leverVault === "0x1b623D8671c417fe5151cCDb38ec7cAB64332836"
         });
       }
     }).catch(err => {

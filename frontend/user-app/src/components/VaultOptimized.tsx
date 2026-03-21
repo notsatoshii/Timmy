@@ -333,7 +333,7 @@ const VaultOptimized: React.FC = () => {
           tvl={metrics.tvl}
           sharePrice={sharePrice}
           utilization={metrics.utilization}
-          annualizedAPY={apyPercent || metrics.annualizedAPY}
+          annualizedAPY={apyPercent !== undefined ? apyPercent : metrics.annualizedAPY}
           isLoading={safeVaultData.isLoadingVaultData}
           hasError={safeVaultData.hasError}
         />

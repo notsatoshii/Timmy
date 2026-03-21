@@ -1,0 +1,10 @@
+{
+  "leverageModel": "0xA7D95F94dA06E29fc8eFf948Bca3B4AF1d2585ed",
+  "oiLimits": "0x5B9820B789785f62349bAE7e2B8A17a8e4A3E7cd",
+  "borrowFeeEngine": "0x706578de003912C71e534949d8b8DDd5108950e1",
+  "fundingRateEngine": "0x1C538eFA480C85D032c0ad45Dd87f9876c16Cbbe",
+  "marginEngine": "0xd4e840487bFE3Ca7448BcdB41a7972DfA29B6fce",
+  "executionEngine": "0xafEA713Dc2d6ebec15B21aB92bd15bC733D5B786",
+  "liquidationEngine": "0x0374edd7DCd819548C9dBf53c36f15880FaD69eD",
+  "settlementEngine": "0xdfB429809e0862e01Dcc73A6621b8729325F5691"
+}

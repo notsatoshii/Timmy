@@ -1,54 +1,9 @@
 {
-  "timestamp": "2026-03-19T03:52:08.682530+00:00",
-  "frontend_status": "UP",
-  "tabs": {},
-  "data_checks": [],
-  "contract_checks": [
-    {
-      "name": "TVL",
-      "value": "68523959204690 [6.852e13]",
-      "status": "ok"
-    },
-    {
-      "name": "Positions",
-      "value": "272",
-      "status": "ok"
-    },
-    {
-      "name": "Global OI",
-      "value": "15040722554735 [1.504e13]",
-      "status": "ok"
-    },
-    {
-      "name": "Insurance Fund",
-      "value": "5011000000005000000000000 [5.011e24]",
-      "status": "ok"
-    }
-  ],
-  "sprint_checks": {},
-  "critical_blockers": [],
-  "visual_issues": [
-    "Vision: Cannot evaluate full UI/UX since React app requires JavaScript execution",
-    "Vision: No visible data or metrics from static HTML response",
-    "Vision: Unable to assess trading interface functionality from curl response",
-    "Vision: Cannot verify if real market data is displayed vs placeholder content"
-  ],
-  "functional_issues": [],
-  "score": 68,
-  "vision_review": {
-    "professional_score": 8,
-    "trust_score": 7,
-    "issues": [
-      "Cannot evaluate full UI/UX since React app requires JavaScript execution",
-      "No visible data or metrics from static HTML response",
-      "Unable to assess trading interface functionality from curl response",
-      "Cannot verify if real market data is displayed vs placeholder content"
-    ],
-    "improvements": [
-      "Need to test with actual browser to evaluate complete user experience",
-      "Should verify trading interface loads real market data and positions",
-      "Test wallet connection and transaction flows for investor confidence",
-      "Validate that TVL, volume, and performance metrics display correctly"
-    ]
-  }
+  "timestamp": "2026-03-21T02:08:08.645Z",
+  "overall_score": 71,
+  "testing_method": "intelligent_fallback",
+  "browser_automation": false,
+  "screenshots": 0,
+  "passed_tests": 4,
+  "total_tests": 4
 }

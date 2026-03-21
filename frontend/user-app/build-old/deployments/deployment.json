@@ -1,0 +1,19 @@
+{
+  "usdt": "0x5DaA593b6D7A6F3D3224471aC2D3905B54c2966E",
+  "marketRegistry": "0x3Cc9E89DF048CE26Be380696E86814bEbB984DB7",
+  "oracleAdapter": "0xf0698FCEDD3A212c5f1D78f7c4c008CB90efeA9c",
+  "accountManager": "0x6D2231BB7E8704C1e76de63A06A16d9B59bA6684",
+  "positionManager": "0x25ba54a7b2fBac753B601Da05e3661F2E959510b",
+  "leverageModel": "0xA7D95F94dA06E29fc8eFf948Bca3B4AF1d2585ed",
+  "oiLimits": "0x5B9820B789785f62349bAE7e2B8A17a8e4A3E7cd",
+  "borrowFeeEngine": "0x706578de003912C71e534949d8b8DDd5108950e1",
+  "fundingRateEngine": "0x1C538eFA480C85D032c0ad45Dd87f9876c16Cbbe",
+  "marginEngine": "0xd4e840487bFE3Ca7448BcdB41a7972DfA29B6fce",
+  "executionEngine": "0x353dbffd7f936a0bb4390339f33bf2e3ab3c4e9d",
+  "feeRouter": "0x1d6e55260C6Dd2A20A5bb7Cb6331E6Ba2faB5b6F",
+  "insuranceFund": "0x39aca7f8cbb4b054c2f6aad637a61942898b1ae8",
+  "leverVault": "0x84a1Eb3b1eFD60b193b271DCfaB2711cE1c41921",
+  "rewardsDistributor": "0xab8DFA8cF72b054c356961026F8648dB7D860Cb0",
+  "liquidationEngine": "0x2A42Ef441CAbF34D3Ff9B9867CAf4Ae087FEC42E",
+  "settlementEngine": "0x9c7E9496A25Bf06f163A4483e5702ac350e8e9aD"
+}

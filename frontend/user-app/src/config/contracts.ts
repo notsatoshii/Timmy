@@ -128,6 +128,7 @@ export interface ContractAddresses {
   // Engine contracts
   leverageModel: `0x${string}`;
   oiLimits: `0x${string}`;
+  oiLimitsNew: `0x${string}`;  // New OILimits with correct TVL for cap display
   borrowFeeEngine: `0x${string}`;
   fundingRateEngine: `0x${string}`;
   marginEngine: `0x${string}`;
@@ -157,6 +158,7 @@ const FALLBACK_ADDRESSES: ContractAddresses = {
   // Engine contracts
   leverageModel: "0xA7D95F94dA06E29fc8eFf948Bca3B4AF1d2585ed" as `0x${string}`,
   oiLimits: "0x5B9820B789785f62349bAE7e2B8A17a8e4A3E7cd" as `0x${string}`,
+  oiLimitsNew: "0xF04a8Fe7d989986A25A55FD6f72753226965f6FB" as `0x${string}`,
   borrowFeeEngine: "0x706578de003912C71e534949d8b8DDd5108950e1" as `0x${string}`,
   fundingRateEngine: "0x1C538eFA480C85D032c0ad45Dd87f9876c16Cbbe" as `0x${string}`,
   marginEngine: "0xd4e840487bFE3Ca7448BcdB41a7972DfA29B6fce" as `0x${string}`,
@@ -212,6 +214,7 @@ export async function loadContractAddresses(): Promise<ContractAddresses> {
       // Engine contracts
       leverageModel: enginesDeployment.leverageModel as `0x${string}`,
       oiLimits: enginesDeployment.oiLimits as `0x${string}`,
+      oiLimitsNew: "0xF04a8Fe7d989986A25A55FD6f72753226965f6FB" as `0x${string}`,
       borrowFeeEngine: enginesDeployment.borrowFeeEngine as `0x${string}`,
       fundingRateEngine: enginesDeployment.fundingRateEngine as `0x${string}`,
       marginEngine: enginesDeployment.marginEngine as `0x${string}`,

@@ -91,16 +91,8 @@ export const useMarketProbabilities = (options: UseMarketProbabilitiesOptions = 
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<number>(0);
 
-  // State to track oracle probabilities
-  const [oracleProbabilities, setOracleProbabilities] = useState<Record<string, number> | null>(() => {
-    // Initialize with fallback values so first render never shows stale data
-    const initial: Record<string, number> = {};
-    for (const marketId of REAL_MARKET_IDS) {
-      const fb = DEMO_MARKETS_FALLBACK[marketId as keyof typeof DEMO_MARKETS_FALLBACK];
-      if (fb) initial[marketId] = fb.initial_probability;
-    }
-    return initial;
-  });
+  // State to track oracle probabilities — start null, show loading until first real fetch
+  const [oracleProbabilities, setOracleProbabilities] = useState<Record<string, number> | null>(null);
   const [oracleError, setOracleError] = useState<string | null>(null);
 
   // Read PI for the first market to test oracle connectivity
@@ -223,9 +215,11 @@ export const useMarketProbabilities = (options: UseMarketProbabilitiesOptions = 
   // Effect to build market data from oracle + fallback
   useEffect(() => {
     if (!enabled) return;
+    // Don't render with stale fallback — wait for first real fetch
+    if (!oracleProbabilities) return;
 
     try {
-      setIsLoading(true);
+      setIsLoading(false);
 
       const source: 'oracle' | 'fallback' = oracleProbabilities ? 'oracle' : 'fallback';
 

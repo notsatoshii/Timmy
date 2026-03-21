@@ -5,7 +5,7 @@ import { parseUnits, createWalletClient, createPublicClient, http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'wagmi/chains';
 import { CONTRACT_ADDRESSES, formatUsdt, parseUsdt, loadContractAddresses, clearAddressCache } from '../config/contracts';
-import { EXECUTION_ENGINE_ABI, ACCOUNT_MANAGER_ABI, USDT_ABI, LEVERAGE_MODEL_ABI } from '../config/abis';
+import { EXECUTION_ENGINE_ABI, ACCOUNT_MANAGER_ABI, USDT_ABI, LEVERAGE_MODEL_ABI, OI_LIMITS_ABI } from '../config/abis';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useMarketProbabilities } from '../hooks/useMarketProbabilities';
 import { useDemo } from '../contexts/DemoContext';
@@ -239,6 +239,136 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
   });
 
   const maxLeverage = maxLeverageRaw ? Number(maxLeverageRaw) / 1e18 : 30; // Convert from WAD to decimal, default to 30
+
+  // Read OI caps and current OI for max position calculation
+  const marketIdHex = tradeForm.marketId ? tradeForm.marketId as `0x${string}` : undefined;
+  const isLong = tradeForm.direction === 'long';
+
+  // OI caps from NEW OILimits (reads correct TVL)
+  const { data: globalOICapRaw } = useReadContract({
+    address: CONTRACT_ADDRESSES.oiLimitsNew,
+    abi: OI_LIMITS_ABI,
+    functionName: 'getGlobalOICap',
+    query: { enabled: !!marketIdHex },
+  });
+
+  const { data: marketOICapRaw } = useReadContract({
+    address: CONTRACT_ADDRESSES.oiLimitsNew,
+    abi: OI_LIMITS_ABI,
+    functionName: 'getMarketOICap',
+    args: marketIdHex ? [marketIdHex] : undefined,
+    query: { enabled: !!marketIdHex },
+  });
+
+  const { data: sideOICapRaw } = useReadContract({
+    address: CONTRACT_ADDRESSES.oiLimitsNew,
+    abi: OI_LIMITS_ABI,
+    functionName: 'getSideOICap',
+    args: marketIdHex ? [marketIdHex] : undefined,
+    query: { enabled: !!marketIdHex },
+  });
+
+  const { data: userOICapRaw } = useReadContract({
+    address: CONTRACT_ADDRESSES.oiLimitsNew,
+    abi: OI_LIMITS_ABI,
+    functionName: 'getUserOICap',
+    args: marketIdHex ? [marketIdHex] : undefined,
+    query: { enabled: !!marketIdHex },
+  });
+
+  // Current OI from OLD OILimits (where ExecutionEngine writes)
+  const { data: globalOIRaw } = useReadContract({
+    address: CONTRACT_ADDRESSES.oiLimits,
+    abi: OI_LIMITS_ABI,
+    functionName: 'getGlobalOI',
+    query: { enabled: !!marketIdHex },
+  });
+
+  const { data: marketOIRaw } = useReadContract({
+    address: CONTRACT_ADDRESSES.oiLimits,
+    abi: OI_LIMITS_ABI,
+    functionName: 'getMarketOI',
+    args: marketIdHex ? [marketIdHex] : undefined,
+    query: { enabled: !!marketIdHex },
+  });
+
+  const { data: sideOIRaw } = useReadContract({
+    address: CONTRACT_ADDRESSES.oiLimits,
+    abi: OI_LIMITS_ABI,
+    functionName: 'getSideOI',
+    args: marketIdHex ? [marketIdHex, isLong] : undefined,
+    query: { enabled: !!marketIdHex },
+  });
+
+  const { data: userOIRaw } = useReadContract({
+    address: CONTRACT_ADDRESSES.oiLimits,
+    abi: OI_LIMITS_ABI,
+    functionName: 'getUserOI',
+    args: marketIdHex && address ? [marketIdHex, address] : undefined,
+    query: { enabled: !!marketIdHex && !!address },
+  });
+
+  // Compute max position size from all 4 OI cap tiers + balance
+  const maxPositionInfo = React.useMemo(() => {
+    if (!marketIdHex) return null;
+
+    const lev = parseFloat(tradeForm.leverage) || 1;
+    const amBal = accountBalance ? Number(accountBalance) : 0;
+
+    // All 4 tiers: cap - current = remaining
+    const tiers: { name: string; cap: number; current: number; remaining: number }[] = [
+      {
+        name: 'Global OI',
+        cap: globalOICapRaw ? Number(globalOICapRaw) : 0,
+        current: globalOIRaw ? Number(globalOIRaw) : 0,
+        remaining: 0,
+      },
+      {
+        name: 'Market OI',
+        cap: marketOICapRaw ? Number(marketOICapRaw) : 0,
+        current: marketOIRaw ? Number(marketOIRaw) : 0,
+        remaining: 0,
+      },
+      {
+        name: 'Side OI',
+        cap: sideOICapRaw ? Number(sideOICapRaw) : 0,
+        current: sideOIRaw ? Number(sideOIRaw) : 0,
+        remaining: 0,
+      },
+      {
+        name: 'Per-user OI',
+        cap: userOICapRaw ? Number(userOICapRaw) : 0,
+        current: userOIRaw ? Number(userOIRaw) : 0,
+        remaining: 0,
+      },
+    ];
+    tiers.forEach(t => { t.remaining = Math.max(0, t.cap - t.current); });
+
+    const balanceTier = { name: 'Account balance', cap: amBal, remaining: amBal * lev };
+
+    // Find the tightest OI constraint
+    const tightestOI = tiers.reduce((min, t) => t.remaining < min.remaining ? t : min, tiers[0]);
+    const oiLimit = tightestOI.remaining;
+
+    // Compare OI limit vs balance-derived notional
+    const maxNotionalFromBalance = balanceTier.remaining;
+    const isBoundByBalance = maxNotionalFromBalance < oiLimit;
+    const maxNotional = Math.min(oiLimit, maxNotionalFromBalance);
+    const maxCollateral = lev > 0 ? maxNotional / lev : 0;
+
+    const binding = isBoundByBalance ? balanceTier : tightestOI;
+
+    return {
+      maxNotional: maxNotional / 1e6,
+      maxCollateral: maxCollateral / 1e6,
+      bindingName: binding.name,
+      bindingCap: (isBoundByBalance ? binding.cap : binding.cap) / 1e6,
+      bindingRemaining: binding.remaining / 1e6,
+      tiers: tiers.map(t => ({ ...t, cap: t.cap / 1e6, current: t.current / 1e6, remaining: t.remaining / 1e6 })),
+      balanceUsd: amBal / 1e6,
+    };
+  }, [marketIdHex, globalOICapRaw, globalOIRaw, marketOICapRaw, marketOIRaw,
+      sideOICapRaw, sideOIRaw, userOICapRaw, userOIRaw, accountBalance, tradeForm.leverage]);
 
   const handleInputChange = (field: keyof TradeForm, value: string) => {
     // Cap leverage to maximum allowed
@@ -582,6 +712,45 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
                     {parseFloat(tradeForm.leverage) > 10 ? 'High' : 'Low'}
                   </span>
                 </div>
+                {maxPositionInfo && (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Max Position:</span>
+                      <span className="font-medium font-mono text-gray-200">
+                        ${maxPositionInfo.maxNotional.toLocaleString('en-US', { maximumFractionDigits: 0 })} notional
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Max Collateral:</span>
+                      <span className="font-medium font-mono text-gray-200">
+                        ${maxPositionInfo.maxCollateral.toLocaleString('en-US', { maximumFractionDigits: 0 })} USDT
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Binding Limit:</span>
+                      <span className="font-medium text-xs text-gray-400">
+                        {maxPositionInfo.bindingName} — ${maxPositionInfo.bindingRemaining.toLocaleString('en-US', { maximumFractionDigits: 0 })} remaining
+                      </span>
+                    </div>
+                    <div className="pt-2 mt-2 border-t border-border/50 space-y-1">
+                      <div className="text-[10px] uppercase tracking-wider text-gray-600 mb-1">OI Capacity</div>
+                      {maxPositionInfo.tiers.map(t => (
+                        <div key={t.name} className="flex justify-between text-xs">
+                          <span className="text-gray-600">{t.name}:</span>
+                          <span className="font-mono text-gray-500">
+                            ${t.current.toLocaleString('en-US', { maximumFractionDigits: 0 })} / ${t.cap.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                          </span>
+                        </div>
+                      ))}
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-600">Balance:</span>
+                        <span className="font-mono text-gray-500">
+                          ${maxPositionInfo.balanceUsd.toLocaleString('en-US', { maximumFractionDigits: 0 })} × {tradeForm.leverage}x
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
