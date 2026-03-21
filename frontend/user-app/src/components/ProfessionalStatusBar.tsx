@@ -171,7 +171,7 @@ const ProfessionalStatusBar: React.FC<ProfessionalStatusBarProps> = ({
               </div>
               <div className="text-center">
                 <div className="text-steel/60">MARKETS</div>
-                <div className="text-accent font-mono font-semibold">5 ACTIVE</div>
+                <div className="text-accent font-mono font-semibold">10 ACTIVE</div>
               </div>
               <div className="text-center">
                 <div className="text-steel/60">USERS</div>

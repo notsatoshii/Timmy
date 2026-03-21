@@ -4,7 +4,6 @@ import { usePageTitle } from '../hooks/usePageTitle';
 import ConnectWallet from './ConnectWallet';
 import Header from './Header';
 import ProtocolStats from './ProtocolStats';
-import Markets from './Markets';
 import LazyMarketDetail from './LazyMarketDetail';
 import MainnetRoadmap from './MainnetRoadmap';
 import ErrorBoundary from './ErrorBoundary';
@@ -16,7 +15,8 @@ import Footer from './Footer';
 import InstitutionalHeader from './InstitutionalHeader';
 import ProfessionalStatusBar from './ProfessionalStatusBar';
 
-// Lazy load heavy components
+// Lazy load heavy components — consistent ProfessionalLoader on all tabs
+const Markets = lazy(() => import('./Markets'));
 const Trading = lazy(() => import('./Trading'));
 const VaultOptimized = lazy(() => import('./VaultOptimized'));
 const Positions = lazy(() => import('./Positions'));
@@ -107,6 +107,13 @@ const DashboardOptimized: React.FC = () => {
             showLiveIndicators: true,
             progressSteps: ['Querying positions', 'Calculating PnL', 'Loading history']
           };
+        case 'Prediction Markets':
+          return {
+            variant: 'default' as const,
+            subtitle: 'Loading markets and oracle price feeds',
+            showLiveIndicators: true,
+            progressSteps: ['Fetching markets', 'Loading prices', 'Ready']
+          };
         default:
           return {
             variant: variant,
@@ -149,10 +156,12 @@ const DashboardOptimized: React.FC = () => {
         }
         return (
           <ErrorBoundary panelName="Markets">
-            <Markets
-              onTradeSelect={handleTradeSelection}
-              onMarketDetail={handleMarketDetail}
-            />
+            <Suspense fallback={<ComponentLoader title="Prediction Markets" />}>
+              <Markets
+                onTradeSelect={handleTradeSelection}
+                onMarketDetail={handleMarketDetail}
+              />
+            </Suspense>
           </ErrorBoundary>
         );
       case 'trading':

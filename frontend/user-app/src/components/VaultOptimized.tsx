@@ -9,6 +9,7 @@ import { useRealAPY } from '../hooks/useRealAPY';
 import { useVaultMulticall } from '../hooks/useVaultMulticall';
 import { useMemoizedVaultCalculations } from '../hooks/useMemoizedCalculations';
 import Skeleton from './Skeleton';
+import ProfessionalLoader from './ProfessionalLoader';
 import VaultStats from './vault/VaultStats';
 import TestnetDisclaimer from './TestnetDisclaimer';
 
@@ -314,6 +315,19 @@ const VaultOptimized: React.FC = () => {
     }
   }, [safeVaultData.userShares]);
 
+  // Show consistent loading screen while vault data loads
+  if (safeVaultData.isLoadingVaultData) {
+    return (
+      <ProfessionalLoader
+        title="Loading Vault"
+        subtitle="Fetching LP positions and yield data"
+        variant="data"
+        size="lg"
+        showLiveIndicators={true}
+      />
+    );
+  }
+
   // Component render
   return (
     <div className="space-y-6">
@@ -555,15 +569,7 @@ const VaultOptimized: React.FC = () => {
         </div>
       )}
 
-      {/* Loading Indicator when vault is loading */}
-      {safeVaultData.isLoadingVaultData && (
-        <div className="bg-accent/10 border border-accent/20 text-accent rounded-lg p-4">
-          <h4 className="font-semibold mb-2">Loading Vault Data...</h4>
-          <p className="text-sm">
-            Fetching live data from LeverVault contract...
-          </p>
-        </div>
-      )}
+      {/* Loading handled by early return above */}
     </div>
   );
 };

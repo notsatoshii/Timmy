@@ -4,7 +4,8 @@ import { CONTRACT_ADDRESSES } from '../config/contracts';
 import {
   OI_LIMITS_ABI,
   BORROW_FEE_ENGINE_ABI,
-  FUNDING_RATE_ENGINE_ABI
+  FUNDING_RATE_ENGINE_ABI,
+  ORACLE_ADAPTER_ABI
 } from '../config/abis';
 import { useMarketProbabilities } from '../hooks/useMarketProbabilities';
 import {
@@ -124,6 +125,18 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
       enabled: !!market?.id && !!CONTRACT_ADDRESSES.oiLimits && marketBytes32 !== '0x0000000000000000000000000000000000000000000000000000000000000000',
     },
   });
+
+  // Get on-chain MTM price (smoothed PI from OracleAdapter)
+  const { data: onChainPI } = useReadContract({
+    address: CONTRACT_ADDRESSES.oracleAdapter,
+    abi: ORACLE_ADAPTER_ABI,
+    functionName: 'getPI',
+    args: [marketBytes32],
+    query: {
+      enabled: !!market?.id && marketBytes32 !== '0x0000000000000000000000000000000000000000000000000000000000000000',
+    },
+  });
+  const mtmPrice = onChainPI ? Number(onChainPI) / 1e18 : null;
 
   // Get current rates (using long side for borrow rate)
   const { data: borrowRate = 0, error: borrowRateError, isLoading: borrowRateLoading } = useReadContract({
@@ -275,7 +288,8 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
       }
     };
 
-    setRecentPositions(generateRecentPositions());
+    // Don't show fake generated positions — show empty until real positions exist
+    setRecentPositions([]);
   }, [market?.id, market?.price, currentPrice]);
 
   const formatTimeToResolution = (timestamp: number): string => {
@@ -572,10 +586,10 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
               {market?.description || 'Unknown Market'}
             </h1>
 
-            <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-6 sm:grid-cols-5">
               <div>
                 <p className="text-gray-500 text-sm flex items-center">
-                  Current Price
+                  Index Price
                   <span className={`ml-2 w-2 h-2 rounded-full animate-pulse ${
                     hasOracleData ? 'bg-accent' : 'bg-warning'
                   }`}></span>
@@ -584,8 +598,18 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
                   {(currentPrice * 100).toFixed(1)}¢
                 </p>
                 <p className="text-xs text-gray-600">
-                  {hasOracleData ? 'Live Oracle' : 'Demo Fallback'}
+                  {hasOracleData ? 'Polymarket' : 'Demo Fallback'}
                 </p>
+              </div>
+              <div>
+                <p className="text-gray-500 text-sm flex items-center">
+                  Mark Price
+                  <span className="ml-2 w-2 h-2 rounded-full animate-pulse bg-blue-400"></span>
+                </p>
+                <p className="text-2xl font-bold text-blue-400 font-mono">
+                  {mtmPrice ? `${(mtmPrice * 100).toFixed(1)}¢` : '—'}
+                </p>
+                <p className="text-xs text-gray-600">On-chain MTM</p>
               </div>
               <div>
                 <p className="text-gray-500 text-sm">Probability</p>

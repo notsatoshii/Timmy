@@ -72,11 +72,13 @@ const ProtocolStats: React.FC = () => {
     query: { enabled: !!addresses.oiLimits }
   });
 
+  // Read actual USDT balance of insurance fund (not internal WAD accounting)
   const { data: insuranceRaw, isLoading: insuranceLoading, error: insuranceError } = useReadContract({
-    address: addresses.insuranceFund,
-    abi: INSURANCE_FUND_ABI,
-    functionName: 'getBalance',
-    query: { enabled: !!addresses.insuranceFund }
+    address: addresses.usdt,
+    abi: [{ name: 'balanceOf', type: 'function', stateMutability: 'view', inputs: [{ name: 'account', type: 'address' }], outputs: [{ name: '', type: 'uint256' }] }],
+    functionName: 'balanceOf',
+    args: [addresses.insuranceFund],
+    query: { enabled: !!addresses.usdt && !!addresses.insuranceFund }
   });
 
   const spacexMarketId = '0x2841ef32b61fb3472aadbfc70d787a1bfaf5d0218c9601b87963af7bcca1bcf1';
@@ -102,25 +104,16 @@ const ProtocolStats: React.FC = () => {
       const safeTvl = tvlFallback ? DEMO_FALLBACK_VALUES.tvl : tvlRaw;
       const safeTotalOI = oiFallback ? DEMO_FALLBACK_VALUES.totalOI : totalOIRaw;
 
-      // Special handling for insurance fund - detect malformed values
+      // Insurance fund: now reads USDT.balanceOf(insuranceFund) directly (6 decimals)
       let safeInsurance: bigint;
       if (insuranceFallback) {
         safeInsurance = DEMO_FALLBACK_VALUES.insuranceFund;
       } else {
-        // The insurance fund should be in USDT format (6 decimals), not WAD format (18 decimals)
-        // Expected range: $10K-$100K, so raw value should be 10,000,000 to 100,000,000 (in USDT format)
-        const expectedMinUsdtRaw = BigInt(10_000_000_000); // $10K in USDT format
-        const expectedMaxUsdtRaw = BigInt(1_000_000_000_000); // $1M in USDT format
-
-        // Convert from WAD to USDT format: divide by 1e12 (18 decimals -> 6 decimals)
-        const wadToUsdtDivisor = BigInt('1000000000000'); // 1e12
-        safeInsurance = insuranceRaw / wadToUsdtDivisor;
-
-        // Sanity check - should be around $10K for bootstrap
-        if (safeInsurance < BigInt(1_000_000) || safeInsurance > BigInt(100_000_000_000_000)) {
+        // Already in USDT format (6 decimals) — no conversion needed
+        safeInsurance = insuranceRaw as bigint;
+        if (safeInsurance < BigInt(0)) {
           safeInsurance = DEMO_FALLBACK_VALUES.insuranceFund;
         }
-        // Keep the converted value - don't overwrite with insuranceRaw
       }
       const safeVolume = volumeFallback ? DEMO_FALLBACK_VALUES.volume24h : volume24h;
       const safeBorrowRate = borrowRateFallback ? DEMO_FALLBACK_VALUES.borrowRate : currentBorrowRate;

@@ -1,6 +1,10 @@
 import React, { useMemo } from 'react';
+import { useReadContract } from 'wagmi';
 import { useMarketProbabilities } from '../hooks/useMarketProbabilities';
+import { CONTRACT_ADDRESSES } from '../config/contracts';
+import { LEVERAGE_MODEL_ABI } from '../config/abis';
 import Skeleton from './Skeleton';
+import ProfessionalLoader from './ProfessionalLoader';
 import TestnetDisclaimer from './TestnetDisclaimer';
 import { LiveDataBadge } from './ConnectionStatus';
 
@@ -20,6 +24,15 @@ interface MarketsProps {
 }
 
 const Markets: React.FC<MarketsProps> = ({ onTradeSelect, onMarketDetail }) => {
+  // Read max leverage from first market as representative
+  const { data: maxLeverageRaw } = useReadContract({
+    address: CONTRACT_ADDRESSES.leverageModel,
+    abi: LEVERAGE_MODEL_ABI,
+    functionName: 'getEffectiveMaxLeverage',
+    args: ['0x2841ef32b61fb3472aadbfc70d787a1bfaf5d0218c9601b87963af7bcca1bcf1'],
+  });
+  const maxLevDisplay = maxLeverageRaw ? `${(Number(maxLeverageRaw) / 1e18).toFixed(0)}x` : '...';
+
   const {
     markets: marketData,
     isLoading,
@@ -92,7 +105,7 @@ const Markets: React.FC<MarketsProps> = ({ onTradeSelect, onMarketDetail }) => {
         <div>
           <h2 className="text-2xl font-bold font-display text-ivory">Prediction Markets</h2>
           <p className="text-sm text-steel mt-1">
-            Browse active binary outcome markets with up to <span className="text-accent font-semibold">30x</span> leverage
+            Browse active binary outcome markets with up to <span className="text-accent font-semibold">{maxLevDisplay}</span> leverage
           </p>
         </div>
         <div className="flex items-center space-x-3">
@@ -207,34 +220,22 @@ const Markets: React.FC<MarketsProps> = ({ onTradeSelect, onMarketDetail }) => {
               >
                 Short
               </button>
-              <span className="text-[10px] text-steel uppercase tracking-wider hidden sm:block">30x max</span>
+              <span className="text-[10px] text-steel uppercase tracking-wider hidden sm:block">{maxLevDisplay} max</span>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Loading skeletons */}
+      {/* Loading state — consistent ProfessionalLoader */}
       {isLoading && (
-        <div className="grid gap-4 lg:grid-cols-1">
-          {[1, 2, 3].map((index) => (
-            <div key={index} className="lever-card">
-              <div className="flex items-center space-x-3 mb-4">
-                <Skeleton width="80px" height="24px" />
-                <Skeleton width="50px" height="24px" />
-              </div>
-              <Skeleton height="24px" className="mb-4" />
-              <div className="grid grid-cols-3 gap-3 mb-4">
-                <div className="lever-inset"><Skeleton height="40px" /></div>
-                <div className="lever-inset"><Skeleton height="40px" /></div>
-                <div className="lever-inset"><Skeleton height="40px" /></div>
-              </div>
-              <div className="flex space-x-3">
-                <Skeleton height="40px" className="flex-1" />
-                <Skeleton height="40px" className="flex-1" />
-              </div>
-            </div>
-          ))}
-        </div>
+        <ProfessionalLoader
+          title="Loading Markets"
+          subtitle="Fetching market data and oracle price feeds"
+          variant="default"
+          size="lg"
+          showLiveIndicators={true}
+          showProgress={false}
+        />
       )}
 
       {!isLoading && markets.length === 0 && (

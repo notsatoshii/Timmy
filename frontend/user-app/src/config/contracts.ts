@@ -150,21 +150,21 @@ const FALLBACK_ADDRESSES: ContractAddresses = {
   positionManager: "0x25ba54a7b2fBac753B601Da05e3661F2E959510b" as `0x${string}`,
 
   // Pool contracts
-  leverVault: "0x1b623D8671c417fe5151cCDb38ec7cAB64332836" as `0x${string}`,
-  rewardsDistributor: "0xab8DFA8cF72b054c356961026F8648dB7D860Cb0" as `0x${string}`,
-  insuranceFund: "0x39Aca7F8CbB4b054C2f6aaD637a61942898B1Ae8" as `0x${string}`,
-  feeRouter: "0x1d6e55260C6Dd2A20A5bb7Cb6331E6Ba2faB5b6F" as `0x${string}`,
+  leverVault: "0x797E10F9F6BD7C725Fc8AD20A5e3330B1BF17360" as `0x${string}`,
+  rewardsDistributor: "0xfefbeb90e73ea4652bc41555f764142944aa297d" as `0x${string}`,
+  insuranceFund: "0x9173c92d6c4915183c65120bce57cc35e58417c9" as `0x${string}`,
+  feeRouter: "0x18f7645a2260e9d874b5e848608f3d3f606fa150" as `0x${string}`,
 
   // Engine contracts
-  leverageModel: "0xA7D95F94dA06E29fc8eFf948Bca3B4AF1d2585ed" as `0x${string}`,
-  oiLimits: "0x5B9820B789785f62349bAE7e2B8A17a8e4A3E7cd" as `0x${string}`,
-  oiLimitsNew: "0xF04a8Fe7d989986A25A55FD6f72753226965f6FB" as `0x${string}`,
-  borrowFeeEngine: "0x706578de003912C71e534949d8b8DDd5108950e1" as `0x${string}`,
-  fundingRateEngine: "0x1C538eFA480C85D032c0ad45Dd87f9876c16Cbbe" as `0x${string}`,
-  marginEngine: "0xd4e840487bFE3Ca7448BcdB41a7972DfA29B6fce" as `0x${string}`,
-  executionEngine: "0xafEA713Dc2d6ebec15B21aB92bd15bC733D5B786" as `0x${string}`,
-  liquidationEngine: "0x0374edd7DCd819548C9dBf53c36f15880FaD69eD" as `0x${string}`,
-  settlementEngine: "0xdfB429809e0862e01Dcc73A6621b8729325F5691" as `0x${string}`
+  leverageModel: "0x5c8a7016ab48484ea2704cd1abbe25fd23c27688" as `0x${string}`,
+  oiLimits: "0x905fe91236385733fb92f2f8af6300b0078e6f72" as `0x${string}`,
+  oiLimitsNew: "0x905fe91236385733fb92f2f8af6300b0078e6f72" as `0x${string}`,
+  borrowFeeEngine: "0x3288aefbd75249fe0bd3834758976b80f9799b21" as `0x${string}`,
+  fundingRateEngine: "0xed3e8868da5994ce7a128a4a8a88ab322daf4c00" as `0x${string}`,
+  marginEngine: "0x0e0318f93f9657755b63f4b43b32ebfeb17783bc" as `0x${string}`,
+  executionEngine: "0x31078bfe85d3f586edce8f5579d32448cb0586d6" as `0x${string}`,
+  liquidationEngine: "0x3ccb33b6b7ec00682f5db0245e5d9af6b71fbd47" as `0x${string}`,
+  settlementEngine: "0x8dc424200580bc22d8e4de8e77e42884226e5893" as `0x${string}`
 };
 
 /**
@@ -214,7 +214,7 @@ export async function loadContractAddresses(): Promise<ContractAddresses> {
       // Engine contracts
       leverageModel: enginesDeployment.leverageModel as `0x${string}`,
       oiLimits: enginesDeployment.oiLimits as `0x${string}`,
-      oiLimitsNew: "0xF04a8Fe7d989986A25A55FD6f72753226965f6FB" as `0x${string}`,
+      oiLimitsNew: (enginesDeployment.oiLimits || "0x905fe91236385733fb92f2f8af6300b0078e6f72") as `0x${string}`,
       borrowFeeEngine: enginesDeployment.borrowFeeEngine as `0x${string}`,
       fundingRateEngine: enginesDeployment.fundingRateEngine as `0x${string}`,
       marginEngine: enginesDeployment.marginEngine as `0x${string}`,

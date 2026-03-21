@@ -10,6 +10,7 @@ import { useNotifications } from '../contexts/NotificationContext';
 import { useMarketProbabilities } from '../hooks/useMarketProbabilities';
 import { useDemo } from '../contexts/DemoContext';
 import Skeleton from './Skeleton';
+import ProfessionalLoader from './ProfessionalLoader';
 import TestnetDisclaimer from './TestnetDisclaimer';
 import LiveDataIndicator from './LiveDataIndicator';
 import SecurityBadges from './SecurityBadges';
@@ -35,6 +36,7 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
   const { markets: onChainMarkets } = useMarketProbabilities();
   const { testWalletKey } = useDemo();
   const [isAutoFunding, setIsAutoFunding] = useState(false);
+  const [orderError, setOrderError] = useState<{title: string; message: string} | null>(null);
   const [tradeForm, setTradeForm] = useState<TradeForm>({
     marketId: selectedTrade?.marketId || '',
     direction: selectedTrade?.direction || 'long',
@@ -80,18 +82,32 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
     try {
       const account = privateKeyToAccount(`0x${testWalletKey}` as `0x${string}`);
 
+      const rpcUrl = 'https://base-sepolia-rpc.publicnode.com';
       const publicClient = createPublicClient({
         chain: baseSepolia,
-        transport: http('https://base-sepolia-rpc.publicnode.com'),
+        transport: http(rpcUrl),
       });
-
       const walletClient = createWalletClient({
         account,
         chain: baseSepolia,
-        transport: http('https://base-sepolia-rpc.publicnode.com'),
+        transport: http(rpcUrl),
       });
 
-      // Write directly - signs locally, sends via eth_sendRawTransaction
+      // Simulate first to catch reverts BEFORE sending
+      try {
+        await publicClient.simulateContract({
+          address: contractAddress,
+          abi,
+          functionName,
+          args,
+          account,
+        });
+      } catch (simError: any) {
+        console.error('Simulation failed:', simError?.shortMessage || simError?.message);
+        throw simError;
+      }
+
+      // Simulation passed — safe to send
       const hash = await walletClient.writeContract({
         address: contractAddress,
         abi,
@@ -441,6 +457,7 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
 
   const handleOpenPosition = async () => {
     if (!tradeForm.marketId || !tradeForm.collateral || !tradeForm.leverage) return;
+    setOrderError(null); // Clear previous errors
 
     try {
       const collateralAmount = parseUsdt(tradeForm.collateral);
@@ -460,7 +477,64 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
 
       if (isDemoMode) {
         setIsAutoFunding(true);
-        // Auto-approve USDT for AccountManager
+
+        const account = privateKeyToAccount(`0x${testWalletKey}` as `0x${string}`);
+        const rpcUrl = 'https://base-sepolia-rpc.publicnode.com';
+        const demoPublicClient = createPublicClient({ chain: baseSepolia, transport: http(rpcUrl) });
+
+        // PRE-FLIGHT CHECK: Simulate openPosition FIRST before any transactions
+        try {
+          console.log('Pre-flight: simulating openPosition...');
+          await demoPublicClient.simulateContract({
+            address: CONTRACT_ADDRESSES.executionEngine as `0x${string}`,
+            abi: EXECUTION_ENGINE_ABI,
+            functionName: 'openPosition',
+            args: [{
+              marketId: tradeForm.marketId as `0x${string}`,
+              isLong: tradeForm.direction === 'long',
+              collateral: collateralAmount,
+              leverage: leverage,
+            }],
+            account,
+          });
+          console.log('Pre-flight simulation passed');
+        } catch (simError: any) {
+          setIsAutoFunding(false);
+          console.error('Pre-flight simulation FAILED:', simError);
+          // Extract error details
+          const errMsg = simError?.cause?.message || simError?.shortMessage || simError?.message || '';
+          const errData = simError?.cause?.data || simError?.data || '';
+          const errStr = errMsg + ' ' + errData;
+
+          let title = 'Cannot Open Position';
+          let reason = '';
+          if (errStr.includes('acc8ffc4') || errStr.includes('MarketCap')) {
+            title = 'Market At Capacity';
+            reason = 'This market has reached its open interest cap. Reduce position size or try a different market. Check the OI CAPACITY section for available room.';
+          } else if (errStr.includes('f2e98b5e') || errStr.includes('SideCap')) {
+            title = 'Side Cap Exceeded';
+            reason = 'Too many positions on this side (Long/Short). Try the opposite direction or a different market.';
+          } else if (errStr.includes('UserCap')) {
+            title = 'Per-User Cap Exceeded';
+            reason = 'You have too much OI in this market. Try a different market.';
+          } else if (errStr.includes('6b4e3c6a') || errStr.includes('GlobalCap')) {
+            title = 'Protocol At Max Capacity';
+            reason = 'Global OI limit reached. Reduce position size.';
+          } else if (errStr.includes('e450d38c') || errStr.includes('Insufficient')) {
+            title = 'Insufficient Funds';
+            reason = 'Not enough balance for this position. Reduce collateral amount.';
+          } else if (errStr.includes('Leverage')) {
+            title = 'Invalid Leverage';
+            reason = 'Leverage is outside the allowed range. Adjust and try again.';
+          } else {
+            reason = 'Simulation failed: ' + (simError?.shortMessage || simError?.message || 'Unknown error. Try reducing position size or selecting a different market.');
+          }
+          setOrderError({ title, message: reason });
+          showErrorToast(title, reason);
+          return; // STOP — don't send any transactions
+        }
+
+        // Simulation passed — safe to proceed with funding + opening
         try {
           await sendDemoTransaction(
             CONTRACT_ADDRESSES.usdt,
@@ -469,7 +543,7 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
             [CONTRACT_ADDRESSES.accountManager, BigInt('115792089237316195423570985008687907853269984665640564039457584007913129639935')]
           );
         } catch (e) { console.log('Approve already set:', e); }
-        // Auto-deposit collateral
+        await new Promise(r => setTimeout(r, 4000));
         try {
           await sendDemoTransaction(
             CONTRACT_ADDRESSES.accountManager,
@@ -478,7 +552,9 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
             [collateralAmount]
           );
         } catch (e) { console.log('Deposit skipped:', e); }
+        await new Promise(r => setTimeout(r, 4000));
         setIsAutoFunding(false);
+
         // Open position
         const hash = await sendDemoTransaction(
           CONTRACT_ADDRESSES.executionEngine,
@@ -493,8 +569,26 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
         );
 
         if (hash) {
-          const marketName = selectedTrade?.marketName || 'Market Position';
-          showTradeConfirmation('open', marketName, hash);
+          // Wait for on-chain receipt
+          try {
+            const receipt = await demoPublicClient.waitForTransactionReceipt({ hash, timeout: 30000 });
+            if (receipt.status === 'success') {
+              const marketName = selectedTrade?.marketName || tradeForm.marketId.substring(0, 10) + '...';
+              showTradeConfirmation('open', marketName, hash);
+              showSuccessToast(
+                'Position Opened!',
+                `${tradeForm.direction.toUpperCase()} position opened with $${tradeForm.collateral} collateral at ${tradeForm.leverage}x leverage.`
+              );
+            } else {
+              showErrorToast(
+                'Position Reverted On-Chain',
+                'The transaction was mined but reverted. Market conditions may have changed. Try a smaller size or different market.'
+              );
+              return; // Don't reset form so user can adjust
+            }
+          } catch (receiptErr) {
+            showErrorToast('Transaction Pending', 'Sent but confirmation timed out. Check Positions tab.');
+          }
         }
       } else {
         await openPosition({
@@ -520,12 +614,41 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
     } catch (error: any) {
       console.error('Error opening position:', error);
 
-      const reason = error?.shortMessage || error?.cause?.shortMessage || error?.message || 'Transaction failed';
+      // Build full error string from all possible locations
+      const errStr = [
+        error?.shortMessage,
+        error?.cause?.shortMessage,
+        error?.cause?.data,
+        error?.data,
+        error?.message,
+      ].filter(Boolean).join(' ');
 
-      showErrorToast(
-        'Position Open Failed',
-        reason
-      );
+      let title = 'Position Failed';
+      let reason = '';
+
+      if (errStr.includes('acc8ffc4') || errStr.includes('MarketCapExceeded')) {
+        title = 'Market At Capacity';
+        reason = 'This market has reached its OI cap. Try reducing your position size or selecting a different market with more capacity. Check the OI CAPACITY section below for available room.';
+      } else if (errStr.includes('f2e98b5e') || errStr.includes('SideCapExceeded')) {
+        title = 'Side Cap Exceeded';
+        reason = 'Too many positions on this side (Long/Short). Try the opposite direction or a different market.';
+      } else if (errStr.includes('6b4e3c6a') || errStr.includes('GlobalCapExceeded')) {
+        title = 'Protocol At Maximum Capacity';
+        reason = 'The entire protocol has reached its global OI limit. Try a smaller position size.';
+      } else if (errStr.includes('UserCapExceeded')) {
+        title = 'Per-User Cap Exceeded';
+        reason = 'You have too much open interest in this market. Try a different market.';
+      } else if (errStr.includes('e450d38c') || errStr.includes('InsufficientBalance')) {
+        title = 'Insufficient Balance';
+        reason = 'Not enough funds. Check your collateral amount is within your available balance.';
+      } else if (errStr.includes('LeverageBelowMinimum') || errStr.includes('LeverageExceeded')) {
+        title = 'Invalid Leverage';
+        reason = 'The leverage is outside the allowed range for this market. Adjust leverage and try again.';
+      } else {
+        reason = error?.shortMessage || error?.cause?.shortMessage || error?.message || 'Transaction simulation failed. The position cannot be opened with these parameters.';
+      }
+
+      showErrorToast(title, reason);
     }
   };
 
@@ -539,6 +662,19 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
   const availableMarkets = selectedTrade
     ? [{ id: selectedTrade.marketId, name: selectedTrade.marketName }]
     : onChainMarkets.map(m => ({ id: m.id, name: m.name }));
+
+  // Show consistent loading screen while critical data loads
+  if (loadingUsdtBalance && loadingAccountBalance) {
+    return (
+      <ProfessionalLoader
+        title="Loading Trading"
+        subtitle="Connecting to execution engine and price feeds"
+        variant="trading"
+        size="lg"
+        showLiveIndicators={true}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -763,6 +899,16 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
                   </p>
                 </div>
               ) : isDemoMode ? (
+                <>
+                {orderError && (
+                  <div className="mb-4 p-4 bg-red-900/30 border border-red-500/50 rounded-lg">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <span className="text-red-400 font-semibold text-sm">{orderError.title}</span>
+                    </div>
+                    <p className="text-red-300/80 text-xs">{orderError.message}</p>
+                  </div>
+                )}
+
                 <button
                   onClick={handleOpenPosition}
                   disabled={!tradeForm.marketId || !tradeForm.collateral || isAutoFunding}
@@ -770,6 +916,7 @@ const Trading: React.FC<TradingProps> = ({ selectedTrade }) => {
                 >
                   {isAutoFunding ? 'Setting up account...' : 'Open Position'}
                 </button>
+                </>
               ) : !accountBalance || accountBalance < parseUsdt(tradeForm.collateral || '0') ? (
                 <div className="space-y-2">
                   <button

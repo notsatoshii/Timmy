@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { usePublicClient } from 'wagmi';
 import { getContractAddresses } from '../config/contracts';
 
-const DEPLOYMENT_BLOCK = BigInt(39110500);
+const DEPLOYMENT_BLOCK = BigInt(39165200);
 
 export const useVolumeCalculation = (enabled: boolean = true) => {
   const [volume24h, setVolume24h] = useState<bigint>(BigInt(0));
