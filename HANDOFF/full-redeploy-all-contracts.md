@@ -451,56 +451,533 @@ Key: e7d9967576ecd9bc2d3d6003e6565261b0bc3d75f20535efc1e8267ec364feb5
 
 ---
 
-## VERIFICATION CHECKLIST (MUST ALL PASS)
+## PHASE A: CONTRACT REFERENCE VERIFICATION
 
-### 1. Contract references (verify every immutable)
+After all 11 deploys complete, verify EVERY immutable ref is correct. Do NOT proceed if any is wrong.
+
 ```bash
-for each new contract:
-  cast call NEW_CONTRACT "vault()(address)" → should be NEW_VAULT
-  cast call NEW_CONTRACT "oiLimits()(address)" → should be NEW_OI
-  etc.
+source control-plane/deploy-env.sh
+
+echo "=== Immutable Reference Audit ==="
+
+# LeverVault
+echo "LeverVault.rewardsDistributor: $(cast call $LEVER_VAULT 'rewardsDistributor()(address)' --rpc-url $RPC_URL)"
+# Must equal NEW_RD
+
+# RewardsDistributor
+echo "RD.leverVault: $(cast call $REWARDS_DISTRIBUTOR 'leverVault()(address)' --rpc-url $RPC_URL)"
+# Must equal NEW_VAULT
+
+# InsuranceFund
+echo "IF.leverVault: $(cast call $INSURANCE_FUND 'leverVault()(address)' --rpc-url $RPC_URL)"
+# Must equal NEW_VAULT
+
+# FeeRouter
+echo "FR.insuranceFund: $(cast call $FEE_ROUTER 'insuranceFund()(address)' --rpc-url $RPC_URL)"
+echo "FR.rewardsDistributor: $(cast call $FEE_ROUTER 'rewardsDistributor()(address)' --rpc-url $RPC_URL)"
+# Must equal NEW_IF and NEW_RD
+
+# OILimits
+echo "OI.vault: $(cast call $OI_LIMITS 'vault()(address)' --rpc-url $RPC_URL)"
+echo "OI.marketRegistry: $(cast call $OI_LIMITS 'marketRegistry()(address)' --rpc-url $RPC_URL)"
+# vault = NEW_VAULT, MR = 0x3Cc9
+
+# LeverageModel
+echo "LM.vault: $(cast call $LEVERAGE_MODEL 'vault()(address)' --rpc-url $RPC_URL)"
+echo "LM.insuranceFund: $(cast call $LEVERAGE_MODEL 'insuranceFund()(address)' --rpc-url $RPC_URL)"
+echo "LM.oiLimits: $(cast call $LEVERAGE_MODEL 'oiLimits()(address)' --rpc-url $RPC_URL)"
+# All must be NEW addresses
+
+# BorrowFeeEngine
+echo "BFE.oiLimits: $(cast call $BORROW_FEE_ENGINE 'oiLimits()(address)' --rpc-url $RPC_URL)"
+echo "BFE.positionManager: $(cast call $BORROW_FEE_ENGINE 'positionManager()(address)' --rpc-url $RPC_URL)"
+
+# FundingRateEngine
+echo "FRE.oiLimits: $(cast call $FUNDING_RATE_ENGINE 'oiLimits()(address)' --rpc-url $RPC_URL)"
+echo "FRE.positionManager: $(cast call $FUNDING_RATE_ENGINE 'positionManager()(address)' --rpc-url $RPC_URL)"
+
+# MarginEngine
+echo "ME.positionManager: $(cast call $MARGIN_ENGINE 'positionManager()(address)' --rpc-url $RPC_URL)"
+echo "ME.borrowFeeEngine: $(cast call $MARGIN_ENGINE 'borrowFeeEngine()(address)' --rpc-url $RPC_URL)"
+echo "ME.fundingRateEngine: $(cast call $MARGIN_ENGINE 'fundingRateEngine()(address)' --rpc-url $RPC_URL)"
+
+# ExecutionEngine
+echo "EE.positionManager: $(cast call $EXECUTION_ENGINE 'positionManager()(address)' --rpc-url $RPC_URL)"
+echo "EE.oiLimits: $(cast call $EXECUTION_ENGINE 'oiLimits()(address)' --rpc-url $RPC_URL)"
+echo "EE.marginEngine: $(cast call $EXECUTION_ENGINE 'marginEngine()(address)' --rpc-url $RPC_URL)"
+echo "EE.leverVault: $(cast call $EXECUTION_ENGINE 'leverVault()(address)' --rpc-url $RPC_URL)"
+
+# LiquidationEngine
+echo "LE.positionManager: $(cast call $LIQUIDATION_ENGINE 'positionManager()(address)' --rpc-url $RPC_URL)"
+echo "LE.executionEngine: $(cast call $LIQUIDATION_ENGINE 'executionEngine()(address)' --rpc-url $RPC_URL)"
+echo "LE.oiLimits: $(cast call $LIQUIDATION_ENGINE 'oiLimits()(address)' --rpc-url $RPC_URL)"
+echo "LE.leverVault: $(cast call $LIQUIDATION_ENGINE 'leverVault()(address)' --rpc-url $RPC_URL)"
+
+# SettlementEngine
+echo "SE.oiLimits: $(cast call $SETTLEMENT_ENGINE 'oiLimits()(address)' --rpc-url $RPC_URL)"
+echo "SE.leverVault: $(cast call $SETTLEMENT_ENGINE 'leverVault()(address)' --rpc-url $RPC_URL)"
 ```
 
-### 2. OI caps correct
+**GATE**: Every address must match. If ANY is wrong, the constructor args were scrambled. Fix before continuing.
+
+---
+
+## PHASE B: OI CAP MATH VERIFICATION
+
 ```bash
-cast call NEW_OI "getGlobalOICap()(uint256)"  # should be ~60% of TVL
+TVL=$(cast call $LEVER_VAULT "totalAssets()(uint256)" --rpc-url $RPC_URL | awk '{print $1}')
+GLOBAL_CAP=$(cast call $OI_LIMITS "getGlobalOICap()(uint256)" --rpc-url $RPC_URL | awk '{print $1}')
+
+python3 -c "
+tvl = int('$TVL')
+gc = int('$GLOBAL_CAP')
+ratio = gc / tvl if tvl > 0 else 0
+print(f'TVL: \${tvl/1e6:,.0f}')
+print(f'Global Cap: \${gc/1e6:,.0f}')
+print(f'Ratio: {ratio:.4f} (MUST be 0.60 ± 0.001)')
+assert 0.599 < ratio < 0.601, f'FAIL: ratio is {ratio}, expected 0.60'
+print('PASS')
+"
+
+# Per-market caps (check SpaceX)
+SPACEX=0x2841ef32b61fb3472aadbfc70d787a1bfaf5d0218c9601b87963af7bcca1bcf1
+MARKET_CAP=$(cast call $OI_LIMITS "getMarketOICap(bytes32)(uint256)" $SPACEX --rpc-url $RPC_URL | awk '{print $1}')
+SIDE_CAP=$(cast call $OI_LIMITS "getSideOICap(bytes32)(uint256)" $SPACEX --rpc-url $RPC_URL | awk '{print $1}')
+USER_CAP=$(cast call $OI_LIMITS "getUserOICap(bytes32)(uint256)" $SPACEX --rpc-url $RPC_URL | awk '{print $1}')
+
+python3 -c "
+mc = int('$MARKET_CAP'); sc = int('$SIDE_CAP'); uc = int('$USER_CAP')
+print(f'Market Cap: \${mc/1e6:,.0f}')
+print(f'Side Cap:   \${sc/1e6:,.0f} ({sc/mc:.2f} of market, expected 0.70)')
+print(f'User Cap:   \${uc/1e6:,.0f} ({uc/mc:.2f} of market, expected 0.20)')
+assert 0.69 < sc/mc < 0.71, 'FAIL: side ratio'
+assert 0.19 < uc/mc < 0.21, 'FAIL: user ratio'
+print('PASS')
+"
 ```
 
-### 3. Borrow fees accruing
+---
+
+## PHASE C: BORROW FEE VERIFICATION
+
+### C1. Index accrual works
 ```bash
-cast call NEW_BFE "getAccruedFees(uint256)(uint256)" PID  # should be > 0 after accrual
+# Accrue and check index moved
+IDX_BEFORE=$(cast call $BORROW_FEE_ENGINE "getBorrowIndex(bytes32,bool)(uint256)" $SPACEX true --rpc-url $RPC_URL | awk '{print $1}')
+cast send $BORROW_FEE_ENGINE "accrueAll()" --private-key $PRIVATE_KEY --rpc-url $RPC_URL --gas-limit 2000000
+sleep 5
+IDX_AFTER=$(cast call $BORROW_FEE_ENGINE "getBorrowIndex(bytes32,bool)(uint256)" $SPACEX true --rpc-url $RPC_URL | awk '{print $1}')
+echo "Before: $IDX_BEFORE After: $IDX_AFTER"
+# IDX_AFTER must be >= IDX_BEFORE (equal if accrued very recently, > if time passed)
 ```
 
-### 4. Funding rates working
+### C2. Position borrow fees accumulate over time
 ```bash
-cast call NEW_FRE "getFundingIndex(bytes32)(int256)" MARKET_ID  # should not revert
-cast call NEW_FRE "getAccruedFunding(uint256)(int256)" PID  # should return value
+# After opening demo positions, wait 60s, accrue, check fees
+sleep 60
+cast send $BORROW_FEE_ENGINE "accrueAll()" --private-key $PRIVATE_KEY --rpc-url $RPC_URL --gas-limit 2000000
+sleep 5
+for PID in POSITION_IDS; do
+    FEES=$(cast call $BORROW_FEE_ENGINE "getAccruedFees(uint256)(uint256)" $PID --rpc-url $RPC_URL | awk '{print $1}')
+    echo "PID $PID fees: $FEES (must be > 0 for leveraged positions)"
+done
 ```
 
-### 5. Liquidation works
+### C3. Borrow rate is reasonable
 ```bash
-# Open a small 30x position, wait for it to become liquidatable, then:
-cast call NEW_ME "isLiquidatable(uint256)(bool)" PID  # true
-cast send NEW_LE "liquidate(uint256)" PID --gas-limit 2000000  # should succeed
+# getCurrentBorrowRate should return ~0.02-0.10% per hour in WAD
+RATE=$(cast call $BORROW_FEE_ENGINE "getCurrentBorrowRate(bytes32,bool)(uint256)" $SPACEX true --rpc-url $RPC_URL | awk '{print $1}')
+python3 -c "
+r = int('$RATE')
+pct_per_hr = r / 1e18 * 100
+print(f'Borrow rate: {pct_per_hr:.4f}% per hour')
+assert 0.01 < pct_per_hr < 1.0, f'FAIL: rate {pct_per_hr}% outside expected range'
+print('PASS')
+"
 ```
 
-### 6. Frontend data matches on-chain
-```
-TVL in stats bar = cast call NEW_VAULT "totalAssets()"
-OI in stats bar = cast call NEW_OI "getGlobalOI()"
-Share price = cast call NEW_VAULT "convertToAssets(1e18)"
-Positions show correct borrow fees
-Prices match prices.json (no stale flash)
-Status bar shows OPERATIONAL
-Volume shows real number (not $0 or —)
+### C4. depthThreshold set for all 10 markets
+```bash
+for MID in MARKET_IDS; do
+    DT=$(cast call $BORROW_FEE_ENGINE "depthThreshold(bytes32)(uint256)" $MID --rpc-url $RPC_URL | awk '{print $1}')
+    echo "$MID depthThreshold=$DT (must be > 0)"
+done
 ```
 
-### 7. All tabs functional
-- Markets: 10 markets, live prices, Long/Short buttons
-- Trading: select market, open position, verify on-chain
-- Positions: show all positions, close one, verify
-- Vault: deposit, withdraw (request), claim, compound
-- MarketDetail: OI breakdown, borrow rate, price chart
+---
+
+## PHASE D: FUNDING RATE VERIFICATION
+
+### D1. All 10 markets initialized
+```bash
+for MID in MARKET_IDS; do
+    IDX=$(cast call $FUNDING_RATE_ENGINE "getFundingIndex(bytes32)(int256)" $MID --rpc-url $RPC_URL 2>&1)
+    echo "$MID fundingIndex=$IDX (must not revert)"
+done
+```
+
+### D2. accrueFunding succeeds on all markets
+```bash
+for MID in MARKET_IDS; do
+    cast send $FUNDING_RATE_ENGINE "accrueFunding(bytes32)" $MID \
+        --private-key $PRIVATE_KEY --rpc-url $RPC_URL --gas-limit 300000 2>&1 | grep "status"
+    sleep 3
+done
+```
+
+### D3. Funding direction correct (heavy side pays)
+```bash
+# After opening positions: SpaceX has long OI only → longs should pay
+# getAccruedFunding should be negative for long positions
+PID_LONG=<spacex_long_pid>
+FUNDING=$(cast call $FUNDING_RATE_ENGINE "getAccruedFunding(uint256)(int256)" $PID_LONG --rpc-url $RPC_URL)
+echo "Long position funding: $FUNDING (should be negative = paying)"
+```
+
+### D4. depthThreshold set for all markets
+```bash
+for MID in MARKET_IDS; do
+    DT=$(cast call $FUNDING_RATE_ENGINE "depthThreshold(bytes32)(uint256)" $MID --rpc-url $RPC_URL | awk '{print $1}')
+    echo "$MID depthThreshold=$DT (must be > 0)"
+done
+```
+
+---
+
+## PHASE E: LIQUIDATION TEST
+
+### E1. Open a tiny high-leverage position designed to be liquidatable
+```bash
+# Open $10 collateral at max leverage on a volatile market
+# This will be near liquidation threshold immediately
+DEMO_KEY=e7d9967576ecd9bc2d3d6003e6565261b0bc3d75f20535efc1e8267ec364feb5
+SPACEX=0x2841ef32b61fb3472aadbfc70d787a1bfaf5d0218c9601b87963af7bcca1bcf1
+
+# Get max leverage
+MAX_LEV=$(cast call $LEVERAGE_MODEL "getEffectiveMaxLeverage(bytes32)(uint256)" $SPACEX --rpc-url $RPC_URL | awk '{print $1}')
+echo "Max leverage: $MAX_LEV"
+
+# Open position at max leverage with tiny collateral
+cast send $EXECUTION_ENGINE "openPosition((bytes32,bool,uint256,uint256))" \
+    "($SPACEX,true,10000000,$MAX_LEV)" \
+    --private-key $DEMO_KEY --rpc-url $RPC_URL --gas-limit 2000000
+# Note the PID from the PositionOpened event or check totalPositions
+```
+
+### E2. Wait for borrow fees to erode equity, check liquidatability
+```bash
+# After 5-10 minutes of borrow accrual:
+cast send $BORROW_FEE_ENGINE "accrueAll()" --private-key $PRIVATE_KEY --rpc-url $RPC_URL --gas-limit 2000000
+sleep 5
+LIQ_PID=<the_tiny_position_pid>
+IS_LIQ=$(cast call $MARGIN_ENGINE "isLiquidatable(uint256)(bool)" $LIQ_PID --rpc-url $RPC_URL)
+echo "isLiquidatable: $IS_LIQ"
+```
+
+### E3. Execute liquidation
+```bash
+cast send $LIQUIDATION_ENGINE "liquidate(uint256)" $LIQ_PID \
+    --private-key $PRIVATE_KEY --rpc-url $RPC_URL --gas-limit 2000000 2>&1 | grep -E "status|gasUsed"
+# status must be 1
+# Verify position is now closed:
+cast call $POSITION_MANAGER "isPositionOpen(uint256)(bool)" $LIQ_PID --rpc-url $RPC_URL
+# Must be false
+```
+
+### E4. Verify liquidation accounting
+```bash
+# After liquidation:
+# - Position closed in PositionManager ✓ (checked above)
+# - OI decreased in OILimits
+# - Insurance fund may have absorbed bad debt
+# - Account balance adjusted
+echo "Global OI after liq: $(cast call $OI_LIMITS 'getGlobalOI()(uint256)' --rpc-url $RPC_URL)"
+echo "IF balance: $(cast call $INSURANCE_FUND 'getBalance()(uint256)' --rpc-url $RPC_URL)"
+```
+
+---
+
+## PHASE F: POSITION LIFECYCLE TEST
+
+### F1. Open position
+```bash
+cast send $EXECUTION_ENGINE "openPosition((bytes32,bool,uint256,uint256))" \
+    "($SPACEX,true,100000000,3000000000000000000)" \
+    --private-key $DEMO_KEY --rpc-url $RPC_URL --gas-limit 2000000
+# Verify: totalOpenPositions increased, OI increased, AM balance decreased
+```
+
+### F2. Add collateral
+```bash
+cast send $EXECUTION_ENGINE "addCollateral(uint256,uint256)" PID 50000000 \
+    --private-key $DEMO_KEY --rpc-url $RPC_URL --gas-limit 500000
+# Verify: position collateral increased
+```
+
+### F3. Close position
+```bash
+cast send $EXECUTION_ENGINE "closePosition(uint256)" PID \
+    --private-key $DEMO_KEY --rpc-url $RPC_URL --gas-limit 2000000
+# Verify: position closed, OI decreased, PnL settled, AM balance updated
+OPEN_BEFORE=<count_before>
+OPEN_AFTER=$(cast call $POSITION_MANAGER "totalOpenPositions()(uint256)" --rpc-url $RPC_URL)
+echo "Positions: $OPEN_BEFORE → $OPEN_AFTER (must decrease by 1)"
+```
+
+### F4. Vault PnL impact
+```bash
+# If position had profit: vault totalAssets should decrease (vault paid trader)
+# If position had loss: vault totalAssets should increase (vault took trader's loss)
+echo "Vault TVL after close: $(cast call $LEVER_VAULT 'totalAssets()(uint256)' --rpc-url $RPC_URL)"
+```
+
+---
+
+## PHASE G: VAULT OPERATIONS TEST
+
+### G1. Deposit
+```bash
+SHARES_BEFORE=$(cast call $LEVER_VAULT "balanceOf(address)(uint256)" $DEMO --rpc-url $RPC_URL)
+cast send $USDT "approve(address,uint256)" $LEVER_VAULT 1000000000 --private-key $DEMO_KEY --rpc-url $RPC_URL --gas-limit 100000
+sleep 3
+cast send $LEVER_VAULT "deposit(uint256,address)" 100000000 $DEMO --private-key $DEMO_KEY --rpc-url $RPC_URL --gas-limit 300000
+sleep 3
+SHARES_AFTER=$(cast call $LEVER_VAULT "balanceOf(address)(uint256)" $DEMO --rpc-url $RPC_URL)
+echo "Shares: $SHARES_BEFORE → $SHARES_AFTER (must increase)"
+```
+
+### G2. Share price sanity
+```bash
+SP=$(cast call $LEVER_VAULT "convertToAssets(uint256)(uint256)" 1000000000000000000 --rpc-url $RPC_URL | awk '{print $1}')
+python3 -c "
+sp = int('$SP') / 1e18
+print(f'Share price: \${sp:.6f}')
+assert 0.90 < sp < 1.10, f'FAIL: share price {sp} out of range'
+print('PASS')
+"
+```
+
+### G3. Withdrawal request
+```bash
+# requestWithdrawal exists? Check:
+grep -n "function requestWithdrawal\|function withdraw\|function redeem" contracts/LeverVault.sol | head -5
+# If withdrawal queue: request, wait 48h (skip for testnet), execute
+# If direct: just call withdraw/redeem
+```
+
+### G4. Fee distribution check
+```bash
+# After a position close (which generates fees):
+echo "RD pending yield: $(cast call $REWARDS_DISTRIBUTOR 'pendingYield(address)(uint256)' $DEMO --rpc-url $RPC_URL 2>/dev/null || echo 'check function name')"
+echo "IF balance: $(cast call $INSURANCE_FUND 'getBalance()(uint256)' --rpc-url $RPC_URL)"
+# Fees should have been split 50% LP (→RD), 30% Protocol (→treasury), 20% Insurance (→IF)
+```
+
+---
+
+## PHASE H: OI CAP ENFORCEMENT TEST
+
+### H1. Try to exceed user OI cap
+```bash
+USER_CAP=$(cast call $OI_LIMITS "getUserOICap(bytes32)(uint256)" $SPACEX --rpc-url $RPC_URL | awk '{print $1}')
+echo "User cap: $USER_CAP"
+# Try opening a position larger than the user cap
+# Should revert with OILimits__UserCapExceeded
+cast call $EXECUTION_ENGINE "openPosition((bytes32,bool,uint256,uint256))" \
+    "($SPACEX,true,999999000000,2000000000000000000)" \
+    --from $DEMO --rpc-url $RPC_URL 2>&1
+# Must revert
+```
+
+### H2. Verify OI tracks correctly
+```bash
+OI_BEFORE=$(cast call $OI_LIMITS "getGlobalOI()(uint256)" --rpc-url $RPC_URL)
+# Open a position...
+OI_AFTER=$(cast call $OI_LIMITS "getGlobalOI()(uint256)" --rpc-url $RPC_URL)
+echo "OI: $OI_BEFORE → $OI_AFTER (must increase by position notional)"
+# Close the position...
+OI_FINAL=$(cast call $OI_LIMITS "getGlobalOI()(uint256)" --rpc-url $RPC_URL)
+echo "OI after close: $OI_FINAL (must return to ~$OI_BEFORE)"
+```
+
+---
+
+## PHASE I: FRONTEND DATA CONSISTENCY
+
+### I1. Stats bar vs on-chain
+```bash
+# Read on-chain values, compare to what frontend should display
+TVL=$(cast call $LEVER_VAULT "totalAssets()(uint256)" --rpc-url $RPC_URL | awk '{print $1}')
+OI=$(cast call $OI_LIMITS "getGlobalOI()(uint256)" --rpc-url $RPC_URL | awk '{print $1}')
+python3 -c "
+tvl = int('$TVL'); oi = int('$OI')
+util = oi / tvl * 100 if tvl > 0 else 0
+print(f'Frontend should show:')
+print(f'  TVL: \${tvl/1e6:,.2f}')
+print(f'  OI:  \${oi/1e6:,.2f}')
+print(f'  Utilization: {util:.2f}%')
+"
+# Visually compare with what the browser shows
+```
+
+### I2. Cross-tab consistency
+```
+Stats bar TVL must equal Vault tab TVL
+Stats bar APY must equal Vault tab APY (within 0.1%)
+Stats bar OI must equal sum of all position notionals
+Position count in Positions tab must equal totalOpenPositions on-chain
+Each position's borrow fee in UI must match getAccruedFees on-chain (within 1 minute lag)
+```
+
+### I3. Price display — no stale flash
+```
+Load the page fresh (hard refresh).
+Markets tab prices must NOT briefly show 50% or 65% before jumping to real values.
+Prices should either show a loading skeleton OR the correct price immediately.
+```
+
+### I4. Demo mode verification
+```
+Header should show "DEMO 0xafB3...34Da" (not a connected wallet address)
+All positions should be demo wallet's positions
+Vault shares should show demo wallet's shares
+Trading should auto-fund from demo wallet
+```
+
+### I5. Error handling
+```
+Try opening position with 0 collateral → should show error toast, not crash
+Try opening position exceeding leverage → should show error with max leverage
+Try depositing 0 into vault → should be disabled or show error
+```
+
+---
+
+## PHASE J: KEEPER VERIFICATION
+
+### J1. Oracle keeper running and prices fresh
+```bash
+systemctl is-active lever-oracle
+# Check prices.json timestamp is < 60s old
+python3 -c "
+import json, time
+d = json.load(open('/home/lever/lever-protocol/frontend/user-app/public/prices.json'))
+age = time.time() - d['lastUpdate']
+print(f'Price age: {age:.0f}s (must be < 60s)')
+assert age < 120, f'FAIL: prices are {age:.0f}s old'
+"
+```
+
+### J2. Accrue keeper running and updating indices
+```bash
+systemctl is-active lever-accrue-keeper
+# Check that borrow indices are moving over 2 minutes
+IDX1=$(cast call $BORROW_FEE_ENGINE "getBorrowIndex(bytes32,bool)(uint256)" $SPACEX true --rpc-url $RPC_URL | awk '{print $1}')
+sleep 120
+IDX2=$(cast call $BORROW_FEE_ENGINE "getBorrowIndex(bytes32,bool)(uint256)" $SPACEX true --rpc-url $RPC_URL | awk '{print $1}')
+python3 -c "
+i1 = int('$IDX1'); i2 = int('$IDX2')
+print(f'Index: {i1} → {i2}')
+assert i2 > i1, 'FAIL: borrow index not moving — keeper may not be working'
+print('PASS')
+"
+```
+
+### J3. No nonce conflict errors
+```bash
+# Check keeper logs for nonce errors
+journalctl -u lever-oracle --no-pager -n 20 2>/dev/null | grep -c "nonce"
+journalctl -u lever-accrue-keeper --no-pager -n 20 2>/dev/null | grep -c "nonce"
+# Both should be 0 or very low
+```
+
+---
+
+## PHASE K: FULL TAB-BY-TAB WALKTHROUGH
+
+### K1. Markets Tab
+- [ ] All 10 markets visible with names and categories
+- [ ] Prices are live (match prices.json), NOT stale 50%/65%
+- [ ] "LIVE" badge (not "DEMO DATA") on each market
+- [ ] Long/Short buttons visible and clickable on each
+- [ ] Time to resolution shows correct dates
+- [ ] Market detail link works for each market
+
+### K2. Trading Tab
+- [ ] Market dropdown shows all 10 markets
+- [ ] Selecting market updates leverage slider max
+- [ ] Max Position / Max Collateral display shows correct values
+- [ ] OI Capacity breakdown shows correct caps and current usage
+- [ ] Binding constraint correctly identifies tightest limit
+- [ ] "Open Position" button works in demo mode
+- [ ] After opening: success toast, position count updates
+- [ ] Error toast for invalid inputs (0 collateral, etc.)
+
+### K3. Positions Tab
+- [ ] Shows all open demo wallet positions
+- [ ] Each position shows: market name, direction (LONG/SHORT), collateral, notional, entry price
+- [ ] Current price matches prices.json
+- [ ] Unrealized PnL is calculated and displayed
+- [ ] Borrow fees show non-zero (accruing) values
+- [ ] Funding shows non-zero values (negative for heavy side)
+- [ ] "Close Position" button works
+- [ ] After closing: position disappears, success toast
+
+### K4. Vault Tab
+- [ ] TVL matches on-chain totalAssets()
+- [ ] Share price shows ~$1.00
+- [ ] APY shows reasonable number (same as stats bar within 0.1%)
+- [ ] Utilization matches stats bar
+- [ ] Demo wallet shares shown (non-zero)
+- [ ] Wallet USDT balance shown
+- [ ] "Approve USDT" button works
+- [ ] "Deposit" button works (with amount)
+- [ ] After deposit: shares increase, TVL increases
+- [ ] Pending yield display (may be 0 if vault is fresh — that's OK)
+- [ ] "Claim Rewards" button works (or shows "nothing to claim")
+- [ ] "Compound" button works (or shows "nothing to compound")
+
+### K5. Market Detail Tab
+- [ ] Select any market → detail page loads
+- [ ] Price/probability displayed correctly
+- [ ] Resolution date shown
+- [ ] OI breakdown bar shows both Long and Short sides
+- [ ] Even very small sides are visible (min 2% width)
+- [ ] Borrow rate shown (hourly, non-zero)
+- [ ] Back button returns to markets list
+
+### K6. Stats Bar
+- [ ] TVL matches vault totalAssets
+- [ ] OI matches OILimits.getGlobalOI
+- [ ] Utilization = OI / TVL (can exceed 100%)
+- [ ] APY matches useRealAPY calculation
+- [ ] Volume shows real number (from PositionOpened events)
+- [ ] Insurance Fund shows real balance
+- [ ] All badges show "LIVE" (not "DEMO DATA")
+
+### K7. Status Bar (bottom)
+- [ ] Shows "SYSTEM OPERATIONAL"
+- [ ] CONTRACTS shows "OPERATIONAL" (no random DEGRADED)
+- [ ] Network latency shows real ms value
+- [ ] No error badges
+
+---
+
+## FINAL GATE
+
+ALL phases A through K must pass before committing. If any phase fails, fix the issue and re-run that phase before moving to the next.
+
+After all pass:
+```bash
+cd /home/lever/lever-protocol
+git add -A
+git commit -m "full redeploy: all 11 contracts with correct refs, init, and verified
+
+<details of what was deployed>
+
+Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>"
+git push origin main
+```
 
 ---
 
