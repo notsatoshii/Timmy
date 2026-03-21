@@ -1,6 +1,6 @@
 # LEVER Protocol — Persistent Context for Build Agents
 
-**Last Updated:** March 20, 2026  
+**Last Updated:** March 21, 2026
 **Do not delete this file. It is the source of truth for all build agents.**
 
 ---
@@ -26,9 +26,10 @@ Only fix: data display bugs, broken functionality, loading states, crashes.
 - Borrow indices accruing every 60s (lever-accrue-keeper service)
 - 10 markets registered and active with live oracle prices
 - Frontend builds and serves on port 3000
-- 8 demo positions across 4 markets (SpaceX, Iran, FIFA, FedRate)
-- Data validation: 14/14 checks pass (validate-display-data.sh)
-- TVL: $502K, OI: $4.3K, utilization: 0.85%, APY: 1.5%, share price: $1.00
+- 4 demo positions (PIDs 276-279): SpaceX 3x Long, US-Iran 2x Short, FIFA 5x Long, Fed Rate 3x Short
+- Demo mode ON by default (localStorage !== 'false')
+- All 36 orphaned positions cleared, stale OI zeroed
+- TVL: $502K, OI: $4.3K, utilization: 0.86%, APY: 0% (fresh vault), share price: $1.000007
 
 ### FIXED — Redeployed March 20, 2026
 
@@ -43,7 +44,7 @@ Only fix: data display bugs, broken functionality, loading states, crashes.
 ### Known Frontend Bugs
 1. Funding shows $0.00 on all positions (contract-level: getFundingIndex reverts — indices not initialized)
 2. Error toasts on Trading show generic message, not actual revert reason
-3. openPosition requires ~826K gas — 800K limit fails silently. Use gas:2000000n.
+3. openPosition requires ~980K gas — gas:2000000n set in useDemoWallet
 
 ### Fixed (Do Not Re-Break)
 - useDemoWallet.ts: uses writeContract with gas:2000000n, NOT simulateContract
