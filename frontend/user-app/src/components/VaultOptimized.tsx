@@ -366,6 +366,10 @@ const VaultOptimized: React.FC = () => {
                 </div>
               ))}
             </div>
+          ) : metrics.userPosition.shares === 0 ? (
+            <div className="text-center py-4">
+              <p className="text-steel text-sm">Deposit USDT to start earning yield</p>
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
@@ -529,30 +533,34 @@ const VaultOptimized: React.FC = () => {
       {address && (
         <div className="bg-surface-1 rounded-lg border border-border p-6">
           <h3 className="text-lg font-semibold text-gray-100 mb-4">Rewards</h3>
-          <div className="space-y-4">
-            <div>
-              <p className="text-xs text-gray-500 uppercase tracking-wide">Pending Yield</p>
-              <p className="text-xl font-bold font-mono text-accent">
-                ${pendingYieldRaw ? formatUsdt(pendingYieldRaw as bigint) : '0.00'} USDT
-              </p>
+          {(!pendingYieldRaw || (pendingYieldRaw as bigint) === BigInt(0)) ? (
+            <div className="text-center py-4">
+              <p className="text-steel text-sm">Rewards will appear here as fees accrue</p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button
-                onClick={handleClaimRewards}
-                disabled={!pendingYieldRaw || (pendingYieldRaw as bigint) === BigInt(0)}
-                className="w-full bg-accent text-surface-0 py-2.5 px-4 rounded-md font-semibold hover:bg-accent-dim disabled:opacity-30 transition-colors"
-              >
-                Claim Rewards
-              </button>
-              <button
-                onClick={handleCompound}
-                disabled={!pendingYieldRaw || (pendingYieldRaw as bigint) === BigInt(0)}
-                className="w-full bg-purple text-white py-2.5 px-4 rounded-md font-semibold hover:bg-purple-dim disabled:opacity-30 transition-colors"
-              >
-                Compound
-              </button>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wide">Pending Yield</p>
+                <p className="text-xl font-bold font-mono text-accent">
+                  ${formatUsdt(pendingYieldRaw as bigint)} USDT
+                </p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  onClick={handleClaimRewards}
+                  className="w-full bg-accent text-surface-0 py-2.5 px-4 rounded-md font-semibold hover:bg-accent-dim transition-colors"
+                >
+                  Claim Rewards
+                </button>
+                <button
+                  onClick={handleCompound}
+                  className="w-full bg-purple text-white py-2.5 px-4 rounded-md font-semibold hover:bg-purple-dim transition-colors"
+                >
+                  Compound
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 

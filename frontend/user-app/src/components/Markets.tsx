@@ -3,7 +3,6 @@ import { useReadContract } from 'wagmi';
 import { useMarketProbabilities } from '../hooks/useMarketProbabilities';
 import { CONTRACT_ADDRESSES } from '../config/contracts';
 import { LEVERAGE_MODEL_ABI } from '../config/abis';
-import Skeleton from './Skeleton';
 import ProfessionalLoader from './ProfessionalLoader';
 import TestnetDisclaimer from './TestnetDisclaimer';
 import { LiveDataBadge } from './ConnectionStatus';
@@ -23,8 +22,21 @@ interface MarketsProps {
   onMarketDetail?: (market: Market) => void;
 }
 
+const CATEGORY_COLORS: Record<string, string> = {
+  Technology: '#3B82F6',
+  Geopolitics: '#EF4444',
+  Economy: '#F59E0B',
+  Sports: '#10B981',
+  Crypto: '#8B5CF6',
+  Stocks: '#06B6D4',
+  Forex: '#EC4899',
+  Speculative: '#6B7280',
+  Politics: '#8B5CF6',
+  Entertainment: '#EC4899',
+  Other: '#6B7280',
+};
+
 const Markets: React.FC<MarketsProps> = ({ onTradeSelect, onMarketDetail }) => {
-  // Read max leverage from first market as representative
   const { data: maxLeverageRaw } = useReadContract({
     address: CONTRACT_ADDRESSES.leverageModel,
     abi: LEVERAGE_MODEL_ABI,
@@ -67,35 +79,9 @@ const Markets: React.FC<MarketsProps> = ({ onTradeSelect, onMarketDetail }) => {
   };
 
   const getPriceColor = (price: number): string => {
-    if (price >= 0.6) return 'text-accent';
-    if (price <= 0.4) return 'text-danger';
-    return 'text-ivory';
-  };
-
-  const getCategoryColor = (category: string): string => {
-    const colors: { [key: string]: string } = {
-      'Politics': 'text-purple border-purple/20',
-      'Sports': 'text-accent border-accent/20',
-      'Technology': 'text-accent border-accent/20',
-      'Economy': 'text-warning border-warning/20',
-      'Crypto': 'text-warning border-warning/20',
-      'Entertainment': 'text-purple border-purple/20',
-      'Other': 'text-steel border-border-light',
-      'Geopolitics': 'text-danger border-danger/20',
-      'Speculative': 'text-purple border-purple/20',
-      'Stocks': 'text-accent border-accent/20',
-      'Forex': 'text-accent border-accent/20',
-    };
-    return colors[category] || colors['Other'];
-  };
-
-  const formatLastUpdateTime = (timestamp: number): string => {
-    if (!timestamp) return '';
-    const now = Date.now();
-    const diff = Math.floor((now - timestamp) / 1000);
-    if (diff < 60) return 'Just now';
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    return `${Math.floor(diff / 3600)}h ago`;
+    if (price >= 0.6) return '#E6FF2B';
+    if (price <= 0.4) return '#EF4444';
+    return '#F5F5F7';
   };
 
   return (
@@ -103,130 +89,147 @@ const Markets: React.FC<MarketsProps> = ({ onTradeSelect, onMarketDetail }) => {
       {/* Header */}
       <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center md:space-y-0">
         <div>
-          <h2 className="text-2xl font-bold font-display text-ivory">Prediction Markets</h2>
+          <h2 className="text-2xl font-bold text-ivory">Prediction Markets</h2>
           <p className="text-sm text-steel mt-1">
-            Browse active binary outcome markets with up to <span className="text-accent font-semibold">{maxLevDisplay}</span> leverage
+            {markets.length} active markets · Up to <span className="text-accent font-semibold">{maxLevDisplay}</span> leverage
           </p>
         </div>
         <div className="flex items-center space-x-3">
           <LiveDataBadge />
           <div className="flex items-center space-x-1.5">
-            <div className={`w-1.5 h-1.5 rounded-full ${hasOracleData ? 'bg-accent' : 'bg-warning animate-pulse'}`}></div>
+            <div className={`w-1.5 h-1.5 rounded-full ${hasOracleData ? 'bg-accent' : 'bg-warning'}`}
+              style={hasOracleData ? { animation: 'pulse-glow 2s ease-in-out infinite' } : {}}
+            />
             <span className={`text-xs font-medium ${hasOracleData ? 'text-accent' : 'text-warning'}`}>
-              {hasOracleData ? 'Oracle Active' : 'Fallback Data'}
+              {hasOracleData ? 'Oracle Active' : 'Fallback'}
             </span>
-            {lastUpdate > 0 && (
-              <span className={`text-xs ${hasOracleData ? 'text-steel' : 'text-warning/70'} font-mono`}>
-                • {formatLastUpdateTime(lastUpdate)}
-              </span>
-            )}
           </div>
           <button
             onClick={refreshProbabilities}
-            className="text-xs text-steel hover:text-ivory px-3 py-1.5 rounded-lg border border-border-light hover:border-border-hover transition-all"
+            className="text-xs text-steel hover:text-ivory px-3 py-1.5 rounded-lg border border-white/4 hover:border-white/8 transition-all"
           >
             Refresh
           </button>
         </div>
       </div>
 
-      {/* Testnet Notice */}
       <TestnetDisclaimer compact={true} context="general" />
 
-      {/* Subtitle info */}
-      <div className="flex items-center space-x-4 text-xs text-steel">
-        <span>{markets.length} active markets</span>
-        {lastUpdate > 0 && (
-          <>
-            <span className="text-border-light">·</span>
-            <span>Last update: {formatLastUpdateTime(lastUpdate)}</span>
-            <span className="text-border-light">·</span>
-            <span className="font-mono text-steel/70">
-              {new Date(lastUpdate).toLocaleTimeString()}
-            </span>
-          </>
-        )}
-      </div>
-
-      {/* Market Cards */}
-      <div className="grid gap-4 lg:grid-cols-1">
-        {markets.map((market, index) => (
-          <div
-            key={market.id}
-            className={`${index === 0 ? 'lever-card-glow' : 'lever-card'} cursor-pointer transition-all duration-200 hover:-translate-y-0.5`}
-            style={index !== 0 ? {} : {}}
-            onClick={() => onMarketDetail?.(market)}
-          >
-            {/* Category + Live badge */}
-            <div className="flex items-center space-x-2 mb-4">
-              <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-medium uppercase tracking-wider border lever-inset ${getCategoryColor(market.category)}`}>
-                {market.category}
-              </span>
-              {market.isLive && (
-                <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-medium uppercase tracking-wider bg-accent/10 text-accent border border-accent/20">
-                  <div className="w-1.5 h-1.5 bg-accent rounded-full mr-1.5 animate-pulse"></div>
-                  Live
+      {/* Market Tile Grid */}
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        {markets.map((market) => {
+          const catColor = CATEGORY_COLORS[market.category] || CATEGORY_COLORS.Other;
+          return (
+            <div
+              key={market.id}
+              data-market-tile={market.id}
+              onClick={() => onMarketDetail?.(market)}
+              className="cursor-pointer transition-all duration-200 hover:bg-[#161721] group"
+              style={{
+                background: '#101118',
+                border: '1px solid rgba(255,255,255,0.04)',
+                borderRadius: '12px',
+                padding: '16px',
+                borderLeft: '3px solid transparent',
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.borderLeftColor = '#E6FF2B';
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.borderLeftColor = 'transparent';
+              }}
+            >
+              {/* Top row: category + live */}
+              <div className="flex items-center justify-between mb-3">
+                <span
+                  className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wider"
+                  style={{
+                    backgroundColor: `${catColor}15`,
+                    color: catColor,
+                    border: `1px solid ${catColor}30`,
+                  }}
+                >
+                  {market.category}
                 </span>
-              )}
-            </div>
-
-            {/* Market Title */}
-            <h3 className="text-lg font-semibold font-display text-ivory mb-4 leading-snug">
-              {market.description}
-            </h3>
-
-            {/* Stats Row — Price, Probability, Resolution in inset boxes */}
-            <div className="grid grid-cols-3 gap-3 mb-4">
-              <div className="lever-inset">
-                <p className="text-[10px] uppercase tracking-widest text-steel mb-1 flex items-center">
-                  Price
-                  <span className={`ml-1.5 w-1 h-1 rounded-full ${market.source === 'oracle' ? 'bg-accent animate-pulse' : 'bg-warning'}`}></span>
-                </p>
-                <p className={`font-semibold font-mono text-xl ${getPriceColor(market.price)}`}>
-                  {(market.price * 100).toFixed(1)}¢
-                </p>
+                {market.isLive && (
+                  <span className="inline-flex items-center text-[10px] font-medium text-accent">
+                    <span
+                      className="w-1.5 h-1.5 rounded-full bg-accent mr-1"
+                      style={{ animation: 'pulse-glow 2s ease-in-out infinite' }}
+                    />
+                    Live
+                  </span>
+                )}
               </div>
-              <div className="lever-inset">
-                <p className="text-[10px] uppercase tracking-widest text-steel mb-1">Probability</p>
-                <p className="font-semibold font-mono text-xl text-ivory">
+
+              {/* Market name */}
+              <h3 className="text-sm font-semibold text-ivory mb-3 leading-snug line-clamp-2 min-h-[2.5rem]">
+                {market.description}
+              </h3>
+
+              {/* Probability (large) */}
+              <div className="mb-3">
+                <span
+                  className="text-2xl font-bold font-mono"
+                  style={{ color: getPriceColor(market.price) }}
+                >
                   {(market.price * 100).toFixed(1)}%
-                </p>
+                </span>
               </div>
-              <div className="lever-inset">
-                <p className="text-[10px] uppercase tracking-widest text-steel mb-1">Resolution</p>
-                <p className="font-semibold font-mono text-xl text-ivory">
-                  {formatTimeToResolution(market.resolutionTime)}
-                </p>
-              </div>
-            </div>
 
-            {/* Action Row */}
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onTradeSelect?.(market.id, market.description, 'long');
+              {/* Stats row */}
+              <div className="flex items-center justify-between text-[11px] mb-3"
+                style={{
+                  background: '#161721',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '8px',
+                  padding: '8px 10px',
                 }}
-                className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-accent border border-accent/20 bg-accent/5 hover:bg-accent/15 hover:border-accent/40 hover:shadow-glow-green transition-all"
               >
-                Long
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onTradeSelect?.(market.id, market.description, 'short');
-                }}
-                className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-danger border border-danger/20 bg-danger/5 hover:bg-danger/15 hover:border-danger/40 transition-all"
-              >
-                Short
-              </button>
-              <span className="text-[10px] text-steel uppercase tracking-wider hidden sm:block">{maxLevDisplay} max</span>
+                <div>
+                  <span className="text-steel uppercase tracking-wider font-medium" style={{ fontSize: '10px', letterSpacing: '0.05em' }}>
+                    Resolution
+                  </span>
+                  <p className="text-ivory font-mono font-semibold mt-0.5">
+                    {formatTimeToResolution(market.resolutionTime)}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <span className="text-steel uppercase tracking-wider font-medium" style={{ fontSize: '10px', letterSpacing: '0.05em' }}>
+                    Max Lev
+                  </span>
+                  <p className="text-ivory font-mono font-semibold mt-0.5">
+                    {maxLevDisplay}
+                  </p>
+                </div>
+              </div>
+
+              {/* Long/Short buttons */}
+              <div className="flex space-x-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onTradeSelect?.(market.id, market.description, 'long');
+                  }}
+                  className="flex-1 py-2 rounded-lg text-xs font-semibold text-accent border border-accent/20 bg-accent/5 hover:bg-accent/15 transition-all"
+                >
+                  Long
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onTradeSelect?.(market.id, market.description, 'short');
+                  }}
+                  className="flex-1 py-2 rounded-lg text-xs font-semibold text-danger border border-danger/20 bg-danger/5 hover:bg-danger/15 transition-all"
+                >
+                  Short
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      {/* Loading state — consistent ProfessionalLoader */}
       {isLoading && (
         <ProfessionalLoader
           title="Loading Markets"
@@ -239,11 +242,24 @@ const Markets: React.FC<MarketsProps> = ({ onTradeSelect, onMarketDetail }) => {
       )}
 
       {!isLoading && markets.length === 0 && (
-        <div className="lever-card text-center py-12">
+        <div className="text-center py-12" style={{ background: '#101118', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.04)' }}>
           <p className="text-steel">No active markets found</p>
           <p className="text-xs text-steel mt-2">Markets will appear here once they are created</p>
         </div>
       )}
+
+      <style>{`
+        @keyframes pulse-glow {
+          0%, 100% { opacity: 0.4; }
+          50% { opacity: 1; }
+        }
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+      `}</style>
     </div>
   );
 };

@@ -1,0 +1,173 @@
+import React, { useState } from 'react';
+import { useWallet } from '../hooks/useWallet';
+import ConnectWallet from './ConnectWallet';
+import Header from './Header';
+import ProtocolStats from './ProtocolStats';
+import Markets from './Markets';
+import MarketDetail from './MarketDetail';
+import Trading from './Trading';
+import VaultOptimized from './VaultOptimized';
+import Positions from './Positions';
+import ErrorBoundary from './ErrorBoundary';
+
+type TabType = 'markets' | 'trading' | 'vault' | 'positions';
+
+interface Market {
+  id: string;
+  description: string;
+  price: number;
+  resolutionTime: number;
+  category: string;
+  isLive: boolean;
+}
+
+const Dashboard: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<TabType>('markets');
+  const [selectedTrade, setSelectedTrade] = useState<{
+    marketId: string;
+    marketName: string;
+    direction: 'long' | 'short';
+  } | null>(null);
+  const [selectedMarket, setSelectedMarket] = useState<Market | null>(null);
+  const { isConnected } = useWallet();
+
+  const handleTradeSelection = (marketId: string, marketName: string, direction: 'long' | 'short') => {
+    setSelectedTrade({ marketId, marketName, direction });
+    setSelectedMarket(null); // Clear market detail view
+    setActiveTab('trading');
+  };
+
+  const handleMarketDetail = (market: Market) => {
+    setSelectedMarket(market);
+  };
+
+  const handleBackToMarkets = () => {
+    setSelectedMarket(null);
+  };
+
+  const tabs = [
+    { id: 'markets' as TabType, label: 'Markets', description: 'Browse prediction markets' },
+    { id: 'trading' as TabType, label: 'Trading', description: 'Open/close positions' },
+    { id: 'vault' as TabType, label: 'Vault', description: 'LP deposits & yields' },
+    { id: 'positions' as TabType, label: 'Positions', description: 'Your active positions' },
+  ];
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'markets':
+        if (selectedMarket) {
+          return (
+            <ErrorBoundary panelName="MarketDetail">
+              <MarketDetail market={selectedMarket} onBack={handleBackToMarkets} onTradeSelect={handleTradeSelection} />
+            </ErrorBoundary>
+          );
+        }
+        return (
+          <ErrorBoundary panelName="Markets">
+            <Markets onTradeSelect={handleTradeSelection} onMarketDetail={handleMarketDetail} />
+          </ErrorBoundary>
+        );
+      case 'trading':
+        return (
+          <ErrorBoundary panelName="Trading">
+            <Trading selectedTrade={selectedTrade} />
+          </ErrorBoundary>
+        );
+      case 'vault':
+        return (
+          <ErrorBoundary panelName="Vault">
+            <VaultOptimized />
+          </ErrorBoundary>
+        );
+      case 'positions':
+        return (
+          <ErrorBoundary panelName="Positions">
+            <Positions />
+          </ErrorBoundary>
+        );
+      default:
+        return (
+          <ErrorBoundary panelName="Markets">
+            <Markets onTradeSelect={handleTradeSelection} onMarketDetail={handleMarketDetail} />
+          </ErrorBoundary>
+        );
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-surface-0">
+      <ErrorBoundary panelName="Header">
+        <Header />
+      </ErrorBoundary>
+
+      {/* Protocol Stats Banner */}
+      <ErrorBoundary panelName="ProtocolStats">
+        <ProtocolStats />
+      </ErrorBoundary>
+
+      {/* Navigation Tabs */}
+      <div className="bg-surface-1 border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Desktop navigation */}
+          <div className="hidden md:flex space-x-8">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                  activeTab === tab.id
+                    ? 'border-accent text-accent'
+                    : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-border-light'
+                }`}
+              >
+                <div className="flex flex-col items-center">
+                  <span>{tab.label}</span>
+                  <span className="text-xs opacity-60">{tab.description}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Mobile navigation */}
+          <div className="md:hidden">
+            <div className="grid grid-cols-4">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`py-3 px-1 border-b-2 font-medium text-xs transition-colors duration-200 ${
+                    activeTab === tab.id
+                      ? 'border-accent text-accent'
+                      : 'border-transparent text-gray-500'
+                  }`}
+                >
+                  <div className="flex flex-col items-center space-y-1">
+                    <span className="text-center leading-tight">{tab.label}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {renderContent()}
+
+        {/* Show wallet connection prompt only for transaction-heavy tabs when not connected */}
+        {!isConnected && (activeTab === 'trading' || activeTab === 'positions') && (
+          <div className="fixed bottom-4 right-4 bg-surface-2 border border-border rounded-lg shadow-card p-4 max-w-sm">
+            <h4 className="font-medium text-gray-100 mb-2">Connect to Trade</h4>
+            <p className="text-sm text-gray-400 mb-3">
+              Connect your wallet to open positions and manage trades
+            </p>
+            <ConnectWallet />
+          </div>
+        )}
+      </main>
+    </div>
+  );
+};
+
+export default Dashboard;

@@ -4,15 +4,16 @@
 - None
 
 ## HIGH
+- Funding rate engine still reverting on getFundingRate calls despite index initialization. Requires deeper investigation. (2026-03-22)
 - Browser automation (puppeteer) cannot run — missing Chrome system dependencies (libatk, libgbm, etc). Need sudo to install. (2026-03-21)
-- Funding rate returns 0 everywhere — getFundingIndex/getFundingRate revert. Contract-level: indices not initialized. (2026-03-21)
 
 ## MEDIUM
-- Test failure: test_batchLiquidate_multiplePositions() failing with leverage exceeds max error (2026-03-21)
+- 27 test failures remain - mostly leverage-related due to test mocks not reflecting real deployed contract fixes (2026-03-22)
 - Dashboard service not responding on port 8080 (non-critical monitoring tool) (2026-03-21)
 - openPosition requires ~826K gas (800K limit fails silently). Frontend useDemoWallet uses gas:2000000n which is correct. (2026-03-21)
 
 ## RESOLVED
+- **MAJOR FIX: Leverage calculations crushing positions at 1x** — FIXED: Root cause was depth thresholds set too high (1000x) relative to actual oracle depths (~1.0). Updated market risk parameters with reasonable depth thresholds (1.0) for all active markets. Effective max leverage increased from 1x → 18.57x. (2026-03-22)
 - OI/TVL mismatch (441% utilization) — FIXED: Force-closed 36 orphaned positions from pre-redeployment vault. Zeroed all stale OI via decreaseOI. Current: TVL=$502K, OI=$4.3K, utilization=0.85%. (2026-03-21)
 - QA scripts false PASSED — FIXED: Added validate-display-data.sh. Checks on-chain TVL, OI, share price, insurance, borrow rate, prices, utilization, APY, addresses. (2026-03-21)
 - APY showing 200% (inflated) — FIXED: Root cause was OI>>TVL. After clearing OI, APY projects 1.5% (reasonable). (2026-03-21)

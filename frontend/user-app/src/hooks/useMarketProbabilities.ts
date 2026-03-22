@@ -64,6 +64,66 @@ const DEMO_MARKETS_FALLBACK = {
     category: "Forex",
     initial_probability: 0.5974,
     expiry: "2026-12-31T00:00:00Z"
+  },
+  "0x8215cf9d075f1ee6044f05d17fa1685d88da515f3ea119e10f50cb487f9e3774": {
+    name: "BTC Above $80k March 2026?",
+    category: "Crypto",
+    initial_probability: 0.135,
+    expiry: "2026-04-01T04:00:00Z"
+  },
+  "0x329ec977deb23dbc392959044918040f8a9252d502c6948eea33d2e72e787ddd": {
+    name: "Masters 2026: Ludvig Aberg Wins?",
+    category: "Sports",
+    initial_probability: 0.059,
+    expiry: "2026-04-13T00:00:00Z"
+  },
+  "0xc2a3fba66cdee6088484ae353b3c414390c591ac5cf485248f9b9cbb591a8cd4": {
+    name: "Hungary PM: Viktor Orbán?",
+    category: "Politics",
+    initial_probability: 0.375,
+    expiry: "2026-04-12T00:00:00Z"
+  },
+  "0x35f95cb4e4331813cbbcf8acd4efea29305a24ff890b4f22d163722095ebb706": {
+    name: "Eurovision 2026: France Wins?",
+    category: "Entertainment",
+    initial_probability: 0.1255,
+    expiry: "2026-05-16T00:00:00Z"
+  },
+  "0x73b37115e0a747b8fec07143017b8359a53677baa466a4847c6af7c14c0ec5c7": {
+    name: "NCAA 2026: Florida Wins?",
+    category: "Sports",
+    initial_probability: 0.0925,
+    expiry: "2026-04-04T00:00:00Z"
+  },
+  "0x6ee69274ed792087cd80dc1db0f90456f4d2621287375a0e90032f61bbe32e9e": {
+    name: "Hungary Election: TISZA Most Seats?",
+    category: "Politics",
+    initial_probability: 0.655,
+    expiry: "2026-04-12T00:00:00Z"
+  },
+  "0xdf341f72d47f0bbcb009aaa13d9d683a79ce8f77de068943c0316feade190c21": {
+    name: "Fed April 2026: No Rate Change?",
+    category: "Economy",
+    initial_probability: 0.9465,
+    expiry: "2026-04-29T00:00:00Z"
+  },
+  "0x0e6da084b18fb861b29203d611dc83df2bcfa3294281dd57ea735f3096023438": {
+    name: "ETH Above $2600 March 2026?",
+    category: "Crypto",
+    initial_probability: 0.105,
+    expiry: "2026-04-01T04:00:00Z"
+  },
+  "0x5131ef671dbddffe63e34798f3cf92be05c95001b20f29255f97d87b2d6e1de2": {
+    name: "Iranian Regime Falls by April 30?",
+    category: "Geopolitics",
+    initial_probability: 0.115,
+    expiry: "2026-04-30T00:00:00Z"
+  },
+  "0x7155116cef46226d9a58e096c87fba03555313c85b9b9b649dca754090845136": {
+    name: "Trump Visits China by April 30?",
+    category: "Geopolitics",
+    initial_probability: 0.125,
+    expiry: "2026-04-30T00:00:00Z"
   }
 };
 

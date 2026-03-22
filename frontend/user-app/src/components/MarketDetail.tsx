@@ -8,6 +8,7 @@ import {
   ORACLE_ADAPTER_ABI
 } from '../config/abis';
 import { useMarketProbabilities } from '../hooks/useMarketProbabilities';
+import TradeForm from './TradeForm';
 import {
   ComposedChart,
   Bar,
@@ -68,6 +69,16 @@ const DEMO_TO_ONCHAIN_ID: Record<string, string> = {
   'demo-8': '0x6dd2ecd673a166f34be2f101b96a048035bcfbcd0f98014491ca94449c159dbc',
   'demo-9': '0xf715c6d9592ef93a01ff357bb5a3514c22ceeaa60e06223c0dcf75afad145e9f',
   'demo-10': '0xe73fd3dd7e069a651cfc9d63dae43702c320a661ab5c9dada3678994d18dffea',
+  'demo-11': '0x8215cf9d075f1ee6044f05d17fa1685d88da515f3ea119e10f50cb487f9e3774',
+  'demo-12': '0x329ec977deb23dbc392959044918040f8a9252d502c6948eea33d2e72e787ddd',
+  'demo-13': '0xc2a3fba66cdee6088484ae353b3c414390c591ac5cf485248f9b9cbb591a8cd4',
+  'demo-14': '0x35f95cb4e4331813cbbcf8acd4efea29305a24ff890b4f22d163722095ebb706',
+  'demo-15': '0x73b37115e0a747b8fec07143017b8359a53677baa466a4847c6af7c14c0ec5c7',
+  'demo-16': '0x6ee69274ed792087cd80dc1db0f90456f4d2621287375a0e90032f61bbe32e9e',
+  'demo-17': '0xdf341f72d47f0bbcb009aaa13d9d683a79ce8f77de068943c0316feade190c21',
+  'demo-18': '0x0e6da084b18fb861b29203d611dc83df2bcfa3294281dd57ea735f3096023438',
+  'demo-19': '0x5131ef671dbddffe63e34798f3cf92be05c95001b20f29255f97d87b2d6e1de2',
+  'demo-20': '0x7155116cef46226d9a58e096c87fba03555313c85b9b9b649dca754090845136',
 };
 
 const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSelect }) => {
@@ -632,15 +643,14 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
             </div>
           </div>
 
-          <div className="flex-shrink-0 lg:ml-6">
-            <div className="flex space-x-3">
-              <button onClick={() => { if (onTradeSelect && market?.id) onTradeSelect(market.id, market.description || 'Unknown', "long"); if (onBack) onBack(); }} className="bg-accent/10 text-accent border border-accent/30 px-6 py-3 rounded-md font-semibold hover:bg-accent/20 hover:border-accent/50 transition-all">
-                Long
-              </button>
-              <button onClick={() => { if (onTradeSelect && market?.id) onTradeSelect(market.id, market.description || 'Unknown', "short"); if (onBack) onBack(); }} className="bg-danger/10 text-danger border border-danger/30 px-6 py-3 rounded-md font-semibold hover:bg-danger/20 hover:border-danger/50 transition-all">
-                Short
-              </button>
-            </div>
+          <div className="flex-shrink-0 lg:ml-6 w-full lg:w-80">
+            <TradeForm
+              marketId={marketBytes32}
+              marketName={market.description}
+              currentPrice={currentPrice}
+              onTradeSelect={onTradeSelect}
+              compact={true}
+            />
           </div>
         </div>
       </div>
@@ -742,37 +752,45 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
           </h3>
 
           <div className="space-y-4">
-            {/* Visual OI Bar */}
-            <div className="flex h-8 rounded-md overflow-hidden">
-              <div
-                className="bg-accent flex items-center justify-center text-xs font-medium text-surface-0"
-                style={{ width: `${longPercentage}%` }}
-              >
-                {longPercentage >= 5 ? `Long ${longPercentageRaw > 0 && longPercentageRaw < 1 ? '<1' : Math.round(longPercentageRaw)}%` : ''}
+            {longOINum === 0 && shortOINum === 0 ? (
+              <div className="text-center py-4">
+                <p className="text-steel text-sm">No open interest yet</p>
               </div>
-              <div
-                className="bg-danger flex items-center justify-center text-xs font-medium text-surface-0"
-                style={{ width: `${shortPercentage}%` }}
-              >
-                {shortPercentage >= 5 ? `Short ${shortPercentageRaw > 0 && shortPercentageRaw < 1 ? '<1' : Math.round(shortPercentageRaw)}%` : ''}
-              </div>
-            </div>
+            ) : (
+              <>
+                {/* Visual OI Bar */}
+                <div className="flex h-8 rounded-md overflow-hidden">
+                  <div
+                    className="bg-accent flex items-center justify-center text-xs font-medium text-surface-0"
+                    style={{ width: `${longPercentage}%` }}
+                  >
+                    {longPercentage >= 5 ? `Long ${longPercentageRaw > 0 && longPercentageRaw < 1 ? '<1' : Math.round(longPercentageRaw)}%` : ''}
+                  </div>
+                  <div
+                    className="bg-danger flex items-center justify-center text-xs font-medium text-surface-0"
+                    style={{ width: `${shortPercentage}%` }}
+                  >
+                    {shortPercentage >= 5 ? `Short ${shortPercentageRaw > 0 && shortPercentageRaw < 1 ? '<1' : Math.round(shortPercentageRaw)}%` : ''}
+                  </div>
+                </div>
 
-            {/* OI Details */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center">
-                <p className="text-accent text-2xl font-bold font-mono">
-                  {formatCurrency(longOINum)}
-                </p>
-                <p className="text-sm text-gray-500">Long OI</p>
-              </div>
-              <div className="text-center">
-                <p className="text-danger text-2xl font-bold font-mono">
-                  {formatCurrency(shortOINum)}
-                </p>
-                <p className="text-sm text-gray-500">Short OI</p>
-              </div>
-            </div>
+                {/* OI Details */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center">
+                    <p className="text-accent text-2xl font-bold font-mono">
+                      {formatCurrency(longOINum)}
+                    </p>
+                    <p className="text-sm text-gray-500">Long OI</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-danger text-2xl font-bold font-mono">
+                      {formatCurrency(shortOINum)}
+                    </p>
+                    <p className="text-sm text-gray-500">Short OI</p>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -814,6 +832,11 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
           </h3>
 
           <div className="space-y-3">
+            {recentPositions.length === 0 && (
+              <div className="text-center py-4">
+                <p className="text-steel text-sm">No positions yet</p>
+              </div>
+            )}
             {recentPositions.slice(0, 5).map((position) => (
               <div key={position.id} className="flex items-center justify-between py-2">
                 <div className="flex items-center space-x-3">

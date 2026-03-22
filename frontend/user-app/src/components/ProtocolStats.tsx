@@ -39,7 +39,11 @@ interface FallbackStatus {
   apyFallback: boolean;
 }
 
-const ProtocolStats: React.FC = () => {
+interface ProtocolStatsProps {
+  activeTab?: string;
+}
+
+const ProtocolStats: React.FC<ProtocolStatsProps> = ({ activeTab = 'markets' }) => {
   const [stats, setStats] = useState<ProtocolStatsData | null>(null);
   const [fallbackStatus, setFallbackStatus] = useState<FallbackStatus>({
     tvlFallback: false,
@@ -203,13 +207,31 @@ const ProtocolStats: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
         {/* Enhanced Professional Stats Card */}
         <div className="lever-card-institutional">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 lg:gap-6">
-            <StatBox label="Total TVL" value={stats?.tvl} highlight={true} isLoading={isLoading} isFallback={fallbackStatus.tvlFallback} />
-            <StatBox label="Total Volume" value={stats?.totalVolume} isLoading={isLoading} isFallback={fallbackStatus.volumeFallback} />
-            <StatBox label="Total OI" value={stats?.totalOI} isLoading={isLoading} isFallback={fallbackStatus.oiFallback} />
-            <StatBox label="LP APY" value={stats?.lpApy} highlight={true} isLoading={isLoading} isFallback={fallbackStatus.apyFallback} />
-            <StatBox label="Utilization" value={stats?.utilizationRate} isLoading={isLoading} isFallback={fallbackStatus.oiFallback || fallbackStatus.tvlFallback} />
-            <StatBox label="Insurance Fund" value={stats?.insuranceFund} isLoading={isLoading} isFallback={fallbackStatus.insuranceFallback} />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
+            {(activeTab === 'markets' || activeTab === 'trading') && (
+              <>
+                <StatBox label="Total TVL" value={stats?.tvl} highlight={true} isLoading={isLoading} isFallback={fallbackStatus.tvlFallback} />
+                <StatBox label="Total Volume" value={stats?.totalVolume} isLoading={isLoading} isFallback={fallbackStatus.volumeFallback} />
+                <StatBox label="Total OI" value={stats?.totalOI} isLoading={isLoading} isFallback={fallbackStatus.oiFallback} />
+                <StatBox label="Utilization" value={stats?.utilizationRate} isLoading={isLoading} isFallback={fallbackStatus.oiFallback || fallbackStatus.tvlFallback} />
+              </>
+            )}
+            {activeTab === 'vault' && (
+              <>
+                <StatBox label="Total TVL" value={stats?.tvl} highlight={true} isLoading={isLoading} isFallback={fallbackStatus.tvlFallback} />
+                <StatBox label="Current APY" value={stats?.lpApy} highlight={true} isLoading={isLoading} isFallback={fallbackStatus.apyFallback} />
+                <StatBox label="Vault Utilization" value={stats?.utilizationRate} isLoading={isLoading} isFallback={fallbackStatus.oiFallback || fallbackStatus.tvlFallback} />
+                <StatBox label="Insurance Fund" value={stats?.insuranceFund} isLoading={isLoading} isFallback={fallbackStatus.insuranceFallback} />
+              </>
+            )}
+            {activeTab === 'positions' && (
+              <>
+                <StatBox label="Net PnL" value="—" isLoading={isLoading} isFallback={false} />
+                <StatBox label="Total Equity" value="—" isLoading={isLoading} isFallback={false} />
+                <StatBox label="Locked Collateral" value="—" isLoading={isLoading} isFallback={false} />
+                <StatBox label="Active Positions" value="0" isLoading={isLoading} isFallback={false} />
+              </>
+            )}
           </div>
 
         </div>

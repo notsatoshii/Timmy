@@ -28,9 +28,19 @@ const MARKET_NAMES: Record<string, string> = {
   "0x14c648a4f4d0bc145e52ef68c38e29448c3f53a7856efe028b8b9282bb53ece7": "Fed Rate Below 4%",
   "0xc75c5438583a86308c965cee1a062f63b322bf00c9d47ccfc1c85b0b220111f2": "SpaceX via Ackman SPAR",
   "0x9f22dfb07feaf97cf92a3dc91483a9ecb508f5815f331b4611a8d582e2dd4554": "AAPL Above $250",
-  "0x6dd2ecd673a166f34be2f101b96a048035bcfbcd0f98014491ca94449c159dbc": "BTC Dominance Above 60%",
-  "0xf715c6d9592ef93a01ff357bb5a3514c22ceeaa60e06223c0dcf75afad145e9f": "EU AI Regulation 2026",
-  "0xe73fd3dd7e069a651cfc9d63dae43702c320a661ab5c9dada3678994d18dffea": "Argentina Dollarization",
+  "0x6dd2ecd673a166f34be2f101b96a048035bcfbcd0f98014491ca94449c159dbc": "OpenSea Token Launch",
+  "0xf715c6d9592ef93a01ff357bb5a3514c22ceeaa60e06223c0dcf75afad145e9f": "Fed April Rate Cut",
+  "0xe73fd3dd7e069a651cfc9d63dae43702c320a661ab5c9dada3678994d18dffea": "Argentina ARS/USD",
+  "0x8215cf9d075f1ee6044f05d17fa1685d88da515f3ea119e10f50cb487f9e3774": "BTC Above $80k March",
+  "0x329ec977deb23dbc392959044918040f8a9252d502c6948eea33d2e72e787ddd": "Masters: Aberg Wins",
+  "0xc2a3fba66cdee6088484ae353b3c414390c591ac5cf485248f9b9cbb591a8cd4": "Hungary PM: Orbán",
+  "0x35f95cb4e4331813cbbcf8acd4efea29305a24ff890b4f22d163722095ebb706": "Eurovision: France",
+  "0x73b37115e0a747b8fec07143017b8359a53677baa466a4847c6af7c14c0ec5c7": "NCAA: Florida Wins",
+  "0x6ee69274ed792087cd80dc1db0f90456f4d2621287375a0e90032f61bbe32e9e": "Hungary: TISZA Seats",
+  "0xdf341f72d47f0bbcb009aaa13d9d683a79ce8f77de068943c0316feade190c21": "Fed April No Change",
+  "0x0e6da084b18fb861b29203d611dc83df2bcfa3294281dd57ea735f3096023438": "ETH Above $2600 March",
+  "0x5131ef671dbddffe63e34798f3cf92be05c95001b20f29255f97d87b2d6e1de2": "Iran Regime Falls",
+  "0x7155116cef46226d9a58e096c87fba03555313c85b9b9b649dca754090845136": "Trump Visits China",
 };
 
 
