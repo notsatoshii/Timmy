@@ -1,5 +1,12 @@
 #!/bin/bash
-source /home/lever/lever-protocol/control-plane/deploy-env.sh
+# Liquidator bot — scans all markets for liquidatable positions and executes them.
+# Uses a DEDICATED wallet to avoid nonce contention with oracle keeper.
+# Re-sources deploy-env.sh each cycle for contract address updates.
+
+DEPLOY_ENV=/home/lever/lever-protocol/control-plane/deploy-env.sh
+
+# Dedicated liquidator wallet — separate from deployer to avoid nonce races
+LIQ_KEY=23d48ac0ec79d91097f03f8edc4f108844ec2fd6d10866c241dfb8f0160f0f10
 
 MARKETS=(
   0x2841ef32b61fb3472aadbfc70d787a1bfaf5d0218c9601b87963af7bcca1bcf1
@@ -15,29 +22,30 @@ MARKETS=(
 )
 
 echo "[$(date)] Liquidator bot started"
+LIQ_ADDR=$(cast wallet address --private-key $LIQ_KEY)
+echo "[$(date)] Using dedicated wallet: $LIQ_ADDR"
 
 while true; do
+  source "$DEPLOY_ENV"
+
   LIQUIDATED=0
   for MKT in "${MARKETS[@]}"; do
-    # Get all positions for this market
     POSITIONS=$(cast call $POSITION_MANAGER "getMarketPositions(bytes32)(uint256[])" $MKT --rpc-url $RPC_URL 2>/dev/null)
     if [ -z "$POSITIONS" ] || [ "$POSITIONS" = "[]" ]; then continue; fi
 
-    # Parse position IDs from the array
     CLEAN=$(echo "$POSITIONS" | tr -d '[]' | tr ',' '\n' | tr -d ' ')
     for PID in $CLEAN; do
       [ -z "$PID" ] && continue
-      # Check if liquidatable via margin engine directly
       LIQ=$(cast call $MARGIN_ENGINE "isLiquidatable(uint256)(bool)" $PID --rpc-url $RPC_URL 2>/dev/null)
       if [ "$LIQ" = "true" ]; then
         echo "[$(date)] Position $PID is liquidatable — executing"
-        NONCE=$(cast nonce $(cast wallet address --private-key $PRIVATE_KEY) --rpc-url $RPC_URL)
-        RESULT=$(cast send $LIQUIDATION_ENGINE "liquidate(uint256)" $PID --private-key $PRIVATE_KEY --rpc-url $RPC_URL --nonce $NONCE 2>&1)
+        RESULT=$(cast send $LIQUIDATION_ENGINE "liquidate(uint256)" $PID \
+          --private-key $LIQ_KEY --rpc-url $RPC_URL 2>&1)
         if echo "$RESULT" | grep -q "status.*1"; then
           echo "[$(date)] Liquidated position $PID successfully"
           LIQUIDATED=$((LIQUIDATED + 1))
         else
-          echo "[$(date)] Failed to liquidate $PID: $RESULT" | tail -3
+          echo "[$(date)] Failed to liquidate $PID: $(echo "$RESULT" | grep -E 'Error|error' | head -1)"
         fi
       fi
     done
