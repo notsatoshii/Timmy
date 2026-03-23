@@ -4,13 +4,17 @@
 - None
 
 ## HIGH
-- Funding rate engine still reverting on getFundingRate calls despite index initialization. Requires deeper investigation. (2026-03-22)
+- Funding rate engine still reverting on getFundingRate calls despite index initialization. Funding indices exist but rate calculation fails on both dummy and real market IDs. Requires deeper investigation of post-redeployment initialization. (2026-03-23 update: confirmed issue persists)
 - Browser automation (puppeteer) cannot run — missing Chrome system dependencies (libatk, libgbm, etc). Need sudo to install. (2026-03-21)
 
 ## MEDIUM
-- 27 test failures remain - mostly leverage-related due to test mocks not reflecting real deployed contract fixes (2026-03-22)
-- Dashboard service not responding on port 8080 (non-critical monitoring tool) (2026-03-21)
+- Test failures: 54 individual tests failing across 8 test suites (29 of 37 suites passing = 78% success). Failures mostly in verification tests with access control issues and smoothing algorithm convergence problems. Core business logic tests passing. (2026-03-23 update: detailed analysis completed)
+- Some complex contract function calls reverting (activeMarkets, totalPositions, getMarketOI) while basic role checks work. System functional but some query functions inaccessible. (2026-03-23)
 - openPosition requires ~826K gas (800K limit fails silently). Frontend useDemoWallet uses gas:2000000n which is correct. (2026-03-21)
+
+## LOW
+- Oracle price staleness warning in health check false positive — timestamps are actually fresh (~2 minutes) but health check calculation incorrect. (2026-03-23)
+- Dashboard service showing UP in health check (corrected from previous not responding report). (2026-03-23)
 
 ## RESOLVED
 - **MAJOR FIX: Leverage calculations crushing positions at 1x** — FIXED: Root cause was depth thresholds set too high (1000x) relative to actual oracle depths (~1.0). Updated market risk parameters with reasonable depth thresholds (1.0) for all active markets. Effective max leverage increased from 1x → 18.57x. (2026-03-22)
