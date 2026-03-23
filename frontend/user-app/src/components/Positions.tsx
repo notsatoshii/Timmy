@@ -65,7 +65,16 @@ interface PositionData {
 
 type CloseState = 'idle' | 'confirming' | 'pending' | 'success' | 'error';
 
-const Positions: React.FC = () => {
+interface PositionsProps {
+  onStatsUpdate?: (stats: {
+    netPnl: string;
+    totalEquity: string;
+    lockedCollateral: string;
+    activePositions: number;
+  }) => void;
+}
+
+const Positions: React.FC<PositionsProps> = ({ onStatsUpdate }) => {
   const { address } = useWallet();
   const { isDemoMode: isDemoWallet, sendTransaction: demoSend } = useDemoWallet();
   const publicClient = usePublicClient();
@@ -411,15 +420,8 @@ const Positions: React.FC = () => {
   const totalEquity = displayPositions.reduce((sum, pos) => {
     try {
       const equity = Number(pos.equity) / 1e6;
-      console.log(`[totalEquity] Position ${pos.id.toString()}:`, {
-        equityBigInt: pos.equity.toString(),
-        equityNumber: equity,
-        isFinite: isFinite(equity),
-        sum: sum
-      });
       return sum + (isFinite(equity) ? equity : 0);
-    } catch (error) {
-      console.error(`[totalEquity] Error processing position ${pos.id.toString()}:`, error);
+    } catch {
       return sum;
     }
   }, 0);
@@ -427,15 +429,8 @@ const Positions: React.FC = () => {
   const totalNetPnl = displayPositions.reduce((sum, pos) => {
     try {
       const netPnl = Number(computeNetPnl(pos)) / 1e6;
-      console.log(`[totalNetPnl] Position ${pos.id.toString()}:`, {
-        netPnlBigInt: computeNetPnl(pos).toString(),
-        netPnlNumber: netPnl,
-        isFinite: isFinite(netPnl),
-        sum: sum
-      });
       return sum + (isFinite(netPnl) ? netPnl : 0);
-    } catch (error) {
-      console.error(`[totalNetPnl] Error processing position ${pos.id.toString()}:`, error);
+    } catch {
       return sum;
     }
   }, 0);
@@ -443,25 +438,26 @@ const Positions: React.FC = () => {
   const totalCollateral = displayPositions.reduce((sum, pos) => {
     try {
       const collateral = Number(pos.collateral) / 1e6;
-      console.log(`[totalCollateral] Position ${pos.id.toString()}:`, {
-        collateralBigInt: pos.collateral.toString(),
-        collateralNumber: collateral,
-        isFinite: isFinite(collateral),
-        sum: sum
-      });
       return sum + (isFinite(collateral) ? collateral : 0);
-    } catch (error) {
-      console.error(`[totalCollateral] Error processing position ${pos.id.toString()}:`, error);
+    } catch {
       return sum;
     }
   }, 0);
 
-  console.log('[Positions] Portfolio totals:', {
-    displayPositionsCount: displayPositions.length,
-    totalEquity,
-    totalNetPnl,
-    totalCollateral
-  });
+  // Push aggregated stats to parent for the top stats bar
+  useEffect(() => {
+    if (onStatsUpdate) {
+      const fmtPnl = totalNetPnl >= 0
+        ? `+$${totalNetPnl.toFixed(2)}`
+        : `-$${Math.abs(totalNetPnl).toFixed(2)}`;
+      onStatsUpdate({
+        netPnl: fmtPnl,
+        totalEquity: `$${totalEquity.toFixed(2)}`,
+        lockedCollateral: `$${totalCollateral.toFixed(2)}`,
+        activePositions: displayPositions.length,
+      });
+    }
+  }, [totalNetPnl, totalEquity, totalCollateral, displayPositions.length, onStatsUpdate]);
 
   // Monitor positions for liquidation warnings
   useEffect(() => {
@@ -516,42 +512,6 @@ const Positions: React.FC = () => {
         </p>
       </div>
 
-      {/* Account Balance Bar
-      {address && (
-        <div className="bg-surface-2 border border-border rounded-lg p-4 flex flex-col space-y-3 md:flex-row md:space-y-0 md:items-center md:justify-between">
-          {isLoadingAccountData ? (
-            <div className="flex space-x-8">
-              <div>
-                <span className="text-xs text-gray-500 uppercase tracking-wide">Account Balance</span>
-                <Skeleton width="100px" height="24px" />
-              </div>
-              <div>
-                <span className="text-xs text-gray-500 uppercase tracking-wide">Free Collateral</span>
-                <Skeleton width="100px" height="24px" />
-              </div>
-            </div>
-          ) : (
-            <div className="flex space-x-8">
-              <div>
-                <span className="text-xs text-gray-500 uppercase tracking-wide">Account Balance</span>
-                <p className="text-lg font-bold font-mono text-gray-100">
-                  ${accountBalance ? formatUsdt(accountBalance as bigint) : '0.00'} USDT
-                </p>
-              </div>
-              <div>
-                <span className="text-xs text-gray-500 uppercase tracking-wide">Free Collateral</span>
-                <p className="text-lg font-bold font-mono text-gray-100">
-                  ${freeCollateral ? formatUsdt(freeCollateral as bigint) : '0.00'} USDT
-                </p>
-              </div>
-            </div>
-          )}
-          <span className="text-xs text-gray-600">
-            Collateral returned to balance on position close
-          </span>
-        </div>
-      )}
-
       {/* Close Success Banner */}
       {closeState === 'success' && (
         <div className="bg-accent-muted border border-accent/20 rounded-lg p-4">
@@ -580,62 +540,7 @@ const Positions: React.FC = () => {
         </div>
       )}
 
-      {/* Portfolio Summary */}
-      {(isLoadingPositions || displayPositions.length > 0) && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {isLoadingPositions ? (
-            <>
-              {[1, 2, 3, 4].map((index) => (
-                <div key={index} className="bg-surface-1 rounded-lg border border-border p-5">
-                  <div className="flex items-center justify-between mb-1">
-                    <Skeleton width="60px" height="16px" />
-                    <Skeleton width="40px" height="16px" />
-                  </div>
-                  <Skeleton width="80px" height="32px" className="mb-1" />
-                  <Skeleton width="90px" height="14px" />
-                </div>
-              ))}
-            </>
-          ) : (
-            <>
-              <div className="bg-surface-1 rounded-lg border border-border p-5">
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Net PnL</h3>
-                  <div className="flex items-center">
-                    <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse"></div>
-                    <span className="text-xs text-accent ml-1 font-medium">LIVE</span>
-                  </div>
-                </div>
-                <p className={`text-2xl font-bold font-mono ${totalNetPnl >= 0 ? 'text-accent' : 'text-danger'}`}>
-                  {totalNetPnl >= 0 ? '+' : ''}${totalNetPnl.toFixed(2)}
-                </p>
-                <p className="text-xs text-gray-600 mt-1">After fees & funding</p>
-              </div>
-              <div className="bg-surface-1 rounded-lg border border-border p-5">
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Equity</h3>
-                  <div className="flex items-center">
-                    <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse"></div>
-                    <span className="text-xs text-accent ml-1 font-medium">LIVE</span>
-                  </div>
-                </div>
-                <p className="text-2xl font-bold font-mono text-gray-100">${totalEquity.toFixed(2)}</p>
-                <p className="text-xs text-gray-600 mt-1">Collateral + net PnL</p>
-              </div>
-              <div className="bg-surface-1 rounded-lg border border-border p-5">
-                <h3 className="text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Locked Collateral</h3>
-                <p className="text-2xl font-bold font-mono text-gray-100">${totalCollateral.toFixed(2)}</p>
-                <p className="text-xs text-gray-600 mt-1">USDT</p>
-              </div>
-              <div className="bg-surface-1 rounded-lg border border-border p-5">
-                <h3 className="text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Active Positions</h3>
-                <p className="text-2xl font-bold font-mono text-gray-100">{displayPositions.length}</p>
-                <p className="text-xs text-gray-600 mt-1">Open</p>
-              </div>
-            </>
-          )}
-        </div>
-      )}
+      {/* Portfolio summary is shown in the top stats bar */}
 
       {/* Enhanced Portfolio Dashboard */}
       {/* Positions List */}

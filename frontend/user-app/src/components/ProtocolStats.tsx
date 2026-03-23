@@ -41,9 +41,15 @@ interface FallbackStatus {
 
 interface ProtocolStatsProps {
   activeTab?: string;
+  positionStats?: {
+    netPnl: string;
+    totalEquity: string;
+    lockedCollateral: string;
+    activePositions: number;
+  };
 }
 
-const ProtocolStats: React.FC<ProtocolStatsProps> = ({ activeTab = 'markets' }) => {
+const ProtocolStats: React.FC<ProtocolStatsProps> = ({ activeTab = 'markets', positionStats }) => {
   const [stats, setStats] = useState<ProtocolStatsData | null>(null);
   const [fallbackStatus, setFallbackStatus] = useState<FallbackStatus>({
     tvlFallback: false,
@@ -191,7 +197,7 @@ const ProtocolStats: React.FC<ProtocolStatsProps> = ({ activeTab = 'markets' }) 
       {loading ? (
         <Skeleton variant="text" className="h-7 w-24 mx-auto" />
       ) : (
-        <div className={`text-xl md:text-2xl font-semibold font-mono ${
+        <div className={`text-lg sm:text-xl md:text-2xl font-semibold font-mono truncate ${
           highlight ? 'text-accent' : 'text-ivory'
         }`}
         style={highlight ? { textShadow: '0 0 20px rgba(230,255,43,0.25)' } : undefined}
@@ -203,12 +209,12 @@ const ProtocolStats: React.FC<ProtocolStatsProps> = ({ activeTab = 'markets' }) 
   );
 
   return (
-    <div className="border-b border-border">
+    <div className="border-b border-border overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
         {/* Enhanced Professional Stats Card */}
-        <div className="lever-card-institutional">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
-            {(activeTab === 'markets' || activeTab === 'trading') && (
+        <div className="lever-card-institutional overflow-hidden">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+            {activeTab === 'markets' && (
               <>
                 <StatBox label="Total TVL" value={stats?.tvl} highlight={true} isLoading={isLoading} isFallback={fallbackStatus.tvlFallback} />
                 <StatBox label="Total Volume" value={stats?.totalVolume} isLoading={isLoading} isFallback={fallbackStatus.volumeFallback} />
@@ -226,10 +232,10 @@ const ProtocolStats: React.FC<ProtocolStatsProps> = ({ activeTab = 'markets' }) 
             )}
             {activeTab === 'positions' && (
               <>
-                <StatBox label="Net PnL" value="—" isLoading={isLoading} isFallback={false} />
-                <StatBox label="Total Equity" value="—" isLoading={isLoading} isFallback={false} />
-                <StatBox label="Locked Collateral" value="—" isLoading={isLoading} isFallback={false} />
-                <StatBox label="Active Positions" value="0" isLoading={isLoading} isFallback={false} />
+                <StatBox label="Net PnL" value={positionStats?.netPnl ?? '—'} isLoading={isLoading} isFallback={false} />
+                <StatBox label="Total Equity" value={positionStats?.totalEquity ?? '—'} isLoading={isLoading} isFallback={false} />
+                <StatBox label="Locked Collateral" value={positionStats?.lockedCollateral ?? '—'} isLoading={isLoading} isFallback={false} />
+                <StatBox label="Active Positions" value={positionStats?.activePositions?.toString() ?? '0'} isLoading={isLoading} isFallback={false} />
               </>
             )}
           </div>

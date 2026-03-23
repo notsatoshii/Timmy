@@ -21,7 +21,7 @@ const Trading = lazy(() => import('./Trading'));
 const VaultOptimized = lazy(() => import('./VaultOptimized'));
 const Positions = lazy(() => import('./Positions'));
 
-type TabType = 'markets' | 'trading' | 'vault' | 'positions';
+type TabType = 'markets' | 'vault' | 'positions';
 
 interface Market {
   id: string;
@@ -40,18 +40,18 @@ const DashboardOptimized: React.FC = () => {
     direction: 'long' | 'short';
   } | null>(null);
   const [selectedMarket, setSelectedMarket] = useState<Market | null>(null);
+  const [positionStats, setPositionStats] = useState<{
+    netPnl: string;
+    totalEquity: string;
+    lockedCollateral: string;
+    activePositions: number;
+  } | undefined>(undefined);
   const { isConnected } = useWallet();
 
   // Dynamic page title based on current section
   const currentSection = selectedMarket ? 'market-detail' : activeTab;
   const customTitle = selectedMarket ? `${selectedMarket.description}` : undefined;
   usePageTitle(currentSection as any, customTitle);
-
-  const handleTradeSelection = useCallback((marketId: string, marketName: string, direction: 'long' | 'short') => {
-    setSelectedTrade({ marketId, marketName, direction });
-    setSelectedMarket(null); // Clear market detail view
-    setActiveTab('trading');
-  }, []);
 
   const handleMarketDetail = useCallback((market: Market) => {
     setSelectedMarket(market);
@@ -62,16 +62,16 @@ const DashboardOptimized: React.FC = () => {
   }, []);
 
   const handleTabChange = useCallback((tabId: TabType) => {
-    // Clear market detail when changing tabs
+    // Clear market detail and trade selection when changing tabs
     if (tabId !== 'markets') {
       setSelectedMarket(null);
+      setSelectedTrade(null);
     }
     setActiveTab(tabId);
   }, []);
 
   const tabs = [
-    { id: 'markets' as TabType, label: 'Markets', description: 'Browse prediction markets' },
-    { id: 'trading' as TabType, label: 'Trading', description: 'Open/close positions' },
+    { id: 'markets' as TabType, label: 'Trade', description: 'Browse markets & open positions' },
     { id: 'vault' as TabType, label: 'Vault', description: 'LP deposits & yields' },
     { id: 'positions' as TabType, label: 'Positions', description: 'Your active positions' },
   ];
@@ -138,6 +138,16 @@ const DashboardOptimized: React.FC = () => {
     );
   };
 
+  // Handle trade selection without navigating away — keeps markets visible
+  const handleTradeSelectionFused = useCallback((marketId: string, marketName: string, direction: 'long' | 'short') => {
+    setSelectedTrade({ marketId, marketName, direction });
+    setSelectedMarket(null);
+  }, []);
+
+  const handleClearTrade = useCallback(() => {
+    setSelectedTrade(null);
+  }, []);
+
   const renderContent = () => {
     switch (activeTab) {
       case 'markets':
@@ -147,28 +157,45 @@ const DashboardOptimized: React.FC = () => {
               <LazyMarketDetail
                 market={selectedMarket}
                 onBack={handleBackToMarkets}
-                onTradeSelect={handleTradeSelection}
+                onTradeSelect={handleTradeSelectionFused}
               />
             </ErrorBoundary>
           );
         }
         return (
-          <ErrorBoundary panelName="Markets">
-            <Suspense fallback={<ComponentLoader title="Prediction Markets" />}>
-              <Markets
-                onTradeSelect={handleTradeSelection}
-                onMarketDetail={handleMarketDetail}
-              />
-            </Suspense>
-          </ErrorBoundary>
-        );
-      case 'trading':
-        return (
-          <ErrorBoundary panelName="Trading">
-            <Suspense fallback={<ComponentLoader title="Trading Interface" />}>
-              <Trading selectedTrade={selectedTrade} />
-            </Suspense>
-          </ErrorBoundary>
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Markets grid — shrinks when trade panel is open */}
+            <div className={selectedTrade ? 'lg:w-3/5 xl:w-2/3' : 'w-full'}>
+              <ErrorBoundary panelName="Markets">
+                <Suspense fallback={<ComponentLoader title="Prediction Markets" />}>
+                  <Markets
+                    onTradeSelect={handleTradeSelectionFused}
+                    onMarketDetail={handleMarketDetail}
+                  />
+                </Suspense>
+              </ErrorBoundary>
+            </div>
+
+            {/* Trade panel — slides in from right when a market is selected */}
+            {selectedTrade && (
+              <div className="lg:w-2/5 xl:w-1/3 lg:sticky lg:top-4 lg:self-start">
+                <ErrorBoundary panelName="Trading">
+                  <Suspense fallback={<ComponentLoader title="Trading Interface" />}>
+                    <div className="relative">
+                      <button
+                        onClick={handleClearTrade}
+                        className="absolute -top-1 -right-1 z-10 w-7 h-7 flex items-center justify-center rounded-full bg-surface-3 border border-border text-steel hover:text-ivory hover:border-border-light transition-colors text-sm"
+                        title="Close trade panel"
+                      >
+                        ✕
+                      </button>
+                      <Trading selectedTrade={selectedTrade} />
+                    </div>
+                  </Suspense>
+                </ErrorBoundary>
+              </div>
+            )}
+          </div>
         );
       case 'vault':
         return (
@@ -182,24 +209,26 @@ const DashboardOptimized: React.FC = () => {
         return (
           <ErrorBoundary panelName="Positions">
             <Suspense fallback={<ComponentLoader title="Your Positions" />}>
-              <Positions />
+              <Positions onStatsUpdate={setPositionStats} />
             </Suspense>
           </ErrorBoundary>
         );
       default:
         return (
           <ErrorBoundary panelName="Markets">
-            <Markets
-              onTradeSelect={handleTradeSelection}
-              onMarketDetail={handleMarketDetail}
-            />
+            <Suspense fallback={<ComponentLoader title="Prediction Markets" />}>
+              <Markets
+                onTradeSelect={handleTradeSelectionFused}
+                onMarketDetail={handleMarketDetail}
+              />
+            </Suspense>
           </ErrorBoundary>
         );
     }
   };
 
   return (
-    <div className="min-h-screen bg-surface-0">
+    <div className="min-h-screen bg-surface-0 overflow-x-hidden">
 
       <ErrorBoundary panelName="Header">
         <Header />
@@ -207,7 +236,7 @@ const DashboardOptimized: React.FC = () => {
 
       {/* Protocol Stats Banner - Always visible, minimal performance impact */}
       <ErrorBoundary panelName="ProtocolStats">
-        <ProtocolStats activeTab={activeTab} />
+        <ProtocolStats activeTab={activeTab} positionStats={positionStats} />
       </ErrorBoundary>
 
       {/* Navigation Tabs — Neumorphic pill switcher */}
@@ -235,8 +264,8 @@ const DashboardOptimized: React.FC = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {renderContent()}
 
-        {/* Show wallet connection prompt only for transaction-heavy tabs when not connected */}
-        {!isConnected && (activeTab === 'trading' || activeTab === 'positions') && (
+        {/* Show wallet connection prompt for positions tab when not connected */}
+        {!isConnected && activeTab === 'positions' && (
           <div className="fixed bottom-4 right-4 bg-surface-2 border border-border rounded-lg shadow-card p-4 max-w-sm z-50">
             <h4 className="font-medium text-gray-100 mb-2">Connect to Trade</h4>
             <p className="text-sm text-gray-400 mb-3">
@@ -249,7 +278,7 @@ const DashboardOptimized: React.FC = () => {
 
       {/* Professional Status Bar */}
       <ErrorBoundary panelName="ProfessionalStatusBar">
-        <ProfessionalStatusBar showDetailed={true} />
+        <ProfessionalStatusBar />
       </ErrorBoundary>
 
       {/* Professional Footer */}

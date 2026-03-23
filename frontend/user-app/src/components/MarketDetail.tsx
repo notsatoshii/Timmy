@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useReadContract } from 'wagmi';
+import { useReadContract, usePublicClient } from 'wagmi';
 import { CONTRACT_ADDRESSES } from '../config/contracts';
 import {
   OI_LIMITS_ABI,
   BORROW_FEE_ENGINE_ABI,
   FUNDING_RATE_ENGINE_ABI,
-  ORACLE_ADAPTER_ABI
+  ORACLE_ADAPTER_ABI,
+  EXECUTION_ENGINE_ABI
 } from '../config/abis';
 import { useMarketProbabilities } from '../hooks/useMarketProbabilities';
 import TradeForm from './TradeForm';
@@ -33,16 +34,6 @@ interface MarketDetailProps {
   market: Market;
   onTradeSelect?: (marketId: string, marketName: string, direction: 'long' | 'short') => void;
   onBack: () => void;
-}
-
-interface PositionData {
-  id: string;
-  trader: string;
-  direction: 'long' | 'short';
-  size: number;
-  entryPrice: number;
-  timestamp: number;
-  pnl: number;
 }
 
 interface CandlestickData {
@@ -81,797 +72,750 @@ const DEMO_TO_ONCHAIN_ID: Record<string, string> = {
   'demo-20': '0x7155116cef46226d9a58e096c87fba03555313c85b9b9b649dca754090845136',
 };
 
+const CATEGORY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  Technology: { bg: 'bg-purple-muted', text: 'text-purple', border: 'border-purple/20' },
+  Geopolitics: { bg: 'bg-danger-muted', text: 'text-danger', border: 'border-danger/20' },
+  Economy: { bg: 'bg-warning-muted', text: 'text-warning', border: 'border-warning/20' },
+  Sports: { bg: 'bg-accent-muted', text: 'text-accent', border: 'border-accent/20' },
+  Crypto: { bg: 'bg-warning-muted', text: 'text-warning', border: 'border-warning/20' },
+  Stocks: { bg: 'bg-accent-muted', text: 'text-accent', border: 'border-accent/20' },
+  Forex: { bg: 'bg-accent-muted', text: 'text-accent', border: 'border-accent/20' },
+  Politics: { bg: 'bg-purple-muted', text: 'text-purple', border: 'border-purple/20' },
+  Speculative: { bg: 'bg-purple-muted', text: 'text-purple', border: 'border-purple/20' },
+  Entertainment: { bg: 'bg-purple-muted', text: 'text-purple', border: 'border-purple/20' },
+};
+
+interface RecentTrade {
+  positionId: string;
+  owner: string;
+  isLong: boolean;
+  collateral: bigint;
+  leverage: bigint;
+  positionSize: bigint;
+  entryPrice: bigint;
+  timestamp: bigint;
+  txHash: string;
+  blockNumber: bigint;
+}
+
 const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSelect }) => {
   const [candlestickData, setCandlestickData] = useState<CandlestickData[]>([]);
   const [selectedTimeframe, setSelectedTimeframe] = useState<TimeFrame>('1h');
-  const [recentPositions, setRecentPositions] = useState<PositionData[]>([]);
+  const [recentTrades, setRecentTrades] = useState<RecentTrade[]>([]);
+  const [tradesLoading, setTradesLoading] = useState(false);
+  const publicClient = usePublicClient();
 
-  // Get real-time price from the same source as Markets component
-  const {
-    markets: oracleMarkets,
-    hasOracleData,
-    refreshProbabilities
-  } = useMarketProbabilities({
-    pollingInterval: 30000,
-    enabled: true,
-  });
-
-  // Find current market in oracle data
+  const { markets: oracleMarkets, hasOracleData, refreshProbabilities } = useMarketProbabilities({ pollingInterval: 30000, enabled: true });
   const currentMarketData = oracleMarkets.find(m => m.id === market.id);
   const currentPrice = currentMarketData ? currentMarketData.probability : market.price;
 
-  // Convert market ID to bytes32 format for contract calls
-  // Demo IDs (demo-1, demo-2, etc.) are mapped to on-chain bytes32 market IDs
   const marketBytes32 = React.useMemo(() => {
-    try {
-      if (!market?.id || typeof market.id !== 'string') {
-        throw new Error('Invalid market ID');
-      }
-      // Look up on-chain ID from demo mapping, or use the ID directly if already bytes32
-      const onchainId = DEMO_TO_ONCHAIN_ID[market.id] || market.id;
-      return onchainId as `0x${string}`;
-    } catch (error) {
-      console.error('Error converting market ID to bytes32:', error);
-      return '0x0000000000000000000000000000000000000000000000000000000000000000' as `0x${string}`;
-    }
+    if (!market?.id) return '0x0000000000000000000000000000000000000000000000000000000000000000' as `0x${string}`;
+    const onchainId = DEMO_TO_ONCHAIN_ID[market.id] || market.id;
+    return onchainId as `0x${string}`;
   }, [market?.id]);
 
-  // Get OI data with error handling
-  const { data: longOI = 0, error: longOIError, isLoading: longOILoading } = useReadContract({
-    address: CONTRACT_ADDRESSES.oiLimits,
-    abi: OI_LIMITS_ABI,
-    functionName: 'getSideOI',
-    args: [marketBytes32, true], // true for long
-    query: {
-      enabled: !!market?.id && !!CONTRACT_ADDRESSES.oiLimits && marketBytes32 !== '0x0000000000000000000000000000000000000000000000000000000000000000',
-    },
-  });
+  const validMarketId = marketBytes32 !== '0x0000000000000000000000000000000000000000000000000000000000000000';
 
-  const { data: shortOI = 0, error: shortOIError, isLoading: shortOILoading } = useReadContract({
-    address: CONTRACT_ADDRESSES.oiLimits,
-    abi: OI_LIMITS_ABI,
-    functionName: 'getSideOI',
-    args: [marketBytes32, false], // false for short
-    query: {
-      enabled: !!market?.id && !!CONTRACT_ADDRESSES.oiLimits && marketBytes32 !== '0x0000000000000000000000000000000000000000000000000000000000000000',
-    },
+  // Contract reads
+  const { data: longOI = BigInt(0) } = useReadContract({
+    address: CONTRACT_ADDRESSES.oiLimits, abi: OI_LIMITS_ABI, functionName: 'getSideOI',
+    args: [marketBytes32, true], query: { enabled: validMarketId },
   });
-
-  // Get on-chain MTM price (smoothed PI from OracleAdapter)
+  const { data: shortOI = BigInt(0) } = useReadContract({
+    address: CONTRACT_ADDRESSES.oiLimits, abi: OI_LIMITS_ABI, functionName: 'getSideOI',
+    args: [marketBytes32, false], query: { enabled: validMarketId },
+  });
+  const { data: marketOICap = BigInt(0) } = useReadContract({
+    address: CONTRACT_ADDRESSES.oiLimits, abi: OI_LIMITS_ABI, functionName: 'getMarketOICap',
+    args: [marketBytes32], query: { enabled: validMarketId },
+  });
+  const { data: globalOICap = BigInt(0) } = useReadContract({
+    address: CONTRACT_ADDRESSES.oiLimits, abi: OI_LIMITS_ABI, functionName: 'getGlobalOICap',
+    query: { enabled: validMarketId },
+  });
+  const { data: globalOI = BigInt(0) } = useReadContract({
+    address: CONTRACT_ADDRESSES.oiLimits, abi: OI_LIMITS_ABI, functionName: 'getGlobalOI',
+    query: { enabled: validMarketId },
+  });
+  const { data: sideOICap = BigInt(0) } = useReadContract({
+    address: CONTRACT_ADDRESSES.oiLimits, abi: OI_LIMITS_ABI, functionName: 'getSideOICap',
+    args: [marketBytes32], query: { enabled: validMarketId },
+  });
   const { data: onChainPI } = useReadContract({
-    address: CONTRACT_ADDRESSES.oracleAdapter,
-    abi: ORACLE_ADAPTER_ABI,
-    functionName: 'getPI',
-    args: [marketBytes32],
-    query: {
-      enabled: !!market?.id && marketBytes32 !== '0x0000000000000000000000000000000000000000000000000000000000000000',
-    },
+    address: CONTRACT_ADDRESSES.oracleAdapter, abi: ORACLE_ADAPTER_ABI, functionName: 'getPI',
+    args: [marketBytes32], query: { enabled: validMarketId },
   });
+  const { data: borrowRate = BigInt(0) } = useReadContract({
+    address: CONTRACT_ADDRESSES.borrowFeeEngine, abi: BORROW_FEE_ENGINE_ABI, functionName: 'getCurrentBorrowRate',
+    args: [marketBytes32, true], query: { enabled: validMarketId },
+  });
+  const { data: fundingRate = BigInt(0) } = useReadContract({
+    address: CONTRACT_ADDRESSES.fundingRateEngine, abi: FUNDING_RATE_ENGINE_ABI, functionName: 'getCurrentFundingRate',
+    args: [marketBytes32], query: { enabled: validMarketId },
+  });
+
   const mtmPrice = onChainPI ? Number(onChainPI) / 1e18 : null;
 
-  // Get current rates (using long side for borrow rate)
-  const { data: borrowRate = 0, error: borrowRateError, isLoading: borrowRateLoading } = useReadContract({
-    address: CONTRACT_ADDRESSES.borrowFeeEngine,
-    abi: BORROW_FEE_ENGINE_ABI,
-    functionName: 'getCurrentBorrowRate',
-    args: [marketBytes32, true], // true for long side
-    query: {
-      enabled: !!market?.id && !!CONTRACT_ADDRESSES.borrowFeeEngine && marketBytes32 !== '0x0000000000000000000000000000000000000000000000000000000000000000',
-    },
-  });
-
-  const { data: fundingRate = 0, error: fundingRateError, isLoading: fundingRateLoading } = useReadContract({
-    address: CONTRACT_ADDRESSES.fundingRateEngine,
-    abi: FUNDING_RATE_ENGINE_ABI,
-    functionName: 'getCurrentFundingRate',
-    args: [marketBytes32],
-    query: {
-      enabled: !!market?.id && !!CONTRACT_ADDRESSES.fundingRateEngine && marketBytes32 !== '0x0000000000000000000000000000000000000000000000000000000000000000',
-    },
-  });
-
-  // Generate demo candlestick data for chart
+  // Fetch recent PositionOpened events for this market
   useEffect(() => {
-    const generateCandlestickData = (): CandlestickData[] => {
+    if (!publicClient || !validMarketId || !CONTRACT_ADDRESSES.executionEngine) return;
+
+    const fetchTrades = async () => {
+      setTradesLoading(true);
       try {
-        const data: CandlestickData[] = [];
-        const now = Date.now();
+        const currentBlock = await publicClient.getBlockNumber();
+        // Look back ~50k blocks (~2 days on Base Sepolia)
+        const fromBlock = currentBlock > 50000n ? currentBlock - 50000n : 0n;
 
-        // Timeframe intervals in milliseconds
-        const intervals: Record<TimeFrame, number> = {
-          '1m': 60 * 1000,
-          '5m': 5 * 60 * 1000,
-          '15m': 15 * 60 * 1000,
-          '1h': 60 * 60 * 1000,
-          '4h': 4 * 60 * 60 * 1000,
-          '1D': 24 * 60 * 60 * 1000,
-        };
-
-        // Number of candles to generate
-        const candleCount: Record<TimeFrame, number> = {
-          '1m': 60, // Last hour
-          '5m': 72, // Last 6 hours
-          '15m': 96, // Last 24 hours
-          '1h': 168, // Last week
-          '4h': 168, // Last 4 weeks
-          '1D': 30, // Last month
-        };
-
-        const interval = intervals[selectedTimeframe];
-        const count = candleCount[selectedTimeframe];
-        const volatility = 0.015; // 1.5% volatility per candle
-
-        // Ensure currentPrice is valid, fallback to market.price or 0.5
-        let price = currentPrice;
-        if (typeof price !== 'number' || isNaN(price) || price <= 0) {
-          price = typeof market?.price === 'number' && !isNaN(market.price) ? market.price : 0.5;
-        }
-
-      for (let i = count; i >= 0; i--) {
-        const timestamp = now - (i * interval);
-
-        // Generate OHLC data
-        const open = price;
-        const randomMove = (Math.random() - 0.5) * volatility;
-        const close = Math.max(0.01, Math.min(0.99, open + randomMove));
-
-        // High and low based on open/close with some randomness
-        const range = Math.abs(close - open);
-        const maxRange = Math.max(range * 1.5, volatility * 0.5);
-        const high = Math.min(0.99, Math.max(open, close) + Math.random() * maxRange);
-        const low = Math.max(0.01, Math.min(open, close) - Math.random() * maxRange);
-
-        // Volume simulation
-        const volume = Math.random() * 100000 + 10000;
-
-        // Format timestamp for display
-        const timestampStr = selectedTimeframe === '1D'
-          ? new Date(timestamp).toLocaleDateString()
-          : new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-        data.push({
-          time: timestamp,
-          timestamp: timestampStr,
-          open,
-          high,
-          low,
-          close,
-          volume,
+        const logs = await publicClient.getLogs({
+          address: CONTRACT_ADDRESSES.executionEngine as `0x${string}`,
+          event: {
+            type: 'event',
+            name: 'PositionOpened',
+            inputs: [
+              { name: 'positionId', type: 'uint256', indexed: true },
+              { name: 'marketId', type: 'bytes32', indexed: true },
+              { name: 'owner', type: 'address', indexed: true },
+              { name: 'isLong', type: 'bool', indexed: false },
+              { name: 'collateral', type: 'uint256', indexed: false },
+              { name: 'leverage', type: 'uint256', indexed: false },
+              { name: 'entryPI', type: 'uint256', indexed: false },
+              { name: 'entryPrice', type: 'uint256', indexed: false },
+              { name: 'positionSize', type: 'uint256', indexed: false },
+              { name: 'impact', type: 'uint256', indexed: false },
+              { name: 'timestamp', type: 'uint256', indexed: false },
+            ],
+          },
+          args: { marketId: marketBytes32 },
+          fromBlock,
+          toBlock: currentBlock,
         });
 
-        price = close; // Next candle starts where this one ended
-      }
+        const trades: RecentTrade[] = logs
+          .filter(log => log.args && log.transactionHash)
+          .map(log => ({
+            positionId: (log.args.positionId as bigint).toString(),
+            owner: log.args.owner as string,
+            isLong: log.args.isLong as boolean,
+            collateral: log.args.collateral as bigint,
+            leverage: log.args.leverage as bigint,
+            positionSize: log.args.positionSize as bigint,
+            entryPrice: log.args.entryPrice as bigint,
+            timestamp: log.args.timestamp as bigint,
+            txHash: log.transactionHash!,
+            blockNumber: log.blockNumber,
+          }))
+          .sort((a, b) => Number(b.timestamp - a.timestamp))
+          .slice(0, 10); // Show last 10 trades
 
-      return data;
-      } catch (error) {
-        console.error('Error generating candlestick data:', error);
-        return [];
+        setRecentTrades(trades);
+      } catch (err) {
+        console.warn('Failed to fetch recent trades:', err);
+        setRecentTrades([]);
+      } finally {
+        setTradesLoading(false);
       }
     };
 
-    setCandlestickData(generateCandlestickData());
-  }, [market?.id, market?.price, currentPrice, selectedTimeframe]);
+    fetchTrades();
+  }, [publicClient, marketBytes32, validMarketId]);
 
-  // Generate demo recent positions
-  useEffect(() => {
-    const generateRecentPositions = (): PositionData[] => {
-      try {
-        const positions = [];
-        const now = Date.now();
+  // OI numbers
+  const toNum = (v: unknown): number => {
+    if (typeof v === 'bigint') return Number(v) / 1e6;
+    if (typeof v === 'number' && isFinite(v)) return v / 1e6;
+    return 0;
+  };
+  const longOINum = toNum(longOI);
+  const shortOINum = toNum(shortOI);
+  const totalOI = longOINum + shortOINum;
+  const marketCapNum = toNum(marketOICap);
+  const globalCapNum = toNum(globalOICap);
+  const globalOINum = toNum(globalOI);
+  const sideCapNum = toNum(sideOICap);
+  const longPct = totalOI > 0 ? (longOINum / totalOI) * 100 : 50;
+  const shortPct = totalOI > 0 ? (shortOINum / totalOI) * 100 : 50;
+  const depthUsedPct = marketCapNum > 0 ? Math.min((totalOI / marketCapNum) * 100, 100) : 0;
+  const depthAvailable = marketCapNum > 0 ? marketCapNum - totalOI : 0;
 
-        // Ensure currentPrice is valid
-        const validCurrentPrice = typeof currentPrice === 'number' && !isNaN(currentPrice) && currentPrice > 0
-          ? currentPrice
-          : (typeof market?.price === 'number' && !isNaN(market.price) ? market.price : 0.5);
+  // Tier utilizations for depth viz (all as % of market cap for relative positioning)
+  const globalUsedPct = globalCapNum > 0 ? Math.min((globalOINum / globalCapNum) * 100, 100) : 0;
+  const sideCapPct = marketCapNum > 0 ? Math.min((sideCapNum / marketCapNum) * 100, 100) : 0;
+  const heavySideOI = Math.max(longOINum, shortOINum);
+  const heavySidePct = sideCapNum > 0 ? Math.min((heavySideOI / sideCapNum) * 100, 100) : 0;
 
-      for (let i = 0; i < 8; i++) {
-        const direction: 'long' | 'short' = Math.random() > 0.5 ? 'long' : 'short';
-        const entryPrice = validCurrentPrice + (Math.random() - 0.5) * 0.1;
-        const size = Math.random() * 50000 + 10000; // $10k - $60k
-        const timestamp = now - (i * 15 * 60 * 1000); // Every 15 minutes
-
-        // Safe PnL calculation with zero division check
-        let pnl = 0;
-        if (entryPrice > 0) {
-          pnl = direction === 'long'
-            ? (validCurrentPrice - entryPrice) * size / entryPrice
-            : (entryPrice - validCurrentPrice) * size / entryPrice;
-        }
-
-        // Ensure PnL is not NaN
-        if (isNaN(pnl)) pnl = 0;
-
-        positions.push({
-          id: `pos-${i}`,
-          trader: `0x${Math.random().toString(16).substring(2, 8)}...${Math.random().toString(16).substring(2, 6)}`,
-          direction,
-          size,
-          entryPrice,
-          timestamp,
-          pnl,
-        });
-      }
-
-      return positions;
-      } catch (error) {
-        console.error('Error generating recent positions:', error);
-        return [];
-      }
-    };
-
-    // Don't show fake generated positions — show empty until real positions exist
-    setRecentPositions([]);
-  }, [market?.id, market?.price, currentPrice]);
-
-  const formatTimeToResolution = (timestamp: number): string => {
-    const now = new Date().getTime();
-    const diff = timestamp - now;
-
-    if (diff < 0) return 'Expired';
-
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-
-    if (days > 0) return `${days}d ${hours}h`;
-    return `${hours}h`;
+  const formatRate = (rate: unknown): string => {
+    try {
+      const r = typeof rate === 'bigint' ? rate : BigInt(0);
+      const pct = (Number(r) / 1e18) * 100;
+      return isFinite(pct) ? `${pct.toFixed(4)}%` : '0.00%';
+    } catch { return '0.00%'; }
   };
 
   const formatCurrency = (value: number): string => {
-    if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-    if (value >= 1000) return `$${(value / 1000).toFixed(1)}K`;
+    if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
+    if (value >= 1e3) return `$${(value / 1e3).toFixed(1)}K`;
     return `$${value.toFixed(0)}`;
   };
 
-  const formatRate = (rate: bigint | number | undefined): string => {
-    try {
-      let rateBigInt: bigint;
-      if (typeof rate === 'bigint') {
-        rateBigInt = rate;
-      } else if (typeof rate === 'number' && !isNaN(rate) && isFinite(rate)) {
-        rateBigInt = BigInt(Math.floor(rate));
-      } else {
-        return '0.00%';
-      }
-      const rateNum = Number(rateBigInt) / 1e18; // Convert from wei
-      if (isNaN(rateNum) || !isFinite(rateNum)) return '0.00%';
-      const hourlyRate = rateNum * 100; // Hourly percentage
-      if (isNaN(hourlyRate) || !isFinite(hourlyRate)) return '0.0000%';
-      return `${hourlyRate.toFixed(4)}%`;
-    } catch (error) {
-      console.warn('Error formatting rate:', rate, error);
-      return '0.00%';
-    }
+  const formatTimeToResolution = (ts: number): string => {
+    const diff = ts - Date.now();
+    if (diff < 0) return 'Expired';
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
+    return d > 0 ? `${d}d ${h}h` : `${h}h`;
   };
 
-  const formatTimestamp = (timestamp: number): string => {
-    const now = Date.now();
-    const diff = Math.floor((now - timestamp) / 1000);
-
-    if (diff < 60) return 'Just now';
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-    return `${Math.floor(diff / 86400)}d ago`;
-  };
-
-  const getCategoryColor = (category: string): string => {
-    const colors: { [key: string]: string } = {
-      'Politics': 'bg-purple-muted text-purple border border-purple/20',
-      'Sports': 'bg-accent-muted text-accent border border-accent/20',
-      'Technology': 'bg-purple-muted text-purple border border-purple/20',
-      'Economy': 'bg-warning-muted text-warning border border-warning/20',
-      'Crypto': 'bg-warning-muted text-warning border border-warning/20',
-      'Entertainment': 'bg-purple-muted text-purple border border-purple/20',
-      'Other': 'bg-surface-3 text-gray-400 border border-border',
-      'Geopolitics': 'bg-danger-muted text-danger border border-danger/20',
-      'Speculative': 'bg-purple-muted text-purple border border-purple/20',
-      'Stocks': 'bg-accent-muted text-accent border border-accent/20',
-      'Forex': 'bg-accent-muted text-accent border border-accent/20',
+  // Candlestick data generation
+  useEffect(() => {
+    const intervals: Record<TimeFrame, number> = {
+      '1m': 60000, '5m': 300000, '15m': 900000,
+      '1h': 3600000, '4h': 14400000, '1D': 86400000,
     };
-    return colors[category] || colors['Other'];
+    const counts: Record<TimeFrame, number> = {
+      '1m': 60, '5m': 72, '15m': 96, '1h': 168, '4h': 168, '1D': 30,
+    };
+    const data: CandlestickData[] = [];
+    const now = Date.now();
+    const interval = intervals[selectedTimeframe];
+    const count = counts[selectedTimeframe];
+    let price = currentPrice > 0 ? currentPrice : 0.5;
+
+    for (let i = count; i >= 0; i--) {
+      const timestamp = now - (i * interval);
+      const open = price;
+      const close = Math.max(0.01, Math.min(0.99, open + (Math.random() - 0.5) * 0.015));
+      const range = Math.abs(close - open);
+      const high = Math.min(0.99, Math.max(open, close) + Math.random() * Math.max(range * 1.5, 0.0075));
+      const low = Math.max(0.01, Math.min(open, close) - Math.random() * Math.max(range * 1.5, 0.0075));
+      const ts = selectedTimeframe === '1D'
+        ? new Date(timestamp).toLocaleDateString()
+        : new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      data.push({ time: timestamp, timestamp: ts, open, high, low, close, volume: Math.random() * 100000 + 10000 });
+      price = close;
+    }
+    setCandlestickData(data);
+  }, [market?.id, currentPrice, selectedTimeframe]);
+
+  const CandlestickBar = (props: any) => {
+    const { payload, x, y, width, height } = props;
+    if (!payload?.open || !payload?.close || !x || !height) return null;
+    const { open, high, low, close } = payload;
+    if ([open, high, low, close, x, y, width, height].some(v => typeof v !== 'number' || !isFinite(v))) return null;
+    const isGreen = close >= open;
+    const color = isGreen ? '#E6FF2B' : '#FF4868';
+    const bodyTop = Math.min(open, close) * height;
+    const bodyHeight = Math.abs(close - open) * height;
+    const wickX = x + width / 2;
+    return (
+      <g>
+        <line x1={wickX} y1={y + height - high * height} x2={wickX} y2={y + height - low * height} stroke={color} strokeWidth={1} />
+        <rect x={x + width * 0.2} y={y + height - bodyTop - bodyHeight} width={width * 0.6}
+          height={Math.max(bodyHeight, 1)} fill={isGreen ? color : 'transparent'} stroke={color} strokeWidth={isGreen ? 0 : 1} />
+      </g>
+    );
   };
 
-  // Timeframe configurations
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (!active || !payload?.length) return null;
+    const d = payload[0]?.payload;
+    if (!d?.open) return null;
+    const isGreen = d.close >= d.open;
+    return (
+      <div className="bg-surface-1 border border-border rounded-lg p-3 shadow-lg">
+        <p className="text-gray-400 text-xs mb-2">{d.timestamp}</p>
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div><span className="text-gray-500">O: </span><span className="text-gray-200 font-mono">{(d.open * 100).toFixed(1)}¢</span></div>
+          <div><span className="text-gray-500">H: </span><span className="text-gray-200 font-mono">{(d.high * 100).toFixed(1)}¢</span></div>
+          <div><span className="text-gray-500">L: </span><span className="text-gray-200 font-mono">{(d.low * 100).toFixed(1)}¢</span></div>
+          <div><span className="text-gray-500">C: </span><span className={`font-mono ${isGreen ? 'text-accent' : 'text-danger'}`}>{(d.close * 100).toFixed(1)}¢</span></div>
+        </div>
+      </div>
+    );
+  };
+
+  const cat = CATEGORY_COLORS[market?.category || ''] || { bg: 'bg-surface-3', text: 'text-gray-400', border: 'border-border' };
   const timeframes: { value: TimeFrame; label: string }[] = [
-    { value: '1m', label: '1M' },
-    { value: '5m', label: '5M' },
-    { value: '15m', label: '15M' },
-    { value: '1h', label: '1H' },
-    { value: '4h', label: '4H' },
-    { value: '1D', label: '1D' },
+    { value: '1m', label: '1M' }, { value: '5m', label: '5M' }, { value: '15m', label: '15M' },
+    { value: '1h', label: '1H' }, { value: '4h', label: '4H' }, { value: '1D', label: '1D' },
   ];
 
-  // Custom candlestick renderer
-  const CandlestickBar = (props: any) => {
-    try {
-      const { payload, x, y, width, height } = props;
-      if (!payload || !payload.open || !payload.high || !payload.low || !payload.close) {
-        return null;
-      }
+  const priceColor = currentPrice >= 0.6 ? 'text-accent' : currentPrice <= 0.4 ? 'text-danger' : 'text-ivory';
 
-      const { open, high, low, close } = payload;
-
-      // Validate numeric values
-      if ([open, high, low, close, x, y, width, height].some(val => typeof val !== 'number' || isNaN(val) || !isFinite(val))) {
-        return null;
-      }
-
-      const isGreen = close >= open;
-      const color = isGreen ? '#00E8B4' : '#FF4868'; // accent vs danger colors
-
-      // Calculate candle body
-      const bodyTop = Math.min(open, close) * height;
-      const bodyHeight = Math.abs(close - open) * height;
-
-      // Calculate wick positions
-      const highY = high * height;
-      const lowY = low * height;
-      const wickX = x + width / 2;
-
-      return (
-        <g>
-          {/* High-Low Wick */}
-          <line
-            x1={wickX}
-            y1={y + height - highY}
-            x2={wickX}
-            y2={y + height - lowY}
-            stroke={color}
-            strokeWidth={1}
-          />
-          {/* Candle Body */}
-          <rect
-            x={x + width * 0.2}
-            y={y + height - bodyTop - bodyHeight}
-            width={width * 0.6}
-            height={Math.max(bodyHeight, 1)}
-            fill={isGreen ? color : 'transparent'}
-            stroke={color}
-            strokeWidth={isGreen ? 0 : 1}
-          />
-        </g>
-      );
-    } catch (error) {
-      console.warn('Error rendering candlestick bar:', error);
-      return null;
-    }
-  };
-
-  // Custom tooltip
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    try {
-      if (!active || !payload || !payload.length) {
-        return null;
-      }
-
-      const data = payload[0]?.payload;
-      if (!data || typeof data.open !== 'number' || typeof data.close !== 'number') {
-        return null;
-      }
-
-      const isGreen = data.close >= data.open;
-
-      return (
-        <div className="bg-surface-1 border border-border rounded-lg p-3 shadow-lg">
-          <p className="text-gray-400 text-xs mb-2">{data.timestamp || 'Unknown'}</p>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div>
-              <span className="text-gray-500">O: </span>
-              <span className="text-gray-200 font-mono">{(data.open * 100).toFixed(1)}¢</span>
-            </div>
-            <div>
-              <span className="text-gray-500">H: </span>
-              <span className="text-gray-200 font-mono">{(data.high * 100).toFixed(1)}¢</span>
-            </div>
-            <div>
-              <span className="text-gray-500">L: </span>
-              <span className="text-gray-200 font-mono">{(data.low * 100).toFixed(1)}¢</span>
-            </div>
-            <div>
-              <span className="text-gray-500">C: </span>
-              <span className={`font-mono ${isGreen ? 'text-accent' : 'text-danger'}`}>
-                {(data.close * 100).toFixed(1)}¢
-              </span>
-            </div>
-          </div>
-        </div>
-      );
-    } catch (error) {
-      console.warn('Error rendering chart tooltip:', error);
-      return null;
-    }
-  };
-
-  // Safe BigInt to Number conversion for OI values (USDT format - 6 decimals, divide by 1e6)
-  const longOINum = (() => {
-    try {
-      if (typeof longOI === 'bigint') {
-        const num = Number(longOI) / 1e6;
-        return isFinite(num) ? num : 0;
-      } else if (typeof longOI === 'number' && !isNaN(longOI) && isFinite(longOI)) {
-        return longOI / 1e6;
-      }
-      return 0;
-    } catch (error) {
-      console.warn('Error converting longOI:', longOI, error);
-      return 0;
-    }
-  })();
-
-  const shortOINum = (() => {
-    try {
-      if (typeof shortOI === 'bigint') {
-        const num = Number(shortOI) / 1e6;
-        return isFinite(num) ? num : 0;
-      } else if (typeof shortOI === 'number' && !isNaN(shortOI) && isFinite(shortOI)) {
-        return shortOI / 1e6;
-      }
-      return 0;
-    } catch (error) {
-      console.warn('Error converting shortOI:', shortOI, error);
-      return 0;
-    }
-  })();
-
-  // Log contract call errors for debugging
-  useEffect(() => {
-    if (longOIError) console.error('Long OI contract call error:', longOIError);
-    if (shortOIError) console.error('Short OI contract call error:', shortOIError);
-    if (borrowRateError) console.error('Borrow rate contract call error:', borrowRateError);
-    if (fundingRateError) console.error('Funding rate contract call error:', fundingRateError);
-  }, [longOIError, shortOIError, borrowRateError, fundingRateError]);
-
-  const totalOI = longOINum + shortOINum;
-  const longPercentageRaw = totalOI > 0 ? (longOINum / totalOI) * 100 : 50;
-  const shortPercentageRaw = totalOI > 0 ? (shortOINum / totalOI) * 100 : 50;
-  // Ensure minimum 2% display width so both sides are always visible
-  const longPercentage = totalOI > 0 && longOINum > 0 ? Math.max(longPercentageRaw, 2) : longPercentageRaw;
-  const shortPercentage = totalOI > 0 && shortOINum > 0 ? Math.max(shortPercentageRaw, 2) : shortPercentageRaw;
-
-  // Validation after all hooks are called (React Hooks rules compliance)
-  if (!market || !market.id || typeof market.price !== 'number' || isNaN(market.price)) {
-    console.error('Invalid market data:', market);
+  if (!market?.id || typeof market.price !== 'number') {
     return (
-      <div className="bg-surface-1 border border-danger/30 rounded-lg p-8 text-center">
-        <div className="text-danger mb-4">
-          <h3 className="text-lg font-semibold">Invalid Market Data</h3>
-          <p className="text-sm text-gray-400">
-            {!market ? 'Market data is missing.' : 'Market ID or price data is invalid.'}
-          </p>
-          {market && (
-            <p className="text-xs text-gray-500 mt-2 font-mono">
-              ID: {market?.id || 'missing'}, Price: {typeof market?.price === 'number' ? market.price : 'invalid'}
-            </p>
-          )}
-        </div>
-        <button
-          onClick={onBack}
-          className="px-4 py-2 bg-accent text-surface-0 rounded-md hover:bg-accent-dim transition-colors"
-        >
-          Back to Markets
-        </button>
+      <div className="text-center py-12">
+        <p className="text-danger">Invalid market data</p>
+        <button onClick={onBack} className="mt-4 px-4 py-2 bg-accent text-surface-0 rounded-md">Back to Markets</button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-5">
+      {/* Back button */}
       <div className="flex items-center justify-between">
-        <button
-          onClick={onBack}
-          className="flex items-center space-x-2 text-gray-400 hover:text-gray-200 transition-colors"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button onClick={onBack} className="flex items-center space-x-2 text-steel hover:text-ivory transition-colors group">
+          <svg className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          <span>Back to Markets</span>
+          <span className="text-sm">Back to Markets</span>
         </button>
-
-        <button
-          onClick={refreshProbabilities}
-          className="text-sm text-gray-500 hover:text-gray-300 px-3 py-1 rounded border border-border hover:border-border-light transition-colors"
-        >
-          Refresh Price
+        <button onClick={refreshProbabilities} className="text-xs text-steel hover:text-ivory px-3 py-1.5 rounded-lg border border-border hover:border-accent/30 transition-all">
+          Refresh
         </button>
       </div>
 
-      {/* Market Header */}
-      <div className="bg-surface-1 rounded-lg border border-border p-6">
-        <div className="flex flex-col space-y-4 lg:flex-row lg:items-start lg:justify-between lg:space-y-0">
-          <div className="flex-1">
-            <div className="flex items-center space-x-3 mb-4">
-              <span
-                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCategoryColor(market?.category || '')}`}
-              >
-                {market?.category || 'Unknown'}
-              </span>
-              {market?.isLive && (
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-accent-muted text-accent border border-accent/20">
-                  <div className="w-1.5 h-1.5 bg-accent rounded-full mr-1 animate-pulse"></div>
-                  Live
+      {/* ═══════ MAIN TWO-COLUMN LAYOUT ═══════ */}
+      <div className="flex flex-col lg:flex-row gap-5">
+
+        {/* ═══ LEFT COLUMN — Market info + Chart + Stats ═══ */}
+        <div className="flex-1 min-w-0 space-y-5">
+
+          {/* ── Market Header Card ── */}
+          <div className="rounded-xl border border-border overflow-hidden" style={{ background: '#0c0d14' }}>
+            <div className="p-5">
+              {/* Category + Live + Source */}
+              <div className="flex items-center space-x-2 mb-3">
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${cat.bg} ${cat.text} border ${cat.border}`}>
+                  {market.category}
                 </span>
+                {market.isLive && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-accent/10 text-accent border border-accent/20">
+                    <span className="w-1.5 h-1.5 bg-accent rounded-full mr-1 animate-pulse" />
+                    Live
+                  </span>
+                )}
+                <span className={`text-[10px] font-mono ${hasOracleData ? 'text-accent/60' : 'text-warning/60'}`}>
+                  {hasOracleData ? 'Polymarket Oracle' : 'Fallback Data'}
+                </span>
+              </div>
+
+              {/* Title */}
+              <h1 className="text-xl sm:text-2xl font-bold text-ivory mb-4 leading-tight">
+                {market.description}
+              </h1>
+
+              {/* Key metrics row */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {/* Probability — hero metric */}
+                <div className="col-span-2 sm:col-span-1">
+                  <p className="text-[10px] uppercase tracking-wider text-steel mb-1">Probability</p>
+                  <p className={`text-3xl font-bold font-mono ${priceColor}`}>
+                    {(currentPrice * 100).toFixed(1)}%
+                  </p>
+                  <p className="text-[10px] text-steel/60 font-mono mt-0.5">
+                    {(currentPrice * 100).toFixed(1)}¢ per contract
+                  </p>
+                </div>
+
+                {/* On-chain Mark Price */}
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-steel mb-1">Mark Price</p>
+                  <p className="text-lg font-bold text-blue-400 font-mono">
+                    {mtmPrice ? `${(mtmPrice * 100).toFixed(1)}¢` : '—'}
+                  </p>
+                  <p className="text-[10px] text-steel/60">On-chain smoothed</p>
+                </div>
+
+                {/* Resolution */}
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-steel mb-1">Resolution</p>
+                  <p className="text-lg font-bold text-ivory font-mono">
+                    {formatTimeToResolution(market.resolutionTime)}
+                  </p>
+                  <p className="text-[10px] text-steel/60">Time remaining</p>
+                </div>
+
+                {/* Total OI */}
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-steel mb-1">Open Interest</p>
+                  <p className="text-lg font-bold text-ivory font-mono">
+                    {formatCurrency(totalOI)}
+                  </p>
+                  <p className="text-[10px] text-steel/60">
+                    {marketCapNum > 0 ? `of ${formatCurrency(marketCapNum)} cap` : 'Active'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Price Chart ── */}
+          <div className="rounded-xl border border-border p-5" style={{ background: '#0c0d14' }}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center space-x-3">
+                <h3 className="text-sm font-semibold text-ivory">Price Chart</h3>
+                <span className="text-xs text-accent font-mono">{(currentPrice * 100).toFixed(1)}¢</span>
+              </div>
+              <div className="flex space-x-0.5 bg-surface-2 rounded-md p-0.5">
+                {timeframes.map((tf) => (
+                  <button key={tf.value} onClick={() => setSelectedTimeframe(tf.value)}
+                    className={`px-2.5 py-1 text-[10px] font-semibold rounded transition-all ${
+                      selectedTimeframe === tf.value
+                        ? 'bg-accent text-surface-0' : 'text-steel hover:text-ivory'
+                    }`}>
+                    {tf.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="h-72 sm:h-80">
+              {candlestickData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={candlestickData} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.2} />
+                    <XAxis dataKey="timestamp" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#6B7280' }} interval="preserveStartEnd" />
+                    <YAxis domain={['dataMin - 0.01', 'dataMax + 0.01']} tickFormatter={(v: number) => `${(v * 100).toFixed(0)}¢`}
+                      axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#6B7280' }} width={35} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey={(entry: CandlestickData) => [entry.low, entry.high]} shape={<CandlestickBar />} />
+                    <Line type="monotone" dataKey="close" stroke="transparent" dot={false} strokeWidth={0} />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full text-steel">Loading chart...</div>
               )}
             </div>
 
-            <h1 className="text-2xl font-bold text-gray-100 mb-4">
-              {market?.description || 'Unknown Market'}
-            </h1>
-
-            <div className="grid grid-cols-2 gap-6 sm:grid-cols-5">
-              <div>
-                <p className="text-gray-500 text-sm flex items-center">
-                  Index Price
-                  <span className={`ml-2 w-2 h-2 rounded-full animate-pulse ${
-                    hasOracleData ? 'bg-accent' : 'bg-warning'
-                  }`}></span>
-                </p>
-                <p className="text-2xl font-bold text-accent font-mono">
-                  {(currentPrice * 100).toFixed(1)}¢
-                </p>
-                <p className="text-xs text-gray-600">
-                  {hasOracleData ? 'Polymarket' : 'Demo Fallback'}
-                </p>
-              </div>
-              <div>
-                <p className="text-gray-500 text-sm flex items-center">
-                  Mark Price
-                  <span className="ml-2 w-2 h-2 rounded-full animate-pulse bg-blue-400"></span>
-                </p>
-                <p className="text-2xl font-bold text-blue-400 font-mono">
-                  {mtmPrice ? `${(mtmPrice * 100).toFixed(1)}¢` : '—'}
-                </p>
-                <p className="text-xs text-gray-600">On-chain MTM</p>
-              </div>
-              <div>
-                <p className="text-gray-500 text-sm">Probability</p>
-                <p className="text-2xl font-bold text-gray-100 font-mono">
-                  {(currentPrice * 100).toFixed(1)}%
-                </p>
-              </div>
-              <div>
-                <p className="text-gray-500 text-sm">Resolution</p>
-                <p className="text-lg font-semibold text-gray-200">
-                  {formatTimeToResolution(market?.resolutionTime || Date.now())}
-                </p>
-              </div>
-              <div>
-                <p className="text-gray-500 text-sm">Total OI</p>
-                <p className="text-lg font-semibold text-gray-200">
-                  {formatCurrency(totalOI)}
-                </p>
-              </div>
+            <div className="flex justify-between text-[10px] text-steel/60 mt-1">
+              <span>{selectedTimeframe === '1D' ? 'Last 30 days' : selectedTimeframe === '4h' ? 'Last 4 weeks' :
+                selectedTimeframe === '1h' ? 'Last week' : selectedTimeframe === '15m' ? 'Last 24 hours' :
+                selectedTimeframe === '5m' ? 'Last 6 hours' : 'Last hour'}</span>
             </div>
           </div>
 
-          <div className="flex-shrink-0 lg:ml-6 w-full lg:w-80">
-            <TradeForm
-              marketId={marketBytes32}
-              marketName={market.description}
-              currentPrice={currentPrice}
-              onTradeSelect={onTradeSelect}
-              compact={true}
-            />
-          </div>
-        </div>
-      </div>
+          {/* ── Liquidity Depth + OI + Rates — Combined Stats Row ── */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
 
-      {/* Charts and Stats Grid */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Price Chart */}
-        <div className="bg-surface-1 rounded-lg border border-border p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-100">
-              Price Chart
-            </h3>
-
-            {/* Timeframe Selector */}
-            <div className="flex space-x-1 bg-surface-2 rounded-md p-1">
-              {timeframes.map((timeframe) => (
-                <button
-                  key={timeframe.value}
-                  onClick={() => setSelectedTimeframe(timeframe.value)}
-                  className={`px-3 py-1 text-xs font-medium rounded transition-all ${
-                    selectedTimeframe === timeframe.value
-                      ? 'bg-accent text-surface-0'
-                      : 'text-gray-400 hover:text-gray-200 hover:bg-surface-3'
-                  }`}
-                >
-                  {timeframe.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="h-64">
-            {candlestickData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart
-                  data={candlestickData}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="#374151"
-                    opacity={0.3}
-                  />
-                  <XAxis
-                    dataKey="timestamp"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 10, fill: '#9CA3AF' }}
-                    interval="preserveStartEnd"
-                  />
-                  <YAxis
-                    domain={['dataMin - 0.01', 'dataMax + 0.01']}
-                    tickFormatter={(value) => `${(value * 100).toFixed(0)}¢`}
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 10, fill: '#9CA3AF' }}
-                    width={40}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar
-                    dataKey={(entry: CandlestickData) => [entry.low, entry.high]}
-                    shape={<CandlestickBar />}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="close"
-                    stroke="transparent"
-                    dot={false}
-                    strokeWidth={0}
-                  />
-                </ComposedChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-gray-500">Loading chart data...</div>
+            {/* Liquidity Depth Visualization */}
+            <div className="rounded-xl border border-border p-5" style={{ background: '#0c0d14' }}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold text-ivory">Liquidity Pool</h3>
+                <span className="text-[10px] font-mono text-cyan-400/70">{formatCurrency(depthAvailable)} available</span>
               </div>
-            )}
-          </div>
 
-          <div className="flex justify-between items-center text-xs text-gray-500 mt-2">
-            <span>
-              {selectedTimeframe === '1D' ? 'Last 30 days' :
-               selectedTimeframe === '4h' ? 'Last 4 weeks' :
-               selectedTimeframe === '1h' ? 'Last week' :
-               selectedTimeframe === '15m' ? 'Last 24 hours' :
-               selectedTimeframe === '5m' ? 'Last 6 hours' :
-               'Last hour'}
-            </span>
-            <span className="text-accent">
-              Current: {(currentPrice * 100).toFixed(1)}¢
-            </span>
-          </div>
-        </div>
+              {/* Tank + tier markers */}
+              <div className="flex gap-4 mb-4">
+                {/* The tank vessel */}
+                <div className="flex-1 relative h-48 rounded-2xl overflow-hidden"
+                  style={{
+                    background: 'linear-gradient(180deg, #060810 0%, #080a12 100%)',
+                    border: '1px solid rgba(56, 189, 248, 0.12)',
+                    boxShadow: 'inset 0 0 30px rgba(56, 189, 248, 0.03), 0 0 1px rgba(56,189,248,0.15)',
+                  }}>
 
-        {/* OI Breakdown */}
-        <div className="bg-surface-1 rounded-lg border border-border p-6">
-          <h3 className="text-lg font-semibold text-gray-100 mb-4">
-            Open Interest Breakdown
-          </h3>
+                  {/* Empty capacity — subtle grid pattern to show the "container" */}
+                  <div className="absolute inset-0" style={{
+                    backgroundImage: 'linear-gradient(rgba(56,189,248,0.02) 1px, transparent 1px)',
+                    backgroundSize: '100% 12px',
+                  }} />
 
-          <div className="space-y-4">
-            {longOINum === 0 && shortOINum === 0 ? (
-              <div className="text-center py-4">
-                <p className="text-steel text-sm">No open interest yet</p>
-              </div>
-            ) : (
-              <>
-                {/* Visual OI Bar */}
-                <div className="flex h-8 rounded-md overflow-hidden">
-                  <div
-                    className="bg-accent flex items-center justify-center text-xs font-medium text-surface-0"
-                    style={{ width: `${longPercentage}%` }}
-                  >
-                    {longPercentage >= 5 ? `Long ${longPercentageRaw > 0 && longPercentageRaw < 1 ? '<1' : Math.round(longPercentageRaw)}%` : ''}
+                  {/* Liquid body — rises from bottom */}
+                  <div className="absolute bottom-0 left-0 right-0 transition-all duration-[2000ms] ease-out"
+                    style={{ height: `${Math.max(depthUsedPct, 3)}%` }}>
+
+                    {/* Primary wave */}
+                    <svg className="absolute -top-[7px] left-0 w-[200%]" viewBox="0 0 1200 16" preserveAspectRatio="none"
+                      style={{ height: '10px', animation: 'wave-drift 3s linear infinite' }}>
+                      <path d="M0,8 Q75,2 150,8 T300,8 T450,8 T600,8 T750,8 T900,8 T1050,8 T1200,8 L1200,16 L0,16 Z"
+                        fill={depthUsedPct > 75 ? 'rgba(248,113,113,0.7)' : 'rgba(56,189,248,0.6)'} />
+                    </svg>
+                    {/* Secondary wave (slower, offset) */}
+                    <svg className="absolute -top-[5px] left-0 w-[200%]" viewBox="0 0 1200 14" preserveAspectRatio="none"
+                      style={{ height: '8px', animation: 'wave-drift 5s linear infinite reverse' }}>
+                      <path d="M0,7 Q100,3 200,7 T400,7 T600,7 T800,7 T1000,7 T1200,7 L1200,14 L0,14 Z"
+                        fill={depthUsedPct > 75 ? 'rgba(248,113,113,0.4)' : 'rgba(56,189,248,0.3)'} />
+                    </svg>
+
+                    {/* Liquid body */}
+                    <div className="absolute inset-0 top-1" style={{
+                      background: depthUsedPct > 75
+                        ? 'linear-gradient(180deg, rgba(248,113,113,0.35) 0%, rgba(248,113,113,0.12) 60%, rgba(248,113,113,0.06) 100%)'
+                        : 'linear-gradient(180deg, rgba(56,189,248,0.30) 0%, rgba(34,211,238,0.15) 40%, rgba(6,182,212,0.06) 100%)',
+                    }} />
+
+                    {/* Light refraction / caustics */}
+                    <div className="absolute inset-0 top-1 overflow-hidden">
+                      <div className="absolute inset-0" style={{
+                        backgroundImage: `
+                          radial-gradient(ellipse 80px 40px at 25% 30%, rgba(255,255,255,0.07) 0%, transparent 100%),
+                          radial-gradient(ellipse 60px 30px at 65% 60%, rgba(255,255,255,0.05) 0%, transparent 100%),
+                          radial-gradient(ellipse 50px 25px at 80% 20%, rgba(255,255,255,0.04) 0%, transparent 100%)
+                        `,
+                        animation: 'caustic-shift 6s ease-in-out infinite alternate',
+                      }} />
+                    </div>
+
+                    {/* Bubbles — hollow circles that float up */}
+                    <div className="absolute bottom-[10%] left-[18%] w-2 h-2 rounded-full border border-white/25"
+                      style={{ animation: 'bubble-rise 3s ease-out infinite', boxShadow: 'inset 0 -1px 2px rgba(255,255,255,0.1)' }} />
+                    <div className="absolute bottom-[15%] left-[52%] w-1.5 h-1.5 rounded-full border border-white/20"
+                      style={{ animation: 'bubble-rise 4s ease-out infinite 1s', boxShadow: 'inset 0 -1px 1px rgba(255,255,255,0.08)' }} />
+                    <div className="absolute bottom-[5%] left-[72%] w-1 h-1 rounded-full border border-white/15"
+                      style={{ animation: 'bubble-rise 5s ease-out infinite 2.2s' }} />
+                    <div className="absolute bottom-[20%] left-[35%] w-1 h-1 rounded-full border border-white/12"
+                      style={{ animation: 'bubble-rise 4.5s ease-out infinite 0.5s' }} />
+                    <div className="absolute bottom-[8%] left-[88%] w-[5px] h-[5px] rounded-full border border-white/18"
+                      style={{ animation: 'bubble-rise 3.5s ease-out infinite 1.8s', boxShadow: 'inset 0 -1px 1px rgba(255,255,255,0.06)' }} />
+
+                    {/* Surface glow line */}
+                    <div className="absolute top-0 left-2 right-2 h-[1px]" style={{
+                      background: depthUsedPct > 75
+                        ? 'linear-gradient(90deg, transparent, rgba(248,113,113,0.6), transparent)'
+                        : 'linear-gradient(90deg, transparent, rgba(56,189,248,0.5), transparent)',
+                      boxShadow: depthUsedPct > 75
+                        ? '0 0 8px rgba(248,113,113,0.3)'
+                        : '0 0 8px rgba(56,189,248,0.25)',
+                    }} />
                   </div>
-                  <div
-                    className="bg-danger flex items-center justify-center text-xs font-medium text-surface-0"
-                    style={{ width: `${shortPercentage}%` }}
-                  >
-                    {shortPercentage >= 5 ? `Short ${shortPercentageRaw > 0 && shortPercentageRaw < 1 ? '<1' : Math.round(shortPercentageRaw)}%` : ''}
+
+                  {/* Side cap marker line inside tank */}
+                  {sideCapPct > 5 && sideCapPct < 95 && (
+                    <div className="absolute left-3 right-3 flex items-center" style={{ bottom: `${sideCapPct}%` }}>
+                      <div className="flex-1 h-[1px] opacity-50"
+                        style={{ backgroundImage: 'repeating-linear-gradient(90deg, rgba(168,85,247,0.5) 0px, rgba(168,85,247,0.5) 4px, transparent 4px, transparent 8px)' }} />
+                    </div>
+                  )}
+
+                  {/* Center percentage */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="text-center">
+                      <p className="text-3xl font-bold font-mono text-white/90"
+                        style={{ textShadow: '0 2px 12px rgba(0,0,0,0.95), 0 0 40px rgba(0,0,0,0.8)' }}>
+                        {depthUsedPct.toFixed(0)}<span className="text-lg">%</span>
+                      </p>
+                      <p className="text-[9px] text-white/40 font-semibold tracking-[0.15em] uppercase"
+                        style={{ textShadow: '0 1px 6px rgba(0,0,0,0.95)' }}>
+                        capacity used
+                      </p>
+                    </div>
                   </div>
                 </div>
 
-                {/* OI Details */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center">
-                    <p className="text-accent text-2xl font-bold font-mono">
-                      {formatCurrency(longOINum)}
-                    </p>
-                    <p className="text-sm text-gray-500">Long OI</p>
+                {/* Tier gauge on the right */}
+                <div className="w-[88px] relative text-[10px]" style={{ height: '12rem' }}>
+                  {/* Vertical track */}
+                  <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-full"
+                    style={{ background: 'linear-gradient(180deg, rgba(56,189,248,0.15) 0%, rgba(56,189,248,0.05) 100%)' }} />
+
+                  {/* Fill level on track */}
+                  <div className="absolute left-0 bottom-0 w-[3px] rounded-full transition-all duration-[2000ms]"
+                    style={{
+                      height: `${Math.max(depthUsedPct, 2)}%`,
+                      background: depthUsedPct > 75
+                        ? 'linear-gradient(180deg, rgba(248,113,113,0.8), rgba(248,113,113,0.3))'
+                        : 'linear-gradient(180deg, rgba(56,189,248,0.8), rgba(6,182,212,0.3))',
+                      boxShadow: depthUsedPct > 75
+                        ? '0 0 6px rgba(248,113,113,0.4)' : '0 0 6px rgba(56,189,248,0.3)',
+                    }} />
+
+                  {/* Cap label — top */}
+                  <div className="absolute top-0 left-3 flex items-center space-x-1.5">
+                    <div className="w-1 h-1 rounded-full bg-accent/50" />
+                    <div>
+                      <div className="text-accent/60 leading-none">Market Cap</div>
+                      <div className="text-accent font-mono font-semibold text-[11px] leading-tight">{formatCurrency(marketCapNum)}</div>
+                    </div>
                   </div>
-                  <div className="text-center">
-                    <p className="text-danger text-2xl font-bold font-mono">
-                      {formatCurrency(shortOINum)}
-                    </p>
-                    <p className="text-sm text-gray-500">Short OI</p>
+
+                  {/* Side cap marker */}
+                  {sideCapPct > 10 && sideCapPct < 90 && (
+                    <div className="absolute left-3 flex items-center space-x-1.5" style={{ bottom: `${sideCapPct}%`, transform: 'translateY(50%)' }}>
+                      <div className="w-1 h-1 rounded-full bg-purple/50" />
+                      <div>
+                        <div className="text-purple/60 leading-none">Side Cap</div>
+                        <div className="text-purple/80 font-mono text-[10px] leading-tight">{formatCurrency(sideCapNum)}</div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Current OI marker */}
+                  <div className="absolute left-3 flex items-center space-x-1.5"
+                    style={{ bottom: `${Math.max(depthUsedPct, 2)}%`, transform: 'translateY(50%)' }}>
+                    <div className="w-1.5 h-1.5 rounded-full"
+                      style={{ background: depthUsedPct > 75 ? '#f87171' : '#38bdf8', boxShadow: depthUsedPct > 75 ? '0 0 4px #f87171' : '0 0 4px #38bdf8' }} />
+                    <div>
+                      <div className="text-white/50 leading-none">OI</div>
+                      <div className="text-white font-mono font-semibold text-[11px] leading-tight">{formatCurrency(totalOI)}</div>
+                    </div>
                   </div>
                 </div>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Rates */}
-        <div className="bg-surface-1 rounded-lg border border-border p-6">
-          <h3 className="text-lg font-semibold text-gray-100 mb-4">
-            Current Rates
-          </h3>
-
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <p className="text-gray-500 text-sm mb-1">Funding Rate</p>
-              <p className="text-xl font-bold text-purple font-mono">
-                {formatRate(fundingRate)}
-              </p>
-              <p className="text-xs text-gray-600">Per Hour</p>
-            </div>
-            <div>
-              <p className="text-gray-500 text-sm mb-1">Borrow Rate</p>
-              <p className="text-xl font-bold text-warning font-mono">
-                {formatRate(borrowRate)}
-              </p>
-              <p className="text-xs text-gray-600">Per Hour</p>
-            </div>
-          </div>
-
-          <div className="mt-4 pt-4 border-t border-border">
-            <p className="text-xs text-gray-600">
-              Funding rate: Heavy side pays light side.
-              Borrow rate: Cost for leveraged positions.
-            </p>
-          </div>
-        </div>
-
-        {/* Recent Positions */}
-        <div className="bg-surface-1 rounded-lg border border-border p-6">
-          <h3 className="text-lg font-semibold text-gray-100 mb-4">
-            Recent Positions
-          </h3>
-
-          <div className="space-y-3">
-            {recentPositions.length === 0 && (
-              <div className="text-center py-4">
-                <p className="text-steel text-sm">No positions yet</p>
               </div>
-            )}
-            {recentPositions.slice(0, 5).map((position) => (
-              <div key={position.id} className="flex items-center justify-between py-2">
-                <div className="flex items-center space-x-3">
-                  <span
-                    className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
-                      position.direction === 'long'
-                        ? 'bg-accent/10 text-accent'
-                        : 'bg-danger/10 text-danger'
-                    }`}
-                  >
-                    {position.direction.toUpperCase()}
-                  </span>
+
+              {/* Tier breakdown */}
+              <div className="grid grid-cols-3 gap-3 pt-3 border-t border-border/20">
+                <div className="text-center">
+                  <p className="text-[10px] text-steel/50 uppercase tracking-wider mb-0.5">Market</p>
+                  <p className="text-sm font-bold font-mono text-ivory">{depthUsedPct.toFixed(0)}%</p>
+                  <p className="text-[10px] text-cyan-400/60 font-mono">{formatCurrency(depthAvailable)} free</p>
+                </div>
+                <div className="text-center border-x border-border/20">
+                  <p className="text-[10px] text-steel/50 uppercase tracking-wider mb-0.5">Per-Side</p>
+                  <p className="text-sm font-bold font-mono text-ivory">{heavySidePct.toFixed(0)}%</p>
+                  <p className="text-[10px] text-purple/60 font-mono">{formatCurrency(sideCapNum)} cap</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-[10px] text-steel/50 uppercase tracking-wider mb-0.5">Global</p>
+                  <p className="text-sm font-bold font-mono text-ivory">{globalUsedPct.toFixed(0)}%</p>
+                  <p className="text-[10px] text-blue-400/60 font-mono">{formatCurrency(globalCapNum)} cap</p>
+                </div>
+              </div>
+            </div>
+
+            {/* OI Breakdown + Rates */}
+            <div className="rounded-xl border border-border p-5 space-y-5" style={{ background: '#0c0d14' }}>
+              {/* OI Split */}
+              <div>
+                <h3 className="text-sm font-semibold text-ivory mb-3">Open Interest</h3>
+                {/* OI Bar */}
+                <div className="flex h-6 rounded-md overflow-hidden mb-3">
+                  <div className="bg-accent/80 flex items-center justify-center text-[10px] font-bold text-surface-0 transition-all"
+                    style={{ width: `${Math.max(longPct, 2)}%` }}>
+                    {longPct >= 10 ? `${Math.round(longPct)}%` : ''}
+                  </div>
+                  <div className="bg-danger/80 flex items-center justify-center text-[10px] font-bold text-white transition-all"
+                    style={{ width: `${Math.max(shortPct, 2)}%` }}>
+                    {shortPct >= 10 ? `${Math.round(shortPct)}%` : ''}
+                  </div>
+                </div>
+                <div className="flex justify-between text-xs">
                   <div>
-                    <p className="text-sm text-gray-200 font-mono">
-                      {formatCurrency(position.size)}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {position.trader}
-                    </p>
+                    <span className="text-accent font-mono font-semibold">{formatCurrency(longOINum)}</span>
+                    <span className="text-steel ml-1">Long</span>
+                  </div>
+                  <div>
+                    <span className="text-steel mr-1">Short</span>
+                    <span className="text-danger font-mono font-semibold">{formatCurrency(shortOINum)}</span>
                   </div>
                 </div>
-
-                <div className="text-right">
-                  <p className={`text-sm font-medium font-mono ${
-                    position.pnl >= 0 ? 'text-accent' : 'text-danger'
-                  }`}>
-                    {position.pnl >= 0 ? '+' : ''}
-                    {formatCurrency(position.pnl)}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {formatTimestamp(position.timestamp)}
-                  </p>
-                </div>
               </div>
-            ))}
+
+              {/* Divider */}
+              <div className="border-t border-border/50" />
+
+              {/* Rates */}
+              <div>
+                <h3 className="text-sm font-semibold text-ivory mb-3">Rates</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-steel mb-1">Funding</p>
+                    <p className="text-lg font-bold text-purple font-mono">{formatRate(fundingRate)}</p>
+                    <p className="text-[10px] text-steel/60">per hour</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-steel mb-1">Borrow</p>
+                    <p className="text-lg font-bold text-warning font-mono">{formatRate(borrowRate)}</p>
+                    <p className="text-[10px] text-steel/60">per hour</p>
+                  </div>
+                </div>
+                <p className="text-[10px] text-steel/50 mt-3">
+                  Funding: heavy side pays light side. Borrow: cost for leveraged positions.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Recent Trades ── */}
+          <div className="rounded-xl border border-border p-5" style={{ background: '#0c0d14' }}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-ivory">Recent Trades</h3>
+              <span className="text-[10px] text-steel font-mono">{recentTrades.length} trades</span>
+            </div>
+
+            {tradesLoading ? (
+              <div className="flex items-center justify-center py-6">
+                <div className="animate-spin w-5 h-5 border-2 border-accent border-t-transparent rounded-full" />
+                <span className="text-xs text-steel ml-2">Fetching on-chain trades...</span>
+              </div>
+            ) : recentTrades.length === 0 ? (
+              <div className="text-center py-6">
+                <p className="text-steel text-sm">No trades found for this market yet</p>
+                <p className="text-[10px] text-steel/50 mt-1">Be the first to open a position!</p>
+              </div>
+            ) : (
+              <div className="space-y-0">
+                {/* Header row */}
+                <div className="grid grid-cols-12 gap-2 text-[10px] uppercase tracking-wider text-steel/60 pb-2 border-b border-border/30">
+                  <div className="col-span-1">Side</div>
+                  <div className="col-span-3">Trader</div>
+                  <div className="col-span-2 text-right">Size</div>
+                  <div className="col-span-2 text-right">Leverage</div>
+                  <div className="col-span-2 text-right">Entry</div>
+                  <div className="col-span-2 text-right">Time</div>
+                </div>
+
+                {recentTrades.map((trade) => {
+                  const shortAddr = `${trade.owner.slice(0, 6)}...${trade.owner.slice(-4)}`;
+                  const size = Number(trade.positionSize) / 1e6;
+                  const lev = Number(trade.leverage) / 1e18;
+                  const entry = Number(trade.entryPrice) / 1e18 * 100;
+                  const ts = Number(trade.timestamp) * 1000;
+                  const now = Date.now();
+                  const diff = Math.floor((now - ts) / 1000);
+                  const timeAgo = diff < 60 ? 'Just now' : diff < 3600 ? `${Math.floor(diff / 60)}m ago` :
+                    diff < 86400 ? `${Math.floor(diff / 3600)}h ago` : `${Math.floor(diff / 86400)}d ago`;
+                  const explorerUrl = `https://sepolia.basescan.org/tx/${trade.txHash}`;
+
+                  return (
+                    <a
+                      key={trade.txHash + trade.positionId}
+                      href={explorerUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="grid grid-cols-12 gap-2 py-2 text-xs hover:bg-white/[0.02] transition-colors border-b border-border/10 last:border-0 group cursor-pointer"
+                    >
+                      <div className="col-span-1">
+                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                          trade.isLong
+                            ? 'bg-accent/10 text-accent'
+                            : 'bg-danger/10 text-danger'
+                        }`}>
+                          {trade.isLong ? 'L' : 'S'}
+                        </span>
+                      </div>
+                      <div className="col-span-3">
+                        <span className="font-mono text-steel group-hover:text-ivory transition-colors">
+                          {shortAddr}
+                        </span>
+                      </div>
+                      <div className="col-span-2 text-right">
+                        <span className="font-mono text-ivory">${size >= 1000 ? `${(size / 1000).toFixed(1)}K` : size.toFixed(0)}</span>
+                      </div>
+                      <div className="col-span-2 text-right">
+                        <span className="font-mono text-steel">{lev.toFixed(1)}x</span>
+                      </div>
+                      <div className="col-span-2 text-right">
+                        <span className="font-mono text-steel">{entry.toFixed(1)}¢</span>
+                      </div>
+                      <div className="col-span-2 text-right flex items-center justify-end space-x-1">
+                        <span className="text-steel/60">{timeAgo}</span>
+                        <svg className="w-3 h-3 text-steel/30 group-hover:text-accent transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </div>
+                    </a>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ═══ RIGHT COLUMN — Sticky Trade Form ═══ */}
+        <div className="lg:w-80 xl:w-96 flex-shrink-0">
+          <div className="lg:sticky lg:top-4">
+            <div className="rounded-xl border border-border p-5" style={{ background: '#0c0d14' }}>
+              <TradeForm
+                marketId={marketBytes32}
+                marketName={market.description}
+                currentPrice={currentPrice}
+                onTradeSelect={onTradeSelect}
+                compact={true}
+              />
+            </div>
           </div>
         </div>
       </div>
