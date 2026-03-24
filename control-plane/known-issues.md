@@ -4,7 +4,6 @@
 - None
 
 ## HIGH
-- Funding rate engine still reverting on getFundingRate calls despite index initialization. Funding indices exist but rate calculation fails on both dummy and real market IDs. Requires deeper investigation of post-redeployment initialization. (2026-03-23 update: confirmed issue persists)
 - Browser automation (puppeteer) cannot run — missing Chrome system dependencies (libatk, libgbm, etc). Need sudo to install. (2026-03-21)
 
 ## MEDIUM
@@ -17,6 +16,7 @@
 - Dashboard service showing UP in health check (corrected from previous not responding report). (2026-03-23)
 
 ## RESOLVED
+- **Funding rate engine reverting on getCurrentFundingRate calls** — FIXED: Markets needed funding indices initialized via initializeMarketIndex(). Fixed by calling initializeMarketIndex() for active markets. FundingRateEngine.getCurrentFundingRate() now returns proper rates (positive, negative, zero) for different market imbalances. Function was misnamed in testing (called getFundingRate vs getCurrentFundingRate). (2026-03-24)
 - **MAJOR FIX: Leverage calculations crushing positions at 1x** — FIXED: Root cause was depth thresholds set too high (1000x) relative to actual oracle depths (~1.0). Updated market risk parameters with reasonable depth thresholds (1.0) for all active markets. Effective max leverage increased from 1x → 18.57x. (2026-03-22)
 - OI/TVL mismatch (441% utilization) — FIXED: Force-closed 36 orphaned positions from pre-redeployment vault. Zeroed all stale OI via decreaseOI. Current: TVL=$502K, OI=$4.3K, utilization=0.85%. (2026-03-21)
 - QA scripts false PASSED — FIXED: Added validate-display-data.sh. Checks on-chain TVL, OI, share price, insurance, borrow rate, prices, utilization, APY, addresses. (2026-03-21)
