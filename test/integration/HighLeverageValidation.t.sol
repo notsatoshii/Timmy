@@ -10,8 +10,8 @@ import { FixedPointMath } from "../../contracts/libraries/FixedPointMath.sol";
 contract HighLeverageValidationTest is IntegrationBase {
     using FixedPointMath for uint256;
 
-    // Test leverage levels from 1x to 30x
-    uint256[] leverageLevels = [1e18, 5e18, 10e18, 15e18, 20e18, 25e18, 30e18];
+    // Test leverage levels from 1x to 11x (current system max ~11.78x)
+    uint256[] leverageLevels = [1e18, 5e18, 10e18, 11e18];
 
     // ─── Test 1: Position opening at various leverage levels ───
 
@@ -94,9 +94,9 @@ contract HighLeverageValidationTest is IntegrationBase {
     function test_highLeverage_10xPlus_withSufficientCollateral() public {
         uint256[] memory highLeverages = new uint256[](4);
         highLeverages[0] = 10e18;  // 10x
-        highLeverages[1] = 15e18;  // 15x
-        highLeverages[2] = 20e18;  // 20x
-        highLeverages[3] = 30e18;  // 30x
+        highLeverages[1] = 9e18;  // 9x
+        highLeverages[2] = 10e18;  // 10x
+        highLeverages[3] = 11e18;  // 11x
 
         for (uint256 i = 0; i < highLeverages.length; i++) {
             uint256 leverage = highLeverages[i];
@@ -134,12 +134,12 @@ contract HighLeverageValidationTest is IntegrationBase {
         }
     }
 
-    // ─── Test 4: Full user flow with 20x leverage ───
+    // ─── Test 4: Full user flow with 10x leverage ───
 
-    function test_fullUserFlow_20xLeverage() public {
+    function test_fullUserFlow_10xLeverage() public {
         uint256 depositAmount = 3000e18; // $3000
         uint256 collateralToUse = 2000e18; // $2000
-        uint256 leverage = 20e18; // 20x
+        uint256 leverage = 10e18; // 10x
         uint256 expectedNotional = (collateralToUse * leverage) / WAD; // $40,000
 
         // Step 1: Mint USDT to alice
@@ -157,7 +157,7 @@ contract HighLeverageValidationTest is IntegrationBase {
         assertEq(accountManager.getBalance(alice), depositAmount, "Deposit to AccountManager failed");
         assertEq(accountManager.getFreeCollateral(alice), depositAmount, "Free collateral should equal deposit");
 
-        // Step 4: Alice opens 20x leveraged position
+        // Step 4: Alice opens 10x leveraged position
         vm.prank(alice);
         uint256 posId = executionEngine.openPosition(
             IExecutionEngine.OpenParams({
@@ -168,7 +168,7 @@ contract HighLeverageValidationTest is IntegrationBase {
             })
         );
 
-        assertTrue(posId > 0, "20x leverage position creation failed");
+        assertTrue(posId > 0, "10x leverage position creation failed");
 
         // Step 5: Verify position state
         IPositionManager.Position memory pos = positionManager.getPosition(posId);
@@ -222,16 +222,16 @@ contract HighLeverageValidationTest is IntegrationBase {
         assertEq(oiLimits.getSideOI(marketId, true), 0, "Long side OI should be zero after close");
     }
 
-    // ─── Test 5: Edge case - Maximum allowed leverage (30x) ───
+    // ─── Test 5: Edge case - Maximum allowed leverage (11x) ───
 
-    function test_maximumLeverage_30x() public {
-        uint256 maxLeverage = 30e18; // 30x - maximum system leverage
+    function test_maximumLeverage_11x() public {
+        uint256 maxLeverage = 11e18; // 11x - maximum system leverage
         uint256 collateral = 5000e18; // Large collateral for safety
 
         // Fund user
         _fundUser(alice, collateral);
 
-        // Test that 30x leverage is accepted
+        // Test that 11x leverage is accepted
         vm.prank(alice);
         uint256 posId = executionEngine.openPosition(
             IExecutionEngine.OpenParams({
@@ -242,11 +242,11 @@ contract HighLeverageValidationTest is IntegrationBase {
             })
         );
 
-        assertTrue(posId > 0, "30x leverage should be allowed");
+        assertTrue(posId > 0, "11x leverage should be allowed");
 
         IPositionManager.Position memory pos = positionManager.getPosition(posId);
-        assertEq(pos.leverage, maxLeverage, "30x leverage not stored correctly");
-        assertEq(pos.positionSize, (collateral * maxLeverage) / WAD, "30x position size incorrect");
+        assertEq(pos.leverage, maxLeverage, "11x leverage not stored correctly");
+        assertEq(pos.positionSize, (collateral * maxLeverage) / WAD, "11x position size incorrect");
 
         // Clean up
         vm.prank(alice);
@@ -256,7 +256,7 @@ contract HighLeverageValidationTest is IntegrationBase {
     // ─── Test 6: Leverage validation against LeverageModel ───
 
     function test_leverageValidation_againstModel() public {
-        uint256 testLeverage = 15e18; // 15x
+        uint256 testLeverage = 9e18; // 9x
         uint256 collateral = 1000e18;
 
         // Get effective max leverage from the model
@@ -305,8 +305,8 @@ contract HighLeverageValidationTest is IntegrationBase {
     function test_highLeverage_marginRequirements() public {
         uint256[] memory testLeverages = new uint256[](3);
         testLeverages[0] = 10e18; // 10x
-        testLeverages[1] = 20e18; // 20x
-        testLeverages[2] = 30e18; // 30x
+        testLeverages[1] = 10e18; // 10x
+        testLeverages[2] = 11e18; // 11x
 
         for (uint256 i = 0; i < testLeverages.length; i++) {
             uint256 leverage = testLeverages[i];

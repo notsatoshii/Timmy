@@ -412,11 +412,20 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
 
                 {/* On-chain Mark Price */}
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider text-steel mb-1">Mark Price</p>
-                  <p className="text-lg font-bold text-blue-400 font-mono">
-                    {mtmPrice ? `${(mtmPrice * 100).toFixed(1)}¢` : '—'}
-                  </p>
-                  <p className="text-[10px] text-steel/60">On-chain smoothed</p>
+                  <p className="text-[10px] uppercase tracking-wider text-steel mb-1">On-Chain PI</p>
+                  {(() => {
+                    const isStale = mtmPrice !== null && Math.abs(mtmPrice - currentPrice) > 0.05;
+                    return (
+                      <>
+                        <p className={`text-lg font-bold font-mono ${isStale ? 'text-warning' : 'text-blue-400'}`}>
+                          {mtmPrice ? `${(mtmPrice * 100).toFixed(1)}¢` : '—'}
+                        </p>
+                        <p className={`text-[10px] ${isStale ? 'text-warning/60' : 'text-steel/60'}`}>
+                          {isStale ? 'Awaiting keeper update' : 'On-chain smoothed'}
+                        </p>
+                      </>
+                    );
+                  })()}
                 </div>
 
                 {/* Resolution */}
@@ -494,7 +503,7 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
             <div className="rounded-xl border border-border p-5" style={{ background: '#0c0d14' }}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-semibold text-ivory">Liquidity Pool</h3>
-                <span className="text-[10px] font-mono text-cyan-400/70">{formatCurrency(depthAvailable)} available</span>
+                <span className="text-[10px] font-mono text-accent/70">{formatCurrency(depthAvailable)} available</span>
               </div>
 
               {/* Tank + tier markers */}
@@ -503,13 +512,13 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
                 <div className="flex-1 relative h-48 rounded-2xl overflow-hidden"
                   style={{
                     background: 'linear-gradient(180deg, #060810 0%, #080a12 100%)',
-                    border: '1px solid rgba(56, 189, 248, 0.12)',
-                    boxShadow: 'inset 0 0 30px rgba(56, 189, 248, 0.03), 0 0 1px rgba(56,189,248,0.15)',
+                    border: '1px solid rgba(230, 255, 43, 0.1)',
+                    boxShadow: 'inset 0 0 30px rgba(230, 255, 43, 0.02), 0 0 1px rgba(230,255,43,0.12)',
                   }}>
 
                   {/* Empty capacity — subtle grid pattern to show the "container" */}
                   <div className="absolute inset-0" style={{
-                    backgroundImage: 'linear-gradient(rgba(56,189,248,0.02) 1px, transparent 1px)',
+                    backgroundImage: 'linear-gradient(rgba(230,255,43,0.015) 1px, transparent 1px)',
                     backgroundSize: '100% 12px',
                   }} />
 
@@ -521,20 +530,20 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
                     <svg className="absolute -top-[7px] left-0 w-[200%]" viewBox="0 0 1200 16" preserveAspectRatio="none"
                       style={{ height: '10px', animation: 'wave-drift 3s linear infinite' }}>
                       <path d="M0,8 Q75,2 150,8 T300,8 T450,8 T600,8 T750,8 T900,8 T1050,8 T1200,8 L1200,16 L0,16 Z"
-                        fill={depthUsedPct > 75 ? 'rgba(248,113,113,0.7)' : 'rgba(56,189,248,0.6)'} />
+                        fill={depthUsedPct > 75 ? 'rgba(248,113,113,0.7)' : 'rgba(230,255,43,0.5)'} />
                     </svg>
                     {/* Secondary wave (slower, offset) */}
                     <svg className="absolute -top-[5px] left-0 w-[200%]" viewBox="0 0 1200 14" preserveAspectRatio="none"
                       style={{ height: '8px', animation: 'wave-drift 5s linear infinite reverse' }}>
                       <path d="M0,7 Q100,3 200,7 T400,7 T600,7 T800,7 T1000,7 T1200,7 L1200,14 L0,14 Z"
-                        fill={depthUsedPct > 75 ? 'rgba(248,113,113,0.4)' : 'rgba(56,189,248,0.3)'} />
+                        fill={depthUsedPct > 75 ? 'rgba(248,113,113,0.4)' : 'rgba(230,255,43,0.25)'} />
                     </svg>
 
                     {/* Liquid body */}
                     <div className="absolute inset-0 top-1" style={{
                       background: depthUsedPct > 75
                         ? 'linear-gradient(180deg, rgba(248,113,113,0.35) 0%, rgba(248,113,113,0.12) 60%, rgba(248,113,113,0.06) 100%)'
-                        : 'linear-gradient(180deg, rgba(56,189,248,0.30) 0%, rgba(34,211,238,0.15) 40%, rgba(6,182,212,0.06) 100%)',
+                        : 'linear-gradient(180deg, rgba(230,255,43,0.25) 0%, rgba(200,230,30,0.12) 40%, rgba(180,210,20,0.04) 100%)',
                     }} />
 
                     {/* Light refraction / caustics */}
@@ -565,10 +574,10 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
                     <div className="absolute top-0 left-2 right-2 h-[1px]" style={{
                       background: depthUsedPct > 75
                         ? 'linear-gradient(90deg, transparent, rgba(248,113,113,0.6), transparent)'
-                        : 'linear-gradient(90deg, transparent, rgba(56,189,248,0.5), transparent)',
+                        : 'linear-gradient(90deg, transparent, rgba(230,255,43,0.45), transparent)',
                       boxShadow: depthUsedPct > 75
                         ? '0 0 8px rgba(248,113,113,0.3)'
-                        : '0 0 8px rgba(56,189,248,0.25)',
+                        : '0 0 8px rgba(230,255,43,0.2)',
                     }} />
                   </div>
 
@@ -599,7 +608,7 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
                 <div className="w-[88px] relative text-[10px]" style={{ height: '12rem' }}>
                   {/* Vertical track */}
                   <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-full"
-                    style={{ background: 'linear-gradient(180deg, rgba(56,189,248,0.15) 0%, rgba(56,189,248,0.05) 100%)' }} />
+                    style={{ background: 'linear-gradient(180deg, rgba(230,255,43,0.12) 0%, rgba(230,255,43,0.03) 100%)' }} />
 
                   {/* Fill level on track */}
                   <div className="absolute left-0 bottom-0 w-[3px] rounded-full transition-all duration-[2000ms]"
@@ -607,9 +616,9 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
                       height: `${Math.max(depthUsedPct, 2)}%`,
                       background: depthUsedPct > 75
                         ? 'linear-gradient(180deg, rgba(248,113,113,0.8), rgba(248,113,113,0.3))'
-                        : 'linear-gradient(180deg, rgba(56,189,248,0.8), rgba(6,182,212,0.3))',
+                        : 'linear-gradient(180deg, rgba(230,255,43,0.8), rgba(200,230,30,0.3))',
                       boxShadow: depthUsedPct > 75
-                        ? '0 0 6px rgba(248,113,113,0.4)' : '0 0 6px rgba(56,189,248,0.3)',
+                        ? '0 0 6px rgba(248,113,113,0.4)' : '0 0 6px rgba(230,255,43,0.25)',
                     }} />
 
                   {/* Cap label — top */}
@@ -636,7 +645,7 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
                   <div className="absolute left-3 flex items-center space-x-1.5"
                     style={{ bottom: `${Math.max(depthUsedPct, 2)}%`, transform: 'translateY(50%)' }}>
                     <div className="w-1.5 h-1.5 rounded-full"
-                      style={{ background: depthUsedPct > 75 ? '#f87171' : '#38bdf8', boxShadow: depthUsedPct > 75 ? '0 0 4px #f87171' : '0 0 4px #38bdf8' }} />
+                      style={{ background: depthUsedPct > 75 ? '#f87171' : '#E6FF2B', boxShadow: depthUsedPct > 75 ? '0 0 4px #f87171' : '0 0 4px rgba(230,255,43,0.5)' }} />
                     <div>
                       <div className="text-white/50 leading-none">OI</div>
                       <div className="text-white font-mono font-semibold text-[11px] leading-tight">{formatCurrency(totalOI)}</div>
@@ -650,7 +659,7 @@ const MarketDetail: React.FC<MarketDetailProps> = ({ market, onBack, onTradeSele
                 <div className="text-center">
                   <p className="text-[10px] text-steel/50 uppercase tracking-wider mb-0.5">Market</p>
                   <p className="text-sm font-bold font-mono text-ivory">{depthUsedPct.toFixed(0)}%</p>
-                  <p className="text-[10px] text-cyan-400/60 font-mono">{formatCurrency(depthAvailable)} free</p>
+                  <p className="text-[10px] text-accent/60 font-mono">{formatCurrency(depthAvailable)} free</p>
                 </div>
                 <div className="text-center border-x border-border/20">
                   <p className="text-[10px] text-steel/50 uppercase tracking-wider mb-0.5">Per-Side</p>

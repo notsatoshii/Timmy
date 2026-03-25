@@ -336,7 +336,7 @@ contract PriceSmoothingVerificationTest is Test {
             depthMin: 50000e18  // 50k depth minimum
         });
 
-        vm.prank(keeper);
+        vm.prank(admin);
         oracle.updateSmoothingParams(MARKET_ID, params);
 
         // High quality update: tight spread, good depth, low vol
@@ -376,7 +376,7 @@ contract PriceSmoothingVerificationTest is Test {
             depthMin: 100000e18 // 100k depth requirement
         });
 
-        vm.prank(keeper);
+        vm.prank(admin);
         oracle.updateSmoothingParams(MARKET_ID, conservativeParams);
 
         // Initialize

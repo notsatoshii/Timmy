@@ -68,23 +68,55 @@ class PolymarketOracleKeeper:
             self.current_prices[mid] = initial
             self.last_polymarket_prices[mid] = initial
 
+        # Track on-chain prices for gradual stepping (anti-manipulation filter is 5% max tick)
+        self.onchain_prices: Dict[str, float] = {}
+        self.DELTA_MAX = 0.045  # Stay under the 5% deltaMax filter
+
         # Oracle contract ABI
-        self.oracle_abi = [{
-            "inputs": [
-                {"name": "marketId", "type": "bytes32"},
-                {"name": "pYes", "type": "uint256"},
-                {"name": "pNo", "type": "uint256"},
-                {"name": "spread", "type": "uint256"},
-                {"name": "depth", "type": "uint256"},
-                {"name": "volume", "type": "uint256"}
-            ],
-            "name": "pushPrice",
-            "type": "function"
-        }]
+        self.oracle_abi = [
+            {
+                "inputs": [
+                    {"name": "marketId", "type": "bytes32"},
+                    {"name": "pYes", "type": "uint256"},
+                    {"name": "pNo", "type": "uint256"},
+                    {"name": "spread", "type": "uint256"},
+                    {"name": "depth", "type": "uint256"},
+                    {"name": "volume", "type": "uint256"}
+                ],
+                "name": "pushPrice",
+                "type": "function"
+            },
+            {
+                "inputs": [{"name": "marketId", "type": "bytes32"}],
+                "outputs": [{"name": "pi", "type": "uint256"}],
+                "name": "getPI",
+                "type": "function",
+                "stateMutability": "view"
+            }
+        ]
 
         self.oracle_contract = self.w3.eth.contract(
             address=Web3.to_checksum_address(self.oracle_adapter),
             abi=self.oracle_abi
+        )
+
+        # Multicall3 — standard address on all EVM chains
+        self.multicall3_addr = Web3.to_checksum_address('0xcA11bde05977b3631167028862bE2a173976CA11')
+        self.multicall3_abi = [{
+            "inputs": [{"components": [
+                {"name": "target", "type": "address"},
+                {"name": "callData", "type": "bytes"}
+            ], "name": "calls", "type": "tuple[]"}],
+            "name": "aggregate",
+            "outputs": [
+                {"name": "blockNumber", "type": "uint256"},
+                {"name": "returnData", "type": "bytes[]"}
+            ],
+            "type": "function"
+        }]
+        self.multicall3 = self.w3.eth.contract(
+            address=self.multicall3_addr,
+            abi=self.multicall3_abi
         )
 
     def load_markets(self) -> List[Dict]:
@@ -194,66 +226,112 @@ class PolymarketOracleKeeper:
         # First try Polymarket API
         fetched = self.fetch_all_polymarket_prices()
 
-        # For markets we didn't get from Polymarket, do gentle random walk
+        # Cache gas price and nonce once per cycle
+        try:
+            base_gas_price = self.w3.eth.gas_price
+            gas_price = max(base_gas_price + 1000000, 1000000)
+            nonce = self.w3.eth.get_transaction_count(self.account.address, 'pending')
+        except Exception as e:
+            logger.error(f"Failed to get gas/nonce: {e}")
+            return
+
+        # Read current on-chain prices so we can step within deltaMax
+        oracle_addr = Web3.to_checksum_address(self.oracle_adapter)
+        for market in self.markets:
+            mid = market['marketId']
+            if mid not in self.onchain_prices:
+                try:
+                    pi_raw = self.oracle_contract.functions.getPI(
+                        bytes.fromhex(mid[2:])
+                    ).call()
+                    self.onchain_prices[mid] = pi_raw / 1e18
+                except:
+                    self.onchain_prices[mid] = self.current_prices.get(mid, 0.5)
+
+        # Build calldata for all markets, then send as single Multicall3 tx
+        calls = []
+
         for market in self.markets:
             mid = market['marketId']
             poly = market.get('_polymarket', {})
             cid = poly.get('conditionId', '')
 
-            # If conditionId == marketId, this is an old market without real Poly mapping
-            # Use gentle walk from last known price
             if cid == mid or not cid:
                 old_price = self.current_prices.get(mid, 0.5)
                 new_price = self.simulate_price_movement(old_price, market['name'])
                 self.current_prices[mid] = new_price
 
-            # Push price on-chain
-            price = self.current_prices[mid]
+            target_price = self.current_prices[mid]
+
+            # Step toward target within deltaMax to avoid anti-manipulation rejection
+            current_onchain = self.onchain_prices.get(mid, target_price)
+            diff = target_price - current_onchain
+            if abs(diff) > self.DELTA_MAX:
+                # Clamp the step to deltaMax
+                step = self.DELTA_MAX if diff > 0 else -self.DELTA_MAX
+                price = current_onchain + step
+                price = max(0.01, min(0.99, price))
+            else:
+                price = target_price
+
+            # Update our tracking of what we're pushing (optimistic — assume it lands)
+            self.onchain_prices[mid] = price
             if self.dry_run:
                 logger.info(f"DRY RUN: {market['name'][:35]}... -> {price:.4f}")
-            else:
+                continue
+
+            market_id_bytes = bytes.fromhex(mid[2:])
+            p_yes_wad = int(price * 1e18)
+            p_no_wad = int((1.0 - price) * 1e18)
+            spread_wad = int(0.01 * 1e18)
+            depth_wad = int(1.0 * 1e18)
+            volume_wad = int(5.0 * 1e18)
+
+            calldata = self.oracle_contract.functions.pushPrice(
+                market_id_bytes, p_yes_wad, p_no_wad,
+                spread_wad, depth_wad, volume_wad
+            )._encode_transaction_data()
+
+            calls.append((oracle_addr, calldata))
+
+        if not calls:
+            return
+
+        # Send all 20 pushPrice calls in a single Multicall3.aggregate() transaction
+        try:
+            tx = self.multicall3.functions.aggregate(calls).build_transaction({
+                'from': self.account.address,
+                'nonce': nonce,
+                'gas': 120000 * len(calls),  # ~120k per subcall
+                'gasPrice': gas_price,
+            })
+            signed_tx = self.account.sign_transaction(tx)
+            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+            logger.info(f"Pushed {len(calls)} markets in 1 tx (hash: {tx_hash.hex()[:16]}...)")
+        except Exception as e:
+            logger.error(f"Multicall batch failed: {e}")
+            # Fallback: push individually
+            logger.info("Falling back to individual pushes...")
+            for i, market in enumerate(self.markets):
+                mid = market['marketId']
+                price = self.current_prices.get(mid, 0.5)
                 try:
-                    self.push_price_to_oracle(mid, price)
-                    logger.info(f"PUSHED: {market['name'][:35]}... -> {price:.4f}")
-                except Exception as e:
-                    logger.error(f"Failed to push {market['name'][:25]}...: {e}")
-
-    def push_price_to_oracle(self, market_id: str, price: float):
-        market_id_bytes = bytes.fromhex(market_id[2:])
-        p_yes_wad = int(price * 1e18)
-        p_no_wad = int((1.0 - price) * 1e18)
-        spread_wad = int(0.01 * 1e18)
-        depth_wad = int(1.0 * 1e18)
-        volume_wad = int(5.0 * 1e18)
-
-        # Use 'pending' nonce to include in-flight transactions
-        for attempt in range(3):
-            try:
-                nonce = self.w3.eth.get_transaction_count(self.account.address, 'pending')
-                gas_price = max(self.w3.eth.gas_price * 3, 30000000)
-                tx = self.oracle_contract.functions.pushPrice(
-                    market_id_bytes, p_yes_wad, p_no_wad,
-                    spread_wad, depth_wad, volume_wad
-                ).build_transaction({
-                    'from': self.account.address,
-                    'nonce': nonce,
-                    'gas': 150000,
-                    'gasPrice': gas_price,
-                })
-
-                signed_tx = self.account.sign_transaction(tx)
-                tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
-                # Don't wait for receipt — fire and forget to avoid blocking
-                logger.debug(f"Sent tx {tx_hash.hex()[:16]}... nonce={nonce}")
-                time.sleep(0.5)  # Brief pause for mempool
-                return  # Consider success (fire-and-forget)
-            except Exception as e:
-                err_str = str(e)
-                if 'nonce' in err_str.lower() or 'underpriced' in err_str.lower() or 'replacement' in err_str.lower():
-                    time.sleep(0.5)
-                    continue
-                raise
-        raise Exception("Failed after 3 nonce retries")
+                    market_id_bytes = bytes.fromhex(mid[2:])
+                    p_yes_wad = int(price * 1e18)
+                    p_no_wad = int((1.0 - price) * 1e18)
+                    tx = self.oracle_contract.functions.pushPrice(
+                        market_id_bytes, p_yes_wad, p_no_wad,
+                        int(0.01e18), int(1e18), int(5e18)
+                    ).build_transaction({
+                        'from': self.account.address,
+                        'nonce': nonce + i,
+                        'gas': 120000,
+                        'gasPrice': gas_price,
+                    })
+                    signed_tx = self.account.sign_transaction(tx)
+                    self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+                except Exception as e2:
+                    logger.error(f"Individual push failed {market['name'][:20]}: {e2}")
 
     def write_prices_json(self):
         try:

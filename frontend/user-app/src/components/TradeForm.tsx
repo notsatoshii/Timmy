@@ -121,7 +121,7 @@ const TradeForm: React.FC<TradeFormProps> = ({ marketId, marketName, currentPric
         </div>
         {currentPrice !== undefined && (
           <div className="flex justify-between text-xs">
-            <span className="text-steel">Entry Price</span>
+            <span className="text-steel">Oracle Price</span>
             <span className="text-ivory font-mono">{(currentPrice * 100).toFixed(1)}¢</span>
           </div>
         )}

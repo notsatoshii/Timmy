@@ -21,4 +21,4 @@ This repo is maintained by an automated build agent (Timmy) that:
 - `SPEC/` contains per-contract specifications
 - Deviations from spec must be logged in `known-issues.md`
 
-*Last updated: 2026-03-23 09:06:49 ICT*
+*Last updated: 2026-03-24 09:07:11 ICT*

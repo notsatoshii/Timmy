@@ -237,12 +237,19 @@ const Positions: React.FC<PositionsProps> = ({ onStatsUpdate }) => {
           // Funding data unavailable, default to 0
         }
 
-        // Calculate PnL with proper decimal scaling
-        // Update currentPI from on-chain oracle (same source as Markets tab)
-        const mktId = (position.marketId as string).toLowerCase();
-        const oracleMatch = oracleMarkets?.find((m: any) => m.id.toLowerCase() === mktId);
-        if (oracleMatch && oracleMatch.probability > 0 && oracleMatch.probability <= 1) {
-          position.currentPI = BigInt(Math.round(oracleMatch.probability * Number(WAD)));
+        // Calculate PnL using ON-CHAIN Mark Price (getPI) — same source as entry price
+        try {
+          const onChainPI = await publicClient.readContract({
+            address: CONTRACT_ADDRESSES.oracleAdapter as `0x${string}`,
+            abi: [{ name: 'getPI', type: 'function', stateMutability: 'view', inputs: [{ name: 'marketId', type: 'bytes32' }], outputs: [{ name: '', type: 'uint256' }] }],
+            functionName: 'getPI',
+            args: [position.marketId],
+          }) as bigint;
+          if (onChainPI > BigInt(0)) {
+            position.currentPI = onChainPI;
+          }
+        } catch (e) {
+          // Fall back to entryPI if oracle read fails
         }
         const priceDiff = Number(position.currentPI - position.entryPI);
         const direction = position.isLong ? 1 : -1;
@@ -298,23 +305,15 @@ const Positions: React.FC<PositionsProps> = ({ onStatsUpdate }) => {
 
   // Show real positions if they exist, otherwise show demo positions when no wallet is connected
   
-  // Recalculate PnL at render time using latest oracle prices
+  // Use positions as-is — PnL already calculated from on-chain Mark Price during fetch
   const displayPositions = React.useMemo(() => {
     if (!positions || positions.length === 0) return positions;
     return positions.map(pos => {
-      const mktId = (pos.marketId as string).toLowerCase();
-      const oracleMatch = oracleMarkets?.find((m: any) => m.id.toLowerCase() === mktId);
-      let currentPI = pos.entryPI;
-      if (oracleMatch && oracleMatch.probability > 0 && oracleMatch.probability <= 1) {
-        currentPI = BigInt(Math.round(oracleMatch.probability * Number(WAD)));
-      }
-      const priceDiff = Number(currentPI) - Number(pos.entryPI);
-      const direction = pos.isLong ? 1 : -1;
-      const pnl = BigInt(Math.round(direction * priceDiff * Number(pos.positionSize) / Number(WAD)));
-      const equity = pos.collateral + pnl - pos.borrowFees + pos.fundingAccrued;
-      return { ...pos, currentPI, pnl, equity };
+      // PnL already uses on-chain getPI() from fetch, just recompute equity
+      const equity = pos.collateral + pos.pnl - pos.borrowFees + pos.fundingAccrued;
+      return { ...pos, equity };
     });
-  }, [positions, oracleMarkets]);
+  }, [positions]);
 
 
   const handleCloseClick = (positionId: bigint) => {
@@ -623,6 +622,9 @@ const Positions: React.FC<PositionsProps> = ({ onStatsUpdate }) => {
                     <div>
                       <p className="text-gray-500 text-xs uppercase tracking-wide">Entry</p>
                       <p className="font-semibold font-mono text-gray-200">{formatPrice(position.entryPrice)}</p>
+                      {position.entryPI !== position.entryPrice && (
+                        <p className="text-[10px] text-steel/50 font-mono">PI: {formatPrice(position.entryPI)}</p>
+                      )}
                     </div>
                     <div>
                       <div className="flex items-center space-x-1">

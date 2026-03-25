@@ -112,22 +112,13 @@ const ProfessionalLoader: React.FC<ProfessionalLoaderProps> = ({
           }}
         />
 
-        {/* Icon/Logo */}
-        {variant === 'default' ? (
-          <img
-            src="/lever-icon.png"
-            alt="Loading"
-            className="professional-loader relative z-10"
-            style={{ width: config.icon, height: config.icon }}
-          />
-        ) : (
-          <div
-            className={`professional-loader relative z-10 flex items-center justify-center text-3xl ${variantConfig.color}`}
-            style={{ width: config.icon, height: config.icon }}
-          >
-            {variantConfig.icon}
-          </div>
-        )}
+        {/* Lever Logo — always spinning */}
+        <img
+          src="/lever-icon.png"
+          alt="Loading"
+          className="professional-loader relative z-10"
+          style={{ width: config.icon, height: config.icon }}
+        />
       </div>
 
       {/* Title and Subtitle */}

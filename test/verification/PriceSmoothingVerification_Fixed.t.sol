@@ -182,7 +182,7 @@ contract PriceSmoothingVerificationFixedTest is Test {
             spreadLimit: 1e17,
             depthMin: 75000e18  // 75k minimum
         });
-        vm.prank(keeper);
+        vm.prank(admin);
         oracle.updateSmoothingParams(MARKET_ID, params);
 
         vm.warp(block.timestamp + 60);
