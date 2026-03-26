@@ -1,10 +1,18 @@
 # LEVER Protocol — Known Issues Tracker
 
-## CRITICAL
+## CRITICAL — AUDIT FINDINGS (2026-03-26)
+- [ ] **LEVER-001: PnL formula mismatch causing vault drains** — DISCOVERED 2026-03-26. ExecutionEngine uses impact-adjusted prices for PnL while MarginEngine/SettlementEngine use raw PI values. Creates systematic bias (38 winners, 0 losers observed), contributes to $426K vault drain. **INVESTOR DEMO BLOCKER**.
+- [ ] **LEVER-002: InsuranceFund not transferring USDT on bad debt absorption** — DISCOVERED 2026-03-26. Critical safety mechanism non-functional. **FUND SAFETY RISK**.
+- [ ] **Compilation environment hanging** — DISCOVERED 2026-03-26. `forge build` and `forge test` timeout/hang consistently. Blocks validation of potential audit fixes in uncommitted changes. **DEVELOPMENT BLOCKED**.
+
+## CRITICAL — OPERATIONAL
 - [x] **OracleAdapter source validation was dead code** — FIXED 2026-03-15
 - [ ] **Oracle fallback sources broken — SINGLE POINT OF FAILURE** — DISCOVERED 2026-03-15. Gamma API returns 0.0 prices for all markets (broken parameter/parsing). CLOB orderbook returns static 0.5 for all markets (empty books). Only CLOB midpoint functional. If primary source fails, oracle provides invalid prices.
 - [ ] **Feed monitor fallback chain non-functional** — DISCOVERED 2026-03-15. Current feed_monitor.py 3-tier fallback (CLOB→Gamma→cached) would fail in production due to broken Gamma integration. Single point of failure creates liquidation risk.
 - [ ] **MarginEngine cannot access risk parameters — ALL POSITION OPENING BLOCKED** — DISCOVERED 2026-03-16. MarginEngine.validateMarginChecks() throws RiskCurves__ZeroDepthThreshold() error even when LeverageModel.getMarketRiskParams() returns correct values (250000000000000000, 500000000000000000000). The MarginEngine appears to call RiskCurves library functions that expect a depth threshold but cannot access the parameters stored in LeverageModel. This blocks all position opening regardless of position size or funding status.
+
+## HIGH — DEVELOPMENT/INFRASTRUCTURE
+- [ ] **Puppeteer browser automation failing** — DISCOVERED 2026-03-21, CONFIRMED 2026-03-26. Missing Chrome system dependencies (libatk, libgbm, etc). Frontend screenshot/verification scripts non-functional. Requires sudo for system package installation.
 
 ## MEDIUM
 - [x] **OracleAdapter role assignments** — FIXED 2026-03-16. freezeMarket/unfreezeMarket/updateSmoothingParams now use DEFAULT_ADMIN_ROLE as per spec.
