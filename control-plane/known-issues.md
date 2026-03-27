@@ -7,7 +7,7 @@
 - Browser automation (puppeteer) cannot run — missing Chrome system dependencies (libatk, libgbm, etc). Need sudo to install. (2026-03-21)
 
 ## MEDIUM
-- Test failures: 22 individual tests failing across 4 test suites (95.9% success rate = 1040 passed / 22 failed). Most failures (13 tests) are leverage expectation mismatches where tests expect 30x leverage but system provides 12x max. Remaining failures in oracle smoothing algorithm convergence. Core business logic tests passing. (2026-03-25 update: MAJOR IMPROVEMENT from 27→22 failures after fixing access control issues and updating leverage expectations)
+- Oracle smoothing verification tests failing (4 tests): confidence scoring, convergence behavior, custom parameters, time weighting. These are algorithmic verification tests for oracle smoothing details, not core business logic. All trading/leverage/margin/execution tests pass. Test success rate: 99.6% (1068/1072). (2026-03-27 update: MAJOR IMPROVEMENT from 22→4 failures after fixing high leverage validation tests)
 - Some complex contract function calls reverting (activeMarkets, totalPositions, getMarketOI) while basic role checks work. System functional but some query functions inaccessible. (2026-03-23)
 - openPosition requires ~826K gas (800K limit fails silently). Frontend useDemoWallet uses gas:2000000n which is correct. (2026-03-21)
 
