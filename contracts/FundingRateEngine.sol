@@ -138,9 +138,11 @@ contract FundingRateEngine is IFundingRateEngine, AccessControl, ReentrancyGuard
 
         _pendingUnmatchedFunding[marketId] = 0;
 
+        // FIX LEVER-P05: Use receiveUnmatchedFunding (requires FUNDING_RATE_ENGINE_ROLE),
+        // not depositRewards (requires FEE_ROUTER_ROLE which FundingRateEngine does not have).
         // Transfer USDT from AccountManager to RewardsDistributor
         accountManager.transferOut(address(rewardsDistributor), pending);
-        rewardsDistributor.depositRewards(pending);
+        rewardsDistributor.receiveUnmatchedFunding(marketId, pending);
 
         emit UnmatchedFundingRouted(marketId, pending, block.timestamp);
     }
@@ -335,14 +337,22 @@ contract FundingRateEngine is IFundingRateEngine, AccessControl, ReentrancyGuard
         uint256 tauEff = RiskCurves.computeTauEffective(tauHours, isLive_);
         uint256 r = RiskCurves.computeR(tauEff);
 
-        uint256 mMarket = RiskCurves.computeMarketAdjustment(
-            sigmaCurrent[marketId],
-            sigmaBaseline[marketId],
-            externalDepth[marketId],
-            depthThreshold[marketId],
-            marketOI[marketId],
-            globalOI
-        );
+        // FIX LEVER-P01: Guard against depthThreshold=0 (default for uninitiated markets).
+        // RiskCurves.computeMarketAdjustment reverts with ZeroDepthThreshold when depthThreshold=0.
+        // Same fix as MarginEngine (LEVER-007). Skip depth adjustment when unconfigured.
+        uint256 mMarket;
+        if (depthThreshold[marketId] == 0) {
+            mMarket = WAD; // No market adjustment when depth threshold not configured
+        } else {
+            mMarket = RiskCurves.computeMarketAdjustment(
+                sigmaCurrent[marketId],
+                sigmaBaseline[marketId],
+                externalDepth[marketId],
+                depthThreshold[marketId],
+                marketOI[marketId],
+                globalOI
+            );
+        }
 
         return RiskCurves.computeRAdjusted(r, mMarket);
     }

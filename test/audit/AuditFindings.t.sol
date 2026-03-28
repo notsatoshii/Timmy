@@ -26,7 +26,9 @@ contract MockLeverVault_Audit {
     function totalAssets() external view returns (uint256) { return totalAssets_; }
     function fundTraderPnL(address, uint256) external { fundCalls++; }
     function socializeLoss(uint256 amount) external { socializedLosses += amount; }
-    function updateUnrealizedPnL(int256) external {}
+    int256 private _netUnrealizedPnL;
+    function updateUnrealizedPnL(int256 newPnL) external { _netUnrealizedPnL = newPnL; }
+    function getNetUnrealizedPnL() external view returns (int256) { return _netUnrealizedPnL; }
 }
 
 /// @title AuditFindingsTest

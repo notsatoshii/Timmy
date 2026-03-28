@@ -317,14 +317,22 @@ contract BorrowFeeEngine is IBorrowFeeEngine, AccessControl, ReentrancyGuard, Pa
         uint256 tauEff = RiskCurves.computeTauEffective(tauHours, isLive_);
         uint256 rBorrow = RiskCurves.computeRBorrow(tauEff);
 
-        uint256 mMarket = RiskCurves.computeMarketAdjustment(
-            sigmaCurrent[marketId],
-            sigmaBaseline[marketId],
-            externalDepth[marketId],
-            depthThreshold[marketId],
-            marketOI[marketId],
-            globalOI
-        );
+        // FIX LEVER-P02: Guard against depthThreshold=0 (default for uninitiated markets).
+        // RiskCurves.computeMarketAdjustment reverts with ZeroDepthThreshold when depthThreshold=0.
+        // Same fix as MarginEngine (LEVER-007). Skip depth adjustment when unconfigured.
+        uint256 mMarket;
+        if (depthThreshold[marketId] == 0) {
+            mMarket = WAD; // No market adjustment when depth threshold not configured
+        } else {
+            mMarket = RiskCurves.computeMarketAdjustment(
+                sigmaCurrent[marketId],
+                sigmaBaseline[marketId],
+                externalDepth[marketId],
+                depthThreshold[marketId],
+                marketOI[marketId],
+                globalOI
+            );
+        }
 
         return RiskCurves.computeRAdjusted(rBorrow, mMarket);
     }

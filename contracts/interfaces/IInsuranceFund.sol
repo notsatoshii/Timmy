@@ -35,11 +35,14 @@ interface IInsuranceFund {
     ///      The `remainder` means different things for different callers:
     ///      - LiquidationEngine: remainder → LP socialization (NAV hit)
     ///      - SettlementEngine: remainder → ADL (winner haircuts), then LP socialization
+    ///      FIX LEVER-P04: recipient receives the insurancePaid USDT directly.
+    ///      Pass address(leverVault) so insurance payments go to the vault, not msg.sender.
     /// @param marketId Market where bad debt occurred
     /// @param totalBadDebt Total bad debt to absorb (WAD)
+    /// @param recipient Address to receive the insurancePaid USDT (should be leverVault)
     /// @return insurancePaid Amount paid by insurance fund (WAD)
     /// @return remainder Amount NOT covered by insurance (WAD)
-    function absorbBadDebt(bytes32 marketId, uint256 totalBadDebt)
+    function absorbBadDebt(bytes32 marketId, uint256 totalBadDebt, address recipient)
         external returns (uint256 insurancePaid, uint256 remainder);
 
     // ──────────────────────────────────────────────

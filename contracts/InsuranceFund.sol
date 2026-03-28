@@ -112,7 +112,7 @@ contract InsuranceFund is IInsuranceFund, AccessControl, ReentrancyGuard, Pausab
     }
 
     /// @inheritdoc IInsuranceFund
-    function absorbBadDebt(bytes32 marketId, uint256 totalBadDebt)
+    function absorbBadDebt(bytes32 marketId, uint256 totalBadDebt, address recipient)
         external
         override
         nonReentrant
@@ -181,9 +181,11 @@ contract InsuranceFund is IInsuranceFund, AccessControl, ReentrancyGuard, Pausab
         _dailySpent += insurancePaid;
         _totalAbsorbed += insurancePaid;
 
-        // FIX LEVER-002: Actually transfer USDT to cover the bad debt
+        // FIX LEVER-P04: Transfer USDT to the specified recipient (leverVault), not msg.sender.
+        // Previously USDT was sent to msg.sender (ExecutionEngine/LiquidationEngine/SettlementEngine)
+        // where it would be permanently stuck since those contracts have no USDT forwarding logic.
         if (insurancePaid > 0) {
-            usdt.safeTransfer(msg.sender, insurancePaid);
+            usdt.safeTransfer(recipient, insurancePaid);
         }
 
         emit BadDebtAbsorbed(marketId, totalBadDebt, insurancePaid, remainder, block.timestamp);

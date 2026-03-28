@@ -106,6 +106,8 @@ contract MockAccountManager_FRE {
 
 contract MockRewardsDistributor_FRE {
     function depositRewards(uint256) external {}
+    // FIX LEVER-P05: receiveUnmatchedFunding is the correct function (requires FUNDING_RATE_ENGINE_ROLE)
+    function receiveUnmatchedFunding(bytes32, uint256) external {}
 }
 
 // ──────────────────────────────────────────────

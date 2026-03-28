@@ -414,6 +414,11 @@ contract LeverVault is ILeverVault, ERC4626, AccessControl, ReentrancyGuard, Pau
     }
 
     /// @inheritdoc ILeverVault
+    function getNetUnrealizedPnL() external view returns (int256) {
+        return _netUnrealizedPnL;
+    }
+
+    /// @inheritdoc ILeverVault
     function getUtilization() external view returns (uint256) {
         return 0;
     }

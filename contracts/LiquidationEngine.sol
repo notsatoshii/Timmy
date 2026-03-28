@@ -440,7 +440,8 @@ contract LiquidationEngine is ILiquidationEngine, AccessControl, ReentrancyGuard
         internal
         returns (uint256 insurancePaid, uint256 socializedAmount)
     {
-        (insurancePaid, socializedAmount) = insuranceFund.absorbBadDebt(marketId, badDebt);
+        // FIX LEVER-P04: Pass leverVault as recipient so insurance USDT goes to vault, not this contract
+        (insurancePaid, socializedAmount) = insuranceFund.absorbBadDebt(marketId, badDebt, address(leverVault));
 
         if (socializedAmount > 0) {
             leverVault.socializeLoss(socializedAmount);

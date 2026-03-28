@@ -499,7 +499,8 @@ contract SettlementEngine is ISettlementEngine, AccessControl, ReentrancyGuard, 
 
         MarketSettlementState storage state = _marketSettlements[marketId];
 
-        (uint256 insurancePaid, uint256 remainder) = insuranceFund.absorbBadDebt(marketId, totalBadDebt);
+        // FIX LEVER-P04: Pass leverVault as recipient so insurance USDT goes to vault, not this contract
+        (uint256 insurancePaid, uint256 remainder) = insuranceFund.absorbBadDebt(marketId, totalBadDebt, address(leverVault));
 
         state.totalBadDebt = totalBadDebt;
         state.insuranceUsed = insurancePaid;

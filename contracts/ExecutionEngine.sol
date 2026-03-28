@@ -40,6 +40,9 @@ contract ExecutionEngine is IExecutionEngine, AccessControl, ReentrancyGuard, Pa
 
     uint256 internal constant WAD = 1e18;
 
+    /// @notice Transaction fee rate: 0.10% (10 bps), matches FeeRouter.TX_FEE_RATE
+    uint256 public constant TX_FEE_RATE = 1e15;
+
     /// @notice Maximum price impact cap: 5% (0.05)
     uint256 public constant MAX_IMPACT = 5e16;
 
@@ -292,7 +295,11 @@ contract ExecutionEngine is IExecutionEngine, AccessControl, ReentrancyGuard, Pa
         ctx.pi = oracleAdapter.getPI(params.marketId);
         (ctx.entryPrice, ctx.impact) =
             _computeExecutionPrice(params.marketId, params.isLong, notional, ctx.pi, true);
-        uint256 txFee = feeRouter.collectTransactionFee(notional);
+        // FIX LEVER-P03 (Bug A): Compute fee locally instead of calling collectTransactionFee.
+        // collectTransactionFee distributes from FeeRouter's own reserves before USDT is moved
+        // there, causing phantom USDT to accumulate in AccountManager and FeeRouter reserves to drain.
+        // Correct flow: compute fee -> debit user accounting -> transfer USDT to FeeRouter -> route.
+        uint256 txFee = notional * TX_FEE_RATE / WAD;
         ctx.collateralNet = params.collateral - txFee;
 
         _validateMargin(params.marketId, params.isLong, ctx.collateralNet, params.leverage);
@@ -300,9 +307,11 @@ contract ExecutionEngine is IExecutionEngine, AccessControl, ReentrancyGuard, Pa
         // Lock position collateral in AccountManager
         accountManager.lockCollateral(msg.sender, ctx.collateralNet);
 
-        // Debit TX fee from user's free balance (fee already routed by FeeRouter)
+        // Debit TX fee from user's accounting balance and transfer USDT to FeeRouter, then route
         if (txFee > 0) {
             accountManager.debitPnL(msg.sender, txFee);
+            accountManager.transferOut(address(feeRouter), txFee);
+            feeRouter.routeFees(IFeeRouter.FeeType.TRANSACTION, txFee);
         }
 
         // Increase OI AFTER price computation to avoid double-counting in imbalance_delta.
@@ -354,20 +363,30 @@ contract ExecutionEngine is IExecutionEngine, AccessControl, ReentrancyGuard, Pa
         uint256 borrowFees = borrowFeeEngine.getAccruedFees(positionId);
         int256 accruedFunding = fundingRateEngine.getAccruedFunding(positionId);
 
-        // FIX LEVER-009: Collect closing transaction fee
-        uint256 closingFee = feeRouter.collectTransactionFee(pos.positionSize);
+        // FIX LEVER-P03 (Bug B) + LEVER-009: Compute closing fee locally.
+        // collectTransactionFee caused double-distribution: once from FeeRouter reserves here,
+        // and again when _settlePnL transferred closingFee to FeeRouter via routeFees.
+        // Now closingFee is computed locally and only routed once inside _settlePnL.
+        uint256 closingFee = pos.positionSize * TX_FEE_RATE / WAD;
 
         // Settle PnL: bookkeeping + actual USDT transfers between AccountManager, Vault, FeeRouter
         uint256 badDebt = _settlePnL(pos.owner, pos.collateral, pnl, borrowFees, accruedFunding, closingFee);
 
         // FIX LEVER-004: Route bad debt through InsuranceFund waterfall
         if (badDebt > 0) {
-            (uint256 insurancePaid, uint256 remainder) = insuranceFund.absorbBadDebt(pos.marketId, badDebt);
+            // FIX LEVER-P04: Pass leverVault as recipient so insurance USDT goes to vault, not here
+            (, uint256 remainder) = insuranceFund.absorbBadDebt(pos.marketId, badDebt, address(leverVault));
             if (remainder > 0) {
                 leverVault.socializeLoss(remainder);
             }
             emit BadDebtRecorded(positionId, pos.owner, badDebt);
         }
+
+        // FIX LEVER-P06: Remove this position's unrealized PnL from vault NAV tracking.
+        // On open, unrealized PnL is 0 so no update needed. On close, the realized pnl was
+        // previously part of the running _netUnrealizedPnL total — remove it now.
+        int256 currentUnrealized = leverVault.getNetUnrealizedPnL();
+        leverVault.updateUnrealizedPnL(currentUnrealized - pnl);
 
         // Update downstream state
         oiLimits.decreaseOI(pos.marketId, pos.owner, pos.isLong, pos.positionSize);

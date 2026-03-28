@@ -112,7 +112,7 @@ contract InsuranceFundFixed is IInsuranceFund, AccessControl, ReentrancyGuard, P
     }
 
     /// @inheritdoc IInsuranceFund
-    function absorbBadDebt(bytes32 marketId, uint256 totalBadDebt)
+    function absorbBadDebt(bytes32 marketId, uint256 totalBadDebt, address /* recipient */)
         external
         override
         nonReentrant

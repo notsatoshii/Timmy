@@ -186,7 +186,7 @@ contract MockInsuranceFund_LE {
         _remainder = remainder_;
     }
 
-    function absorbBadDebt(bytes32, uint256 totalBadDebt)
+    function absorbBadDebt(bytes32, uint256 totalBadDebt, address)
         external
         returns (uint256 insurancePaid, uint256 remainder)
     {

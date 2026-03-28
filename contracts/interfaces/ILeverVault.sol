@@ -102,6 +102,15 @@ interface ILeverVault is IERC4626 {
     /// @notice Get real-time NAV including unrealized trader PnL
     function getNAV() external view returns (uint256 nav);
 
+    /// @notice Get current net unrealized trader PnL (positive = traders are profitable)
+    /// @dev Used by ExecutionEngine to compute incremental updates to unrealized PnL
+    function getNetUnrealizedPnL() external view returns (int256);
+
+    /// @notice Update the net unrealized trader PnL for NAV calculation
+    /// @dev Only callable by EXECUTION_ENGINE_ROLE. Sets the absolute value (not a delta).
+    /// @param newPnL New net unrealized PnL (positive = traders profitable)
+    function updateUnrealizedPnL(int256 newPnL) external;
+
     /// @notice Transfer USDT from vault to AccountManager to fund trader PnL profit
     /// @dev Called by ExecutionEngine when a trader closes a profitable position.
     ///      The unified LP pool backs all trades — this is how winners get paid.

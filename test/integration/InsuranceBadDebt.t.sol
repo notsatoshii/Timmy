@@ -136,7 +136,7 @@ contract InsuranceBadDebtTest is Test {
 
         vm.prank(liquidationEngine);
         (uint256 paid, uint256 remainder) = insurance.absorbBadDebt(
-            keccak256("MARKET"), badDebt
+            keccak256("MARKET"), badDebt, address(this)
         );
 
         // Insurance pays ~10% (subject to daily cap)
@@ -156,7 +156,7 @@ contract InsuranceBadDebtTest is Test {
 
         vm.prank(liquidationEngine);
         (uint256 paid, uint256 remainder) = insurance.absorbBadDebt(
-            keccak256("MARKET"), badDebt
+            keccak256("MARKET"), badDebt, address(this)
         );
 
         // Tier 1: 100% from insurance (if within daily cap and above floor)
@@ -179,7 +179,7 @@ contract InsuranceBadDebtTest is Test {
         uint256 badDebt = balance; // Try full balance
 
         vm.prank(liquidationEngine);
-        (uint256 paid,) = insurance.absorbBadDebt(keccak256("MARKET"), badDebt);
+        (uint256 paid,) = insurance.absorbBadDebt(keccak256("MARKET"), badDebt, address(this));
 
         // Should be capped at 25% of balance (may also be limited by floor)
         assertLe(paid, dailyCap + 1); // +1 for rounding
@@ -196,13 +196,13 @@ contract InsuranceBadDebtTest is Test {
         // First absorption: use up most of daily cap
         vm.prank(liquidationEngine);
         (uint256 paid1,) = insurance.absorbBadDebt(
-            keccak256("M1"), dailyCap - 1e6
+            keccak256("M1"), dailyCap - 1e6, address(this)
         );
 
         // Second absorption: should be constrained by remaining capacity
         vm.prank(liquidationEngine);
         (uint256 paid2,) = insurance.absorbBadDebt(
-            keccak256("M2"), 100_000e6
+            keccak256("M2"), 100_000e6, address(this)
         );
 
         assertLe(paid1 + paid2, dailyCap + 1);
@@ -217,7 +217,7 @@ contract InsuranceBadDebtTest is Test {
 
         // Use up daily cap
         vm.prank(liquidationEngine);
-        insurance.absorbBadDebt(keccak256("M1"), balance);
+        insurance.absorbBadDebt(keccak256("M1"), balance, address(this));
 
         uint256 remaining = insurance.getRemainingDailyCapacity();
         // Should be near zero (or zero)
@@ -248,7 +248,7 @@ contract InsuranceBadDebtTest is Test {
         // Try to absorb $200k → would bring balance to $400k (below floor)
         vm.prank(liquidationEngine);
         (uint256 paid, uint256 remainder) = insurance.absorbBadDebt(
-            keccak256("MARKET"), 200_000e6
+            keccak256("MARKET"), 200_000e6, address(this)
         );
 
         // Should only pay down to floor: $600k - $500k = $100k max
@@ -267,7 +267,7 @@ contract InsuranceBadDebtTest is Test {
 
         vm.prank(settlementEngine);
         (uint256 paid,) = insurance.absorbBadDebt(
-            keccak256("MARKET"), 10_000e6
+            keccak256("MARKET"), 10_000e6, address(this)
         );
 
         assertGt(paid, 0);
@@ -289,7 +289,7 @@ contract InsuranceBadDebtTest is Test {
     function test_unauthorized_cannotAbsorb() public {
         vm.expectRevert();
         vm.prank(address(0x999));
-        insurance.absorbBadDebt(keccak256("MARKET"), 1e6);
+        insurance.absorbBadDebt(keccak256("MARKET"), 1e6, address(this));
     }
 
     function test_unauthorized_cannotDeposit() public {
@@ -303,7 +303,7 @@ contract InsuranceBadDebtTest is Test {
     function test_zeroBadDebt_noop() public {
         vm.prank(liquidationEngine);
         (uint256 paid, uint256 remainder) = insurance.absorbBadDebt(
-            keccak256("MARKET"), 0
+            keccak256("MARKET"), 0, address(this)
         );
 
         assertEq(paid, 0);
@@ -329,10 +329,10 @@ contract InsuranceBadDebtTest is Test {
         _dealUSDT(address(insurance), insurance.getBalance());
 
         vm.prank(liquidationEngine);
-        insurance.absorbBadDebt(keccak256("M1"), 5_000e6);
+        insurance.absorbBadDebt(keccak256("M1"), 5_000e6, address(this));
 
         vm.prank(liquidationEngine);
-        insurance.absorbBadDebt(keccak256("M2"), 3_000e6);
+        insurance.absorbBadDebt(keccak256("M2"), 3_000e6, address(this));
 
         assertEq(insurance.totalAbsorbed(), 5_000e6 + 3_000e6);
     }
@@ -354,7 +354,7 @@ contract InsuranceBadDebtTest is Test {
         uint256 badDebt = 300_000e6;
         vm.prank(liquidationEngine);
         (uint256 paid, uint256 remainder) = insurance.absorbBadDebt(
-            keccak256("MARKET"), badDebt
+            keccak256("MARKET"), badDebt, address(this)
         );
 
         // Floor constraint ($100k) should be strictest

@@ -83,6 +83,10 @@ contract MockLeverVault {
     function socializeLoss(uint256) external {}
     function fundTraderPnL(address, uint256) external {}
 
+    int256 private _netUnrealizedPnL;
+    function updateUnrealizedPnL(int256 newPnL) external { _netUnrealizedPnL = newPnL; }
+    function getNetUnrealizedPnL() external view returns (int256) { return _netUnrealizedPnL; }
+
     // ERC4626 stubs needed by some contracts
     function asset() external pure returns (address) { return address(0); }
     function totalSupply() external view returns (uint256) { return _totalAssets; }
@@ -106,7 +110,7 @@ contract MockInsuranceFund {
         return (_balance * 1e18) / _tvl;
     }
     function deposit(uint256 amount) external { _balance += amount; }
-    function absorbBadDebt(bytes32, uint256 totalBadDebt)
+    function absorbBadDebt(bytes32, uint256 totalBadDebt, address)
         external returns (uint256 insurancePaid, uint256 remainder)
     {
         if (totalBadDebt <= _balance) {

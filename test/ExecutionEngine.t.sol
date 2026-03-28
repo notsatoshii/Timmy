@@ -233,12 +233,23 @@ contract MockLeverVault_EE {
     uint256 public fundCalls;
     address public lastRecipient;
     uint256 public lastAmount;
+    int256 private _netUnrealizedPnL;
 
     function fundTraderPnL(address recipient, uint256 amount) external {
         ++fundCalls;
         lastRecipient = recipient;
         lastAmount = amount;
     }
+
+    function updateUnrealizedPnL(int256 newPnL) external {
+        _netUnrealizedPnL = newPnL;
+    }
+
+    function getNetUnrealizedPnL() external view returns (int256) {
+        return _netUnrealizedPnL;
+    }
+
+    function socializeLoss(uint256) external {}
 }
 
 contract MockBorrowFeeEngine {
@@ -339,7 +350,7 @@ contract MockPositionManager {
 // ──────────────────────────────────────────────
 
 contract MockInsuranceFund_EE {
-    function absorbBadDebt(bytes32, uint256 totalBadDebt) external pure returns (uint256, uint256) {
+    function absorbBadDebt(bytes32, uint256 totalBadDebt, address) external pure returns (uint256, uint256) {
         return (totalBadDebt, 0); // Absorb everything, no remainder
     }
 }
