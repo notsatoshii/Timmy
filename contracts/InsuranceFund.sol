@@ -32,7 +32,8 @@ contract InsuranceFund is IInsuranceFund, AccessControl, ReentrancyGuard, Pausab
     // Constants
     // ──────────────────────────────────────────────
 
-    uint256 public constant INSURANCE_BOOTSTRAP = 10_000e18;
+    // FIX LEVER-003: Use USDT-denomination (6 decimals) instead of WAD
+    uint256 public constant INSURANCE_BOOTSTRAP = 10_000e6;
     uint256 public constant DAILY_CAP_PCT = 25e16;          // 25% of balance
     uint256 public constant IFR_FLOOR = 5e16;               // 5% of TVL
     uint256 public constant IFR_TARGET = 2e17;              // 20% of TVL
@@ -48,6 +49,7 @@ contract InsuranceFund is IInsuranceFund, AccessControl, ReentrancyGuard, Pausab
 
     bytes32 public constant ADMIN_ROLE = DEFAULT_ADMIN_ROLE;
     bytes32 public constant FEE_ROUTER_ROLE = keccak256("FEE_ROUTER_ROLE");
+    bytes32 public constant EXECUTION_ENGINE_ROLE = keccak256("EXECUTION_ENGINE_ROLE");
     bytes32 public constant LIQUIDATION_ENGINE_ROLE = keccak256("LIQUIDATION_ENGINE_ROLE");
     bytes32 public constant SETTLEMENT_ENGINE_ROLE = keccak256("SETTLEMENT_ENGINE_ROLE");
 
@@ -118,7 +120,8 @@ contract InsuranceFund is IInsuranceFund, AccessControl, ReentrancyGuard, Pausab
         returns (uint256 insurancePaid, uint256 remainder)
     {
         if (
-            !hasRole(LIQUIDATION_ENGINE_ROLE, msg.sender)
+            !hasRole(EXECUTION_ENGINE_ROLE, msg.sender)
+                && !hasRole(LIQUIDATION_ENGINE_ROLE, msg.sender)
                 && !hasRole(SETTLEMENT_ENGINE_ROLE, msg.sender)
         ) {
             revert AccessControlUnauthorizedAccount(msg.sender, LIQUIDATION_ENGINE_ROLE);
@@ -177,6 +180,11 @@ contract InsuranceFund is IInsuranceFund, AccessControl, ReentrancyGuard, Pausab
         _balance -= insurancePaid;
         _dailySpent += insurancePaid;
         _totalAbsorbed += insurancePaid;
+
+        // FIX LEVER-002: Actually transfer USDT to cover the bad debt
+        if (insurancePaid > 0) {
+            usdt.safeTransfer(msg.sender, insurancePaid);
+        }
 
         emit BadDebtAbsorbed(marketId, totalBadDebt, insurancePaid, remainder, block.timestamp);
 

@@ -6,6 +6,8 @@ import { IFundingRateEngine } from "./interfaces/IFundingRateEngine.sol";
 import { IMarketRegistry } from "./interfaces/IMarketRegistry.sol";
 import { IOILimits } from "./interfaces/IOILimits.sol";
 import { IPositionManager } from "./interfaces/IPositionManager.sol";
+import { IAccountManager } from "./interfaces/IAccountManager.sol";
+import { IRewardsDistributor } from "./interfaces/IRewardsDistributor.sol";
 import { RiskCurves } from "./libraries/RiskCurves.sol";
 import { FixedPointMath } from "./libraries/FixedPointMath.sol";
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
@@ -61,6 +63,9 @@ contract FundingRateEngine is IFundingRateEngine, AccessControl, ReentrancyGuard
     IMarketRegistry public immutable marketRegistry;
     IOILimits public immutable oiLimits;
     IPositionManager public immutable positionManager;
+    // FIX LEVER-011: Add dependencies for routing unmatched funding
+    IAccountManager public immutable accountManager;
+    IRewardsDistributor public immutable rewardsDistributor;
 
     // ──────────────────────────────────────────────
     // State Variables
@@ -95,12 +100,16 @@ contract FundingRateEngine is IFundingRateEngine, AccessControl, ReentrancyGuard
         address admin_,
         address marketRegistry_,
         address oiLimits_,
-        address positionManager_
+        address positionManager_,
+        address accountManager_,
+        address rewardsDistributor_
     ) {
         if (admin_ == address(0)) revert FundingRateEngine__ZeroAddress();
         if (marketRegistry_ == address(0)) revert FundingRateEngine__ZeroAddress();
         if (oiLimits_ == address(0)) revert FundingRateEngine__ZeroAddress();
         if (positionManager_ == address(0)) revert FundingRateEngine__ZeroAddress();
+        if (accountManager_ == address(0)) revert FundingRateEngine__ZeroAddress();
+        if (rewardsDistributor_ == address(0)) revert FundingRateEngine__ZeroAddress();
 
         _grantRole(ADMIN_ROLE, admin_);
         _grantRole(KEEPER_ROLE, admin_);
@@ -108,6 +117,8 @@ contract FundingRateEngine is IFundingRateEngine, AccessControl, ReentrancyGuard
         marketRegistry = IMarketRegistry(marketRegistry_);
         oiLimits = IOILimits(oiLimits_);
         positionManager = IPositionManager(positionManager_);
+        accountManager = IAccountManager(accountManager_);
+        rewardsDistributor = IRewardsDistributor(rewardsDistributor_);
     }
 
     // ──────────────────────────────────────────────
@@ -120,11 +131,16 @@ contract FundingRateEngine is IFundingRateEngine, AccessControl, ReentrancyGuard
     }
 
     /// @inheritdoc IFundingRateEngine
+    // FIX LEVER-011: Actually transfer USDT to RewardsDistributor
     function routeUnmatchedFunding(bytes32 marketId) external whenNotPaused nonReentrant {
         uint256 pending = _pendingUnmatchedFunding[marketId];
         if (pending == 0) revert FundingRateEngine__NoUnmatchedFunding(marketId);
 
         _pendingUnmatchedFunding[marketId] = 0;
+
+        // Transfer USDT from AccountManager to RewardsDistributor
+        accountManager.transferOut(address(rewardsDistributor), pending);
+        rewardsDistributor.depositRewards(pending);
 
         emit UnmatchedFundingRouted(marketId, pending, block.timestamp);
     }

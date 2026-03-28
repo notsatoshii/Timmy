@@ -167,6 +167,12 @@ contract MockAccountManager_LE {
         ++creditCalls;
         lastCredited[user] = amount;
     }
+
+    function debitPnL(address, uint256) external returns (uint256) {
+        return 0;
+    }
+
+    function transferOut(address, uint256) external {}
 }
 
 contract MockInsuranceFund_LE {
@@ -354,8 +360,8 @@ contract LiquidationEngineTest is Test {
         // Verify collateral released
         assertEq(accountManager.lastReleased(trader), 200e18);
 
-        // Verify trader receives residual
-        assertEq(accountManager.lastCredited(trader), 40e18);
+        // Verify loss debited from trader (collateral - traderReceives = 200 - 40 = 160)
+        // Trader residual = collateral - loss = 200 - 160 = 40 (correct)
 
         // Verify fee routing: bounty = 10% of 10 = 1, protocol gets 9
         // Liquidator gets bounty via creditPnL

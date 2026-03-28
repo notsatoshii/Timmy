@@ -222,7 +222,7 @@ abstract contract IntegrationBase is Test {
 
         // ── 4. Deploy fee engines ──
         borrowFeeEngine = new BorrowFeeEngine(admin, address(registry), address(oiLimits), address(positionManager));
-        fundingRateEngine = new FundingRateEngine(admin, address(registry), address(oiLimits), address(positionManager));
+        fundingRateEngine = new FundingRateEngine(admin, address(registry), address(oiLimits), address(positionManager), address(accountManager), makeAddr("rewardsDistributor"));
 
         // ── 5. Deploy MarginEngine ──
         marginEngine = new MarginEngine(
@@ -257,6 +257,7 @@ abstract contract IntegrationBase is Test {
             address(fundingRateEngine),
             address(accountManager),
             address(vault),
+            address(insuranceFund),
             admin
         );
 

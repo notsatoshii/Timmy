@@ -145,6 +145,20 @@ contract OILimits is IOILimits, AccessControl, ReentrancyGuard, Pausable {
         _unpause();
     }
 
+    /// @notice Emergency admin function to reset ghost OI for a market
+    /// @dev FIX LEVER-006: Use after verifying zero open positions to clear stale OI
+    function adminResetMarketOI(bytes32 marketId) external onlyRole(ADMIN_ROLE) {
+        uint256 oldGlobal = _globalOI;
+        uint256 oldMarket = _marketOI[marketId];
+
+        _globalOI = oldGlobal > oldMarket ? oldGlobal - oldMarket : 0;
+        _marketOI[marketId] = 0;
+        _longOI[marketId] = 0;
+        _shortOI[marketId] = 0;
+
+        emit OIDecreased(marketId, true, oldMarket, 0);
+    }
+
     // ──────────────────────────────────────────────
     // External functions (view)
     // ──────────────────────────────────────────────

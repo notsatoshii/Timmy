@@ -325,7 +325,11 @@ contract LeverVault is ILeverVault, ERC4626, AccessControl, ReentrancyGuard, Pau
     }
 
     /// @inheritdoc ILeverVault
-    function socializeLoss(uint256 amount) external onlyRole(LIQUIDATION_ENGINE_ROLE) {
+    /// @dev Callable by both LiquidationEngine and ExecutionEngine for bad debt socialization
+    function socializeLoss(uint256 amount) external {
+        if (!hasRole(LIQUIDATION_ENGINE_ROLE, msg.sender) && !hasRole(EXECUTION_ENGINE_ROLE, msg.sender)) {
+            revert AccessControlUnauthorizedAccount(msg.sender, LIQUIDATION_ENGINE_ROLE);
+        }
         if (amount == 0) revert LeverVault__ZeroAmount();
         _socializedLosses += amount;
         emit LossSocialized(amount, _socializedLosses);

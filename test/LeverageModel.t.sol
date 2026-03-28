@@ -196,27 +196,27 @@ contract LeverageModelTest is Test {
     }
 
     function test_tvlMult_atMaturity() public {
-        mockVault.setTotalAssets(50_000_000e18);
+        mockVault.setTotalAssets(50_000_000e6);
         uint256 mult = model.getTVLMultiplier();
         assertEq(mult, WAD, "TVL=maturity => 1.0");
     }
 
     function test_tvlMult_aboveMaturity() public {
-        mockVault.setTotalAssets(100_000_000e18);
+        mockVault.setTotalAssets(100_000_000e6);
         uint256 mult = model.getTVLMultiplier();
         assertEq(mult, WAD, "TVL>maturity => capped at 1.0");
     }
 
     function test_tvlMult_10M() public {
         // sqrt(10M/50M) = sqrt(0.2) ~ 0.4472
-        mockVault.setTotalAssets(10_000_000e18);
+        mockVault.setTotalAssets(10_000_000e6);
         uint256 mult = model.getTVLMultiplier();
         assertApproxEqAbs(mult, 4472e14, 1e15, "TVL=$10M => ~0.447");
     }
 
     function test_tvlMult_small() public {
         // sqrt(100k/50M) = sqrt(0.002) ~ 0.0447 => floored to 0.10
-        mockVault.setTotalAssets(100_000e18);
+        mockVault.setTotalAssets(100_000e6);
         uint256 mult = model.getTVLMultiplier();
         assertEq(mult, 1e17, "Small TVL floored to 0.10");
     }
@@ -226,30 +226,30 @@ contract LeverageModelTest is Test {
     // ──────────────────────────────────────────────
 
     function test_ifrMult_zeroInsurance() public {
-        mockVault.setTotalAssets(10_000_000e18);
+        mockVault.setTotalAssets(10_000_000e6);
         mockInsurance.setBalance(0);
         uint256 mult = model.getIFRMultiplier();
         assertEq(mult, 4e17, "IFR=0 => floor 0.40");
     }
 
     function test_ifrMult_atTarget() public {
-        mockVault.setTotalAssets(10_000_000e18);
-        mockInsurance.setBalance(2_000_000e18); // IFR = 20%
+        mockVault.setTotalAssets(10_000_000e6);
+        mockInsurance.setBalance(2_000_000e6); // IFR = 20%
         uint256 mult = model.getIFRMultiplier();
         assertEq(mult, WAD, "IFR=target => 1.0");
     }
 
     function test_ifrMult_aboveTarget() public {
-        mockVault.setTotalAssets(10_000_000e18);
-        mockInsurance.setBalance(5_000_000e18); // IFR = 50%
+        mockVault.setTotalAssets(10_000_000e6);
+        mockInsurance.setBalance(5_000_000e6); // IFR = 50%
         uint256 mult = model.getIFRMultiplier();
         assertEq(mult, WAD, "IFR>target => capped at 1.0");
     }
 
     function test_ifrMult_6pct() public {
         // IFR = 6%, mult = 0.40 + 3.0 x 0.06 = 0.40 + 0.18 = 0.58
-        mockVault.setTotalAssets(10_000_000e18);
-        mockInsurance.setBalance(600_000e18);
+        mockVault.setTotalAssets(10_000_000e6);
+        mockInsurance.setBalance(600_000e6);
         uint256 mult = model.getIFRMultiplier();
         assertApproxEqAbs(mult, 58e16, 1e15, "IFR=6% => 0.58");
     }
@@ -302,8 +302,8 @@ contract LeverageModelTest is Test {
     // ──────────────────────────────────────────────
 
     function test_platformCeiling_allFactorsOne() public {
-        mockVault.setTotalAssets(50_000_000e18);     // TVL_Mult = 1.0
-        mockInsurance.setBalance(10_000_000e18);      // IFR = 20% => IFR_Mult = 1.0
+        mockVault.setTotalAssets(50_000_000e6);     // TVL_Mult = 1.0
+        mockInsurance.setBalance(10_000_000e6);      // IFR = 20% => IFR_Mult = 1.0
         mockOI.setGlobalUtilization(1e17);            // 10% => Util_Mult = 1.0
 
         uint256 ceiling = model.getPlatformCeiling();
@@ -314,8 +314,8 @@ contract LeverageModelTest is Test {
         // From spec: TVL=$10M, IFR=6%, U=40%
         // TVL_Mult ~ 0.447, IFR_Mult ~ 0.58, Util_Mult ~ 0.90
         // Ceiling = 30 x 0.447 x 0.58 x 0.90 ~ 7.0
-        mockVault.setTotalAssets(10_000_000e18);
-        mockInsurance.setBalance(600_000e18);
+        mockVault.setTotalAssets(10_000_000e6);
+        mockInsurance.setBalance(600_000e6);
         mockOI.setGlobalUtilization(4e17);
 
         uint256 ceiling = model.getPlatformCeiling();
@@ -409,8 +409,8 @@ contract LeverageModelTest is Test {
         // Compressed = 7.0 x 0.053 = 0.37x
         // Step 3 = max(1.0, 0.37 x 0.56) = max(1.0, 0.21) = 1.0x
 
-        mockVault.setTotalAssets(10_000_000e18);
-        mockInsurance.setBalance(600_000e18);
+        mockVault.setTotalAssets(10_000_000e6);
+        mockInsurance.setBalance(600_000e6);
         mockOI.setGlobalUtilization(4e17);
 
         mockRegistry.setTau(marketId, 4e18);
@@ -554,7 +554,7 @@ contract LeverageModelTest is Test {
 
     function test_edge_tinyTVL() public {
         // Very small TVL: still functions with floor multipliers
-        mockVault.setTotalAssets(1e18); // $1
+        mockVault.setTotalAssets(1e6); // $1
         mockInsurance.setBalance(0);
         mockOI.setGlobalUtilization(0);
 
@@ -568,7 +568,7 @@ contract LeverageModelTest is Test {
     // ──────────────────────────────────────────────
 
     function testFuzz_tvlMult_bounded(uint256 tvl) public {
-        tvl = bound(tvl, 0, 1_000_000_000e18); // 0 to $1B
+        tvl = bound(tvl, 0, 1_000_000_000e6); // 0 to $1B
         mockVault.setTotalAssets(tvl);
         uint256 mult = model.getTVLMultiplier();
         assertGe(mult, 1e17, "TVL mult >= 0.10");
@@ -576,7 +576,7 @@ contract LeverageModelTest is Test {
     }
 
     function testFuzz_ifrMult_bounded(uint256 balance, uint256 tvl) public {
-        tvl = bound(tvl, 1e18, 1_000_000_000e18);
+        tvl = bound(tvl, 1e6, 1_000_000_000e6);
         balance = bound(balance, 0, tvl);
         mockVault.setTotalAssets(tvl);
         mockInsurance.setBalance(balance);
@@ -594,7 +594,7 @@ contract LeverageModelTest is Test {
     }
 
     function testFuzz_effectiveMax_neverBelowOne(uint256 tvl, uint256 tau, bool isLive) public {
-        tvl = bound(tvl, 0, 1_000_000_000e18);
+        tvl = bound(tvl, 0, 1_000_000_000e6);
         tau = bound(tau, 0, 1000e18);
 
         mockVault.setTotalAssets(tvl);
@@ -613,8 +613,8 @@ contract LeverageModelTest is Test {
     // ──────────────────────────────────────────────
 
     function _setupPlatformAtMax() internal {
-        mockVault.setTotalAssets(50_000_000e18);
-        mockInsurance.setBalance(10_000_000e18);
+        mockVault.setTotalAssets(50_000_000e6);
+        mockInsurance.setBalance(10_000_000e6);
         mockOI.setGlobalUtilization(0);
     }
 

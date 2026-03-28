@@ -1,10 +1,10 @@
 {
-  "leverageModel": "0x5c8a7016ab48484ea2704cd1abbe25fd23c27688",
-  "oiLimits": "0x905fe91236385733fb92f2f8af6300b0078e6f72",
-  "borrowFeeEngine": "0x3288aefbd75249fe0bd3834758976b80f9799b21",
-  "fundingRateEngine": "0xed3e8868da5994ce7a128a4a8a88ab322daf4c00",
-  "marginEngine": "0x0e0318f93f9657755b63f4b43b32ebfeb17783bc",
-  "executionEngine": "0x31078bfe85d3f586edce8f5579d32448cb0586d6",
-  "liquidationEngine": "0x3ccb33b6b7ec00682f5db0245e5d9af6b71fbd47",
-  "settlementEngine": "0x8dc424200580bc22d8e4de8e77e42884226e5893"
+  "leverageModel": "0xE89f4835C3075E9f1e599786A232a00c1E61833B",
+  "oiLimits": "0xE336dDfCF31a0274D3DEa317Fb8d8BBad4E13758",
+  "borrowFeeEngine": "0x706578de003912C71e534949d8b8DDd5108950e1",
+  "fundingRateEngine": "0xf96b5dba5763be3521df0a445e8b4e12db59baac",
+  "marginEngine": "0xedcd246c7c0bef806df1ce9b4655cfe6ee7353d5",
+  "executionEngine": "0xE91C216b2baAeb4b088A1531469234A2C5b5fDc2",
+  "liquidationEngine": "0x0756a2a91dd62ce8982c652d504dd76a2ddae5ac",
+  "settlementEngine": "0xd430c69184aeca515a1e1fd4a3fa2a9fd65532c2"
 }

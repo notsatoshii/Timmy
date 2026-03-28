@@ -338,6 +338,12 @@ contract MockPositionManager {
 // Tests
 // ──────────────────────────────────────────────
 
+contract MockInsuranceFund_EE {
+    function absorbBadDebt(bytes32, uint256 totalBadDebt) external pure returns (uint256, uint256) {
+        return (totalBadDebt, 0); // Absorb everything, no remainder
+    }
+}
+
 contract ExecutionEngineTest is Test {
     using FixedPointMath for uint256;
 
@@ -355,6 +361,7 @@ contract ExecutionEngineTest is Test {
     MockFundingRateEngine fundingRateEngine;
     MockAccountManager accountManager;
     MockLeverVault_EE vault;
+    MockInsuranceFund_EE insuranceFund;
 
     address admin = address(0xAD);
     address alice = address(0xA1);
@@ -374,6 +381,7 @@ contract ExecutionEngineTest is Test {
         fundingRateEngine = new MockFundingRateEngine();
         accountManager = new MockAccountManager();
         vault = new MockLeverVault_EE();
+        insuranceFund = new MockInsuranceFund_EE();
 
         engine = new ExecutionEngine(
             address(positionManager),
@@ -387,6 +395,7 @@ contract ExecutionEngineTest is Test {
             address(fundingRateEngine),
             address(accountManager),
             address(vault),
+            address(insuranceFund),
             admin
         );
 
@@ -426,7 +435,7 @@ contract ExecutionEngineTest is Test {
             address(0), address(oiLimits), address(marginEngine),
             address(oracleAdapter), address(registry), address(leverageModel),
             address(feeRouter), address(borrowFeeEngine), address(fundingRateEngine),
-            address(accountManager), address(vault), admin
+            address(accountManager), address(vault), address(insuranceFund), admin
         );
     }
 

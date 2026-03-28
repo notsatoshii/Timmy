@@ -52,8 +52,8 @@ contract InsuranceBadDebtTest is Test {
         usdt = new InsuranceTestToken();
         vault = new MockVaultForInsurance();
 
-        // Set TVL = $10M
-        vault.setTotalAssets(10_000_000e18);
+        // Set TVL = $10M (USDT 6-decimal denomination)
+        vault.setTotalAssets(10_000_000e6);
 
         insurance = new InsuranceFund(admin, address(usdt), address(vault));
 
@@ -68,7 +68,7 @@ contract InsuranceBadDebtTest is Test {
     // ─── Initial State ───
 
     function test_initialBalance_isBootstrap() public view {
-        assertEq(insurance.getBalance(), 10_000e18); // $10k bootstrap
+        assertEq(insurance.getBalance(), 10_000e6); // $10k bootstrap (USDT 6 decimals)
     }
 
     function test_initialIFR_isSmall() public view {
@@ -89,7 +89,7 @@ contract InsuranceBadDebtTest is Test {
 
     function test_tier3_midIFR() public {
         // Bring IFR to >5% but ≤10%: need balance > 500k (threshold is strictly >5%)
-        _fundInsurance(491_000e18); // bootstrap + 491k = 501k → IFR = 5.01%
+        _fundInsurance(491_000e6); // bootstrap + 491k = 501k → IFR = 5.01%
         uint256 ifr = insurance.getIFR();
         assertGt(ifr, 5e16);  // > 5%
         assertLe(ifr, 1e17);  // ≤ 10%
@@ -102,7 +102,7 @@ contract InsuranceBadDebtTest is Test {
 
     function test_tier2_highIFR() public {
         // Bring IFR to >10% but ≤15%: need balance > 1M (threshold is strictly >10%)
-        _fundInsurance(991_000e18); // bootstrap + 991k = 1001k → IFR = 10.01%
+        _fundInsurance(991_000e6); // bootstrap + 991k = 1001k → IFR = 10.01%
         uint256 ifr = insurance.getIFR();
         assertGt(ifr, 1e17);    // > 10%
         assertLe(ifr, 15e16);   // ≤ 15%
@@ -115,7 +115,7 @@ contract InsuranceBadDebtTest is Test {
 
     function test_tier1_fullIFR() public {
         // Bring IFR > 15%: need balance > 15% of $10M = $1.5M
-        _fundInsurance(1_500_000e18);
+        _fundInsurance(1_500_000e6);
         uint256 ifr = insurance.getIFR();
         assertGt(ifr, 15e16);
 
@@ -128,8 +128,11 @@ contract InsuranceBadDebtTest is Test {
 
     function test_absorbBadDebt_tier4_only10pct() public {
         // At tier 4 (IFR < 5%), only 10% of bad debt comes from insurance
-        uint256 badDebt = 1_000e18;
+        uint256 badDebt = 1_000e6;
         uint256 balanceBefore = insurance.getBalance();
+
+        // Fund the contract with actual USDT for the transfer
+        _dealUSDT(address(insurance), balanceBefore);
 
         vm.prank(liquidationEngine);
         (uint256 paid, uint256 remainder) = insurance.absorbBadDebt(
@@ -143,10 +146,13 @@ contract InsuranceBadDebtTest is Test {
     }
 
     function test_absorbBadDebt_tier1_fullCoverage() public {
-        _fundInsurance(2_000_000e18); // High IFR → Tier 1
+        _fundInsurance(2_000_000e6); // High IFR → Tier 1
 
-        uint256 badDebt = 10_000e18;
+        uint256 badDebt = 10_000e6;
         uint256 balanceBefore = insurance.getBalance();
+
+        // Fund the contract with actual USDT for the transfer
+        _dealUSDT(address(insurance), balanceBefore);
 
         vm.prank(liquidationEngine);
         (uint256 paid, uint256 remainder) = insurance.absorbBadDebt(
@@ -162,9 +168,12 @@ contract InsuranceBadDebtTest is Test {
     // ─── Daily Cap (25% of balance) ───
 
     function test_dailyCap_limits_singleEvent() public {
-        _fundInsurance(2_000_000e18); // $2M+ balance, Tier 1
+        _fundInsurance(2_000_000e6); // $2M+ balance, Tier 1
         uint256 balance = insurance.getBalance();
         uint256 dailyCap = balance * 25 / 100; // 25%
+
+        // Fund the contract with actual USDT for the transfer
+        _dealUSDT(address(insurance), balance);
 
         // Try to absorb more than 25% in one event
         uint256 badDebt = balance; // Try full balance
@@ -177,28 +186,34 @@ contract InsuranceBadDebtTest is Test {
     }
 
     function test_dailyCap_accumulates_acrossMultipleEvents() public {
-        _fundInsurance(2_000_000e18);
+        _fundInsurance(2_000_000e6);
         uint256 balance = insurance.getBalance();
         uint256 dailyCap = balance * 25 / 100;
+
+        // Fund the contract with actual USDT for the transfers
+        _dealUSDT(address(insurance), balance);
 
         // First absorption: use up most of daily cap
         vm.prank(liquidationEngine);
         (uint256 paid1,) = insurance.absorbBadDebt(
-            keccak256("M1"), dailyCap - 1e18
+            keccak256("M1"), dailyCap - 1e6
         );
 
         // Second absorption: should be constrained by remaining capacity
         vm.prank(liquidationEngine);
         (uint256 paid2,) = insurance.absorbBadDebt(
-            keccak256("M2"), 100_000e18
+            keccak256("M2"), 100_000e6
         );
 
         assertLe(paid1 + paid2, dailyCap + 1);
     }
 
     function test_dailyCap_resets_after24h() public {
-        _fundInsurance(2_000_000e18);
+        _fundInsurance(2_000_000e6);
         uint256 balance = insurance.getBalance();
+
+        // Fund the contract with actual USDT for the transfers
+        _dealUSDT(address(insurance), balance);
 
         // Use up daily cap
         vm.prank(liquidationEngine);
@@ -206,7 +221,7 @@ contract InsuranceBadDebtTest is Test {
 
         uint256 remaining = insurance.getRemainingDailyCapacity();
         // Should be near zero (or zero)
-        assertLe(remaining, 1e18);
+        assertLe(remaining, 1e6);
 
         // Warp past 24h
         vm.warp(block.timestamp + 24 hours + 1);
@@ -221,16 +236,19 @@ contract InsuranceBadDebtTest is Test {
     function test_floor_preventsDepletionBelowThreshold() public {
         // TVL = $10M → floor = 5% = $500k
         // Set balance to $600k (just above floor)
-        _fundInsurance(590_000e18); // bootstrap + 590k = $600k
+        _fundInsurance(590_000e6); // bootstrap + 590k = $600k
         uint256 balance = insurance.getBalance();
         uint256 floor = insurance.getFloor();
 
-        assertEq(floor, 500_000e18); // 5% of $10M
+        assertEq(floor, 500_000e6); // 5% of $10M
+
+        // Fund the contract with actual USDT for the transfer
+        _dealUSDT(address(insurance), balance);
 
         // Try to absorb $200k → would bring balance to $400k (below floor)
         vm.prank(liquidationEngine);
         (uint256 paid, uint256 remainder) = insurance.absorbBadDebt(
-            keccak256("MARKET"), 200_000e18
+            keccak256("MARKET"), 200_000e6
         );
 
         // Should only pay down to floor: $600k - $500k = $100k max
@@ -242,11 +260,14 @@ contract InsuranceBadDebtTest is Test {
     // ─── Settlement Engine Access ───
 
     function test_settlementEngine_canAbsorbBadDebt() public {
-        _fundInsurance(2_000_000e18);
+        _fundInsurance(2_000_000e6);
+
+        // Fund the contract with actual USDT for the transfer
+        _dealUSDT(address(insurance), insurance.getBalance());
 
         vm.prank(settlementEngine);
         (uint256 paid,) = insurance.absorbBadDebt(
-            keccak256("MARKET"), 10_000e18
+            keccak256("MARKET"), 10_000e6
         );
 
         assertGt(paid, 0);
@@ -258,9 +279,9 @@ contract InsuranceBadDebtTest is Test {
         uint256 balanceBefore = insurance.getBalance();
 
         vm.prank(feeRouter);
-        insurance.deposit(50_000e18);
+        insurance.deposit(50_000e6);
 
-        assertEq(insurance.getBalance(), balanceBefore + 50_000e18);
+        assertEq(insurance.getBalance(), balanceBefore + 50_000e6);
     }
 
     // ─── Access Control ───
@@ -268,13 +289,13 @@ contract InsuranceBadDebtTest is Test {
     function test_unauthorized_cannotAbsorb() public {
         vm.expectRevert();
         vm.prank(address(0x999));
-        insurance.absorbBadDebt(keccak256("MARKET"), 1e18);
+        insurance.absorbBadDebt(keccak256("MARKET"), 1e6);
     }
 
     function test_unauthorized_cannotDeposit() public {
         vm.expectRevert();
         vm.prank(address(0x999));
-        insurance.deposit(1e18);
+        insurance.deposit(1e6);
     }
 
     // ─── Zero Bad Debt ───
@@ -293,7 +314,7 @@ contract InsuranceBadDebtTest is Test {
 
     function test_isFullyFunded_whenIFRAboveTarget() public {
         // Target = 20% → need $2M for $10M TVL
-        _fundInsurance(2_000_000e18);
+        _fundInsurance(2_000_000e6);
         assertTrue(insurance.isFullyFunded());
     }
 
@@ -302,15 +323,18 @@ contract InsuranceBadDebtTest is Test {
     }
 
     function test_totalAbsorbed_tracks_lifetime() public {
-        _fundInsurance(2_000_000e18);
+        _fundInsurance(2_000_000e6);
+
+        // Fund the contract with actual USDT for the transfers
+        _dealUSDT(address(insurance), insurance.getBalance());
 
         vm.prank(liquidationEngine);
-        insurance.absorbBadDebt(keccak256("M1"), 5_000e18);
+        insurance.absorbBadDebt(keccak256("M1"), 5_000e6);
 
         vm.prank(liquidationEngine);
-        insurance.absorbBadDebt(keccak256("M2"), 3_000e18);
+        insurance.absorbBadDebt(keccak256("M2"), 3_000e6);
 
-        assertEq(insurance.totalAbsorbed(), 5_000e18 + 3_000e18);
+        assertEq(insurance.totalAbsorbed(), 5_000e6 + 3_000e6);
     }
 
     // ─── Combined Constraints (daily cap + floor + tier) ───
@@ -321,10 +345,13 @@ contract InsuranceBadDebtTest is Test {
         // Daily cap = 25% × $600k = $150k
         // Tier 3 (IFR ~6%): 40% insurance
         // Bad debt = $300k → tier says $120k, but floor says $100k
-        _fundInsurance(590_000e18); // $600k total
+        _fundInsurance(590_000e6); // $600k total
         uint256 balance = insurance.getBalance();
 
-        uint256 badDebt = 300_000e18;
+        // Fund the contract with actual USDT for the transfer
+        _dealUSDT(address(insurance), balance);
+
+        uint256 badDebt = 300_000e6;
         vm.prank(liquidationEngine);
         (uint256 paid, uint256 remainder) = insurance.absorbBadDebt(
             keccak256("MARKET"), badDebt
@@ -337,10 +364,15 @@ contract InsuranceBadDebtTest is Test {
         assertEq(paid + remainder, badDebt);
     }
 
-    // ─── Helper ───
+    // ─── Helpers ───
 
     function _fundInsurance(uint256 amount) internal {
         vm.prank(feeRouter);
         insurance.deposit(amount);
+    }
+
+    /// @dev Give the InsuranceFund contract actual USDT tokens so safeTransfer works
+    function _dealUSDT(address to, uint256 amount) internal {
+        deal(address(usdt), to, amount);
     }
 }

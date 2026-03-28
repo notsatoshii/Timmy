@@ -140,7 +140,9 @@ contract Deploy is Script {
         addresses.fundingRateEngine = _deployFundingRateEngine(
             addresses.marketRegistry,
             addresses.oiLimits,
-            addresses.positionManager
+            addresses.positionManager,
+            addresses.accountManager,
+            addresses.rewardsDistributor
         );
 
         // Phase 7: Margin & Execution
@@ -163,7 +165,8 @@ contract Deploy is Script {
             addresses.borrowFeeEngine,
             addresses.fundingRateEngine,
             addresses.accountManager,
-            addresses.leverVault
+            addresses.leverVault,
+            addresses.insuranceFund
         );
 
         // Phase 8: Terminal contracts
@@ -369,7 +372,9 @@ contract Deploy is Script {
     function _deployFundingRateEngine(
         address marketRegistry,
         address oiLimits,
-        address positionManager
+        address positionManager,
+        address accountManager,
+        address rewardsDistributor
     ) internal returns (address) {
         address deployer = vm.addr(vm.envUint("PRIVATE_KEY"));
         console.log("Deploying FundingRateEngine...");
@@ -377,7 +382,9 @@ contract Deploy is Script {
             deployer,
             marketRegistry,
             oiLimits,
-            positionManager
+            positionManager,
+            accountManager,
+            rewardsDistributor
         );
         console.log("FundingRateEngine deployed:", address(engine));
         return address(engine);
@@ -419,7 +426,8 @@ contract Deploy is Script {
         address borrowFeeEngine,
         address fundingRateEngine,
         address accountManager,
-        address leverVault
+        address leverVault,
+        address insuranceFund
     ) internal returns (address) {
         address deployer = vm.addr(vm.envUint("PRIVATE_KEY"));
         console.log("Deploying ExecutionEngine...");
@@ -435,6 +443,7 @@ contract Deploy is Script {
             fundingRateEngine,
             accountManager,
             leverVault,
+            insuranceFund,
             deployer
         );
         console.log("ExecutionEngine deployed:", address(engine));

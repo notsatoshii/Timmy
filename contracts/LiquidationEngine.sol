@@ -393,6 +393,7 @@ contract LiquidationEngine is ILiquidationEngine, AccessControl, ReentrancyGuard
     }
 
     /// @dev Close position in all downstream contracts
+    /// FIX LEVER-010: Route PnL losses to vault, borrow fees to FeeRouter
     function _closeAndSettle(
         IPositionManager.Position memory pos,
         uint256 positionId,
@@ -402,12 +403,19 @@ contract LiquidationEngine is ILiquidationEngine, AccessControl, ReentrancyGuard
         positionManager.closePosition(positionId);
         accountManager.releaseCollateral(pos.owner, pos.collateral);
 
-        if (traderReceives > 0) {
-            accountManager.creditPnL(pos.owner, traderReceives);
+        // Debit the loss amount from trader (collateral - traderReceives - fee is the loss to vault)
+        uint256 loss = pos.collateral > traderReceives ? pos.collateral - traderReceives : 0;
+        if (loss > 0) {
+            accountManager.debitPnL(pos.owner, loss);
+            // Transfer losses to vault
+            accountManager.transferOut(address(leverVault), loss);
         }
+
+        // Trader keeps only traderReceives in their balance (already released)
     }
 
     /// @dev Route liquidation fee: bounty to external liquidator (Path C), rest through FeeRouter
+    /// FIX LEVER-005: Transfer USDT to FeeRouter before calling routeFees
     function _routeFee(uint256 fee, address liquidator) internal {
         if (fee == 0) return;
 
@@ -418,9 +426,11 @@ contract LiquidationEngine is ILiquidationEngine, AccessControl, ReentrancyGuard
                 accountManager.creditPnL(liquidator, bounty);
             }
             if (feeForProtocol > 0) {
+                accountManager.transferOut(address(feeRouter), feeForProtocol);
                 feeRouter.routeFees(IFeeRouter.FeeType.LIQUIDATION, feeForProtocol);
             }
         } else {
+            accountManager.transferOut(address(feeRouter), fee);
             feeRouter.routeFees(IFeeRouter.FeeType.LIQUIDATION, fee);
         }
     }

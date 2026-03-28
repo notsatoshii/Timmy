@@ -29,8 +29,8 @@ contract OracleAdapter is IOracleAdapter, AccessControl, ReentrancyGuard, Pausab
 
     uint256 private constant WAD = 1e18;
 
-    /// @dev Consistency tolerance for pYes + pNo ≈ 1.0 (5%)
-    uint256 private constant CONSISTENCY_TOLERANCE = 5e16;
+    /// @dev Consistency tolerance for pYes + pNo ≈ 1.0 (2% per CONSTANTS.md)
+    uint256 private constant CONSISTENCY_TOLERANCE = 2e16;
 
     /// @dev Default staleness threshold (5 minutes)
     uint256 private constant DEFAULT_STALENESS = 300;

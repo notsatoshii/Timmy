@@ -121,7 +121,7 @@ contract FullIntegrationTest is Test {
 
         // 7. Deploy fee engines
         borrowFeeEngine = new BorrowFeeEngine(admin, address(registry), address(oiLimits), address(positionManager));
-        fundingRateEngine = new FundingRateEngine(admin, address(registry), address(oiLimits), address(positionManager));
+        fundingRateEngine = new FundingRateEngine(admin, address(registry), address(oiLimits), address(positionManager), address(accountManager), address(distributor));
 
         // 8. Deploy MarginEngine
         marginEngine = new MarginEngine(
@@ -156,6 +156,7 @@ contract FullIntegrationTest is Test {
             address(fundingRateEngine),
             address(accountManager),
             address(vault),
+            address(insuranceFund),
             admin
         );
 

@@ -241,6 +241,8 @@ contract MockAccountManager_SE {
         totalCredited += amount;
         lastCredited[user] = amount;
     }
+
+    function transferOut(address, uint256) external {}
 }
 
 contract MockLeverVault_SE {

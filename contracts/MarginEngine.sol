@@ -400,15 +400,20 @@ contract MarginEngine is IMarginEngine, AccessControl, Pausable {
         // Compute R(τ)
         uint256 r = RiskCurves.computeR(tauEff);
 
-        // Compute M_market
-        uint256 mMarket = RiskCurves.computeMarketAdjustment(
-            sigmaCurrent[marketId],
-            sigmaBaseline[marketId],
-            externalDepth[marketId],
-            depthThreshold[marketId],
-            marketOI[marketId],
-            globalOI
-        );
+        // FIX LEVER-007: Skip market adjustment if depthThreshold not configured (defaults to no adjustment)
+        uint256 mMarket;
+        if (depthThreshold[marketId] == 0) {
+            mMarket = WAD; // No market adjustment when unconfigured
+        } else {
+            mMarket = RiskCurves.computeMarketAdjustment(
+                sigmaCurrent[marketId],
+                sigmaBaseline[marketId],
+                externalDepth[marketId],
+                depthThreshold[marketId],
+                marketOI[marketId],
+                globalOI
+            );
+        }
 
         // R_adjusted = R(τ) × M_market
         return RiskCurves.computeRAdjusted(r, mMarket);

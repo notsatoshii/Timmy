@@ -163,7 +163,7 @@ contract LeverageModel is ILeverageModel, AccessControl, Pausable {
         uint256 tvl = _getTVLInWad();
         if (tvl == 0) return IFR_MULT_FLOOR;
 
-        uint256 insuranceBalance = insuranceFund.getBalance();
+        uint256 insuranceBalance = insuranceFund.getBalance() * USDT_DECIMALS_SCALE;
         uint256 ifr = insuranceBalance.wadDiv(tvl);
         return _computeIFRMultiplier(ifr);
     }
@@ -233,7 +233,7 @@ contract LeverageModel is ILeverageModel, AccessControl, Pausable {
 
         uint256 ifr;
         if (tvl > 0) {
-            ifr = insuranceFund.getBalance().wadDiv(tvl);
+            ifr = (insuranceFund.getBalance() * USDT_DECIMALS_SCALE).wadDiv(tvl);
         }
         uint256 ifrMult = _computeIFRMultiplier(ifr);
 

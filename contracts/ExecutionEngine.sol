@@ -88,6 +88,7 @@ contract ExecutionEngine is IExecutionEngine, AccessControl, ReentrancyGuard, Pa
     IFundingRateEngine public immutable fundingRateEngine;
     IAccountManager public immutable accountManager;
     ILeverVault public immutable leverVault;
+    IInsuranceFund public immutable insuranceFund;
 
     // ──────────────────────────────────────────────
     // Constructor
@@ -117,13 +118,15 @@ contract ExecutionEngine is IExecutionEngine, AccessControl, ReentrancyGuard, Pa
         address _fundingRateEngine,
         address _accountManager,
         address _leverVault,
+        address _insuranceFund,
         address _admin
     ) {
         if (
             _positionManager == address(0) || _oiLimits == address(0) || _marginEngine == address(0)
                 || _oracleAdapter == address(0) || _marketRegistry == address(0) || _leverageModel == address(0)
                 || _feeRouter == address(0) || _borrowFeeEngine == address(0) || _fundingRateEngine == address(0)
-                || _accountManager == address(0) || _leverVault == address(0) || _admin == address(0)
+                || _accountManager == address(0) || _leverVault == address(0) || _insuranceFund == address(0)
+                || _admin == address(0)
         ) {
             revert ExecutionEngine__ZeroAddress();
         }
@@ -139,6 +142,7 @@ contract ExecutionEngine is IExecutionEngine, AccessControl, ReentrancyGuard, Pa
         fundingRateEngine = IFundingRateEngine(_fundingRateEngine);
         accountManager = IAccountManager(_accountManager);
         leverVault = ILeverVault(_leverVault);
+        insuranceFund = IInsuranceFund(_insuranceFund);
 
         _grantRole(DEFAULT_ADMIN_ROLE, _admin);
         _grantRole(ADMIN_ROLE, _admin);
@@ -345,14 +349,23 @@ contract ExecutionEngine is IExecutionEngine, AccessControl, ReentrancyGuard, Pa
         uint256 pi = oracleAdapter.getPI(pos.marketId);
         (uint256 exitPrice,) = _computeExecutionPrice(pos.marketId, pos.isLong, pos.positionSize, pi, false);
 
-        int256 pnl = _computePnL(pos.isLong, exitPrice, pos.entryPrice, pos.positionSize);
+        // FIX LEVER-001: Use raw PI values for PnL (consistent with MarginEngine/SettlementEngine)
+        int256 pnl = _computePnL(pos.isLong, pi, pos.entryPI, pos.positionSize);
         uint256 borrowFees = borrowFeeEngine.getAccruedFees(positionId);
         int256 accruedFunding = fundingRateEngine.getAccruedFunding(positionId);
 
-        // Settle PnL: bookkeeping + actual USDT transfers between AccountManager, Vault, FeeRouter
-        uint256 badDebt = _settlePnL(pos.owner, pos.collateral, pnl, borrowFees, accruedFunding);
+        // FIX LEVER-009: Collect closing transaction fee
+        uint256 closingFee = feeRouter.collectTransactionFee(pos.positionSize);
 
+        // Settle PnL: bookkeeping + actual USDT transfers between AccountManager, Vault, FeeRouter
+        uint256 badDebt = _settlePnL(pos.owner, pos.collateral, pnl, borrowFees, accruedFunding, closingFee);
+
+        // FIX LEVER-004: Route bad debt through InsuranceFund waterfall
         if (badDebt > 0) {
+            (uint256 insurancePaid, uint256 remainder) = insuranceFund.absorbBadDebt(pos.marketId, badDebt);
+            if (remainder > 0) {
+                leverVault.socializeLoss(remainder);
+            }
             emit BadDebtRecorded(positionId, pos.owner, badDebt);
         }
 
@@ -377,12 +390,13 @@ contract ExecutionEngine is IExecutionEngine, AccessControl, ReentrancyGuard, Pa
         uint256 collateral,
         int256 pnl,
         uint256 borrowFees,
-        int256 accruedFunding
+        int256 accruedFunding,
+        uint256 closingFee
     ) private returns (uint256 badDebt) {
         accountManager.releaseCollateral(owner, collateral);
 
-        // Net change to user's balance beyond their collateral
-        int256 pnlDelta = pnl - int256(borrowFees) + accruedFunding;
+        // Net change to user's balance beyond their collateral (includes closing fee)
+        int256 pnlDelta = pnl - int256(borrowFees) - int256(closingFee) + accruedFunding;
 
         if (pnlDelta > 0) {
             accountManager.creditPnL(owner, uint256(pnlDelta));
@@ -397,15 +411,16 @@ contract ExecutionEngine is IExecutionEngine, AccessControl, ReentrancyGuard, Pa
             leverVault.fundTraderPnL(address(accountManager), uint256(pnl));
         }
 
-        // Outflows: price loss → vault, borrow fees → FeeRouter
+        // Outflows: price loss → vault, fees → FeeRouter
         uint256 pnlLoss = pnl < 0 ? uint256(-pnl) : 0;
-        uint256 totalOutflow = pnlLoss + borrowFees;
+        uint256 totalFees = borrowFees + closingFee;
+        uint256 totalOutflow = pnlLoss + totalFees;
 
         if (totalOutflow > 0) {
             uint256 transferable = badDebt >= totalOutflow ? 0 : totalOutflow - badDebt;
 
             // FeeRouter has priority (protocol revenue), vault absorbs shortfall from bad debt
-            uint256 toFeeRouter = borrowFees > transferable ? transferable : borrowFees;
+            uint256 toFeeRouter = totalFees > transferable ? transferable : totalFees;
             uint256 toVault = transferable - toFeeRouter;
             if (toVault > pnlLoss) toVault = pnlLoss;
 
@@ -417,6 +432,7 @@ contract ExecutionEngine is IExecutionEngine, AccessControl, ReentrancyGuard, Pa
                 feeRouter.routeFees(IFeeRouter.FeeType.BORROW, toFeeRouter);
             }
         }
+
     }
 
     // ──────────────────────────────────────────────

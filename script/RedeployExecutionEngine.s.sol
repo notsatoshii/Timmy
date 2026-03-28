@@ -25,6 +25,7 @@ contract RedeployExecutionEngine is Script {
         address fundingRateEngine = 0x1C538eFA480C85D032c0ad45Dd87f9876c16Cbbe;
         address accountManager = 0x6D2231BB7E8704C1e76de63A06A16d9B59bA6684;
         address leverVault = 0x84a1Eb3b1eFD60b193b271DCfaB2711cE1c41921;
+        address insuranceFund = 0x39Aca7F8CbB4b054C2f6aaD637a61942898B1Ae8;
         address deployer = 0x0e4D636c6D79c380A137f28EF73E054364cd5434;
 
         // Use the FIXED LeverageModel that was already deployed
@@ -58,6 +59,7 @@ contract RedeployExecutionEngine is Script {
             fundingRateEngine,
             accountManager,
             leverVault,
+            insuranceFund,
             deployer
         );
 

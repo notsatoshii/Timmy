@@ -50,6 +50,7 @@ contract DeployEngines is Script {
         address leverVault = vm.parseJsonAddress(poolJson, ".leverVault");
         address insuranceFund = vm.parseJsonAddress(poolJson, ".insuranceFund");
         address feeRouter = vm.parseJsonAddress(poolJson, ".feeRouter");
+        address rewardsDistributor = vm.parseJsonAddress(poolJson, ".rewardsDistributor");
 
         vm.startBroadcast(deployerPrivateKey);
 
@@ -61,7 +62,7 @@ contract DeployEngines is Script {
 
         // Phase 2: Fee engines
         addresses.borrowFeeEngine = _deployBorrowFeeEngine(deployer, marketRegistry, addresses.oiLimits, positionManager);
-        addresses.fundingRateEngine = _deployFundingRateEngine(deployer, marketRegistry, addresses.oiLimits, positionManager);
+        addresses.fundingRateEngine = _deployFundingRateEngine(deployer, marketRegistry, addresses.oiLimits, positionManager, accountManager, rewardsDistributor);
 
         // Phase 3: Margin & execution
         addresses.marginEngine = _deployMarginEngine(
@@ -71,7 +72,7 @@ contract DeployEngines is Script {
         addresses.executionEngine = _deployExecutionEngine(
             deployer, positionManager, addresses.oiLimits, addresses.marginEngine, oracleAdapter,
             marketRegistry, addresses.leverageModel, feeRouter, addresses.borrowFeeEngine,
-            addresses.fundingRateEngine, accountManager, leverVault
+            addresses.fundingRateEngine, accountManager, leverVault, insuranceFund
         );
 
         // Phase 4: Terminal engines
@@ -126,10 +127,11 @@ contract DeployEngines is Script {
     }
 
     function _deployFundingRateEngine(
-        address deployer, address marketRegistry, address oiLimits, address positionManager
+        address deployer, address marketRegistry, address oiLimits, address positionManager,
+        address accountManager, address rewardsDistributor
     ) internal returns (address) {
         console.log("Deploying FundingRateEngine...");
-        address addr = address(new FundingRateEngine(deployer, marketRegistry, oiLimits, positionManager));
+        address addr = address(new FundingRateEngine(deployer, marketRegistry, oiLimits, positionManager, accountManager, rewardsDistributor));
         console.log("FundingRateEngine deployed:", addr);
         return addr;
     }
@@ -147,12 +149,13 @@ contract DeployEngines is Script {
     function _deployExecutionEngine(
         address deployer, address positionManager, address oiLimits, address marginEngine,
         address oracleAdapter, address marketRegistry, address leverageModel, address feeRouter,
-        address borrowFeeEngine, address fundingRateEngine, address accountManager, address leverVault
+        address borrowFeeEngine, address fundingRateEngine, address accountManager, address leverVault,
+        address insuranceFund
     ) internal returns (address) {
         console.log("Deploying ExecutionEngine...");
         address addr = address(new ExecutionEngine(
             positionManager, oiLimits, marginEngine, oracleAdapter, marketRegistry, leverageModel,
-            feeRouter, borrowFeeEngine, fundingRateEngine, accountManager, leverVault, deployer
+            feeRouter, borrowFeeEngine, fundingRateEngine, accountManager, leverVault, insuranceFund, deployer
         ));
         console.log("ExecutionEngine deployed:", addr);
         return addr;

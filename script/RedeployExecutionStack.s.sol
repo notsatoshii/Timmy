@@ -48,7 +48,7 @@ contract RedeployExecutionStack is Script {
             positionManager, oiLimits, marginEngine,
             oracleAdapter, marketRegistry, address(newLM),
             feeRouter, borrowFeeEngine, fundingRateEngine,
-            accountManager, leverVault, admin
+            accountManager, leverVault, insuranceFund, admin
         );
         console2.log("ExecutionEngine:", address(newEE));
 

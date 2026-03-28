@@ -100,6 +100,14 @@ contract MockPositionManagerFunding {
     }
 }
 
+contract MockAccountManager_FRE {
+    function transferOut(address, uint256) external {}
+}
+
+contract MockRewardsDistributor_FRE {
+    function depositRewards(uint256) external {}
+}
+
 // ──────────────────────────────────────────────
 // Tests
 // ──────────────────────────────────────────────
@@ -116,6 +124,8 @@ contract FundingRateEngineTest is Test {
 
     address public admin = address(this);
     address public user1 = address(0x1);
+    MockAccountManager_FRE public mockAccountManager;
+    MockRewardsDistributor_FRE public mockRewardsDistributor;
 
     bytes32 public constant MARKET_A = keccak256("MARKET_A");
 
@@ -123,12 +133,16 @@ contract FundingRateEngineTest is Test {
         registry = new MockMarketRegistryFunding();
         oiLimits = new MockOILimitsFunding();
         posMgr = new MockPositionManagerFunding();
+        mockAccountManager = new MockAccountManager_FRE();
+        mockRewardsDistributor = new MockRewardsDistributor_FRE();
 
         engine = new FundingRateEngine(
             admin,
             address(registry),
             address(oiLimits),
-            address(posMgr)
+            address(posMgr),
+            address(mockAccountManager),
+            address(mockRewardsDistributor)
         );
 
         // 48h to resolution, not live, balanced OI
@@ -148,22 +162,32 @@ contract FundingRateEngineTest is Test {
 
     function test_constructor_revertsOnZeroAdmin() public {
         vm.expectRevert(FundingRateEngine__ZeroAddress.selector);
-        new FundingRateEngine(address(0), address(registry), address(oiLimits), address(posMgr));
+        new FundingRateEngine(address(0), address(registry), address(oiLimits), address(posMgr), address(mockAccountManager), address(mockRewardsDistributor));
     }
 
     function test_constructor_revertsOnZeroRegistry() public {
         vm.expectRevert(FundingRateEngine__ZeroAddress.selector);
-        new FundingRateEngine(admin, address(0), address(oiLimits), address(posMgr));
+        new FundingRateEngine(admin, address(0), address(oiLimits), address(posMgr), address(mockAccountManager), address(mockRewardsDistributor));
     }
 
     function test_constructor_revertsOnZeroOILimits() public {
         vm.expectRevert(FundingRateEngine__ZeroAddress.selector);
-        new FundingRateEngine(admin, address(registry), address(0), address(posMgr));
+        new FundingRateEngine(admin, address(registry), address(0), address(posMgr), address(mockAccountManager), address(mockRewardsDistributor));
     }
 
     function test_constructor_revertsOnZeroPosMgr() public {
         vm.expectRevert(FundingRateEngine__ZeroAddress.selector);
-        new FundingRateEngine(admin, address(registry), address(oiLimits), address(0));
+        new FundingRateEngine(admin, address(registry), address(oiLimits), address(0), address(mockAccountManager), address(mockRewardsDistributor));
+    }
+
+    function test_constructor_revertsOnZeroAccountManager() public {
+        vm.expectRevert(FundingRateEngine__ZeroAddress.selector);
+        new FundingRateEngine(admin, address(registry), address(oiLimits), address(posMgr), address(0), address(mockRewardsDistributor));
+    }
+
+    function test_constructor_revertsOnZeroRewardsDistributor() public {
+        vm.expectRevert(FundingRateEngine__ZeroAddress.selector);
+        new FundingRateEngine(admin, address(registry), address(oiLimits), address(posMgr), address(mockAccountManager), address(0));
     }
 
     // ──────────────────────────────────────────────

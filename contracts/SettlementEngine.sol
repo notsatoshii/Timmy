@@ -95,6 +95,7 @@ contract SettlementEngine is ISettlementEngine, AccessControl, ReentrancyGuard, 
     /// @dev Aggregate totals from first pass (avoids stack-too-deep in settleMarket)
     struct FirstPassResult {
         uint256 totalWinnerPayout;
+        uint256 totalLoserDebt;   // FIX LEVER-014: Track total loser debt separately
         uint256 totalBadDebt;
         uint256 totalFees;
         uint256 winnerCount;
@@ -215,8 +216,9 @@ contract SettlementEngine is ISettlementEngine, AccessControl, ReentrancyGuard, 
         state.winnerCount = fp.winnerCount;
         state.loserCount = fp.loserCount;
 
+        // FIX LEVER-014: Use correct totalLoserDebt field instead of duplicating totalBadDebt
         emit MarketSettled(
-            marketId, outcome, fp.totalWinnerPayout, fp.totalBadDebt,
+            marketId, outcome, fp.totalWinnerPayout, fp.totalLoserDebt,
             fp.totalBadDebt, fp.totalFees, block.timestamp
         );
 
@@ -265,7 +267,9 @@ contract SettlementEngine is ISettlementEngine, AccessControl, ReentrancyGuard, 
             accountManager.creditPnL(pos.owner, result.payout);
         }
 
+        // FIX LEVER-005: Transfer USDT to FeeRouter before calling routeFees
         if (result.settlementFee > 0) {
+            accountManager.transferOut(address(feeRouter), result.settlementFee);
             feeRouter.routeFees(IFeeRouter.FeeType.SETTLEMENT, result.settlementFee);
         }
 
@@ -478,6 +482,7 @@ contract SettlementEngine is ISettlementEngine, AccessControl, ReentrancyGuard, 
                 fp.totalFees += ctx.settlementFee;
                 ++fp.winnerCount;
             } else {
+                fp.totalLoserDebt += pos.collateral;   // FIX LEVER-014
                 fp.totalBadDebt += ctx.badDebt;
                 ++fp.loserCount;
             }

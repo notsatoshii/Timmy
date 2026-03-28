@@ -353,9 +353,9 @@ contract OracleAdapterTest is Test {
     }
 
     function test_pushPrice_acceptsWithinConsistencyTolerance() public {
-        // pYes + pNo = 1.04 (within 5% tolerance)
-        _pushPrice(MARKET_ID, 0.54e18, 0.5e18, 0.01e18, 100_000e18, 1_000_000e18);
-        assertEq(oracle.getPI(MARKET_ID), 0.54e18); // first update = pRaw
+        // pYes + pNo = 1.01 (within 2% tolerance per LEVER-022 fix)
+        _pushPrice(MARKET_ID, 0.51e18, 0.5e18, 0.01e18, 100_000e18, 1_000_000e18);
+        assertEq(oracle.getPI(MARKET_ID), 0.51e18); // first update = pRaw
     }
 
     function test_pushPrice_acceptsBoundaryValues() public {
