@@ -444,7 +444,8 @@ contract LiquidationEngine is ILiquidationEngine, AccessControl, ReentrancyGuard
         (insurancePaid, socializedAmount) = insuranceFund.absorbBadDebt(marketId, badDebt, address(leverVault));
 
         if (socializedAmount > 0) {
-            leverVault.socializeLoss(socializedAmount);
+            // FIX LEVER-BUG-5: socializedAmount is WAD (from absorbBadDebt), socializeLoss expects USDT
+            leverVault.socializeLoss(socializedAmount / 1e12);
         }
     }
 

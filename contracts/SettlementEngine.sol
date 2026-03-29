@@ -514,12 +514,14 @@ contract SettlementEngine is ISettlementEngine, AccessControl, ReentrancyGuard, 
             uint256 haircut = remainder.wadDiv(totalWinnerPayout);
             if (haircut > WAD) {
                 haircut = WAD;
-                leverVault.socializeLoss(remainder - totalWinnerPayout);
+                // FIX LEVER-BUG-5: remainder and totalWinnerPayout are WAD, socializeLoss expects USDT
+                leverVault.socializeLoss((remainder - totalWinnerPayout) / 1e12);
             }
             state.adlHaircut = haircut;
         } else {
             // No winners to haircut — all remainder goes to LP socialization
-            leverVault.socializeLoss(remainder);
+            // FIX LEVER-BUG-5: remainder is WAD, socializeLoss expects USDT
+            leverVault.socializeLoss(remainder / 1e12);
         }
     }
 
