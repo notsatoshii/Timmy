@@ -42,6 +42,8 @@ contract InsuranceFund is IInsuranceFund, AccessControl, ReentrancyGuard, Pausab
     uint256 public constant TIER_3_THRESHOLD = 5e16;        // 5% IFR
     uint256 public constant WAD = 1e18;
     uint256 public constant DAILY_WINDOW = 24 hours;
+    /// @notice Scale factor: WAD / USDT = 1e18 / 1e6. Converts between WAD and USDT scales.
+    uint256 public constant SCALE = 1e12;
 
     // ──────────────────────────────────────────────
     // Roles
@@ -91,7 +93,7 @@ contract InsuranceFund is IInsuranceFund, AccessControl, ReentrancyGuard, Pausab
         usdt = IERC20(usdt_);
         leverVault = ILeverVault(leverVault_);
 
-        _balance = INSURANCE_BOOTSTRAP;
+        _balance = 0; // FIX LEVER-BUG-4: No phantom bootstrap. Real USDT enters via FeeRouter.deposit().
         _dailyWindowStart = block.timestamp;
 
         _grantRole(ADMIN_ROLE, admin_);
@@ -129,11 +131,15 @@ contract InsuranceFund is IInsuranceFund, AccessControl, ReentrancyGuard, Pausab
 
         if (totalBadDebt == 0) return (0, 0);
 
+        // FIX LEVER-BUG-5: Scale _balance (USDT, 6-decimal) to WAD for all comparison math.
+        // totalBadDebt arrives in WAD from callers. All constraints must compare WAD vs WAD.
+        uint256 balanceWAD = _balance * SCALE;
+
         // 1. Reset daily window if expired
         if (block.timestamp >= _dailyWindowStart + DAILY_WINDOW) {
             _dailySpent = 0;
             _dailyWindowStart = block.timestamp;
-            emit DailyCapReset(_balance.wadMul(DAILY_CAP_PCT), block.timestamp);
+            emit DailyCapReset(balanceWAD.wadMul(DAILY_CAP_PCT), block.timestamp);
         }
 
         // 2. Determine tier (insurance vs ADL split)
@@ -149,43 +155,46 @@ contract InsuranceFund is IInsuranceFund, AccessControl, ReentrancyGuard, Pausab
             insurancePct = 1e17; // 10% insurance
         }
 
-        // Insurance's share of this bad debt event
+        // 3. Insurance's share of this bad debt event (all WAD)
         uint256 insuranceTarget = totalBadDebt.wadMul(insurancePct);
 
-        // 3. Apply daily cap constraint
-        uint256 dailyCap = _balance.wadMul(DAILY_CAP_PCT);
-        uint256 dailyRemaining = dailyCap > _dailySpent ? dailyCap - _dailySpent : 0;
+        // 4. Apply daily cap constraint (all WAD)
+        uint256 dailyCap = balanceWAD.wadMul(DAILY_CAP_PCT);
+        uint256 dailySpentWAD = _dailySpent * SCALE;
+        uint256 dailyRemaining = dailyCap > dailySpentWAD ? dailyCap - dailySpentWAD : 0;
         if (insuranceTarget > dailyRemaining) {
             insuranceTarget = dailyRemaining;
         }
 
-        // 4. Apply floor constraint (fund cannot drop below 5% of TVL)
+        // 5. Apply floor constraint (fund cannot drop below 5% of TVL, all WAD)
         uint256 tvl = leverVault.totalAssets();
-        uint256 floor = tvl.wadMul(IFR_FLOOR);
-        uint256 maxSpend = _balance > floor ? _balance - floor : 0;
+        uint256 tvlWAD = tvl * SCALE;
+        uint256 floor = tvlWAD.wadMul(IFR_FLOOR);
+        uint256 maxSpend = balanceWAD > floor ? balanceWAD - floor : 0;
         if (insuranceTarget > maxSpend) {
             insuranceTarget = maxSpend;
         }
 
-        // 5. Cannot spend more than balance
-        if (insuranceTarget > _balance) {
-            insuranceTarget = _balance;
+        // 6. Cannot spend more than balance (WAD)
+        if (insuranceTarget > balanceWAD) {
+            insuranceTarget = balanceWAD;
         }
 
-        // 6. Final amounts
+        // 7. Final amounts (all WAD, matches interface NatSpec)
         insurancePaid = insuranceTarget;
-        remainder = totalBadDebt - insurancePaid;
+        remainder = totalBadDebt > insurancePaid ? totalBadDebt - insurancePaid : 0;
 
-        // 7. Execute
-        _balance -= insurancePaid;
-        _dailySpent += insurancePaid;
-        _totalAbsorbed += insurancePaid;
+        // 8. Convert to USDT for actual token operations (single conversion point)
+        uint256 transferUSDT = insurancePaid / SCALE;
+
+        // 9. Update internal state (USDT scale)
+        _balance -= transferUSDT;
+        _dailySpent += transferUSDT;
+        _totalAbsorbed += transferUSDT;
 
         // FIX LEVER-P04: Transfer USDT to the specified recipient (leverVault), not msg.sender.
-        // Previously USDT was sent to msg.sender (ExecutionEngine/LiquidationEngine/SettlementEngine)
-        // where it would be permanently stuck since those contracts have no USDT forwarding logic.
-        if (insurancePaid > 0) {
-            usdt.safeTransfer(recipient, insurancePaid);
+        if (transferUSDT > 0) {
+            usdt.safeTransfer(recipient, transferUSDT);
         }
 
         emit BadDebtAbsorbed(marketId, totalBadDebt, insurancePaid, remainder, block.timestamp);
@@ -241,32 +250,34 @@ contract InsuranceFund is IInsuranceFund, AccessControl, ReentrancyGuard, Pausab
     }
 
     /// @inheritdoc IInsuranceFund
+    /// @dev Returns remaining daily capacity in USDT (6-decimal), consistent with getBalance().
     function getRemainingDailyCapacity() external view override returns (uint256) {
-        uint256 dailyCap;
+        uint256 balanceWAD = _balance * SCALE;
+        uint256 dailyCap = balanceWAD.wadMul(DAILY_CAP_PCT);
         uint256 spent;
 
         if (block.timestamp >= _dailyWindowStart + DAILY_WINDOW) {
-            // Window has expired — full capacity available
-            dailyCap = _balance.wadMul(DAILY_CAP_PCT);
             spent = 0;
         } else {
-            dailyCap = _balance.wadMul(DAILY_CAP_PCT);
-            spent = _dailySpent;
+            spent = _dailySpent * SCALE;
         }
 
-        return dailyCap > spent ? dailyCap - spent : 0;
+        uint256 remainingWAD = dailyCap > spent ? dailyCap - spent : 0;
+        return remainingWAD / SCALE; // return in USDT
     }
 
     /// @inheritdoc IInsuranceFund
+    /// @dev Returns floor in USDT (6-decimal), consistent with getBalance().
     function getFloor() external view override returns (uint256 floor) {
         uint256 tvl = leverVault.totalAssets();
-        return tvl.wadMul(IFR_FLOOR);
+        return tvl * IFR_FLOOR / WAD; // simple percentage of USDT TVL
     }
 
     /// @inheritdoc IInsuranceFund
+    /// @dev Returns target in USDT (6-decimal), consistent with getBalance().
     function getTarget() external view override returns (uint256 target) {
         uint256 tvl = leverVault.totalAssets();
-        return tvl.wadMul(IFR_TARGET);
+        return tvl * IFR_TARGET / WAD; // simple percentage of USDT TVL
     }
 
     /// @inheritdoc IInsuranceFund

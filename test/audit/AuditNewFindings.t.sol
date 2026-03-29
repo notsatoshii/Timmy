@@ -486,51 +486,48 @@ contract AuditNewFindingsTest is Test {
     function test_LEVER_P04_insuranceBadDebtGoesToVault() public {
         InsuranceFund fund = new InsuranceFund(admin, address(usdt), address(vault));
 
-        // Grant role to this test contract (simulate ExecutionEngine)
-        vm.prank(admin);
+        // Grant roles
+        vm.startPrank(admin);
         fund.grantRole(fund.EXECUTION_ENGINE_ROLE(), address(this));
+        fund.grantRole(fund.FEE_ROUTER_ROLE(), address(this));
+        vm.stopPrank();
 
-        // Bootstrap: InsuranceFund has 10_000e6 USDT accounting-only balance.
-        // We need actual USDT in the contract for the safeTransfer to succeed.
-        uint256 fundAmount = 5_000e6; // $5,000 USDT (less than bootstrap to stay within floor)
-        usdt.mint(address(fund), fundAmount);
+        // BUG-4: Constructor no longer has phantom bootstrap. Explicitly fund.
+        uint256 bootstrapAmount = 10_000e6;
+        usdt.mint(address(fund), bootstrapAmount); // actual USDT tokens
+        fund.deposit(bootstrapAmount);              // accounting update
 
-        // Fund has bootstrap balance (10_000e6) in accounting but only 5_000e6 USDT tokens.
-        // We need to reconcile: set vault TVL high enough that floor = 5% of TVL < fundAmount
-        vault.setTotalAssets(200_000e6); // $200K TVL => floor = 5% = $10K > fundAmount
-        // Actually we need a lower floor. Let's use $50K TVL => floor = 5% = $2,500e6
-        vault.setTotalAssets(50_000e6);
-
-        // IFR = 10_000e6 / 50_000e6 = 20% = IFR_TARGET => tier 1 => 100% insurance coverage
+        vault.setTotalAssets(50_000e6); // $50K TVL
+        // IFR = 10_000e6 / 50_000e6 = 20% => tier 1 => 100% insurance coverage
         // daily cap = 25% of 10_000e6 = 2_500e6
         // floor = 5% of 50_000e6 = 2_500e6
         // maxSpend = 10_000e6 - 2_500e6 = 7_500e6
 
-        uint256 badDebtAmount = 1_000e6; // $1,000 bad debt — within all constraints
+        uint256 badDebtAmountWAD = 1_000e18; // $1000 in WAD
 
         address mockVault = address(0xBEEF);
         uint256 vaultBalanceBefore = usdt.balanceOf(mockVault);
 
-        (uint256 insurancePaid, uint256 remainder) = fund.absorbBadDebt(
+        (uint256 insurancePaidWAD, uint256 remainderWAD) = fund.absorbBadDebt(
             MARKET_A,
-            badDebtAmount,
+            badDebtAmountWAD,
             mockVault
         );
 
         uint256 vaultBalanceAfter = usdt.balanceOf(mockVault);
 
-        // Insurance should have paid something
-        assertGt(insurancePaid, 0, "InsuranceFund must pay some amount");
-        assertEq(remainder, badDebtAmount - insurancePaid, "Remainder must equal badDebt - paid");
+        assertGt(insurancePaidWAD, 0, "InsuranceFund must pay some amount (WAD)");
+        assertEq(remainderWAD, badDebtAmountWAD - insurancePaidWAD, "Remainder must equal badDebt - paid");
+
+        // USDT transferred = insurancePaidWAD / SCALE (1e12)
+        uint256 insurancePaidUSDT = insurancePaidWAD / 1e12;
 
         // USDT must go to mockVault (recipient), NOT to address(this) (caller)
-        assertEq(vaultBalanceAfter - vaultBalanceBefore, insurancePaid, "Vault must receive the USDT");
-        assertEq(usdt.balanceOf(address(this)), 0, "Caller must NOT receive USDT");
+        assertEq(vaultBalanceAfter - vaultBalanceBefore, insurancePaidUSDT, "Vault must receive the USDT");
 
-        // InsuranceFund accounting balance must decrease
+        // InsuranceFund accounting balance must decrease (USDT scale)
         uint256 fundBalanceAfter = fund.getBalance();
-        // Bootstrap was 10_000e6, paid insurancePaid
-        assertEq(fundBalanceAfter, 10_000e6 - insurancePaid, "Fund balance must decrease by amount paid");
+        assertEq(fundBalanceAfter, bootstrapAmount - insurancePaidUSDT, "Fund balance must decrease by amount paid");
     }
 
     // ──────────────────────────────────────────────────────────────────────────

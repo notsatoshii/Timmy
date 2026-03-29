@@ -83,14 +83,21 @@ contract InsuranceFundTest is Test {
 
         // Give InsuranceFund USDT balance so safeTransfer works in absorbBadDebt
         deal(address(usdt), address(fund), 1_000_000e6);
+
+        // FIX LEVER-BUG-4: Constructor no longer sets phantom bootstrap.
+        // Explicitly deposit real USDT to bootstrap the fund for tests.
+        vm.prank(feeRouter);
+        fund.deposit(BOOTSTRAP);
     }
 
     // ──────────────────────────────────────────────
     // Constructor
     // ──────────────────────────────────────────────
 
-    function test_constructor_setsBootstrapBalance() public view {
-        assertEq(fund.getBalance(), BOOTSTRAP);
+    function test_constructor_setsZeroBalance() public {
+        // BUG-4: constructor no longer sets phantom bootstrap; starts at 0
+        InsuranceFund freshFund = new InsuranceFund(admin, address(usdt), address(vault));
+        assertEq(freshFund.getBalance(), 0, "New fund must start with zero balance");
     }
 
     function test_constructor_setsImmutables() public view {
@@ -243,15 +250,15 @@ contract InsuranceFundTest is Test {
     // ──────────────────────────────────────────────
 
     function test_absorbBadDebt_basicAbsorption() public {
-        // IFR = 10% → tier 3 (40% insurance). Bad debt = 1000
+        // IFR = 10% → tier 3 (40% insurance). Bad debt = $1000
         // insuranceTarget = 1000 * 0.4 = 400
         // dailyCap = 10000 * 0.25 = 2500 → ok
         // floor = 100000 * 0.05 = 5000, maxSpend = 10000 - 5000 = 5000 → ok
         vm.prank(liquidationEngine);
-        (uint256 paid, uint256 rem) = fund.absorbBadDebt(bytes32("MKT1"), 1000e6, address(this));
+        (uint256 paid, uint256 rem) = fund.absorbBadDebt(bytes32("MKT1"), 1000e18, address(this));
 
-        assertEq(paid, 400e6);
-        assertEq(rem, 600e6);
+        assertEq(paid, 400e18);
+        assertEq(rem, 600e18);
         assertEq(fund.getBalance(), BOOTSTRAP - 400e6);
         assertEq(fund.totalAbsorbed(), 400e6);
     }
@@ -265,10 +272,10 @@ contract InsuranceFundTest is Test {
 
     function test_absorbBadDebt_emitsEvent() public {
         vm.expectEmit(true, false, false, true);
-        emit IInsuranceFund.BadDebtAbsorbed(bytes32("MKT1"), 1000e6, 400e6, 600e6, block.timestamp);
+        emit IInsuranceFund.BadDebtAbsorbed(bytes32("MKT1"), 1000e18, 400e18, 600e18, block.timestamp);
 
         vm.prank(liquidationEngine);
-        fund.absorbBadDebt(bytes32("MKT1"), 1000e6, address(this));
+        fund.absorbBadDebt(bytes32("MKT1"), 1000e18, address(this));
     }
 
     function test_absorbBadDebt_revertsOnUnauthorized() public {
@@ -288,9 +295,9 @@ contract InsuranceFundTest is Test {
 
     function test_absorbBadDebt_settlementEngineCanCall() public {
         vm.prank(settlementEngine);
-        (uint256 paid, uint256 rem) = fund.absorbBadDebt(bytes32("MKT1"), 1000e6, address(this));
-        assertEq(paid, 400e6);
-        assertEq(rem, 600e6);
+        (uint256 paid, uint256 rem) = fund.absorbBadDebt(bytes32("MKT1"), 1000e18, address(this));
+        assertEq(paid, 400e18);
+        assertEq(rem, 600e18);
     }
 
     // ──────────────────────────────────────────────
@@ -304,10 +311,10 @@ contract InsuranceFundTest is Test {
         // Balance = 16K, IFR = 16%
 
         vm.prank(liquidationEngine);
-        (uint256 paid, uint256 rem) = fund.absorbBadDebt(bytes32("MKT1"), 1000e6, address(this));
+        (uint256 paid, uint256 rem) = fund.absorbBadDebt(bytes32("MKT1"), 1000e18, address(this));
 
-        // 100% insurance → paid = 1000
-        assertEq(paid, 1000e6);
+        // 100% insurance → paid = $1000
+        assertEq(paid, 1000e18);
         assertEq(rem, 0);
     }
 
@@ -322,16 +329,16 @@ contract InsuranceFundTest is Test {
         // Balance = 40K, TVL = 100K, IFR = 40% → tier 1 (100%)
         // dailyCap = 40K * 25% = 10K
 
-        // First absorb 8K → ok (tier 1, 100%)
+        // First absorb $8K → ok (tier 1, 100%)
         vm.prank(liquidationEngine);
-        (uint256 paid1,) = fund.absorbBadDebt(bytes32("MKT1"), 8000e6, address(this));
-        assertEq(paid1, 8000e6);
+        (uint256 paid1,) = fund.absorbBadDebt(bytes32("MKT1"), 8000e18, address(this));
+        assertEq(paid1, 8000e18);
 
         // Balance = 32K. dailyCap = 32K * 0.25 = 8K. spent = 8K. remaining = 0.
         vm.prank(liquidationEngine);
-        (uint256 paid2, uint256 rem2) = fund.absorbBadDebt(bytes32("MKT1"), 3000e6, address(this));
+        (uint256 paid2, uint256 rem2) = fund.absorbBadDebt(bytes32("MKT1"), 3000e18, address(this));
         assertEq(paid2, 0);
-        assertEq(rem2, 3000e6);
+        assertEq(rem2, 3000e18);
     }
 
     function test_absorbBadDebt_dailyCapResetsAfter24h() public {
@@ -342,13 +349,13 @@ contract InsuranceFundTest is Test {
 
         // Exhaust daily cap: 40K * 0.25 = 10K
         vm.prank(liquidationEngine);
-        (uint256 paid1,) = fund.absorbBadDebt(bytes32("MKT1"), 10_000e6, address(this));
-        assertEq(paid1, 10_000e6);
+        (uint256 paid1,) = fund.absorbBadDebt(bytes32("MKT1"), 10_000e18, address(this));
+        assertEq(paid1, 10_000e18);
         // Balance = 30K, spent = 10K
 
         // Cap exhausted (30K * 0.25 = 7.5K < spent 10K)
         vm.prank(liquidationEngine);
-        (uint256 paid2,) = fund.absorbBadDebt(bytes32("MKT1"), 1000e6, address(this));
+        (uint256 paid2,) = fund.absorbBadDebt(bytes32("MKT1"), 1000e18, address(this));
         assertEq(paid2, 0);
 
         // Advance 24h → window resets
@@ -356,8 +363,8 @@ contract InsuranceFundTest is Test {
 
         // Balance = 30K, new dailyCap = 30K * 0.25 = 7.5K
         vm.prank(liquidationEngine);
-        (uint256 paid3, uint256 rem3) = fund.absorbBadDebt(bytes32("MKT1"), 5000e6, address(this));
-        assertEq(paid3, 5000e6);
+        (uint256 paid3, uint256 rem3) = fund.absorbBadDebt(bytes32("MKT1"), 5000e18, address(this));
+        assertEq(paid3, 5000e18);
         assertEq(rem3, 0);
     }
 
@@ -368,21 +375,21 @@ contract InsuranceFundTest is Test {
         // Balance = 40K, IFR = 40% → tier 1. dailyCap = 10K
 
         vm.prank(liquidationEngine);
-        (uint256 paid1,) = fund.absorbBadDebt(bytes32("MKT1"), 5000e6, address(this));
-        assertEq(paid1, 5000e6);
+        (uint256 paid1,) = fund.absorbBadDebt(bytes32("MKT1"), 5000e18, address(this));
+        assertEq(paid1, 5000e18);
         // Balance = 35K, spent = 5K
 
         // Second event same block. dailyCap = 35K * 0.25 = 8.75K. remaining = 8.75K - 5K = 3.75K
         vm.prank(liquidationEngine);
-        (uint256 paid2,) = fund.absorbBadDebt(bytes32("MKT2"), 3000e6, address(this));
-        assertEq(paid2, 3000e6);
+        (uint256 paid2,) = fund.absorbBadDebt(bytes32("MKT2"), 3000e18, address(this));
+        assertEq(paid2, 3000e18);
         // Balance = 32K, spent = 8K
 
         // Third event. dailyCap = 32K * 0.25 = 8K. remaining = 8K - 8K = 0
         vm.prank(liquidationEngine);
-        (uint256 paid3, uint256 rem3) = fund.absorbBadDebt(bytes32("MKT3"), 2000e6, address(this));
+        (uint256 paid3, uint256 rem3) = fund.absorbBadDebt(bytes32("MKT3"), 2000e18, address(this));
         assertEq(paid3, 0);
-        assertEq(rem3, 2000e6);
+        assertEq(rem3, 2000e18);
     }
 
     // ──────────────────────────────────────────────
@@ -391,12 +398,12 @@ contract InsuranceFundTest is Test {
 
     function test_absorbBadDebt_floorPreventsDepletion() public {
         // TVL = 100K, floor = 5K. Balance = 10K. maxSpend = 10K - 5K = 5K.
-        // IFR = 10% → tier 3 (40% insurance). Bad debt = 50K.
+        // IFR = 10% → tier 3 (40% insurance). Bad debt = $50K.
         // insuranceTarget = 50K * 0.4 = 20K
         // dailyCap = 10K * 0.25 = 2.5K → constrains first
         vm.prank(liquidationEngine);
-        (uint256 paid,) = fund.absorbBadDebt(bytes32("MKT1"), 50_000e6, address(this));
-        assertEq(paid, 2_500e6);
+        (uint256 paid,) = fund.absorbBadDebt(bytes32("MKT1"), 50_000e18, address(this));
+        assertEq(paid, 2_500e18);
     }
 
     function test_absorbBadDebt_fundAtFloor_paysNothing() public {
@@ -404,20 +411,20 @@ contract InsuranceFundTest is Test {
         vault.setTotalAssets(200_000e6);
 
         vm.prank(liquidationEngine);
-        (uint256 paid, uint256 rem) = fund.absorbBadDebt(bytes32("MKT1"), 1000e6, address(this));
+        (uint256 paid, uint256 rem) = fund.absorbBadDebt(bytes32("MKT1"), 1000e18, address(this));
         assertEq(paid, 0);
-        assertEq(rem, 1000e6);
+        assertEq(rem, 1000e18);
     }
 
     function test_absorbBadDebt_floorConstraintBinds() public {
         // TVL = 110K, floor = 5.5K, balance = 10K, maxSpend = 4.5K
         vault.setTotalAssets(110_000e6);
-        // IFR = 10K/110K ≈ 9.09% → tier 3 (40%). Bad debt = 20K
+        // IFR = 10K/110K ≈ 9.09% → tier 3 (40%). Bad debt = $20K
         // insuranceTarget = 20K * 0.4 = 8K
         // dailyCap = 10K * 0.25 = 2.5K → binds first
         vm.prank(liquidationEngine);
-        (uint256 paid,) = fund.absorbBadDebt(bytes32("MKT1"), 20_000e6, address(this));
-        assertEq(paid, 2_500e6);
+        (uint256 paid,) = fund.absorbBadDebt(bytes32("MKT1"), 20_000e18, address(this));
+        assertEq(paid, 2_500e18);
     }
 
     // ──────────────────────────────────────────────
@@ -428,9 +435,9 @@ contract InsuranceFundTest is Test {
         // TVL = 10M → IFR = 10K/10M = 0.1% → tier 4 (10%). Floor = 500K > balance → maxSpend = 0
         vault.setTotalAssets(10_000_000e6);
         vm.prank(liquidationEngine);
-        (uint256 paid, uint256 rem) = fund.absorbBadDebt(bytes32("MKT1"), 1_000_000e6, address(this));
+        (uint256 paid, uint256 rem) = fund.absorbBadDebt(bytes32("MKT1"), 1_000_000e18, address(this));
         assertEq(paid, 0);
-        assertEq(rem, 1_000_000e6);
+        assertEq(rem, 1_000_000e18);
     }
 
     // ──────────────────────────────────────────────
@@ -443,8 +450,8 @@ contract InsuranceFundTest is Test {
         // floor = 100 * 0.05 = 5. maxSpend = 10K - 5 = 9995
         // dailyCap = 10K * 0.25 = 2.5K
         vm.prank(liquidationEngine);
-        (uint256 paid, uint256 rem) = fund.absorbBadDebt(bytes32("MKT1"), 2000e6, address(this));
-        assertEq(paid, 2000e6);
+        (uint256 paid, uint256 rem) = fund.absorbBadDebt(bytes32("MKT1"), 2000e18, address(this));
+        assertEq(paid, 2000e18);
         assertEq(rem, 0);
     }
 
@@ -454,8 +461,8 @@ contract InsuranceFundTest is Test {
         // floor = 0, maxSpend = 10K
         // dailyCap = 10K * 0.25 = 2.5K
         vm.prank(liquidationEngine);
-        (uint256 paid, uint256 rem) = fund.absorbBadDebt(bytes32("MKT1"), 2000e6, address(this));
-        assertEq(paid, 2000e6);
+        (uint256 paid, uint256 rem) = fund.absorbBadDebt(bytes32("MKT1"), 2000e18, address(this));
+        assertEq(paid, 2000e18);
         assertEq(rem, 0);
     }
 
@@ -470,14 +477,14 @@ contract InsuranceFundTest is Test {
 
     function test_getRemainingDailyCapacity_afterSpending() public {
         vm.prank(liquidationEngine);
-        fund.absorbBadDebt(bytes32("MKT1"), 1000e6, address(this));
+        fund.absorbBadDebt(bytes32("MKT1"), 1000e18, address(this));
         // Paid 400 (tier 3, 40%). Balance = 9600. dailyCap = 9600*0.25 = 2400. remaining = 2400 - 400 = 2000
         assertEq(fund.getRemainingDailyCapacity(), 2000e6);
     }
 
     function test_getRemainingDailyCapacity_resetsAfterWindow() public {
         vm.prank(liquidationEngine);
-        fund.absorbBadDebt(bytes32("MKT1"), 1000e6, address(this));
+        fund.absorbBadDebt(bytes32("MKT1"), 1000e18, address(this));
 
         vm.warp(block.timestamp + 24 hours);
 
@@ -495,12 +502,12 @@ contract InsuranceFundTest is Test {
 
     function test_totalAbsorbed_accumulates() public {
         vm.prank(liquidationEngine);
-        fund.absorbBadDebt(bytes32("MKT1"), 1000e6, address(this));
+        fund.absorbBadDebt(bytes32("MKT1"), 1000e18, address(this));
 
         vm.prank(liquidationEngine);
-        fund.absorbBadDebt(bytes32("MKT2"), 500e6, address(this));
+        fund.absorbBadDebt(bytes32("MKT2"), 500e18, address(this));
 
-        // Tier 3 (40%): 400 + 200 = 600
+        // Tier 3 (40%): 400 + 200 = 600 USDT
         assertEq(fund.totalAbsorbed(), 600e6);
     }
 
@@ -545,23 +552,23 @@ contract InsuranceFundTest is Test {
         fund.deposit(30_000e6);
         // Balance = 40K
 
-        // Absorb 10K (daily cap = 40K * 0.25 = 10K) → drains full daily cap
+        // Absorb $10K (daily cap = 40K * 0.25 = 10K) → drains full daily cap
         vm.prank(liquidationEngine);
-        (uint256 paid,) = fund.absorbBadDebt(bytes32("MKT1"), 10_000e6, address(this));
-        assertEq(paid, 10_000e6);
+        (uint256 paid,) = fund.absorbBadDebt(bytes32("MKT1"), 10_000e18, address(this));
+        assertEq(paid, 10_000e18);
         // Balance = 30K, dailySpent = 10K
 
         // No capacity left (30K * 0.25 = 7.5K < 10K spent)
         vm.prank(liquidationEngine);
-        (uint256 paid2,) = fund.absorbBadDebt(bytes32("MKT1"), 1000e6, address(this));
+        (uint256 paid2,) = fund.absorbBadDebt(bytes32("MKT1"), 1000e18, address(this));
         assertEq(paid2, 0);
 
         // Next window
         vm.warp(block.timestamp + 24 hours);
         // Balance = 30K, new daily cap = 30K * 0.25 = 7.5K
         vm.prank(liquidationEngine);
-        (uint256 paid3,) = fund.absorbBadDebt(bytes32("MKT1"), 10_000e6, address(this));
-        assertEq(paid3, 7_500e6);
+        (uint256 paid3,) = fund.absorbBadDebt(bytes32("MKT1"), 10_000e18, address(this));
+        assertEq(paid3, 7_500e18);
     }
 
     // ──────────────────────────────────────────────
@@ -574,11 +581,11 @@ contract InsuranceFundTest is Test {
         // IFR = 10K/150K ≈ 6.67% → tier 3 (40% insurance)
         // floor = 150K * 5% = 7.5K, maxSpend = 10K - 7.5K = 2.5K
         // dailyCap = 10K * 25% = 2.5K
-        // Bad debt = 10K → insuranceTarget = 4K → min(4K, 2.5K, 2.5K) = 2.5K
+        // Bad debt = $10K → insuranceTarget = 4K → min(4K, 2.5K, 2.5K) = 2.5K
         vm.prank(liquidationEngine);
-        (uint256 paid, uint256 rem) = fund.absorbBadDebt(bytes32("MKT1"), 10_000e6, address(this));
-        assertEq(paid, 2_500e6);
-        assertEq(rem, 7_500e6);
+        (uint256 paid, uint256 rem) = fund.absorbBadDebt(bytes32("MKT1"), 10_000e18, address(this));
+        assertEq(paid, 2_500e18);
+        assertEq(rem, 7_500e18);
     }
 
     // ──────────────────────────────────────────────
@@ -587,17 +594,17 @@ contract InsuranceFundTest is Test {
 
     function test_absorbBadDebt_emitsDailyCapResetOnNewWindow() public {
         vm.prank(liquidationEngine);
-        fund.absorbBadDebt(bytes32("MKT1"), 100e6, address(this));
+        fund.absorbBadDebt(bytes32("MKT1"), 100e18, address(this));
 
         vm.warp(block.timestamp + 24 hours);
 
-        // Balance after first absorb: 10K - 40 = 9960. Cap = 9960 * 0.25 = 2490
-        uint256 expectedCap = 2_490e6;
+        // Balance after first absorb: 10K - 40 = 9960 USDT. In WAD: 9960e18. Cap = 9960e18 * 0.25 = 2490e18
+        uint256 expectedCapWAD = 2_490e18;
 
         vm.expectEmit(false, false, false, true);
-        emit IInsuranceFund.DailyCapReset(expectedCap, block.timestamp);
+        emit IInsuranceFund.DailyCapReset(expectedCapWAD, block.timestamp);
 
         vm.prank(liquidationEngine);
-        fund.absorbBadDebt(bytes32("MKT1"), 100e6, address(this));
+        fund.absorbBadDebt(bytes32("MKT1"), 100e18, address(this));
     }
 }

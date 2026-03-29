@@ -63,6 +63,12 @@ contract InsuranceBadDebtTest is Test {
         insurance.grantRole(insurance.FEE_ROUTER_ROLE(), feeRouter);
 
         vm.stopPrank();
+
+        // FIX LEVER-BUG-4: Constructor no longer has phantom bootstrap.
+        // Seed with real USDT tokens + update accounting via deposit().
+        usdt.mint(address(insurance), 10_000e6); // actual USDT in the contract
+        vm.prank(feeRouter);
+        insurance.deposit(10_000e6); // update _balance accounting
     }
 
     // ─── Initial State ───
@@ -148,21 +154,22 @@ contract InsuranceBadDebtTest is Test {
     function test_absorbBadDebt_tier1_fullCoverage() public {
         _fundInsurance(2_000_000e6); // High IFR → Tier 1
 
-        uint256 badDebt = 10_000e6;
+        uint256 badDebtWAD = 10_000e18; // $10K in WAD
         uint256 balanceBefore = insurance.getBalance();
 
         // Fund the contract with actual USDT for the transfer
         _dealUSDT(address(insurance), balanceBefore);
 
         vm.prank(liquidationEngine);
-        (uint256 paid, uint256 remainder) = insurance.absorbBadDebt(
-            keccak256("MARKET"), badDebt, address(this)
+        (uint256 paidWAD, uint256 remainderWAD) = insurance.absorbBadDebt(
+            keccak256("MARKET"), badDebtWAD, address(this)
         );
 
         // Tier 1: 100% from insurance (if within daily cap and above floor)
-        assertEq(paid, badDebt);
-        assertEq(remainder, 0);
-        assertEq(insurance.getBalance(), balanceBefore - paid);
+        assertEq(paidWAD, badDebtWAD);
+        assertEq(remainderWAD, 0);
+        // getBalance is USDT; paid is WAD; convert via SCALE (1e12)
+        assertEq(insurance.getBalance(), balanceBefore - paidWAD / 1e12);
     }
 
     // ─── Daily Cap (25% of balance) ───
@@ -170,42 +177,42 @@ contract InsuranceBadDebtTest is Test {
     function test_dailyCap_limits_singleEvent() public {
         _fundInsurance(2_000_000e6); // $2M+ balance, Tier 1
         uint256 balance = insurance.getBalance();
-        uint256 dailyCap = balance * 25 / 100; // 25%
+        uint256 dailyCapWAD = uint256(balance) * 1e12 * 25 / 100; // 25% in WAD
 
         // Fund the contract with actual USDT for the transfer
         _dealUSDT(address(insurance), balance);
 
-        // Try to absorb more than 25% in one event
-        uint256 badDebt = balance; // Try full balance
+        // Try to absorb more than 25% in one event (WAD scale)
+        uint256 badDebtWAD = uint256(balance) * 1e12;
 
         vm.prank(liquidationEngine);
-        (uint256 paid,) = insurance.absorbBadDebt(keccak256("MARKET"), badDebt, address(this));
+        (uint256 paidWAD,) = insurance.absorbBadDebt(keccak256("MARKET"), badDebtWAD, address(this));
 
         // Should be capped at 25% of balance (may also be limited by floor)
-        assertLe(paid, dailyCap + 1); // +1 for rounding
+        assertLe(paidWAD, dailyCapWAD + 1e12); // rounding tolerance
     }
 
     function test_dailyCap_accumulates_acrossMultipleEvents() public {
         _fundInsurance(2_000_000e6);
         uint256 balance = insurance.getBalance();
-        uint256 dailyCap = balance * 25 / 100;
+        uint256 dailyCapWAD = uint256(balance) * 1e12 * 25 / 100;
 
         // Fund the contract with actual USDT for the transfers
         _dealUSDT(address(insurance), balance);
 
-        // First absorption: use up most of daily cap
+        // First absorption: use up most of daily cap (WAD scale)
         vm.prank(liquidationEngine);
         (uint256 paid1,) = insurance.absorbBadDebt(
-            keccak256("M1"), dailyCap - 1e6, address(this)
+            keccak256("M1"), dailyCapWAD - 1e18, address(this)
         );
 
         // Second absorption: should be constrained by remaining capacity
         vm.prank(liquidationEngine);
         (uint256 paid2,) = insurance.absorbBadDebt(
-            keccak256("M2"), 100_000e6, address(this)
+            keccak256("M2"), 100_000e18, address(this)
         );
 
-        assertLe(paid1 + paid2, dailyCap + 1);
+        assertLe(paid1 + paid2, dailyCapWAD + 1e12);
     }
 
     function test_dailyCap_resets_after24h() public {
@@ -215,9 +222,10 @@ contract InsuranceBadDebtTest is Test {
         // Fund the contract with actual USDT for the transfers
         _dealUSDT(address(insurance), balance);
 
-        // Use up daily cap
+        // Use up daily cap (WAD scale)
+        uint256 badDebtWAD = uint256(balance) * 1e12;
         vm.prank(liquidationEngine);
-        insurance.absorbBadDebt(keccak256("M1"), balance, address(this));
+        insurance.absorbBadDebt(keccak256("M1"), badDebtWAD, address(this));
 
         uint256 remaining = insurance.getRemainingDailyCapacity();
         // Should be near zero (or zero)
@@ -329,11 +337,12 @@ contract InsuranceBadDebtTest is Test {
         _dealUSDT(address(insurance), insurance.getBalance());
 
         vm.prank(liquidationEngine);
-        insurance.absorbBadDebt(keccak256("M1"), 5_000e6, address(this));
+        insurance.absorbBadDebt(keccak256("M1"), 5_000e18, address(this));
 
         vm.prank(liquidationEngine);
-        insurance.absorbBadDebt(keccak256("M2"), 3_000e6, address(this));
+        insurance.absorbBadDebt(keccak256("M2"), 3_000e18, address(this));
 
+        // totalAbsorbed is in USDT scale
         assertEq(insurance.totalAbsorbed(), 5_000e6 + 3_000e6);
     }
 
@@ -351,17 +360,17 @@ contract InsuranceBadDebtTest is Test {
         // Fund the contract with actual USDT for the transfer
         _dealUSDT(address(insurance), balance);
 
-        uint256 badDebt = 300_000e6;
+        uint256 badDebtWAD = 300_000e18; // WAD scale
         vm.prank(liquidationEngine);
-        (uint256 paid, uint256 remainder) = insurance.absorbBadDebt(
-            keccak256("MARKET"), badDebt, address(this)
+        (uint256 paidWAD, uint256 remainder) = insurance.absorbBadDebt(
+            keccak256("MARKET"), badDebtWAD, address(this)
         );
 
         // Floor constraint ($100k) should be strictest
         uint256 floor = insurance.getFloor();
-        uint256 maxFromFloor = balance > floor ? balance - floor : 0;
-        assertLe(paid, maxFromFloor + 1);
-        assertEq(paid + remainder, badDebt);
+        uint256 maxFromFloorWAD = balance > floor ? (balance - floor) * 1e12 : 0;
+        assertLe(paidWAD, maxFromFloorWAD + 1e12);
+        assertEq(paidWAD + remainder, badDebtWAD);
     }
 
     // ─── Helpers ───
