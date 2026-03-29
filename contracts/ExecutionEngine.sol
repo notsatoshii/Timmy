@@ -168,6 +168,13 @@ contract ExecutionEngine is IExecutionEngine, AccessControl, ReentrancyGuard, Pa
 
         _validateMarket(params.marketId);
 
+        // FIX LEVER-BUG-7: Reject positions on markets without configured risk parameters.
+        // When depthThreshold=0, maintenance margin defaults to M_market=1.0 (overly lenient),
+        // making liquidations impossible. Markets must be configured before trading.
+        if (marginEngine.depthThreshold(params.marketId) == 0) {
+            revert ExecutionEngine__MarketNotConfigured(params.marketId);
+        }
+
         uint256 maxLev = leverageModel.getEffectiveMaxLeverage(params.marketId);
         if (params.leverage > maxLev) {
             revert ExecutionEngine__LeverageExceedsMax(params.leverage, maxLev);
@@ -377,7 +384,8 @@ contract ExecutionEngine is IExecutionEngine, AccessControl, ReentrancyGuard, Pa
             // FIX LEVER-P04: Pass leverVault as recipient so insurance USDT goes to vault, not here
             (, uint256 remainder) = insuranceFund.absorbBadDebt(pos.marketId, badDebt, address(leverVault));
             if (remainder > 0) {
-                leverVault.socializeLoss(remainder);
+                // FIX LEVER-BUG-5: remainder is WAD (1e18), socializeLoss expects USDT (1e6)
+                leverVault.socializeLoss(remainder / 1e12);
             }
             emit BadDebtRecorded(positionId, pos.owner, badDebt);
         }

@@ -84,5 +84,8 @@ interface IMarginEngine {
     /// @param amount Collateral to remove (WAD)
     /// @return allowed True if post-removal MR is above buffer
     function canRemoveCollateral(uint256 positionId, uint256 amount) external view returns (bool allowed);
+
+    /// @notice Check if a market has configured risk parameters (depthThreshold > 0)
+    function depthThreshold(bytes32 marketId) external view returns (uint256);
 }
 

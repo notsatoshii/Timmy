@@ -26,6 +26,7 @@ interface IExecutionEngine {
     error ExecutionEngine__NotPositionOwner(uint256 positionId, address caller);
     error ExecutionEngine__ZeroSize();
     error ExecutionEngine__MarginCheckFailed(uint8 checkIndex);
+    error ExecutionEngine__MarketNotConfigured(bytes32 marketId);
 
     // ──────────────────────────────────────────────
     // Events
