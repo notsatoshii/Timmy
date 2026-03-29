@@ -62,6 +62,7 @@ contract ExecutionEngine is IExecutionEngine, AccessControl, ReentrancyGuard, Pa
     // ──────────────────────────────────────────────
 
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    bytes32 public constant KEEPER_ROLE = keccak256("KEEPER_ROLE");
 
     // ──────────────────────────────────────────────
     // Type declarations
@@ -278,6 +279,18 @@ contract ExecutionEngine is IExecutionEngine, AccessControl, ReentrancyGuard, Pa
     /// @inheritdoc IExecutionEngine
     function getMarketDepth(bytes32 marketId) external view override returns (uint256 depth) {
         depth = _getMarketDepth(marketId);
+    }
+
+    // ──────────────────────────────────────────────
+    // Keeper functions
+    // ──────────────────────────────────────────────
+
+    /// @notice Recompute and update the vault's net unrealized PnL from all open positions.
+    /// @dev Called by the keeper to sync vault NAV with current oracle prices.
+    ///      Reads aggregate PnL from MarginEngine (off-chain view) then writes to vault.
+    function refreshUnrealizedPnL() external onlyRole(KEEPER_ROLE) {
+        int256 netPnL = marginEngine.computeNetUnrealizedPnL();
+        leverVault.updateUnrealizedPnL(netPnL);
     }
 
     // ──────────────────────────────────────────────

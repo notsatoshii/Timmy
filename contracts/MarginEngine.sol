@@ -452,4 +452,24 @@ contract MarginEngine is IMarginEngine, AccessControl, Pausable {
         uint256 adjFactor = WAD + volAdj + utilAdj;
         return imScaled.wadMul(adjFactor);
     }
+
+    // ──────────────────────────────────────────────
+    // View — Aggregate Unrealized PnL
+    // ──────────────────────────────────────────────
+
+    /// @notice Compute aggregate unrealized PnL across all open positions in all markets.
+    /// @dev Iterates open positions per market (efficient: skips closed positions).
+    ///      Gas-intensive view; intended for keeper off-chain reads (eth_call), not on-chain calls.
+    /// @return netPnL Sum of unrealized PnL (positive = traders profitable = vault liability)
+    function computeNetUnrealizedPnL() external view returns (int256 netPnL) {
+        bytes32[] memory markets = marketRegistry.getActiveMarkets();
+        for (uint256 m = 0; m < markets.length; m++) {
+            uint256[] memory posIds = positionManager.getMarketPositions(markets[m]);
+            for (uint256 p = 0; p < posIds.length; p++) {
+                IPositionManager.Position memory pos = positionManager.getPosition(posIds[p]);
+                EquityResult memory eq = _computeEquity(pos);
+                netPnL += eq.pnl;
+            }
+        }
+    }
 }

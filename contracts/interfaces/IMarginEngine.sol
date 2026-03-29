@@ -87,5 +87,9 @@ interface IMarginEngine {
 
     /// @notice Check if a market has configured risk parameters (depthThreshold > 0)
     function depthThreshold(bytes32 marketId) external view returns (uint256);
+
+    /// @notice Compute aggregate unrealized PnL across all open positions
+    /// @return netPnL Sum of unrealized PnL (positive = traders profitable = vault liability)
+    function computeNetUnrealizedPnL() external view returns (int256 netPnL);
 }
 
