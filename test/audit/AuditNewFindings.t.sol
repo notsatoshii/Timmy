@@ -216,8 +216,10 @@ contract MockLeverageModel_ANF {
 contract MockMarginEngine_ANF {
     bool private _valid = true;
     uint8 private _failedCheck;
+    mapping(bytes32 => uint256) public depthThreshold;
 
     function setValid(bool val, uint8 failedCheck_) external { _valid = val; _failedCheck = failedCheck_; }
+    function setDepthThreshold(bytes32 marketId, uint256 val) external { depthThreshold[marketId] = val; }
     function validateMarginChecks(bytes32, address, bool, uint256, uint256) external view returns (bool, uint8) {
         return (_valid, _failedCheck);
     }
@@ -439,6 +441,9 @@ contract AuditNewFindingsTest is Test {
 
         oracleAdapter.setPI(MARKET_A, 5e17); // PI = 0.50
 
+        // FIX LEVER-BUG-7: Gate check requires depthThreshold > 0
+        marginEngine.setDepthThreshold(MARKET_A, 1e18);
+
         address trader = address(0xB1);
         uint256 collateral = 1_000e18; // $1,000 collateral
         uint256 leverage = 2e18;       // 2x
@@ -641,6 +646,9 @@ contract AuditNewFindingsTest is Test {
         uint256 exitPI  = 7e17;   // PI = 0.70 at close (trader profitable)
 
         oracleAdapter.setPI(MARKET_A, entryPI);
+
+        // FIX LEVER-BUG-7: Gate check requires depthThreshold > 0
+        marginEngine.setDepthThreshold(MARKET_A, 1e18);
 
         uint256 collateral = 1_000e18;
         uint256 leverage = 2e18;
