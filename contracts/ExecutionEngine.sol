@@ -456,7 +456,13 @@ contract ExecutionEngine is IExecutionEngine, AccessControl, ReentrancyGuard, Pa
             }
             if (toFeeRouter > 0) {
                 accountManager.transferOut(address(feeRouter), toFeeRouter);
-                feeRouter.routeFees(IFeeRouter.FeeType.BORROW, toFeeRouter);
+
+                // FIX LEVER-BUG-8: Route borrow fees and closing fee with correct FeeTypes.
+                // Previously all fees were routed as BORROW, misclassifying the closing tx fee.
+                uint256 borrowToRoute = borrowFees > toFeeRouter ? toFeeRouter : borrowFees;
+                uint256 closingToRoute = toFeeRouter - borrowToRoute;
+                if (borrowToRoute > 0) feeRouter.routeFees(IFeeRouter.FeeType.BORROW, borrowToRoute);
+                if (closingToRoute > 0) feeRouter.routeFees(IFeeRouter.FeeType.TRANSACTION, closingToRoute);
             }
         }
 
