@@ -55,7 +55,7 @@ contract DeployEngines is Script {
         vm.startBroadcast(deployerPrivateKey);
 
         // Phase 1: Risk & OI systems
-        addresses.oiLimits = _deployOILimits(deployer, marketRegistry, leverVault);
+        addresses.oiLimits = _deployOILimits(deployer, marketRegistry, leverVault, positionManager);
         addresses.leverageModel = _deployLeverageModel(
             deployer, leverVault, insuranceFund, addresses.oiLimits, marketRegistry, oracleAdapter
         );
@@ -100,9 +100,9 @@ contract DeployEngines is Script {
     // Deployment Functions
     // ──────────────────────────────────────────────
 
-    function _deployOILimits(address deployer, address marketRegistry, address leverVault) internal returns (address) {
+    function _deployOILimits(address deployer, address marketRegistry, address leverVault, address positionMgr) internal returns (address) {
         console.log("Deploying OILimits...");
-        address addr = address(new OILimits(marketRegistry, leverVault, deployer));
+        address addr = address(new OILimits(marketRegistry, leverVault, positionMgr, deployer));
         console.log("OILimits deployed:", addr);
         return addr;
     }

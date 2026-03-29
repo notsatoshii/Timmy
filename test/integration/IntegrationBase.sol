@@ -222,7 +222,7 @@ abstract contract IntegrationBase is Test {
         accountManager = new AccountManager(admin, address(usdt));
 
         // ── 3. Deploy OILimits first (needed by fee engines) ──
-        oiLimits = new OILimits(address(registry), address(vault), admin);
+        oiLimits = new OILimits(address(registry), address(vault), address(positionManager), admin);
 
         // ── 4. Deploy fee engines ──
         borrowFeeEngine = new BorrowFeeEngine(admin, address(registry), address(oiLimits), address(positionManager));

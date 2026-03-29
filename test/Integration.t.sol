@@ -117,7 +117,7 @@ contract FullIntegrationTest is Test {
         accountManager = new AccountManager(admin, address(usdt));
 
         // 6. Deploy OILimits (needs registry, vault)
-        oiLimits = new OILimits(address(registry), address(vault), admin);
+        oiLimits = new OILimits(address(registry), address(vault), address(positionManager), admin);
 
         // 7. Deploy fee engines
         borrowFeeEngine = new BorrowFeeEngine(admin, address(registry), address(oiLimits), address(positionManager));

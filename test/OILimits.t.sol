@@ -48,6 +48,22 @@ contract MockLeverVault {
     }
 }
 
+contract MockPositionManager_OI {
+    mapping(bytes32 => uint256[]) private _marketPositions;
+
+    function getMarketPositions(bytes32 marketId) external view returns (uint256[] memory) {
+        return _marketPositions[marketId];
+    }
+
+    function addPosition(bytes32 marketId, uint256 positionId) external {
+        _marketPositions[marketId].push(positionId);
+    }
+
+    function clearPositions(bytes32 marketId) external {
+        delete _marketPositions[marketId];
+    }
+}
+
 // ──────────────────────────────────────────────
 // Tests
 // ──────────────────────────────────────────────
@@ -60,6 +76,7 @@ contract OILimitsTest is Test {
     OILimits oiLimits;
     MockMarketRegistry registry;
     MockLeverVault vault;
+    MockPositionManager_OI posMgr;
 
     address admin = address(0xAD);
     address engine = address(0xE1);
@@ -75,9 +92,10 @@ contract OILimitsTest is Test {
     function setUp() public {
         registry = new MockMarketRegistry();
         vault = new MockLeverVault();
+        posMgr = new MockPositionManager_OI();
 
         vm.prank(admin);
-        oiLimits = new OILimits(address(registry), address(vault), admin);
+        oiLimits = new OILimits(address(registry), address(vault), address(posMgr), admin);
 
         // Grant roles
         vm.startPrank(admin);
@@ -109,13 +127,16 @@ contract OILimitsTest is Test {
 
     function test_constructor_revertsZeroAddress() public {
         vm.expectRevert(OILimits.OILimits__ZeroAddress.selector);
-        new OILimits(address(0), address(vault), admin);
+        new OILimits(address(0), address(vault), address(posMgr), admin);
 
         vm.expectRevert(OILimits.OILimits__ZeroAddress.selector);
-        new OILimits(address(registry), address(0), admin);
+        new OILimits(address(registry), address(0), address(posMgr), admin);
 
         vm.expectRevert(OILimits.OILimits__ZeroAddress.selector);
-        new OILimits(address(registry), address(vault), address(0));
+        new OILimits(address(registry), address(vault), address(0), admin);
+
+        vm.expectRevert(OILimits.OILimits__ZeroAddress.selector);
+        new OILimits(address(registry), address(vault), address(posMgr), address(0));
     }
 
     // ──────────────────────────────────────────────

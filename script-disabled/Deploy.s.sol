@@ -267,6 +267,7 @@ contract Deploy is Script {
         OILimits oiLimits = new OILimits(
             addrs.marketRegistry,
             addrs.leverVault,
+            addrs.positionManager,
             addrs.admin
         );
         addrs.oiLimits = address(oiLimits);

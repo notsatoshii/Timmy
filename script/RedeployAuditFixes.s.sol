@@ -69,6 +69,7 @@ contract RedeployAuditFixes is Script {
         OILimits newOILimits = new OILimits(
             MARKET_REGISTRY,
             LEVER_VAULT,
+            POSITION_MANAGER,
             ADMIN
         );
         console2.log("OILimits:", address(newOILimits));

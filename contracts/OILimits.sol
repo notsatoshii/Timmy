@@ -5,6 +5,7 @@ pragma solidity 0.8.24;
 import { IOILimits } from "./interfaces/IOILimits.sol";
 import { IMarketRegistry } from "./interfaces/IMarketRegistry.sol";
 import { ILeverVault } from "./interfaces/ILeverVault.sol";
+import { IPositionManager } from "./interfaces/IPositionManager.sol";
 import { RiskCurves } from "./libraries/RiskCurves.sol";
 import { FixedPointMath } from "./libraries/FixedPointMath.sol";
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
@@ -52,6 +53,7 @@ contract OILimits is IOILimits, AccessControl, ReentrancyGuard, Pausable {
 
     IMarketRegistry public immutable marketRegistry;
     ILeverVault public immutable vault;
+    IPositionManager public immutable positionManager;
 
     uint256 private _globalOI;
     mapping(bytes32 => uint256) private _marketOI;
@@ -65,14 +67,16 @@ contract OILimits is IOILimits, AccessControl, ReentrancyGuard, Pausable {
 
     /// @param _marketRegistry MarketRegistry address (for τ, is_live, allocation weights)
     /// @param _vault LeverVault address (for TVL)
+    /// @param _positionManager PositionManager address (for on-chain position count verification)
     /// @param _admin Initial admin address
-    constructor(address _marketRegistry, address _vault, address _admin) {
-        if (_marketRegistry == address(0) || _vault == address(0) || _admin == address(0)) {
+    constructor(address _marketRegistry, address _vault, address _positionManager, address _admin) {
+        if (_marketRegistry == address(0) || _vault == address(0) || _positionManager == address(0) || _admin == address(0)) {
             revert OILimits__ZeroAddress();
         }
 
         marketRegistry = IMarketRegistry(_marketRegistry);
         vault = ILeverVault(_vault);
+        positionManager = IPositionManager(_positionManager);
 
         _grantRole(DEFAULT_ADMIN_ROLE, _admin);
         _grantRole(ADMIN_ROLE, _admin);
@@ -157,6 +161,38 @@ contract OILimits is IOILimits, AccessControl, ReentrancyGuard, Pausable {
         _shortOI[marketId] = 0;
 
         emit OIDecreased(marketId, true, oldMarket, 0);
+    }
+
+    /// @notice Improved admin reset: clears ghost OI with on-chain safety check and per-user OI clearing
+    /// @dev FIX LEVER-BUG-3: Reverts if market has any open positions in PositionManager.
+    ///      Also clears per-user OI for all supplied addresses (the original adminResetMarketOI missed this).
+    /// @param marketId The market to reset
+    /// @param affectedUsers List of users whose per-user OI to clear (build from OIIncreased events)
+    function adminResetMarketOIFull(
+        bytes32 marketId,
+        address[] calldata affectedUsers
+    ) external onlyRole(ADMIN_ROLE) nonReentrant {
+        // On-chain safety: revert if any positions still open in this market
+        uint256 posCount = positionManager.getMarketPositions(marketId).length;
+        if (posCount != 0) revert OILimits__MarketHasOpenPositions(marketId, posCount);
+
+        uint256 oldMarket = _marketOI[marketId];
+        if (oldMarket == 0 && _longOI[marketId] == 0 && _shortOI[marketId] == 0) return;
+
+        // Clear global OI
+        _globalOI = oldMarket > _globalOI ? 0 : _globalOI - oldMarket;
+
+        // Clear market accumulators
+        _marketOI[marketId] = 0;
+        _longOI[marketId] = 0;
+        _shortOI[marketId] = 0;
+
+        // Clear per-user OI for every supplied user in this market
+        for (uint256 i = 0; i < affectedUsers.length; ++i) {
+            _userOI[marketId][affectedUsers[i]] = 0;
+        }
+
+        emit OIReset(marketId, oldMarket, affectedUsers.length);
     }
 
     // ──────────────────────────────────────────────

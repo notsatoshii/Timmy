@@ -119,7 +119,8 @@ contract Deploy is Script {
         // Phase 5: OI & Risk (now that vault is available)
         addresses.oiLimits = _deployOILimits(
             addresses.marketRegistry,
-            addresses.leverVault
+            addresses.leverVault,
+            addresses.positionManager
         );
 
         addresses.leverageModel = _deployLeverageModel(
@@ -318,11 +319,12 @@ contract Deploy is Script {
 
     function _deployOILimits(
         address marketRegistry,
-        address leverVault
+        address leverVault,
+        address positionMgr
     ) internal returns (address) {
         address deployer = vm.addr(vm.envUint("PRIVATE_KEY"));
         console.log("Deploying OILimits...");
-        OILimits limits = new OILimits(marketRegistry, leverVault, deployer);
+        OILimits limits = new OILimits(marketRegistry, leverVault, positionMgr, deployer);
         console.log("OILimits deployed:", address(limits));
         return address(limits);
     }

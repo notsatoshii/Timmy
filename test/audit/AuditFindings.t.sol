@@ -80,14 +80,13 @@ contract AuditFindingsTest is Test {
 
         InsuranceFund fund = new InsuranceFund(address(this), address(1), address(vault));
 
-        // Bootstrap should be 10_000e6 (USDT), not 10_000e18 (WAD)
+        // FIX LEVER-BUG-4: Constructor no longer has phantom bootstrap. Starts at 0.
+        // The INSURANCE_BOOTSTRAP constant still uses USDT denomination (10_000e6).
         uint256 balance = fund.getBalance();
-        assertEq(balance, 10_000e6, "Bootstrap must be in USDT denomination (10_000e6)");
+        assertEq(balance, 0, "New fund must start with zero balance (BUG-4: no phantom bootstrap)");
 
-        // IFR = balance / TVL = 10_000e6 / 25_000_000e6 = 0.0004 = 0.04%
-        uint256 ifr = fund.getIFR();
-        // With 10_000e6 bootstrap and 25M TVL, IFR should be tiny (< 1%)
-        assertTrue(ifr < 1e16, "IFR with $10K bootstrap vs $25M TVL should be < 1%");
+        // INSURANCE_BOOTSTRAP constant is still correctly denominated in USDT (6 decimals)
+        assertEq(fund.INSURANCE_BOOTSTRAP(), 10_000e6, "Bootstrap constant must be in USDT denomination");
     }
 
     // ──────────────────────────────────────────────
@@ -139,7 +138,7 @@ contract AuditFindingsTest is Test {
         vault.setTotalAssets(25_000_000e6);
 
         // Use makeAddr for MarketRegistry (won't be called during reset)
-        OILimits oiLimits = new OILimits(makeAddr("registry"), address(vault), admin);
+        OILimits oiLimits = new OILimits(makeAddr("registry"), address(vault), makeAddr("positionManager"), admin);
 
         bytes32 marketId = keccak256("TEST_MARKET");
 

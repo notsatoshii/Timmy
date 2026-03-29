@@ -13,6 +13,7 @@ interface IOILimits {
     error OILimits__MarketCapExceeded(bytes32 marketId, uint256 currentOI, uint256 cap);
     error OILimits__SideCapExceeded(bytes32 marketId, bool isLong, uint256 currentOI, uint256 cap);
     error OILimits__UserCapExceeded(bytes32 marketId, address user, uint256 currentOI, uint256 cap);
+    error OILimits__MarketHasOpenPositions(bytes32 marketId, uint256 count);
 
     // ──────────────────────────────────────────────
     // Events
@@ -20,6 +21,7 @@ interface IOILimits {
 
     event OIIncreased(bytes32 indexed marketId, bool isLong, uint256 amount, uint256 newTotal);
     event OIDecreased(bytes32 indexed marketId, bool isLong, uint256 amount, uint256 newTotal);
+    event OIReset(bytes32 indexed marketId, uint256 clearedAmount, uint256 userCount);
 
     // ──────────────────────────────────────────────
     // External — State Changing
@@ -81,5 +83,10 @@ interface IOILimits {
 
     /// @notice Get global utilization: global_OI / global_OI_cap
     function getGlobalUtilization() external view returns (uint256);
+
+    /// @notice Clear ghost OI for a market with on-chain safety check and per-user OI clearing
+    /// @param marketId The market to reset
+    /// @param affectedUsers Users whose per-user OI to clear
+    function adminResetMarketOIFull(bytes32 marketId, address[] calldata affectedUsers) external;
 }
 
