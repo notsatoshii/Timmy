@@ -366,7 +366,8 @@ contract MarginEngine is IMarginEngine, AccessControl, Pausable {
         // PnL = direction × (PI_current - PI_entry) × position_size
         uint256 currentPI = oracle.getPI(pos.marketId);
         int256 direction = pos.isLong ? int256(1) : int256(-1);
-        int256 piDelta = int256(currentPI) - int256(pos.entryPI);
+        // LEVER-BUG-1: Use execution price at entry (consistent with realized PnL in ExecutionEngine)
+        int256 piDelta = int256(currentPI) - int256(pos.entryPrice);
         result.pnl = direction * piDelta * int256(pos.positionSize) / int256(WAD);
 
         // Accrued borrow fees (always positive, reduces equity)

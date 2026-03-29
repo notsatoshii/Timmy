@@ -258,17 +258,35 @@ contract SettlementEngine is ISettlementEngine, AccessControl, ReentrancyGuard, 
 
         _positionSettled[positionId] = true;
 
-        // Execute: decrease OI, close position, release collateral, credit payout
+        // Execute: decrease OI, close position, release collateral
         oiLimits.decreaseOI(pos.marketId, pos.owner, pos.isLong, pos.positionSize);
         positionManager.closePosition(positionId);
         accountManager.releaseCollateral(pos.owner, pos.collateral);
 
-        if (result.payout > 0) {
-            accountManager.creditPnL(pos.owner, result.payout);
-        }
+        // FIX LEVER-BUG-6: Compute delta (net gain/loss beyond collateral)
+        // Same pattern as ExecutionEngine._settlePnL: credit/debit only the delta
+        int256 delta = int256(result.payout) - int256(pos.collateral);
 
-        // FIX LEVER-005: Transfer USDT to FeeRouter before calling routeFees
+        if (delta > 0) {
+            // Winner with net profit: vault funds the profit
+            uint256 profit = uint256(delta);
+            leverVault.fundTraderPnL(address(accountManager), profit);
+            accountManager.creditPnL(pos.owner, profit);
+        } else if (delta < 0) {
+            // Lost part or all of collateral (losers, or winners whose fees exceeded gains)
+            uint256 loss = uint256(-delta);
+            uint256 badDebt = accountManager.debitPnL(pos.owner, loss);
+            uint256 vaultBound = loss > badDebt ? loss - badDebt : 0;
+            if (vaultBound > 0) {
+                accountManager.transferOut(address(leverVault), vaultBound);
+            }
+        }
+        // delta == 0: no credit, no debit
+
+        // Vault funds the settlement fee so the fee transfer out is covered
+        // (settlementFee > 0 only for winners; losers have settlementFee = 0)
         if (result.settlementFee > 0) {
+            leverVault.fundTraderPnL(address(accountManager), result.settlementFee);
             accountManager.transferOut(address(feeRouter), result.settlementFee);
             feeRouter.routeFees(IFeeRouter.FeeType.SETTLEMENT, result.settlementFee);
         }

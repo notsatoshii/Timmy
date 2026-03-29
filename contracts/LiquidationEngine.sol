@@ -345,7 +345,7 @@ contract LiquidationEngine is ILiquidationEngine, AccessControl, ReentrancyGuard
         }
 
         // 6. Close position
-        _closeAndSettle(pos, positionId, ctx.traderReceives);
+        _closeAndSettle(pos, positionId, ctx.traderReceives, ctx.fee);
 
         // 7. Update accumulators
         _totalLiquidationFees += ctx.fee;
@@ -397,21 +397,24 @@ contract LiquidationEngine is ILiquidationEngine, AccessControl, ReentrancyGuard
     function _closeAndSettle(
         IPositionManager.Position memory pos,
         uint256 positionId,
-        uint256 traderReceives
+        uint256 traderReceives,
+        uint256 fee
     ) internal {
         oiLimits.decreaseOI(pos.marketId, pos.owner, pos.isLong, pos.positionSize);
         positionManager.closePosition(positionId);
         accountManager.releaseCollateral(pos.owner, pos.collateral);
 
-        // Debit the loss amount from trader (collateral - traderReceives - fee is the loss to vault)
-        uint256 loss = pos.collateral > traderReceives ? pos.collateral - traderReceives : 0;
-        if (loss > 0) {
-            accountManager.debitPnL(pos.owner, loss);
-            // Transfer losses to vault
-            accountManager.transferOut(address(leverVault), loss);
+        // Total deduction from trader = everything they don't keep
+        uint256 totalDeduct = pos.collateral > traderReceives ? pos.collateral - traderReceives : 0;
+        if (totalDeduct > 0) {
+            accountManager.debitPnL(pos.owner, totalDeduct);
         }
 
-        // Trader keeps only traderReceives in their balance (already released)
+        // Only the trading loss goes to vault (fee already sent to FeeRouter in _routeFee)
+        uint256 vaultLoss = totalDeduct > fee ? totalDeduct - fee : 0;
+        if (vaultLoss > 0) {
+            accountManager.transferOut(address(leverVault), vaultLoss);
+        }
     }
 
     /// @dev Route liquidation fee: bounty to external liquidator (Path C), rest through FeeRouter

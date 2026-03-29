@@ -378,8 +378,9 @@ contract ExecutionEngine is IExecutionEngine, AccessControl, ReentrancyGuard, Pa
         uint256 pi = oracleAdapter.getPI(pos.marketId);
         (uint256 exitPrice,) = _computeExecutionPrice(pos.marketId, pos.isLong, pos.positionSize, pi, false);
 
-        // FIX LEVER-001: Use raw PI values for PnL (consistent with MarginEngine/SettlementEngine)
-        int256 pnl = _computePnL(pos.isLong, pi, pos.entryPI, pos.positionSize);
+        // LEVER-BUG-1: Single-impact PnL per LESSONS.md (raw PI exit, execution price entry)
+        // pi = raw oracle PI at close (mark price); pos.entryPrice = execution price at open
+        int256 pnl = _computePnL(pos.isLong, pi, pos.entryPrice, pos.positionSize);
         uint256 borrowFees = borrowFeeEngine.getAccruedFees(positionId);
         int256 accruedFunding = fundingRateEngine.getAccruedFunding(positionId);
 
@@ -589,11 +590,11 @@ contract ExecutionEngine is IExecutionEngine, AccessControl, ReentrancyGuard, Pa
     /// @dev Compute PnL for a position
     function _computePnL(
         bool isLong,
-        uint256 exitPrice,
-        uint256 entryPrice,
+        uint256 exitMark,
+        uint256 entryMark,
         uint256 positionSize
     ) internal pure returns (int256 pnl) {
-        int256 priceDiff = int256(exitPrice) - int256(entryPrice);
+        int256 priceDiff = int256(exitMark) - int256(entryMark);
         if (!isLong) priceDiff = -priceDiff;
         pnl = (priceDiff * int256(positionSize)) / int256(WAD);
     }

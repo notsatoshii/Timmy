@@ -178,10 +178,12 @@ contract RedeployAuditFixes is Script {
         IGrantRole(FEE_ROUTER).grantRole(EE_ROLE, address(newEE));
         console2.log("FeeRouter: EE_ROLE -> newEE");
 
-        // LeverVault: grant EE_ROLE and LE_ROLE
+        // LeverVault: grant EE_ROLE to ExecutionEngine + SettlementEngine, LE_ROLE to LiquidationEngine
+        // FIX LEVER-BUG-6: SettlementEngine needs EE_ROLE for fundTraderPnL on winner settlements
         IGrantRole(LEVER_VAULT).grantRole(EE_ROLE, address(newEE));
+        IGrantRole(LEVER_VAULT).grantRole(EE_ROLE, address(newSE));
         IGrantRole(LEVER_VAULT).grantRole(LE_ROLE, address(newLE));
-        console2.log("LeverVault: EE_ROLE + LE_ROLE granted");
+        console2.log("LeverVault: EE_ROLE (EE+SE) + LE_ROLE granted");
 
         // OILimits: grant EE_ROLE, LE_ROLE, SE_ROLE
         IGrantRole(address(newOILimits)).grantRole(EE_ROLE, address(newEE));
