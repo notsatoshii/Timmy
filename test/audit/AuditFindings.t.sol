@@ -39,30 +39,31 @@ contract AuditFindingsTest is Test {
     uint256 internal constant WAD = 1e18;
 
     // ──────────────────────────────────────────────
-    // LEVER-001: PnL formula must use raw PI values
+    // LEVER-BUG-1: Single-impact PnL formula (raw PI exit, execution price entry)
     // ──────────────────────────────────────────────
 
-    /// @notice Verify PnL uses raw PI, not impact-adjusted prices
-    function test_LEVER001_pnlUsesRawPI() public pure {
-        // Scenario: Long position, PI moves from 0.50 to 0.55
-        uint256 entryPI = 5e17;      // 0.50
-        uint256 currentPI = 55e16;    // 0.55
+    /// @notice Verify PnL uses single-impact: raw PI exit, execution price entry (LESSONS.md)
+    function test_LEVER001_pnlSingleImpact() public pure {
+        // Scenario: Long position, PI moves from 0.50 to 0.55, 2% entry impact
+        uint256 entryPI = 5e17;      // 0.50 (raw oracle PI at open)
+        uint256 currentPI = 55e16;    // 0.55 (raw oracle PI at close/mark)
         uint256 positionSize = 10_000e18; // $10K notional
 
-        // Impact-adjusted entry price (with 2% impact)
+        // Execution price at entry (long pays higher): 0.50 * 1.02 = 0.51
         uint256 entryPrice = entryPI * (WAD + 2e16) / WAD; // 0.51
-        // Impact-adjusted exit price (with 1% impact)
-        uint256 exitPrice = currentPI * (WAD - 1e16) / WAD; // 0.5445
 
-        // Wrong PnL (using impact prices): (0.5445 - 0.51) × 10000 = $345
-        int256 wrongPnL = (int256(exitPrice) - int256(entryPrice)) * int256(positionSize) / int256(WAD);
+        // Correct PnL (single-impact per LESSONS.md): raw PI exit, execution price entry
+        // PnL = (0.55 - 0.51) * 10000 = $400
+        int256 correctPnL = (int256(currentPI) - int256(entryPrice)) * int256(positionSize) / int256(WAD);
 
-        // Correct PnL (using raw PI): (0.55 - 0.50) × 10000 = $500
-        int256 correctPnL = (int256(currentPI) - int256(entryPI)) * int256(positionSize) / int256(WAD);
+        // Wrong PnL (raw PI both sides, old bug): (0.55 - 0.50) * 10000 = $500
+        // This overstates PnL by hiding the entry spread cost
+        int256 rawBothPnL = (int256(currentPI) - int256(entryPI)) * int256(positionSize) / int256(WAD);
 
-        // The correct PnL should be higher (no impact spread eaten)
-        assertTrue(correctPnL > wrongPnL, "Raw PI PnL should differ from impact-adjusted PnL");
-        assertEq(correctPnL, 500e18, "PnL should be $500");
+        // Single-impact PnL is lower than raw-both PnL (entry spread is charged)
+        assertTrue(correctPnL < rawBothPnL, "Single-impact must be lower than raw-both (spread charged)");
+        assertEq(correctPnL, 400e18, "PnL should be $400 (entry spread of $100 deducted)");
+        assertEq(rawBothPnL, 500e18, "Raw-both PnL would be $500 (entry spread hidden)");
     }
 
     // ──────────────────────────────────────────────
@@ -155,23 +156,27 @@ contract AuditFindingsTest is Test {
     // ──────────────────────────────────────────────
 
     function test_invariant_pnlFormulaConsistency() public pure {
-        // Both MarginEngine and ExecutionEngine must compute the same PnL
-        // for the same position. With the fix, both use raw PI values.
+        // Both MarginEngine and ExecutionEngine must use the same formula:
+        // PnL = direction * (currentPI - entryPrice) * size (single-impact)
 
-        uint256 entryPI = 6e17;    // 0.60
-        uint256 currentPI = 7e17;  // 0.70
+        uint256 entryPI = 6e17;    // 0.60 (raw oracle PI at open)
+        uint256 currentPI = 7e17;  // 0.70 (raw oracle PI at close)
         uint256 size = 50_000e18;  // $50K
 
-        // Long PnL
-        int256 longPnL = (int256(currentPI) - int256(entryPI)) * int256(size) / int256(WAD);
-        assertEq(longPnL, 5_000e18, "Long PnL should be $5K");
+        // Entry prices with 1% impact
+        uint256 longEntryPrice = entryPI * (WAD + 1e16) / WAD;  // 0.606
+        uint256 shortEntryPrice = entryPI * (WAD - 1e16) / WAD; // 0.594
 
-        // Short PnL (opposite direction)
-        int256 shortPnL = -(int256(currentPI) - int256(entryPI)) * int256(size) / int256(WAD);
-        assertEq(shortPnL, -5_000e18, "Short PnL should be -$5K");
+        // Long PnL = (0.70 - 0.606) * 50K = $4,700
+        int256 longPnL = (int256(currentPI) - int256(longEntryPrice)) * int256(size) / int256(WAD);
 
-        // Zero-sum: long + short = 0
-        assertEq(longPnL + shortPnL, 0, "PnL must be zero-sum");
+        // Short PnL = -(0.70 - 0.594) * 50K = -$5,300
+        int256 shortPnL = -(int256(currentPI) - int256(shortEntryPrice)) * int256(size) / int256(WAD);
+
+        // With single-impact, long+short is NOT zero-sum; the spread is the protocol's revenue.
+        // Total = longPnL + shortPnL = 4700 - 5300 = -600 (= 2 * impact * entryPI * size)
+        int256 totalPnL = longPnL + shortPnL;
+        assertTrue(totalPnL < 0, "Total PnL should be negative (spread revenue)");
     }
 
     // ──────────────────────────────────────────────

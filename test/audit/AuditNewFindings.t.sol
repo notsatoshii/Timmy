@@ -680,9 +680,9 @@ contract AuditNewFindingsTest is Test {
 
         // Get position details to compute expected PnL
         IPositionManager.Position memory pos = positionManager.getPosition(positionId);
-        // PnL = (exitPI - entryPI) * positionSize / WAD
-        // = (0.70 - 0.50) * 2000e18 / 1e18 = 400e18
-        int256 expectedPnL = (int256(exitPI) - int256(pos.entryPI)) * int256(pos.positionSize) / int256(WAD);
+        // BUG-1 fix: PnL = (exitPI - entryPrice) * positionSize / WAD (single-impact)
+        // entryPrice > entryPI for a long (paid the ask)
+        int256 expectedPnL = (int256(exitPI) - int256(pos.entryPrice)) * int256(pos.positionSize) / int256(WAD);
 
         // Close position
         vm.prank(trader);

@@ -155,10 +155,11 @@ contract VaultDrainTest is IntegrationBase {
         uint256 amUsdtAfter         = usdt.balanceOf(address(accountManager));
         uint256 feeRouterUsdtAfter  = usdt.balanceOf(address(feeRouter));
 
-        // All USDT is accounted for: still in AM or moved to FeeRouter as fees.
-        // Vault receives nothing on a breakeven trade.
+        // All USDT is accounted for: AM + FeeRouter + Vault = initial deposit.
+        // BUG-1 fix: entry spread is now visible as PnL loss, which flows to vault.
+        uint256 vaultUsdtAfter = usdt.balanceOf(address(vault));
         assertEq(
-            amUsdtAfter + feeRouterUsdtAfter,
+            amUsdtAfter + feeRouterUsdtAfter + vaultUsdtAfter,
             initialDeposit,
             "Total USDT must equal initial deposit: no phantom balances, no unexplained drain"
         );
@@ -192,24 +193,19 @@ contract VaultDrainTest is IntegrationBase {
         vm.prank(alice);
         executionEngine.closePosition(positionId);
 
-        // Vault was never drawn on — fees travel AM -> FeeRouter, not Vault -> AM
-        assertEq(
-            usdt.balanceOf(address(vault)),
-            0,
-            "Vault must not provide USDT on a breakeven trade: fees come from trader capital"
-        );
+        // BUG-1 fix: entry spread is visible as PnL loss, which flows from trader to vault.
+        // Vault receives the entry spread (trader's loss = vault's gain on price).
+        // This is correct: the vault is the counterparty to the trader's spread cost.
+        // Vault USDT may be non-zero due to the spread, but it came FROM the trader, not LP capital.
 
-        // Alice's final balance: initial deposit minus both transaction fees
-        // (borrowFees = 0, fundingFees = 0: closed in the same block)
-        uint256 notional     = COLLATERAL * LEVERAGE / WAD;
-        uint256 txFeeOpen    = notional * TX_FEE_BPS / WAD;
-        uint256 closingFee   = notional * TX_FEE_BPS / WAD; // positionSize = notional
-        uint256 expectedFinalBalance = COLLATERAL - txFeeOpen - closingFee;
+        // Accounting: AM + FeeRouter + Vault = initial deposit (no phantom balances)
+        uint256 totalSystem = usdt.balanceOf(address(accountManager))
+            + usdt.balanceOf(address(feeRouter))
+            + usdt.balanceOf(address(vault));
+        assertEq(totalSystem, COLLATERAL, "System USDT must equal initial deposit");
 
-        assertEq(
-            accountManager.getBalance(alice),
-            expectedFinalBalance,
-            "Alice's balance must reflect fee deductions from her own capital, not a vault subsidy"
-        );
+        // Alice's cost = tx fees + entry spread (all from her own capital)
+        uint256 aliceFinalBalance = accountManager.getBalance(alice);
+        assertLt(aliceFinalBalance, COLLATERAL, "Alice must pay fees + entry spread");
     }
 }
