@@ -1,15 +1,15 @@
 {
-  "timestamp": "2026-03-27T09:58:00.482Z",
+  "timestamp": "2026-03-29T02:03:47.848Z",
   "method": "Playwright Browser Testing",
   "tests": [
     {
       "name": "Overall Verification",
       "passed": false,
       "details": {
-        "error": "browserType.launch: Executable doesn't exist at /root/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+        "error": "this.page.setViewport is not a function"
       },
       "issues": [
-        "Verification failed: browserType.launch: Executable doesn't exist at /root/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+        "Verification failed: this.page.setViewport is not a function"
       ]
     }
   ],
