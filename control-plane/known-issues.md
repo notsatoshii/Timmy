@@ -13,7 +13,8 @@
 
 ## LOW
 - Oracle price staleness warning in health check false positive — timestamps are actually fresh (~2 minutes) but health check calculation incorrect. (2026-03-23)
-- Dashboard service showing UP in health check (corrected from previous not responding report). (2026-03-23)
+- Dashboard service showing UP in health check but systemctl shows inactive (dead). Service needs restart but requires sudo. (2026-04-01)
+- Oracle contract functions reverting on some calls (getLastUpdateTime, getPI work but some queries fail). Prices.json updating correctly from keeper. (2026-04-01)
 
 ## RESOLVED
 - **Test failures in price smoothing verification (5 tests) and high leverage validation (5 tests)** — FIXED: Oracle smoothing tests were using keeper role instead of admin for updateSmoothingParams(). High leverage tests expected 30x leverage but system max is 12x. Updated tests to use correct roles and realistic leverage values. Test success rate improved from 95.4% to 95.9%. (2026-03-25)
