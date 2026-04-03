@@ -163,6 +163,10 @@ contract MockMarginEngine {
     function canRemoveCollateral(uint256, uint256) external view returns (bool) {
         return _canRemove;
     }
+
+    function depthThreshold(bytes32) external pure returns (uint256) {
+        return 1e18; // Return 1.0 WAD to indicate market is configured
+    }
 }
 
 contract MockFeeRouter {
