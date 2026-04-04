@@ -473,7 +473,7 @@ contract LiquidationEngineTest is Test {
 
         // LP socialization
         assertEq(leverVault.socializeCalls(), 1);
-        assertEq(leverVault.lastSocialized(), 40e18);
+        assertEq(leverVault.lastSocialized(), 40e18 / 1e12); // USDT format (6 decimals)
     }
 
     function test_liquidate_badDebt_fullSocialization() public {
@@ -487,7 +487,7 @@ contract LiquidationEngineTest is Test {
         assertEq(result.badDebt, 100e18);
         assertEq(result.insurancePaid, 0);
         assertEq(result.adlAmount, 100e18);
-        assertEq(leverVault.lastSocialized(), 100e18);
+        assertEq(leverVault.lastSocialized(), 100e18 / 1e12); // USDT format (6 decimals)
     }
 
     // ──────────────────────────────────────────────
@@ -832,7 +832,7 @@ contract LiquidationEngineTest is Test {
         assertEq(result.badDebt, 500e18);
         assertEq(result.insurancePaid, 200e18);
         assertEq(result.adlAmount, 300e18);
-        assertEq(leverVault.lastSocialized(), 300e18);
+        assertEq(leverVault.lastSocialized(), 300e18 / 1e12); // USDT format (6 decimals)
     }
 
     // ──────────────────────────────────────────────

@@ -592,7 +592,7 @@ contract SettlementEngineTest is Test {
         engine.settleMarket(marketId);
 
         assertEq(leverVault.socializeCalls(), 1);
-        assertEq(leverVault.lastSocialized(), 400e18);
+        assertEq(leverVault.lastSocialized(), 400e18 / 1e12); // USDT format (6 decimals)
     }
 
     // ──────────────────────────────────────────────
