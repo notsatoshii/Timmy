@@ -242,6 +242,11 @@ contract MockAccountManager_SE {
         lastCredited[user] = amount;
     }
 
+    function debitPnL(address user, uint256 amount) external returns (uint256 badDebt) {
+        // Mock implementation - no bad debt
+        return 0;
+    }
+
     function transferOut(address, uint256) external {}
 }
 
@@ -252,6 +257,10 @@ contract MockLeverVault_SE {
     function socializeLoss(uint256 amount) external {
         ++socializeCalls;
         lastSocialized = amount;
+    }
+
+    function fundTraderPnL(address recipient, uint256 amount) external {
+        // Mock implementation - no actual transfer
     }
 
     function totalAssets() external pure returns (uint256) {
@@ -576,7 +585,7 @@ contract SettlementEngineTest is Test {
 
         // LP socialization = 700 - 109.8 = 590.2
         uint256 expectedSocialized = 700e18 - 1098e17;
-        assertApproxEqAbs(leverVault.lastSocialized(), expectedSocialized, 1e15);
+        assertApproxEqAbs(leverVault.lastSocialized(), expectedSocialized / 1e12, 1e15 / 1e12); // USDT format (6 decimals)
         assertEq(leverVault.socializeCalls(), 1);
     }
 
