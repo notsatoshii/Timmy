@@ -7,7 +7,8 @@
 - Browser automation (puppeteer) cannot run — missing Chrome system dependencies (libatk, libgbm, etc). Need sudo to install. (2026-03-21)
 
 ## MEDIUM
-- Oracle smoothing verification tests failing (4 tests): confidence scoring, convergence behavior, custom parameters, time weighting. These are algorithmic verification tests for oracle smoothing details, not core business logic. Test success rate: 98.4% (1095/1113) up from 98.0%. (2026-04-04 update: Fixed decimal conversion issues, all LiquidationEngine tests PASS)
+- Oracle smoothing verification tests failing (4 tests): confidence scoring, convergence behavior, custom parameters, time weighting. These are algorithmic verification tests for oracle smoothing details, not core business logic. Test success rate: 99.46% (1107/1113). (2026-04-06 update: Fixed 12 SettlementEngine tests, significant progress on test coverage)
+- SettlementEngine payout calculation discrepancy (2 tests): test_claimSettlement_winnerGetsPayout and test_permissionlessClaim both return 498e18 vs expected 698e18. Difference of 200e18 matches collateral amount, suggesting collateral not included in final payout calculation. (2026-04-06)
 - Some complex contract function calls reverting (activeMarkets, totalPositions, getMarketOI) while basic role checks work. System functional but some query functions inaccessible. (2026-03-23)
 - openPosition requires ~826K gas (800K limit fails silently). Frontend useDemoWallet uses gas:2000000n which is correct. (2026-03-21)
 
@@ -17,6 +18,7 @@
 - Oracle contract functions reverting on some calls (getLastUpdateTime, getPI work but some queries fail). Prices.json updating correctly from keeper. (2026-04-01)
 
 ## RESOLVED
+- **SettlementEngine test failures (12 tests)** — FIXED: Multiple missing mock functions and decimal format issues. Added fundTraderPnL() and debitPnL() functions to MockLeverVault_SE and MockAccountManager_SE. Fixed decimal conversion in test_adl_haircutCappedAtWAD_lpSocialization (WAD→USDT format). All SettlementEngine mock function issues resolved. Test success rate improved: 98.38% → 99.46% (1095 → 1107 passing, 18 → 6 failing). Remaining 2 failures are payout calculation issues requiring investigation. (2026-04-06)
 - **Decimal conversion issues in liquidation/settlement tests (4 tests)** — FIXED: Tests expected leverVault.lastSocialized() to return WAD format (18 decimals) but LEVER-BUG-6 fee accounting fixes changed implementation to pass USDT format (6 decimals) to vault. Updated test assertions to expect USDT format (value / 1e12). Fixed 4 tests: liquidate_badDebt_fullSocialization, liquidate_badDebt_insurancePartialCover, liquidate_deeplyUnderwater, adl_noWinners_allLPSocialization. All LiquidationEngine tests now PASS (37/37). Test success rate improved: 98.0% → 98.4% (1091 → 1095 passing, 22 → 18 failing). (2026-04-04)
 - **ExecutionEngine test failures (16 tests)** — FIXED: MockMarginEngine missing depthThreshold() function required by LEVER-BUG-7 market configuration checks. Added depthThreshold function returning 1.0 WAD to indicate configured market. All 45 ExecutionEngine tests now PASS. (2026-04-03)
 - **Test failures in price smoothing verification (5 tests) and high leverage validation (5 tests)** — FIXED: Oracle smoothing tests were using keeper role instead of admin for updateSmoothingParams(). High leverage tests expected 30x leverage but system max is 12x. Updated tests to use correct roles and realistic leverage values. Test success rate improved from 95.4% to 95.9%. (2026-03-25)
